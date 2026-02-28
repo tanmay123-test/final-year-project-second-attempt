@@ -36,13 +36,10 @@ class AppointmentDB:
             'id', 'user_id', 'worker_id', 'user_name', 'patient_symptoms',
             'booking_date', 'time_slot', 'appointment_type', 'status',
             'meeting_link', 'doctor_otp', 'otp_verified', 'created_at',
-<<<<<<< HEAD
             'video_room', 'video_status', 'prescription_file',
             'payment_status', 'payment_amount', 'razorpay_order_id', 
-            'razorpay_payment_id', 'payout_status'
-=======
-            'video_room', 'video_status', 'prescription_file', 'insurance_details'
->>>>>>> 8c7a46a34f1b63542063e010623a085b3ac466ea
+            'razorpay_payment_id', 'payout_status', 'insurance_details'
+
         }
         
         # Add missing columns
@@ -71,15 +68,13 @@ class AppointmentDB:
                 'video_room': 'TEXT',
                 'video_status': 'TEXT DEFAULT "ready"',
                 'prescription_file': 'TEXT',
-<<<<<<< HEAD
                 'payment_status': 'TEXT DEFAULT "pending"',
                 'payment_amount': 'INTEGER',
                 'razorpay_order_id': 'TEXT',
                 'razorpay_payment_id': 'TEXT',
-                'payout_status': 'TEXT DEFAULT "pending"'
-=======
+                'payout_status': 'TEXT DEFAULT "pending"',
                 'insurance_details': 'TEXT'
->>>>>>> 8c7a46a34f1b63542063e010623a085b3ac466ea
+
             }
             
             try:

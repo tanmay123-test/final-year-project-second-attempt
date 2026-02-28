@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService, workerService } from '../services/api';
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -12,32 +12,33 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Check for User Token
       const token = localStorage.getItem('token');
+      
       if (token) {
         try {
+          // 1. Try to fetch User Info
           const response = await authService.getUserInfo();
           setUser(response.data);
         } catch (error) {
-          console.error('Auth check failed:', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user_id');
+          // 2. If User Info fails, try Worker Info
+          try {
+            const workerRes = await workerService.verifyToken();
+            setWorker(workerRes.data);
+            
+            // Sync localStorage if needed
+            localStorage.setItem('worker_id', workerRes.data.id);
+            localStorage.setItem('worker_email', workerRes.data.email);
+          } catch (workerError) {
+            console.error('Auth check failed:', workerError);
+            localStorage.removeItem('token');
+            localStorage.removeItem('user_id');
+            localStorage.removeItem('worker_id');
+            localStorage.removeItem('worker_email');
+            setUser(null);
+            setWorker(null);
+          }
         }
       }
-
-      // Check for Worker ID
-      const workerId = localStorage.getItem('worker_id');
-      const workerEmail = localStorage.getItem('worker_email');
-      if (workerId && workerEmail) {
-        // Since we don't have a token verify for worker, we optimistically set state
-        // In a real app, we should verify against backend
-        setWorker({
-          worker_id: workerId,
-          email: workerEmail,
-          // We might miss specialization here, but it's okay for now
-        });
-      }
-
       setLoading(false);
     };
 
@@ -60,19 +61,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const workerLogin = async (email) => {
+  const workerLogin = async (email, password) => {
     try {
-      const response = await workerService.login({ email });
-      const { worker_id, service, specialization } = response.data;
+      const response = await workerService.login({ email, password });
+      const { worker_id, service, specialization, token, name } = response.data;
       
       localStorage.setItem('worker_id', worker_id);
       localStorage.setItem('worker_email', email);
+      if (token) {
+        localStorage.setItem('token', token); // Store worker token (reusing user token key might be tricky if user is also logged in?)
+        // Ideally we should distinguish, but current logic in api.js uses 'token' from localStorage.
+        // For now, let's assume one login at a time (User OR Worker).
+      }
       
       setWorker({
+        id: worker_id, // Normalize to id
         worker_id,
         email,
         service,
-        specialization
+        specialization,
+        name
       });
       return true;
     } catch (error) {

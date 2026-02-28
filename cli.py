@@ -2909,11 +2909,23 @@ def admin_menu():
         c = input("Choice: ").strip()
 
         if c == "1":
-            r = requests.get(f"{API}/admin/workers/pending")
-            print("\nPending Workers:")
-            workers = r.json()
-            for w in workers:
-                print(f"ID:{w['id']} | {w['full_name']} | {w['specialization']} | {w['status']}")
+            services = ["healthcare", "housekeeping", "resource", "car", "money"]
+            found_any = False
+            for svc in services:
+                try:
+                    r = requests.get(f"{API}/admin/workers/pending?service={svc}")
+                    if r.status_code == 200:
+                        workers = r.json()
+                        if workers:
+                            found_any = True
+                            print(f"\n=== Pending {svc.capitalize()} Workers ===")
+                            for w in workers:
+                                print(f"ID:{w['id']} | {w['full_name']} | {w['specialization']} | {w['status']}")
+                except Exception as e:
+                    print(f"Error fetching {svc}: {e}")
+            
+            if not found_any:
+                print("\nNo pending workers found.")
 
         elif c == "2":
             wid = input("Worker ID: ").strip()

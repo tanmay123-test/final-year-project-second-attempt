@@ -9,7 +9,8 @@ worker_db = WorkerDB()
 
 @admin_bp.route("/admin/workers/pending", methods=["GET"])
 def pending_workers():
-    workers = worker_db.get_pending_workers()
+    service = request.args.get('service')
+    workers = worker_db.get_pending_workers(service)
     return jsonify(workers), 200
 
 # ================= APPROVE WORKER =================

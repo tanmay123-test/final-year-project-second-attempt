@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Stethoscope, Home, Package, Car, Wallet, ChevronLeft } from 'lucide-react';
 import { commonService } from '../services/api';
+import './ServiceSelection.css';
 
 const ServiceSelection = ({ mode = 'user' }) => {
   const navigate = useNavigate();
   
   const defaultServices = [
     { id: 'healthcare', label: 'Healthcare', path: '/doctors' },
-    { id: 'housekeeping', label: 'Housekeeping', path: '/worker/housekeeping/login' },
+    { id: 'housekeeping', label: 'Housekeeping', path: '/housekeeping/home' },
     { id: 'resource', label: 'Resource Management', path: '/worker/resource/login' },
     { id: 'car', label: 'Car Services', path: '/worker/car/login' },
     { id: 'money', label: 'Money Management', path: '/worker/money/login' },
@@ -51,13 +52,9 @@ const ServiceSelection = ({ mode = 'user' }) => {
       {/* Header Section */}
       <header className="service-header">
         <div className="header-top-row">
-          <button 
-            className="back-button" 
-            onClick={() => navigate(-1)}
-            aria-label="Go back"
-          >
-            <ChevronLeft size={24} color="white" />
-          </button>
+          <div className="breadcrumbs" style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+            <span>Home</span> <span style={{ margin: '0 8px' }}>&gt;</span> <span style={{ color: 'white', fontWeight: '500' }}>Services</span>
+          </div>
         </div>
         <div className="header-content">
           <h1>Select Your Service</h1>
@@ -77,11 +74,18 @@ const ServiceSelection = ({ mode = 'user' }) => {
                 onClick={() => {
                   if (service.path === '#') return;
                   
-                  if (mode === 'worker' && service.id === 'healthcare') {
-                    navigate('/worker/healthcare/login');
-                  } else {
-                    navigate(service.path);
+                  if (mode === 'worker') {
+                    if (service.id === 'healthcare') {
+                      navigate('/worker/healthcare/login');
+                      return;
+                    }
+                    if (service.id === 'housekeeping') {
+                      navigate('/worker/housekeeping/login');
+                      return;
+                    }
                   }
+                  
+                  navigate(service.path);
                 }}
                 aria-label={`Select ${service.label} service`}
               >

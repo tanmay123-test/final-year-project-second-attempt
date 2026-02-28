@@ -6,6 +6,19 @@
 from email_service import send_email
 
 
+import logging
+import os
+
+# Configure logging
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_FILE = os.path.join(BASE_DIR, 'notification.log')
+
+logging.basicConfig(
+    filename=LOG_FILE, 
+    level=logging.INFO, 
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
 # ================= USER NOTIFICATION =================
 def notify_user(email, subject, body):
     """
@@ -13,13 +26,7 @@ def notify_user(email, subject, body):
     Currently email.
     Later we will plug Firebase here.
     """
-    print("📨 Sending USER notification...")
-    try:
-        send_email(email, subject, body)
-        print(f"✅ User notification sent to {email}")
-    except Exception as e:
-        print(f"❌ Failed to send user notification to {email}: {e}")
-        # Don't crash the application, just log the error
+    return send_email_notification(email, subject, body)
 
 
 # ================= DOCTOR NOTIFICATION =================
@@ -29,25 +36,63 @@ def notify_doctor(email, subject, body):
     Currently email.
     Later WhatsApp/Firebase ready.
     """
-    print("📨 Sending DOCTOR notification...")
-    try:
-        send_email(email, subject, body)
-        print(f"✅ Doctor notification sent to {email}")
-    except Exception as e:
-        print(f"❌ Failed to send doctor notification to {email}: {e}")
-        # Don't crash the application, just log the error
+    return send_email_notification(email, subject, body)
+
+
+# ================= WORKER NOTIFICATION =================
+def notify_worker(email, subject, body):
+    """
+    Send notification to worker (Housekeeping, etc).
+    """
+    return send_email_notification(email, subject, body)
 
 
 # ================= GENERAL EMAIL FUNCTION =================
+import time
+
+# Simple in-memory cache for deduplication: {email_subject_body_hash: timestamp}
+_email_cache = {}
+
 def send_email_notification(to_email, subject, body):
     """
-    General email sending function with error handling
+    General email sending function with error handling and deduplication.
+    Prevents sending the exact same email to the same person within 60 seconds.
     """
+    # Deduplication logic
+    current_time = time.time()
+    # Create a unique key for this email content
+    email_key = f"{to_email}:{subject}:{body}"
+    
+    # Check cache
+    if email_key in _email_cache:
+        last_sent = _email_cache[email_key]
+        if current_time - last_sent < 60: # 60 seconds window
+            print(f"Duplicate email suppressed to {to_email}")
+            logging.info(f"Duplicate email suppressed to: {to_email}")
+            return True # Pretend it was sent
+
     print(f"📧 Attempting to send email to {to_email}")
+    logging.info(f"Attempting to send generic email to: {to_email}")
     try:
-        send_email(to_email, subject, body)
-        print(f"✅ Email sent successfully to {to_email}")
-        return True
+        success = send_email(to_email, subject, body)
+        if success:
+            # Update cache
+            _email_cache[email_key] = current_time
+            
+            # Clean up cache (optional, simple removing old keys)
+            # For a long running process, we might want to periodically clear this dict,
+            # but for this scope it's fine.
+            if len(_email_cache) > 1000:
+                _email_cache.clear()
+                
+            print(f"✅ Email sent successfully to {to_email}")
+            logging.info(f"Successfully sent generic email to: {to_email}")
+            return True
+        else:
+            print(f"❌ Email sending failed to {to_email}")
+            logging.error(f"Failed to send generic email to: {to_email}")
+            return False
     except Exception as e:
         print(f"❌ Email sending failed to {to_email}: {e}")
+        logging.error(f"Exception sending generic email to {to_email}: {e}")
         return False

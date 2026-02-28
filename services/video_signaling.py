@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class VideoSignalingServer:
     def __init__(self, app):
-        self.socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+        self.socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
         self.setup_socket_events()
         logger.info("Video signaling server initialized")
     
