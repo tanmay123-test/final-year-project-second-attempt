@@ -532,91 +532,114 @@ const BookingFlow = () => {
       )}
 
       {step === 'schedule' && (
-        <div className="step-content form-container">
-          <h2>Schedule Service</h2>
-          
-          {selectedWorker && !selectedWorker.is_online && (
-             <div className="warning-banner" style={{padding: '10px', background: '#FFF3E0', border: '1px solid #FFCC80', borderRadius: '8px', marginBottom: '16px', color: '#E65100', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px'}}>
+        <div className="step-content" style={{maxWidth: 720, margin: '0 auto'}}>
+          <div style={{background: 'white', border: '1px solid #E5E7EB', borderRadius: 16, padding: 20, boxShadow: '0 10px 24px rgba(0,0,0,0.06)'}}>
+            <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16}}>
+              <h2 style={{margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#1F2937'}}>Schedule Service</h2>
+              <span style={{padding: '6px 10px', background: '#F3E5F5', color: '#8E44AD', borderRadius: 999, fontSize: 12, fontWeight: 700}}>
+                {bookingType === 'instant' ? 'Instant' : 'Scheduled'}
+              </span>
+            </div>
+            
+            {selectedWorker && !selectedWorker.is_online && (
+              <div style={{padding: 12, background: '#FFF3E0', border: '1px solid #FFCC80', borderRadius: 12, marginBottom: 16, color: '#B45309', display: 'flex', alignItems: 'center', gap: 8}}>
                 <AlertCircle size={16} />
                 <span>{selectedWorker.name} is currently offline. Please select a time slot.</span>
-             </div>
-          )}
+              </div>
+            )}
 
-          <div className="form-group">
-            <label><MapPin size={16}/> Address</label>
-            <input 
-              required 
-              type="text" 
-              value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
-              placeholder="Enter your full address"
-              className="form-input"
-            />
-          </div>
-
-          {bookingType === 'schedule' && (
-            <div className="form-column">
-              <div className="form-group">
-                <label><Calendar size={16}/> Date</label>
+            <div style={{display: 'grid', gap: 16}}>
+              <div>
+                <label style={{display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151'}}><MapPin size={16}/> Address</label>
                 <input 
                   required 
-                  type="date" 
-                  value={formData.date}
-                  onChange={(e) => setFormData({...formData, date: e.target.value, time: ''})}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="form-input"
+                  type="text" 
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  placeholder="Enter your full address"
+                  style={{width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #E5E7EB', outline: 'none'}}
                 />
               </div>
-              
-              <div className="form-group">
-                <label><Clock size={16}/> Available Time Slots</label>
-                {!formData.date ? (
-                  <div className="no-slots">Please select a date first</div>
-                ) : fetchingSlots ? (
-                  <div className="no-slots">Loading available slots...</div>
-                ) : (
-                  <div className="slots-grid">
-                    {availableSlots.length > 0 ? availableSlots.map(slot => (
-                      <button 
-                        key={slot.time}
-                        className={`slot-btn ${formData.time === slot.time ? 'selected' : ''}`}
-                        onClick={() => setFormData({...formData, time: slot.time})}
-                      >
-                        <div>{slot.time}</div>
-                        <div style={{fontSize: '0.75rem', opacity: 0.8}}>{slot.count} available</div>
-                      </button>
-                    )) : (
-                      <div className="no-slots">No slots available for this date</div>
+
+              {bookingType === 'schedule' && (
+                <div style={{display: 'grid', gridTemplateColumns: '1fr', gap: 16}}>
+                  <div>
+                    <label style={{display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151'}}><Calendar size={16}/> Date</label>
+                    <input 
+                      required 
+                      type="date" 
+                      value={formData.date}
+                      onChange={(e) => setFormData({...formData, date: e.target.value, time: ''})}
+                      min={new Date().toISOString().split('T')[0]}
+                      style={{width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #E5E7EB', outline: 'none'}}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label style={{display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151'}}><Clock size={16}/> Available Time Slots</label>
+                    {!formData.date ? (
+                      <div style={{padding: 12, background: '#F9FAFB', border: '1px dashed #E5E7EB', borderRadius: 12, color: '#6B7280'}}>Please select a date first</div>
+                    ) : fetchingSlots ? (
+                      <div style={{padding: 12, background: '#F9FAFB', border: '1px dashed #E5E7EB', borderRadius: 12, color: '#6B7280'}}>Loading available slots...</div>
+                    ) : (
+                      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 12}}>
+                        {availableSlots.length > 0 ? availableSlots.map(slot => (
+                          <button 
+                            key={slot.time}
+                            onClick={() => setFormData({...formData, time: slot.time})}
+                            style={{
+                              padding: '12px 10px',
+                              borderRadius: 12,
+                              border: formData.time === slot.time ? '2px solid #8E44AD' : '1px solid #E5E7EB',
+                              background: formData.time === slot.time ? 'linear-gradient(135deg,#F3E5F5,#ffffff)' : 'white',
+                              color: '#1F2937',
+                              fontWeight: 600,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              gap: 4,
+                              boxShadow: formData.time === slot.time ? '0 8px 16px rgba(142,68,173,0.15)' : 'none',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            <div>{slot.time}</div>
+                            <div style={{fontSize: '0.75rem', opacity: 0.8}}>{slot.count} available</div>
+                          </button>
+                        )) : (
+                          <div style={{padding: 12, background: '#F9FAFB', border: '1px dashed #E5E7EB', borderRadius: 12, color: '#6B7280'}}>No slots available for this date</div>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            </div>
-          )}
+                </div>
+              )}
 
-          {bookingType === 'instant' && (
-            <div className="info-box">
-              <AlertCircle size={20} />
-              <p>
-                {selectedWorker 
-                  ? `Request will be sent directly to ${selectedWorker.name}.` 
-                  : "Please select a professional to proceed with instant booking."}
-              </p>
+              {bookingType === 'instant' && (
+                <div style={{padding: 16, background: '#F3E5F5', border: '1px solid #8E44AD', borderRadius: 12, color: '#8E44AD', display: 'flex', alignItems: 'center', gap: 8}}>
+                  <AlertCircle size={20} />
+                  <p style={{margin: 0}}>
+                    {selectedWorker 
+                      ? `Request will be sent directly to ${selectedWorker.name}.` 
+                      : "Please select a professional to proceed with instant booking."}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
 
-          <div className="form-actions">
-            <button className="secondary-btn" onClick={() => setStep('type-selection')}>Back</button>
-            <button 
-              className="primary-btn" 
-              onClick={handleCheckAvailability}
-              disabled={!formData.address || !selectedWorker || (bookingType === 'schedule' && (!formData.date || !formData.time))}
-              title={!selectedWorker ? "Please select a professional first" : ""}
-            >
-              {loading ? 'Checking...' : 'Check Availability'}
-            </button>
+            <div style={{display: 'flex', justifyContent: 'space-between', marginTop: 20}}>
+              <button className="secondary-btn" onClick={() => setStep('type-selection')}>Back</button>
+              <button 
+                className="primary-btn" 
+                onClick={handleCheckAvailability}
+                disabled={!formData.address || !selectedWorker || (bookingType === 'schedule' && (!formData.date || !formData.time))}
+                title={!selectedWorker ? "Please select a professional first" : ""}
+              >
+                {loading ? 'Checking...' : 'Check Availability'}
+              </button>
+            </div>
+            {error && <div className="error-msg" style={{marginTop: 12}}><AlertCircle size={16}/> {error}</div>}
           </div>
-          {error && <div className="error-msg"><AlertCircle size={16}/> {error}</div>}
         </div>
       )}
 

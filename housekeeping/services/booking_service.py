@@ -173,13 +173,23 @@ class BookingService:
         """
         Cancel a booking.
         """
-        if self.db.update_booking_status(booking_id, 'CANCELLED'):
-            # Notify worker
-            booking = self.db.get_booking_by_id(booking_id)
-            if booking and booking.get('worker_id'):
+        booking = self.db.get_booking_by_id(booking_id)
+        if not booking:
+            return False, "Booking not found"
+        if str(booking.get('user_id')) != str(user_id):
+            return False, "Unauthorized: You do not own this booking"
+        if booking.get('status') in ('CANCELLED', 'COMPLETED'):
+            return False, f"Cannot cancel a {booking.get('status').lower()} booking"
+        updated = self.db.update_booking_status(booking_id, 'CANCELLED')
+        if not updated:
+            return False, "Failed to cancel booking"
+        # Notify worker
+        if booking.get('worker_id'):
+            try:
                 self._notify_worker(booking['worker_id'], booking_id, "Booking Cancelled", f"Booking #{booking_id} has been cancelled by the user.")
-            return True, "Booking cancelled"
-        return False, "Failed to cancel booking"
+            except Exception:
+                pass
+        return True, "Booking cancelled"
 
     def update_booking_status_by_worker(self, booking_id, worker_id, status):
         """

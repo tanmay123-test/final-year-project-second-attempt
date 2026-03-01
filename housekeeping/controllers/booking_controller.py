@@ -271,8 +271,28 @@ def my_bookings():
     else:
         bookings = booking_service.db.get_worker_bookings(user['data']['id'])
         print(f"[DEBUG] Found {len(bookings)} bookings for worker {user['data']['id']}")
+    
+    # Enrich bookings with worker_name using WorkerDB
+    enriched = []
+    for b in bookings:
+        try:
+            wid = b.get('worker_id') if isinstance(b, dict) else None
+            name = None
+            if wid:
+                w = worker_db.get_worker_by_id(wid)
+                if w:
+                    name = w.get('full_name') or w.get('name')
+            if isinstance(b, dict):
+                b['worker_name'] = name or b.get('worker_name') or 'Assigned Provider'
+                enriched.append(b)
+            else:
+                enriched.append(b)
+        except Exception:
+            if isinstance(b, dict):
+                b['worker_name'] = b.get('worker_name') or 'Assigned Provider'
+            enriched.append(b)
         
-    return jsonify({"bookings": bookings}), 200
+    return jsonify({"bookings": enriched}), 200
 
 @housekeeping_bp.route('/user/accept-booking', methods=['POST'])
 def user_accept_booking():

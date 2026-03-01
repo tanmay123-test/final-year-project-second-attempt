@@ -119,21 +119,21 @@ const UserHome = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '12px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Search size={20} color="white" style={{ opacity: 0.8 }} />
+        {/* Search Bar - refreshed pill style */}
+        <div style={{ backgroundColor: 'white', padding: '12px 16px', borderRadius: '999px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }}>
+          <Search size={20} color="#8E44AD" />
           <input 
             type="text" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search services, cleaners..." 
-            style={{ background: 'transparent', border: 'none', color: 'white', width: '100%', outline: 'none', '::placeholder': { color: 'rgba(255,255,255,0.7)' } }}
+            placeholder="Search for cleaners, services, or locations..." 
+            style={{ background: 'transparent', border: 'none', color: '#1F2937', width: '100%', outline: 'none' }}
           />
           {searchQuery && (
             <X 
               size={20} 
-              color="white" 
-              style={{ cursor: 'pointer', opacity: 0.8 }} 
+              color="#6B7280" 
+              style={{ cursor: 'pointer' }} 
               onClick={() => setSearchQuery('')}
             />
           )}
@@ -155,7 +155,7 @@ const UserHome = () => {
               </span>
             )}
           </div>
-          <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' }}>
+          <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '8px', scrollbarWidth: 'none' }}>
             {filteredServices.map((spec, index) => {
               const isSelected = selectedSpecialization === spec.name;
               return (
@@ -163,10 +163,14 @@ const UserHome = () => {
                   key={index} 
                   onClick={() => handleSpecializationClick(spec.name)}
                   style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    minWidth: '70px', 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    minWidth: '200px',
+                    padding: '18px',
+                    background: 'white',
+                    borderRadius: '24px',
+                    boxShadow: '0 12px 30px rgba(0,0,0,0.06)',
                     cursor: 'pointer', 
                     position: 'relative',
                     opacity: selectedSpecialization && !isSelected ? 0.5 : 1,
@@ -174,38 +178,22 @@ const UserHome = () => {
                     transition: 'all 0.2s ease'
                   }}
                 >
-                  <div style={{ 
-                    width: '60px', 
-                    height: '60px', 
-                    borderRadius: '16px', 
-                    backgroundColor: spec.color, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center', 
-                    fontSize: '24px', 
-                    marginBottom: '8px', 
-                    position: 'relative',
-                    border: isSelected ? '2px solid #8E44AD' : 'none',
-                    boxShadow: isSelected ? '0 4px 12px rgba(142, 68, 173, 0.2)' : 'none'
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '26px',
+                    marginBottom: '10px'
                   }}>
                     {spec.icon}
-                    {spec.available_count > 0 && (
-                      <span style={{ 
-                        position: 'absolute', top: -5, right: -5, 
-                        backgroundColor: '#2ECC71', color: 'white', 
-                        fontSize: '10px', fontWeight: 'bold', 
-                        padding: '2px 6px', borderRadius: '10px',
-                        border: '2px solid white'
-                      }}>
-                        {spec.available_count}
-                      </span>
-                    )}
                   </div>
                   <span style={{ 
-                    fontSize: '11px', 
-                    color: isSelected ? '#8E44AD' : '#4B5563', 
-                    fontWeight: isSelected ? 'bold' : 'normal',
-                    textAlign: 'center' 
+                    fontSize: '14px',
+                    color: isSelected ? '#8E44AD' : '#111827',
+                    fontWeight: 600,
+                    textAlign: 'center'
                   }}>
                     {spec.name}
                   </span>
@@ -226,21 +214,23 @@ const UserHome = () => {
           
           {filteredCleaners.length > 0 ? (
             filteredCleaners.map(cleaner => (
-              <div key={cleaner.id} style={{ backgroundColor: 'white', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid #F3F4F6' }}>
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-                  <div style={{ width: '50px', height: '50px', borderRadius: '12px', backgroundColor: cleaner.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '20px', fontWeight: 'bold', position: 'relative' }}>
+              <div key={cleaner.id} style={{ backgroundColor: 'white', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid #EEF2F7', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', alignItems: 'center' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: cleaner.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '18px', fontWeight: 'bold', position: 'relative' }}>
                     {cleaner.name.charAt(0)}
                     {cleaner.is_online && (
-                      <span style={{ position: 'absolute', bottom: -2, right: -2, width: '12px', height: '12px', backgroundColor: '#2ECC71', border: '2px solid white', borderRadius: '50%' }} title="Online"></span>
+                      <span style={{ position: 'absolute', bottom: -2, right: -2, width: '10px', height: '10px', backgroundColor: '#2ECC71', border: '2px solid white', borderRadius: '50%' }} title="Online"></span>
                     )}
                   </div>
                   <div>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: 'bold', color: '#1F2937' }}>{cleaner.name}</h3>
-                    <p style={{ margin: '0 0 4px 0', fontSize: '12px', color: '#6B7280' }}>{cleaner.role}</p>
+                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1F2937' }}>{cleaner.name}</h3>
+                    <p style={{ margin: '4px 0 6px 0', fontSize: '12px', color: '#6B7280' }}>{cleaner.role}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: '#6B7280' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Star size={12} fill="#F59E0B" color="#F59E0B" />
-                        <span style={{ color: '#1F2937', fontWeight: '600' }}>{cleaner.rating}</span>
+                        <span style={{ color: '#1F2937', fontWeight: 600 }}>{cleaner.rating}</span>
+                        <span style={{ color: '#9CA3AF' }}>·</span>
+                        <span>45 reviews</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Clock size={12} />
@@ -253,11 +243,11 @@ const UserHome = () => {
                     </div>
                   </div>
                 </div>
-                <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#8E44AD' }}>₹{cleaner.price}<span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}> / visit</span></span>
+                <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '16px', fontWeight: 700, color: '#8E44AD' }}>₹{cleaner.price}<span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 'normal' }}> / visit</span></span>
                   <button 
                     onClick={() => navigate('/housekeeping/booking/create', { state: { worker: cleaner } })}
-                    style={{ backgroundColor: '#8E44AD', color: 'white', border: 'none', padding: '8px 24px', borderRadius: '20px', fontSize: '14px', fontWeight: '600' }}
+                    style={{ background: 'linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%)', color: 'white', border: 'none', padding: '10px 18px', borderRadius: '999px', fontSize: '14px', fontWeight: 700, boxShadow: '0 8px 16px rgba(142, 68, 173, 0.25)' }}
                   >
                     Book Now
                   </button>

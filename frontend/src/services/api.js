@@ -133,6 +133,7 @@ export const housekeepingService = {
   getWorkerBalance: () => api.get('/api/housekeeping/worker/balance'),
   getWorkerServices: () => api.get('/api/housekeeping/worker/services'),
   saveWorkerServices: (services) => api.post('/api/housekeeping/worker/services', { services }),
+  cancelBooking: (bookingId) => api.post('/api/housekeeping/cancel-booking', { booking_id: bookingId }),
 };
 
 export default api;

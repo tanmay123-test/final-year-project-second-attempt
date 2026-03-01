@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, MoreVertical, ArrowRight, Loader2, XCircle } from 'lucide-react';
 import HousekeepingNavigation from '../components/HousekeepingNavigation';
-import api from '../../../../frontend/src/services/api';
+import api, { housekeepingService } from '../../../../frontend/src/services/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../frontend/src/context/AuthContext';
 import { housekeepingSocket } from '../../../../frontend/src/services/housekeepingSocket';
@@ -12,6 +12,7 @@ const UserBookings = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [detailsBooking, setDetailsBooking] = useState(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -21,18 +22,19 @@ const UserBookings = () => {
 
   const fetchBookings = async () => {
     try {
-      const response = await api.get('/housekeeping/my-bookings');
-      // Handle both direct array or { bookings: [...] } format
-      const data = response.data.bookings || response.data || [];
+      const response = await housekeepingService.getUserBookings();
+      const data = response.data.bookings || [];
       // Map backend fields to frontend display fields if necessary
       const mapped = data.map(b => ({
         id: b.id,
         service: b.service_type || 'Service',
         provider: b.worker_name || 'Assigned Provider',
-        date: `${b.date}, ${b.time}`,
+        date: `${b.booking_date || b.date || ''}, ${b.time_slot || b.time || ''}`,
         status: b.status.toLowerCase(), // Ensure lowercase for filtering
         price: b.price || 0,
-        image: getServiceIcon(b.service_type)
+        image: getServiceIcon(b.service_type),
+        workerId: b.worker_id,
+        address: b.address || ''
       }));
       setBookings(mapped);
     } catch (error) {
@@ -67,11 +69,12 @@ const UserBookings = () => {
   const handleCancel = async (id) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
     try {
-        await api.post('/housekeeping/cancel-booking', { booking_id: id });
+        await housekeepingService.cancelBooking(id);
         fetchBookings();
     } catch (error) {
         console.error('Failed to cancel booking', error);
-        alert('Failed to cancel booking');
+        const msg = error.response?.data?.error || 'Failed to cancel booking';
+        alert(msg);
     }
   };
 
@@ -161,8 +164,8 @@ const UserBookings = () => {
                   {booking.image}
                 </div>
                 <div>
-                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '600', color: '#1F2937' }}>{booking.service}</h3>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>{booking.provider}</p>
+                  <h3 style={{ margin: '0 0 4px 0', fontSize: '16px', fontWeight: '700', color: '#1F2937' }}>{booking.provider}</h3>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>{booking.service}</p>
                 </div>
               </div>
               <span style={{ 
@@ -189,7 +192,12 @@ const UserBookings = () => {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button style={{ color: '#8E44AD', background: 'none', border: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>View Details</button>
+              <button 
+                onClick={() => setDetailsBooking(booking)}
+                style={{ color: '#8E44AD', background: 'none', border: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                View Details
+              </button>
               
               {['pending', 'requested', 'assigned'].includes(booking.status) && (
                 <button 
@@ -197,22 +205,6 @@ const UserBookings = () => {
                   style={{ backgroundColor: '#FEE2E2', color: '#DC2626', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
                   <XCircle size={14} /> Cancel
-                </button>
-              )}
-
-              {['requested', 'assigned'].includes(booking.status) && (
-                <button 
-                  onClick={async () => {
-                    try {
-                      await api.post('/api/housekeeping/user/accept-booking', { booking_id: booking.id });
-                      fetchBookings();
-                    } catch (e) {
-                      alert('Failed to accept booking');
-                    }
-                  }}
-                  style={{ backgroundColor: '#8E44AD', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', marginLeft: '8px' }}
-                >
-                  Accept
                 </button>
               )}
 
@@ -231,6 +223,29 @@ const UserBookings = () => {
       </div>
 
       <HousekeepingNavigation />
+      
+      {detailsBooking && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: 16, width: '90%', maxWidth: 520, padding: 20, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#1F2937' }}>{detailsBooking.provider}</h3>
+            <p style={{ margin: '4px 0 12px 0', color: '#6B7280', fontSize: 13 }}>{detailsBooking.service}</p>
+            <div style={{ display: 'grid', gap: 8, fontSize: 13, color: '#4B5563' }}>
+              <div><strong>Date & Time:</strong> {detailsBooking.date}</div>
+              {detailsBooking.address && <div><strong>Address:</strong> {detailsBooking.address}</div>}
+              <div><strong>Status:</strong> {detailsBooking.status.toUpperCase()}</div>
+              <div><strong>Price:</strong> ₹{detailsBooking.price}</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 16 }}>
+              <button 
+                onClick={() => setDetailsBooking(null)}
+                style={{ backgroundColor: '#E5E7EB', color: '#374151', border: 'none', padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
