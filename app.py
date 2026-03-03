@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO
+from werkzeug.utils import secure_filename
+import os
+from datetime import datetime
 from meeting_utils import create_meeting_link
 import random
 from user_db import UserDB
@@ -16,8 +19,11 @@ from emergency_detector import is_emergency
 from auth_utils import generate_token, verify_token
 from otp_service import send_otp, verify_otp
 from email_service import send_email
+from config import (EXPERT_IMAGES_DIR, ALLOWED_EXTENSIONS, MAX_FILE_SIZE)
 
 from video_db import VideoConsultDB
+from expert_db import ExpertDB
+from expert_chat_db import ExpertChatDB
 
 import appointment_db
 print("🔥 USING appointment_db FROM:", appointment_db.__file__)
@@ -60,9 +66,138 @@ except ImportError as e:
 app.register_blueprint(video_bp)
 print("✅ Video consultation blueprint registered")
 
+try:
+    from car_service.car_routes import car_bp
+    app.register_blueprint(car_bp)
+    print("✅ Car service blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register car service blueprint: {e}")
+
+# Register trip planner blueprint
+try:
+    from car_service.trip_routes import trip_bp
+    app.register_blueprint(trip_bp)
+    print("✅ Trip planner blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register trip planner blueprint: {e}")
+
+# Register worker routes blueprint
+try:
+    from car_service.worker_routes import worker_bp
+    app.register_blueprint(worker_bp)
+    print("✅ Worker routes blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register worker routes blueprint: {e}")
+
+# Register mechanic routes blueprint
+try:
+    from car_service.mechanic_routes import mechanic_bp
+    app.register_blueprint(mechanic_bp)
+    print("✅ Mechanic routes blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register mechanic routes blueprint: {e}")
+
+# Register unified car service worker routes blueprint
+try:
+    from car_service.car_service_worker_routes import car_service_worker_bp
+    app.register_blueprint(car_service_worker_bp)
+    print("✅ Unified car service worker routes blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register unified car service worker routes blueprint: {e}")
+
+# Register dispatch routes blueprint
+try:
+    from car_service.dispatch.routes import dispatch_bp
+    app.register_blueprint(dispatch_bp)
+    print("✅ Dispatch routes blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register dispatch routes blueprint: {e}")
+
+# Register active job routes blueprint
+try:
+    from car_service.dispatch.active_routes import active_bp
+    app.register_blueprint(active_bp)
+    print("✅ Active job routes blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register active job routes blueprint: {e}")
+
+# Register earnings routes blueprint
+try:
+    from car_service.dispatch.earnings_routes import earnings_bp
+    app.register_blueprint(earnings_bp)
+    print("✅ Earnings routes blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register earnings routes blueprint: {e}")
+
+# Register performance routes blueprint
+try:
+    from car_service.dispatch.performance_routes import performance_bp
+    app.register_blueprint(performance_bp)
+    print("✅ Performance routes blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register performance routes blueprint: {e}")
+
+# Register smart search routes blueprint
+try:
+    from car_service.smart_search_routes import smart_search_bp
+    app.register_blueprint(smart_search_bp)
+    print("✅ Smart search routes blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register smart search routes blueprint: {e}")
+
+# Register Ask Expert blueprint
+try:
+    from car_service.ask_expert import ask_expert_bp, init_ask_expert_db
+    app.register_blueprint(ask_expert_bp)
+    init_ask_expert_db(app)
+    print("✅ Ask Expert blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register Ask Expert blueprint: {e}")
+
+# Register Automobile Expert blueprint
+try:
+    from car_service.automobile_expert_routes import automobile_expert_bp
+    app.register_blueprint(automobile_expert_bp)
+    print("✅ Automobile Expert blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register Automobile Expert blueprint: {e}")
+
+# Register Expert Availability blueprint
+try:
+    from car_service.expert_availability_routes import expert_availability_bp
+    app.register_blueprint(expert_availability_bp)
+    print("✅ Expert Availability blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register Expert Availability blueprint: {e}")
+
+# Register Consultation Session blueprint
+try:
+    from car_service.consultation_session_routes import consultation_session_bp
+    app.register_blueprint(consultation_session_bp)
+    print("✅ Consultation Session blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register Consultation Session blueprint: {e}")
+
+# Register Expert History blueprint
+try:
+    from car_service.expert_history_routes import expert_history_bp
+    app.register_blueprint(expert_history_bp)
+    print("✅ Expert History blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register Expert History blueprint: {e}")
+
+# Register Fuel Delivery blueprint
+try:
+    from car_service.fuel_delivery_routes import fuel_delivery_bp
+    app.register_blueprint(fuel_delivery_bp, url_prefix='/fuel-delivery')
+    print("✅ Fuel Delivery blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register Fuel Delivery blueprint: {e}")
+
+ 
+
 # Initialize WebSocket signaling server
 socketio = init_video_signaling(app)
-print("✅ Video signaling server initialized")
 
 # ================= DATABASE =================
 user_db = UserDB()
@@ -72,9 +207,20 @@ message_db = MessageDB()
 availability_db = AvailabilityDB()
 event_db = EventDB()
 subscription_db = SubscriptionDB()
+expert_db = ExpertDB()
+expert_chat_db = ExpertChatDB()
 
 # ================= AUTH =====================
 def require_auth():
+    auth = request.headers.get("Authorization")
+    if not auth:
+        return None
+    try:
+        return verify_token(auth.split(" ")[1])
+    except:
+        return None
+
+def require_worker_auth():
     auth = request.headers.get("Authorization")
     if not auth:
         return None
@@ -1015,6 +1161,482 @@ def get_doctor_profile():
         return jsonify(profile), 200
     else:
         return jsonify({"error": "Profile not found"}), 404
+
+
+# ================= EXPERT SYSTEM =================
+@app.route("/expert/categories")
+def get_expert_categories():
+    """Get all available expert categories"""
+    try:
+        categories = expert_db.get_expert_categories()
+        return jsonify({"categories": categories}), 200
+    except Exception as e:
+        print(f"❌ Error fetching expert categories: {e}")
+        return jsonify({"error": "Failed to fetch categories", "categories": []}), 500
+
+
+@app.route("/expert/online")
+def get_online_experts():
+    """Get all online experts, optionally filtered by category"""
+    try:
+        category = request.args.get("category")
+        experts = expert_db.get_online_experts(category)
+        return jsonify({"experts": experts}), 200
+    except Exception as e:
+        print(f"❌ Error fetching online experts: {e}")
+        return jsonify({"error": "Failed to fetch experts", "experts": []}), 500
+
+
+@app.route("/expert/all")
+def get_all_experts():
+    """Get all experts, optionally filtered by category"""
+    try:
+        category = request.args.get("category")
+        experts = expert_db.get_all_experts(category)
+        return jsonify({"experts": experts}), 200
+    except Exception as e:
+        print(f"❌ Error fetching all experts: {e}")
+        return jsonify({"error": "Failed to fetch experts", "experts": []}), 500
+
+
+@app.route("/expert/search")
+def search_experts():
+    """Search experts by query, optionally filtered by category"""
+    try:
+        query = request.args.get("q", "")
+        category = request.args.get("category")
+        if not query.strip():
+            return jsonify({"error": "Search query is required"}), 400
+        
+        experts = expert_db.search_experts(query, category)
+        return jsonify({"experts": experts}), 200
+    except Exception as e:
+        print(f"❌ Error searching experts: {e}")
+        return jsonify({"error": "Failed to search experts", "experts": []}), 500
+
+
+@app.route("/expert/request", methods=["POST"])
+def create_expert_request():
+    """Create a new expert request"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({"error": "Authentication required"}), 401
+        
+        data = request.json
+        required_fields = ["expert_id", "category", "title"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return jsonify({"error": f"Missing required fields: {missing_fields}"}), 400
+        
+        request_id = expert_db.create_expert_request(
+            user_id=user["user_id"],
+            expert_id=data["expert_id"],
+            category=data["category"],
+            title=data["title"],
+            description=data.get("description", ""),
+            image_url=data.get("image_url"),
+            priority=data.get("priority", "normal")
+        )
+        
+        if request_id:
+            print(f"✅ Expert request created: {request_id}")
+            return jsonify({
+                "success": True,
+                "request_id": request_id,
+                "message": "Expert request created successfully"
+            }), 201
+        else:
+            return jsonify({"error": "Failed to create expert request"}), 500
+            
+    except Exception as e:
+        print(f"❌ Error creating expert request: {e}")
+        return jsonify({"error": "Failed to create expert request"}), 500
+
+
+@app.route("/expert/requests/<int:expert_id>")
+def get_expert_requests(expert_id):
+    """Get requests for a specific expert"""
+    try:
+        status = request.args.get("status")
+        requests = expert_db.get_expert_requests(expert_id, status)
+        return jsonify({"requests": requests}), 200
+    except Exception as e:
+        print(f"❌ Error fetching expert requests: {e}")
+        return jsonify({"error": "Failed to fetch requests", "requests": []}), 500
+
+
+@app.route("/expert/user/requests")
+def get_user_expert_requests():
+    """Get expert requests for the authenticated user"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({"error": "Authentication required"}), 401
+        
+        status = request.args.get("status")
+        requests = expert_db.get_user_requests(user["user_id"], status)
+        return jsonify({"requests": requests}), 200
+    except Exception as e:
+        print(f"❌ Error fetching user expert requests: {e}")
+        return jsonify({"error": "Failed to fetch requests", "requests": []}), 500
+
+
+@app.route("/expert/request/<int:request_id>/status", methods=["PUT"])
+def update_expert_request_status(request_id):
+    """Update expert request status"""
+    try:
+        data = request.json
+        status = data.get("status")
+        
+        if not status:
+            return jsonify({"error": "Status is required"}), 400
+        
+        expert_db.update_request_status(request_id, status)
+        print(f"✅ Expert request {request_id} status updated to: {status}")
+        return jsonify({
+            "success": True,
+            "message": "Request status updated successfully"
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error updating expert request status: {e}")
+        return jsonify({"error": "Failed to update request status"}), 500
+
+
+@app.route("/expert/session", methods=["POST"])
+def create_expert_session():
+    """Create a new expert session"""
+    try:
+        data = request.json
+        required_fields = ["request_id", "expert_id", "user_id", "session_type"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return jsonify({"error": f"Missing required fields: {missing_fields}"}), 400
+        
+        meeting_link = None
+        if data["session_type"] == "call":
+            meeting_link = create_meeting_link()
+        
+        session_id = expert_db.create_session(
+            request_id=data["request_id"],
+            expert_id=data["expert_id"],
+            user_id=data["user_id"],
+            session_type=data["session_type"],
+            meeting_link=meeting_link
+        )
+        
+        if session_id:
+            print(f"✅ Expert session created: {session_id}")
+            return jsonify({
+                "success": True,
+                "session_id": session_id,
+                "meeting_link": meeting_link,
+                "message": "Session created successfully"
+            }), 201
+        else:
+            return jsonify({"error": "Failed to create session"}), 500
+            
+    except Exception as e:
+        print(f"❌ Error creating expert session: {e}")
+        return jsonify({"error": "Failed to create session"}), 500
+
+
+@app.route("/expert/sessions")
+def get_expert_sessions():
+    """Get active expert sessions"""
+    try:
+        expert_id = request.args.get("expert_id", type=int)
+        user_id = request.args.get("user_id", type=int)
+        
+        sessions = expert_db.get_active_sessions(expert_id, user_id)
+        return jsonify({"sessions": sessions}), 200
+    except Exception as e:
+        print(f"❌ Error fetching expert sessions: {e}")
+        return jsonify({"error": "Failed to fetch sessions", "sessions": []}), 500
+
+
+@app.route("/expert/session/<int:session_id>/end", methods=["PUT"])
+def end_expert_session(session_id):
+    """End an expert session"""
+    try:
+        expert_db.end_session(session_id)
+        print(f"✅ Expert session {session_id} ended")
+        return jsonify({
+            "success": True,
+            "message": "Session ended successfully"
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error ending expert session: {e}")
+        return jsonify({"error": "Failed to end session"}), 500
+
+
+@app.route("/expert/status/<int:expert_id>", methods=["PUT"])
+def update_expert_status(expert_id):
+    """Update expert online/offline status"""
+    try:
+        data = request.json
+        is_online = data.get("is_online", False)
+        
+        expert_db.update_expert_status(expert_id, bool(is_online))
+        status = "online" if is_online else "offline"
+        print(f"✅ Expert {expert_id} status updated to: {status}")
+        return jsonify({
+            "success": True,
+            "message": f"Expert status updated to {status}"
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error updating expert status: {e}")
+        return jsonify({"error": "Failed to update expert status"}), 500
+
+
+# ================= EXPERT CHAT SYSTEM =================
+@app.route("/expert/chat/room", methods=["POST"])
+def create_chat_room():
+    """Create a new chat room for an expert session"""
+    try:
+        data = request.json
+        required_fields = ["session_id", "expert_id", "user_id"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return jsonify({"error": f"Missing required fields: {missing_fields}"}), 400
+        
+        room_id = expert_chat_db.create_chat_room(
+            session_id=data["session_id"],
+            expert_id=data["expert_id"],
+            user_id=data["user_id"],
+            room_name=data.get("room_name")
+        )
+        
+        if room_id:
+            print(f"✅ Chat room created: {room_id}")
+            return jsonify({
+                "success": True,
+                "room_id": room_id,
+                "message": "Chat room created successfully"
+            }), 201
+        else:
+            return jsonify({"error": "Failed to create chat room"}), 500
+            
+    except Exception as e:
+        print(f"❌ Error creating chat room: {e}")
+        return jsonify({"error": "Failed to create chat room"}), 500
+
+
+@app.route("/expert/chat/room/<int:room_id>")
+def get_chat_room(room_id):
+    """Get chat room details"""
+    try:
+        room = expert_chat_db.get_chat_room(room_id)
+        if room:
+            return jsonify({"room": room}), 200
+        else:
+            return jsonify({"error": "Chat room not found"}), 404
+    except Exception as e:
+        print(f"❌ Error fetching chat room: {e}")
+        return jsonify({"error": "Failed to fetch chat room"}), 500
+
+
+@app.route("/expert/chat/rooms/user")
+def get_user_chat_rooms():
+    """Get all chat rooms for a user"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({"error": "Authentication required"}), 401
+        
+        rooms = expert_chat_db.get_user_chat_rooms(user["user_id"])
+        return jsonify({"rooms": rooms}), 200
+    except Exception as e:
+        print(f"❌ Error fetching user chat rooms: {e}")
+        return jsonify({"error": "Failed to fetch chat rooms", "rooms": []}), 500
+
+
+@app.route("/expert/chat/rooms/expert/<int:expert_id>")
+def get_expert_chat_rooms(expert_id):
+    """Get all chat rooms for an expert"""
+    try:
+        rooms = expert_chat_db.get_expert_chat_rooms(expert_id)
+        return jsonify({"rooms": rooms}), 200
+    except Exception as e:
+        print(f"❌ Error fetching expert chat rooms: {e}")
+        return jsonify({"error": "Failed to fetch chat rooms", "rooms": []}), 500
+
+
+@app.route("/expert/chat/messages/<int:room_id>")
+def get_chat_messages(room_id):
+    """Get messages for a chat room"""
+    try:
+        limit = request.args.get("limit", 50, type=int)
+        offset = request.args.get("offset", 0, type=int)
+        
+        messages = expert_chat_db.get_room_messages(room_id, limit, offset)
+        return jsonify({"messages": messages}), 200
+    except Exception as e:
+        print(f"❌ Error fetching chat messages: {e}")
+        return jsonify({"error": "Failed to fetch messages", "messages": []}), 500
+
+
+@app.route("/expert/chat/send", methods=["POST"])
+def send_chat_message():
+    """Send a message in a chat room"""
+    try:
+        data = request.json
+        required_fields = ["room_id", "sender_id", "sender_type", "message"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return jsonify({"error": f"Missing required fields: {missing_fields}"}), 400
+        
+        message_id = expert_chat_db.send_message(
+            room_id=data["room_id"],
+            sender_id=data["sender_id"],
+            sender_type=data["sender_type"],
+            message=data["message"],
+            message_type=data.get("message_type", "text"),
+            file_url=data.get("file_url")
+        )
+        
+        if message_id:
+            print(f"✅ Message sent: {message_id}")
+            return jsonify({
+                "success": True,
+                "message_id": message_id,
+                "message": "Message sent successfully"
+            }), 201
+        else:
+            return jsonify({"error": "Failed to send message"}), 500
+            
+    except Exception as e:
+        print(f"❌ Error sending message: {e}")
+        return jsonify({"error": "Failed to send message"}), 500
+
+
+@app.route("/expert/chat/read/<int:room_id>", methods=["PUT"])
+def mark_messages_read(room_id):
+    """Mark messages as read for a participant"""
+    try:
+        data = request.json
+        participant_id = data.get("participant_id")
+        
+        if not participant_id:
+            return jsonify({"error": "Participant ID is required"}), 400
+        
+        expert_chat_db.mark_messages_read(room_id, participant_id)
+        print(f"✅ Messages marked as read for room {room_id}")
+        return jsonify({
+            "success": True,
+            "message": "Messages marked as read"
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error marking messages as read: {e}")
+        return jsonify({"error": "Failed to mark messages as read"}), 500
+
+
+@app.route("/expert/chat/status/<int:room_id>", methods=["PUT"])
+def update_participant_status(room_id):
+    """Update participant online status in a chat room"""
+    try:
+        data = request.json
+        participant_id = data.get("participant_id")
+        is_online = data.get("is_online", False)
+        
+        if not participant_id:
+            return jsonify({"error": "Participant ID is required"}), 400
+        
+        expert_chat_db.update_participant_status(room_id, participant_id, bool(is_online))
+        status = "online" if is_online else "offline"
+        print(f"✅ Participant {participant_id} status updated to {status} in room {room_id}")
+        return jsonify({
+            "success": True,
+            "message": f"Participant status updated to {status}"
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error updating participant status: {e}")
+        return jsonify({"error": "Failed to update participant status"}), 500
+
+
+@app.route("/expert/chat/close/<int:room_id>", methods=["PUT"])
+def close_chat_room(room_id):
+    """Close a chat room"""
+    try:
+        expert_chat_db.close_chat_room(room_id)
+        print(f"✅ Chat room {room_id} closed")
+        return jsonify({
+            "success": True,
+            "message": "Chat room closed successfully"
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error closing chat room: {e}")
+        return jsonify({"error": "Failed to close chat room"}), 500
+
+
+@app.route("/expert/chat/search/<int:room_id>")
+def search_chat_messages(room_id):
+    """Search messages in a chat room"""
+    try:
+        query = request.args.get("q", "")
+        if not query.strip():
+            return jsonify({"error": "Search query is required"}), 400
+        
+        messages = expert_chat_db.search_messages(room_id, query)
+        return jsonify({"messages": messages}), 200
+    except Exception as e:
+        print(f"❌ Error searching chat messages: {e}")
+        return jsonify({"error": "Failed to search messages", "messages": []}), 500
+
+
+# ================= EXPERT FILE UPLOAD =================
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route("/expert/upload", methods=["POST"])
+def upload_expert_file():
+    """Upload file for expert request"""
+    try:
+        user = require_auth()
+        if not user:
+            return jsonify({"error": "Authentication required"}), 401
+        
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({"error": "File type not allowed"}), 400
+        
+        # Generate unique filename
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_filename = f"{timestamp}_{filename}"
+        
+        # Save file
+        file_path = os.path.join(EXPERT_IMAGES_DIR, unique_filename)
+        file.save(file_path)
+        
+        # Generate URL
+        file_url = f"/uploads/expert_requests/images/{unique_filename}"
+        
+        print(f"✅ File uploaded: {file_url}")
+        return jsonify({
+            "success": True,
+            "file_url": file_url,
+            "filename": unique_filename,
+            "message": "File uploaded successfully"
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error uploading file: {e}")
+        return jsonify({"error": "Failed to upload file"}), 500
+
 
 # ================= RUN =================
 if __name__ == "__main__":

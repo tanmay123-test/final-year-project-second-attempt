@@ -58,6 +58,19 @@ HEALTHCARE_REQUIRED_DOCS = [
 os.makedirs(HEALTHCARE_UPLOAD_DIR, exist_ok=True)
 
 # ==================================================
+# ============== EXPERT UPLOADS ===================
+# ==================================================
+
+EXPERT_UPLOAD_DIR = os.path.join(UPLOAD_DIR, "expert_requests")
+EXPERT_IMAGES_DIR = os.path.join(EXPERT_UPLOAD_DIR, "images")
+
+os.makedirs(EXPERT_UPLOAD_DIR, exist_ok=True)
+os.makedirs(EXPERT_IMAGES_DIR, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx'}
+MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
+
+# ==================================================
 # ================= RAZORPAY PAYMENT ================
 # ==================================================
 
