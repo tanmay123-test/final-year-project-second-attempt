@@ -3,6 +3,7 @@ Worker/Doctor database for healthcare professionals.
 """
 import sqlite3
 import bcrypt
+import re
 from config import WORKER_DB, DATA_DIR
 import os
 
@@ -36,27 +37,15 @@ class WorkerDB:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 license_number TEXT,
                 password TEXT,
-                consultation_fee INTEGER DEFAULT 400
+                wallet_balance REAL DEFAULT 0.0
             )
         """)
-        
-        # Check and add missing columns (migration)
-        cursor.execute("PRAGMA table_info(workers)")
-        existing_columns = {row[1] for row in cursor.fetchall()}
-        
-        required_columns = {
-            'id', 'full_name', 'email', 'phone', 'service', 'specialization',
-            'experience', 'clinic_location', 'rating', 'photo_url', 'status',
-            'created_at', 'license_number', 'password', 'consultation_fee'
-        }
-        
-        missing_columns = required_columns - existing_columns
-        
-        for column in missing_columns:
-            if column == 'consultation_fee':
-                print(f"🔄 Adding missing column: {column}")
-                cursor.execute("ALTER TABLE workers ADD COLUMN consultation_fee INTEGER DEFAULT 400")
-        
+        # Migration: Add wallet_balance if not exists
+        try:
+            cursor.execute("ALTER TABLE workers ADD COLUMN wallet_balance REAL DEFAULT 0.0")
+        except sqlite3.OperationalError:
+            pass # Column likely exists
+            
         self.conn.commit()
 
     def _row_to_dict(self, row):
@@ -67,72 +56,88 @@ class WorkerDB:
             d["name"] = d.get("full_name") or d.get("name", "")
         return d
 
-    def register_worker(self, full_name, email, phone, service, specialization, experience, clinic_location="", license_number=None, password=None, consultation_fee=400):
+    def is_valid_email(self, email):
+        # Basic regex for email validation
+        return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
+
+    def register_worker(self, full_name, email, phone, service, specialization, experience, clinic_location="", license_number=None, password=None):
+        # Validate email format
+        if not self.is_valid_email(email):
+            print(f"❌ Registration failed: Invalid email format '{email}'")
+            return None
+
         cursor = self.conn.cursor()
         hashed_pw = None
         if password:
-            hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+            hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode('utf-8')
             
         try:
             cursor.execute("""
-                INSERT INTO workers (full_name, email, phone, service, specialization, experience, clinic_location, license_number, password, consultation_fee)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (full_name, email, phone, service, specialization, int(experience or 0), clinic_location or "", license_number, hashed_pw, int(consultation_fee)))
+                INSERT INTO workers (full_name, email, phone, service, specialization, experience, clinic_location, license_number, password)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (full_name, email, phone, service, specialization, int(experience or 0), clinic_location or "", license_number, hashed_pw))
             self.conn.commit()
             return cursor.lastrowid
         except sqlite3.IntegrityError:
             return None
 
+    def get_worker_by_email(self, email):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM workers WHERE email = ?", (email,))
+        row = cursor.fetchone()
+        return self._row_to_dict(row)
+
     def verify_worker_login(self, email):
         cursor = self.conn.cursor()
         cursor.execute(
-            "SELECT id, status, service, specialization FROM workers WHERE email = ?",
+            "SELECT id, status, service, specialization, full_name FROM workers WHERE email = ?",
             (email,)
         )
         row = cursor.fetchone()
         if not row:
             return None
-        return (row["id"], row["status"], row["service"], row["specialization"] or "")
+        return (row["id"], row["status"], row["service"], row["specialization"] or "", row["full_name"])
 
-    def get_worker_by_id(self, worker_id):
+    def get_all_specializations(self, service_type='healthcare'):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM workers WHERE id = ?", (worker_id,))
-        row = cursor.fetchone()
-        return self._row_to_dict(row)
-
-    def get_all_specializations(self):
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT DISTINCT specialization FROM workers WHERE status = 'approved' AND specialization IS NOT NULL AND specialization != ''")
+        cursor.execute("SELECT DISTINCT specialization FROM workers WHERE specialization IS NOT NULL AND specialization != '' AND service = ?", (service_type,))
         return [r["specialization"] for r in cursor.fetchall()]
 
-    def get_all_workers(self):
+    def get_all_workers(self, service_type='healthcare'):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM workers WHERE status = 'approved'")
+        cursor.execute("SELECT * FROM workers WHERE status = 'approved' AND service = ?", (service_type,))
         return [self._row_to_dict(r) for r in cursor.fetchall()]
 
-    def get_workers_by_specialization(self, specialization):
+    def get_workers_by_specialization(self, specialization, service_type='healthcare'):
         cursor = self.conn.cursor()
-        spec = (specialization or "").lower().strip()
-        cursor.execute(
-            "SELECT * FROM workers WHERE status = 'approved' AND LOWER(TRIM(specialization)) = ?",
-            (spec,)
-        )
+        # Use LIKE for partial matching to support comma-separated specializations
+        # Also check for exact match or if it's part of a list
+        pattern = f"%{specialization}%"
+        cursor.execute("""
+            SELECT * FROM workers 
+            WHERE status = 'approved' 
+            AND service = ? 
+            AND (specialization LIKE ? OR specialization = ?)
+        """, (service_type, pattern, specialization))
         return [self._row_to_dict(r) for r in cursor.fetchall()]
 
-    def search_workers(self, q):
+    def search_workers(self, q, service_type='healthcare'):
         if not q or not str(q).strip():
-            return self.get_all_workers()
+            return self.get_all_workers(service_type)
         cursor = self.conn.cursor()
         pattern = f"%{q.strip()}%"
         cursor.execute("""
-            SELECT * FROM workers WHERE status = 'approved'
+            SELECT * FROM workers WHERE status = 'approved' AND service = ?
             AND (full_name LIKE ? OR specialization LIKE ? OR clinic_location LIKE ?)
-        """, (pattern, pattern, pattern))
+        """, (service_type, pattern, pattern, pattern))
         return [self._row_to_dict(r) for r in cursor.fetchall()]
 
-    def get_pending_workers(self):
+    def get_pending_workers(self, service_type=None):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM workers WHERE status = 'pending'")
+        if service_type:
+            cursor.execute("SELECT * FROM workers WHERE status = 'pending' AND service = ?", (service_type,))
+        else:
+            cursor.execute("SELECT * FROM workers WHERE status = 'pending'")
         return [self._row_to_dict(r) for r in cursor.fetchall()]
 
     def get_worker_by_id(self, worker_id):
@@ -150,53 +155,13 @@ class WorkerDB:
         cursor = self.conn.cursor()
         cursor.execute("UPDATE workers SET status = 'rejected' WHERE id = ?", (worker_id,))
         self.conn.commit()
-    
-    def get_worker_consultation_fee(self, worker_id):
-        """Get consultation fee for a worker"""
+
+    def update_wallet_balance(self, worker_id, amount):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT consultation_fee FROM workers WHERE id = ?", (worker_id,))
-        result = cursor.fetchone()
-        return result[0] if result else 400  # Default fee
-    
-    def update_consultation_fee(self, worker_id, consultation_fee):
-        """Update consultation fee for a worker"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            UPDATE workers 
-            SET consultation_fee = ? 
-            WHERE id = ?
-        """, (int(consultation_fee), worker_id))
+        cursor.execute("UPDATE workers SET wallet_balance = wallet_balance + ? WHERE id = ?", (amount, worker_id))
         self.conn.commit()
-        return cursor.rowcount > 0
-    
-    def get_worker_profile(self, worker_id):
-        """Get complete worker profile including consultation fee"""
+
+    def get_workers_by_service(self, service_type):
         cursor = self.conn.cursor()
-        cursor.execute("""
-            SELECT full_name, email, phone, specialization, experience, 
-                   clinic_location, consultation_fee, rating, status
-            FROM workers 
-            WHERE id = ?
-        """, (worker_id,))
-        result = cursor.fetchone()
-        
-        if result:
-            return {
-                "doctor_name": result[0],
-                "email": result[1],
-                "phone": result[2],
-                "specialization": result[3],
-                "experience": result[4],
-                "clinic_location": result[5],
-                "consultation_fee": result[6],
-                "rating": result[7],
-                "status": result[8]
-            }
-        return None
-    
-    def get_worker_by_email(self, email):
-        """Get worker ID by email"""
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT id FROM workers WHERE email = ?", (email,))
-        result = cursor.fetchone()
-        return result[0] if result else None
+        cursor.execute("SELECT * FROM workers WHERE service = ? AND status = 'approved'", (service_type,))
+        return [self._row_to_dict(r) for r in cursor.fetchall()]

@@ -66,6 +66,7 @@ except ImportError as e:
 app.register_blueprint(video_bp)
 print("✅ Video consultation blueprint registered")
 
+# Register car service blueprint
 try:
     from car_service.car_routes import car_bp
     app.register_blueprint(car_bp)
@@ -202,10 +203,16 @@ try:
 except Exception as e:
     print(f"⚠️ Could not register Fuel Delivery blueprint: {e}")
 
- 
-
 # Initialize WebSocket signaling server
 socketio = init_video_signaling(app)
+
+# Initialize Housekeeping Socket
+try:
+    from housekeeping.socket_handlers import init_housekeeping_socket
+    init_housekeeping_socket(socketio)
+    print("✅ Housekeeping socket initialized")
+except Exception as e:
+    print(f"⚠️ Could not initialize housekeeping socket: {e}")
 
 # ================= DATABASE =================
 user_db = UserDB()
@@ -243,7 +250,7 @@ def require_worker_auth():
 def get_services():
     services = [
         {"id": "healthcare", "label": "Healthcare", "path": "/doctors"},
-        {"id": "housekeeping", "label": "Housekeeping", "path": "/worker/housekeeping/login"},
+        {"id": "housekeeping", "label": "Housekeeping", "path": "/housekeeping/home"},
         {"id": "resource", "label": "Resource Management", "path": "/worker/resource/login"},
         {"id": "car", "label": "Car Services", "path": "/worker/car/login"},
         {"id": "money", "label": "Money Management", "path": "/worker/money/login"}
@@ -328,7 +335,7 @@ def get_specializations():
         "Dermatologist","Neurologist","Psychiatrist","Gynecologist",
         "Pediatrician","General Physician","Urologist","Oncologist"
     ]
-    db_specs = worker_db.get_all_specializations() or []
+    db_specs = worker_db.get_all_specializations('healthcare') or []
     return jsonify({"specializations": sorted(set(DEFAULT + db_specs))}), 200
 
 
@@ -540,14 +547,19 @@ def worker_login():
     if not w:
         return jsonify({"error": "Not found"}), 404
 
-    wid, status, svc, spec = w
+    wid, status, svc, spec, name = w
     if status != "approved":
         return jsonify({"error": "Not approved"}), 403
 
+    # Generate token for worker
+    token = generate_token(request.json["email"])
+
     return jsonify({
+        "token": token,
         "worker_id": wid,
         "service": svc,
-        "specialization": spec
+        "specialization": spec,
+        "name": name
     }), 200
 
 
@@ -976,7 +988,8 @@ def ai_care():
 # ================= ADMIN ROUTES =================
 @app.route("/admin/workers/pending")
 def admin_pending_workers():
-    workers = worker_db.get_pending_workers()
+    service = request.args.get('service')
+    workers = worker_db.get_pending_workers(service)
     return jsonify(workers), 200
 
 @app.route("/admin/worker/approve/<int:worker_id>", methods=["POST"])

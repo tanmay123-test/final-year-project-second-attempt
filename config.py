@@ -16,6 +16,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 USER_DB = os.path.join(DATA_DIR, "users.db")
 OTP_DB = os.path.join(DATA_DIR, "otp.db")
 WORKER_DB = os.path.join(DATA_DIR, "workers.db")
+HOUSEKEEPING_DB = os.path.join(DATA_DIR, "housekeeping.db")
 
 # ==================================================
 # ================= EMAIL (TEMP) ===================

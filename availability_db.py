@@ -8,11 +8,11 @@ DB_PATH = os.path.join(BASE_DIR, "expertease.db")
 class AvailabilityDB:
     def __init__(self):
         self.conn = sqlite3.connect("expertease.db", check_same_thread=False)
-        self.cursor = self.conn.cursor()
         self.create_table()
 
     def create_table(self):
-        self.cursor.execute("""
+        cursor = self.conn.cursor()
+        cursor.execute("""
         CREATE TABLE IF NOT EXISTS availability (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             worker_id INTEGER,
@@ -27,15 +27,16 @@ class AvailabilityDB:
     # ==================================================
     def add_availability(self, worker_id, date, time_slot):
         # Check if slot already exists
-        self.cursor.execute("""
+        cursor = self.conn.cursor()
+        cursor.execute("""
         SELECT id FROM availability
         WHERE worker_id=? AND date=? AND time_slot=?
         """, (worker_id, date, time_slot))
 
-        if self.cursor.fetchone():
+        if cursor.fetchone():
             return False, "This time slot is already added"
 
-        self.cursor.execute("""
+        cursor.execute("""
         INSERT INTO availability (worker_id, date, time_slot)
         VALUES (?, ?, ?)
         """, (worker_id, date, time_slot))
@@ -47,7 +48,8 @@ class AvailabilityDB:
     # REMOVE AVAILABILITY
     # ==================================================
     def remove_availability(self, worker_id, date, time_slot):
-        self.cursor.execute("""
+        cursor = self.conn.cursor()
+        cursor.execute("""
         DELETE FROM availability
         WHERE worker_id=? AND date=? AND time_slot=?
         """, (worker_id, date, time_slot))
@@ -57,14 +59,15 @@ class AvailabilityDB:
     # GET AVAILABILITY (OPTIONAL DATE FILTER)
     # ==================================================
     def get_availability(self, worker_id, date=None):
+        cursor = self.conn.cursor()
         if date:
-            self.cursor.execute("""
+            cursor.execute("""
             SELECT date, time_slot FROM availability
             WHERE worker_id=? AND date=?
             ORDER BY time_slot
             """, (worker_id, date))
         else:
-            self.cursor.execute("""
+            cursor.execute("""
             SELECT date, time_slot FROM availability
             WHERE worker_id=?
             ORDER BY date, time_slot
@@ -72,5 +75,5 @@ class AvailabilityDB:
 
         return [
             {"date": row[0], "time_slot": row[1]}
-            for row in self.cursor.fetchall()
+            for row in cursor.fetchall()
         ]

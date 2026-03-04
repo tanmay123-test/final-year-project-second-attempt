@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Stethoscope, Home, Package, Car, Wallet, Mail, Loader2, ChevronLeft } from 'lucide-react';
+import { Stethoscope, Home, Package, Car, Wallet, Mail, Loader2, ChevronLeft, Lock } from 'lucide-react';
 
 const SERVICE_CONFIG = {
   healthcare: { label: 'Healthcare', icon: Stethoscope, color: '#8E44AD' },
-  housekeeping: { label: 'Housekeeping', icon: Home, color: '#E67E22' },
+  housekeeping: { label: 'Housekeeping', icon: Home, color: '#8E44AD' },
   resource: { label: 'Resource Management', icon: Package, color: '#3498DB' },
   car: { label: 'Car Services', icon: Car, color: '#9B59B6' },
   money: { label: 'Money Management', icon: Wallet, color: '#2ECC71' }
@@ -15,7 +15,11 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
   const config = SERVICE_CONFIG[serviceType] || SERVICE_CONFIG.healthcare;
   const ServiceIcon = config.icon;
 
+  const isPurple = config.color === '#8E44AD';
+  const bgStyle = { background: isPurple ? 'var(--medical-gradient)' : config.color };
+
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { workerLogin } = useAuth();
@@ -26,10 +30,16 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
     setError('');
     setLoading(true);
     try {
-      await workerLogin(email);
-      navigate('/worker/dashboard'); // Generic dashboard for now
+      await workerLogin(email, password);
+      if (serviceType === 'housekeeping') {
+        navigate('/worker/housekeeping/dashboard');
+      } else if (serviceType === 'healthcare') {
+        navigate('/doctor/dashboard');
+      } else {
+        navigate('/worker/dashboard');
+      }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to login. Please check your email or approval status.');
+      setError(err.response?.data?.error || 'Failed to login. Please check your email/password or approval status.');
     } finally {
       setLoading(false);
     }
@@ -57,7 +67,7 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
         </div>
         
         <div className="auth-header" style={{ marginTop: '2rem' }}>
-           <div className="auth-icon">
+           <div className="auth-icon" style={bgStyle}>
             <ServiceIcon size={32} strokeWidth={2} color="white" />
           </div>
           <h2 className="auth-title">
@@ -86,15 +96,42 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
             </div>
           </div>
           
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? <><Loader2 className="animate-spin" size={20} /> Verifying...</> : 'Login'}
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <div className="input-wrapper">
+              <Lock className="input-icon" size={20} />
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          
+          <button 
+            type="submit" 
+            className="btn-primary" 
+            disabled={loading}
+            style={bgStyle}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <span>Sign In</span>
+            )}
           </button>
         </form>
 
         <div className="auth-footer">
           <p>
             {isHealthcare ? 'Not registered as a doctor? ' : 'New to ExpertEase? '}
-            <Link to={`/worker/${serviceType}/signup`} className="auth-link">
+            <Link to={`/worker/${serviceType}/signup`} className="auth-link" style={{ color: config.color }}>
               {isHealthcare ? 'Apply here' : 'Join as a Provider'}
             </Link>
           </p>

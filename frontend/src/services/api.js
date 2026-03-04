@@ -67,6 +67,7 @@ export const workerService = {
   register: (data) => api.post('/worker/signup', data), // Generic
   registerHealthcare: (data) => api.post('/worker/healthcare/signup', data),
   login: (credentials) => api.post('/worker/login', credentials),
+  verifyToken: () => api.get('/api/provider/auth/me'),
   
   // Dashboard & Management
   getRequests: (workerId) => api.get(`/worker/${workerId}/requests`),
@@ -114,6 +115,25 @@ export const aiService = {
 
 export const commonService = {
   getServices: () => api.get('/services'),
+};
+
+export const housekeepingService = {
+  getServices: (workerId) => api.get('/api/housekeeping/services', { params: { worker_id: workerId } }),
+  getTopCleaners: () => api.get('/api/housekeeping/services'), 
+  getRecommendedWorkers: (serviceType) => api.get(`/api/housekeeping/recommendations/workers`, { params: { service_type: serviceType, _t: new Date().getTime() } }),
+  getSlots: (serviceType, date, workerId) => api.get('/api/housekeeping/slots', { params: { service_type: serviceType, date, worker_id: workerId, _t: new Date().getTime() } }),
+  checkAvailability: (data) => api.post('/api/housekeeping/check-availability', data),
+  confirmBooking: (data) => api.post('/api/housekeeping/confirm-booking', data),
+  getUserBookings: () => api.get('/api/housekeeping/my-bookings', { params: { _t: new Date().getTime() } }),
+  
+  // Worker
+  getWorkerStatus: () => api.get('/api/housekeeping/worker/status'),
+  setWorkerStatus: (isOnline) => api.post('/api/housekeeping/worker/status', { is_online: isOnline }),
+  updateBookingStatus: (data) => api.post('/api/housekeeping/worker/update-status', data),
+  getWorkerBalance: () => api.get('/api/housekeeping/worker/balance'),
+  getWorkerServices: () => api.get('/api/housekeeping/worker/services'),
+  saveWorkerServices: (services) => api.post('/api/housekeeping/worker/services', { services }),
+  cancelBooking: (bookingId) => api.post('/api/housekeeping/cancel-booking', { booking_id: bookingId }),
 };
 
 export default api;

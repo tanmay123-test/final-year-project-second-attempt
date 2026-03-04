@@ -19,6 +19,19 @@ import DoctorProfile from './pages/DoctorProfile';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// Housekeeping Arrival Pages
+import UserHome from '../../housekeeping/arrival/frontend/pages/UserHome';
+import AIChat from '../../housekeeping/arrival/frontend/pages/AIChat';
+import UserBookings from '../../housekeeping/arrival/frontend/pages/UserBookings';
+import UserProfile from '../../housekeeping/arrival/frontend/pages/UserProfile';
+import BookingFlow from '../../housekeeping/arrival/frontend/pages/BookingFlow';
+import ProviderDashboard from '../../housekeeping/provider/frontend/pages/ProviderDashboard';
+import ProviderSchedule from '../../housekeeping/provider/frontend/pages/ProviderSchedule';
+import ProviderAvailability from '../../housekeeping/provider/frontend/pages/ProviderAvailability';
+import ProviderEarnings from '../../housekeeping/provider/frontend/pages/ProviderEarnings';
+import ProviderProfile from '../../housekeeping/provider/frontend/pages/ProviderProfile';
+import ProviderPricing from '../../housekeeping/provider/frontend/pages/ProviderPricing';
+
 import UserLayout from './components/UserLayout';
 
 const ProtectedWorkerRoute = ({ children }) => {
@@ -50,6 +63,14 @@ const App = () => {
             <Route path="/book/:doctorId" element={<Booking />} />
             <Route path="/profile" element={<div style={{padding: '2rem'}}><h2>Profile Page</h2><p>Coming Soon</p></div>} />
           </Route>
+
+          {/* Housekeeping Arrival Routes */}
+          <Route path="/housekeeping/home" element={<ProtectedRoute><UserHome /></ProtectedRoute>} />
+          <Route path="/housekeeping/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
+          <Route path="/housekeeping/bookings" element={<ProtectedRoute><UserBookings /></ProtectedRoute>} />
+          <Route path="/housekeeping/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+          <Route path="/housekeeping/explore" element={<ProtectedRoute><UserHome /></ProtectedRoute>} />
+          <Route path="/housekeeping/booking/create" element={<ProtectedRoute><BookingFlow /></ProtectedRoute>} />
 
           {/* Service Selection (No Bottom Nav) */}
           <Route path="/services" element={<ProtectedRoute><ServiceSelection /></ProtectedRoute>} />
@@ -88,6 +109,54 @@ const App = () => {
           {/* Housekeeping */}
           <Route path="/worker/housekeeping/login" element={<WorkerLogin serviceType="housekeeping" />} />
           <Route path="/worker/housekeeping/signup" element={<WorkerSignup serviceType="housekeeping" />} />
+          <Route 
+            path="/worker/housekeeping/dashboard" 
+            element={
+              <ProtectedWorkerRoute>
+                <ProviderDashboard />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/worker/housekeeping/schedule" 
+            element={
+              <ProtectedWorkerRoute>
+                <ProviderSchedule />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/worker/housekeeping/availability" 
+            element={
+              <ProtectedWorkerRoute>
+                <ProviderAvailability />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/worker/housekeeping/earnings" 
+            element={
+              <ProtectedWorkerRoute>
+                <ProviderEarnings />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/worker/housekeeping/profile" 
+            element={
+              <ProtectedWorkerRoute>
+                <ProviderProfile />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/worker/housekeeping/pricing" 
+            element={
+              <ProtectedWorkerRoute>
+                <ProviderPricing />
+              </ProtectedWorkerRoute>
+            } 
+          />
 
           {/* Resource Management */}
           <Route path="/worker/resource/login" element={<WorkerLogin serviceType="resource" />} />

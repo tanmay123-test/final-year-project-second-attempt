@@ -36,9 +36,9 @@ class AppointmentDB:
             'id', 'user_id', 'worker_id', 'user_name', 'patient_symptoms',
             'booking_date', 'time_slot', 'appointment_type', 'status',
             'meeting_link', 'doctor_otp', 'otp_verified', 'created_at',
-            'video_room', 'video_status', 'prescription_file', 'insurance_details',
-            'payment_status', 'payment_amount', 'razorpay_order_id',
-            'razorpay_payment_id', 'payout_status'
+            'video_room', 'video_status', 'prescription_file',
+            'insurance_details', 'payment_status', 'payment_amount',
+            'razorpay_order_id', 'razorpay_payment_id', 'payout_status'
         }
         
         # Add missing columns

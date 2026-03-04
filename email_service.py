@@ -1,6 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import re
 from config import (
     EMAIL_ADDRESS,
     EMAIL_PASSWORD,
@@ -17,11 +18,19 @@ from config import (
 # - Email content will still be printed to console
 # - Safe for college submission & demo
 
+def is_valid_email(email):
+    # Basic regex for email validation
+    return re.match(r"[^@]+@[^@]+\.[^@]+", email)
+
 def send_email(to_email, subject, body):
     print("\n📨 EMAIL EVENT TRIGGERED")
     print("To      :", to_email)
     print("Subject :", subject)
     print("Body    :", body)
+
+    if not is_valid_email(to_email):
+        print(f"❌ Invalid email format: {to_email}")
+        return False
 
     try:
         msg = MIMEMultipart()
