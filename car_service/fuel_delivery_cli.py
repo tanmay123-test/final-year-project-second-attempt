@@ -41,6 +41,41 @@ def fuel_delivery_agent_signup():
         
         vehicle_number = input("🔢 Vehicle Number: ").strip()
         
+        # Service Area Details (NEW)
+        print("\n🗺️ SERVICE AREA DETAILS:")
+        print("Define your service area where you can provide fuel delivery:")
+        
+        service_area_city = input("🏙️ Service Area City: ").strip()
+        print("Available Areas: Asalpha, Bandra, Andheri, Worli, Dadar, Kurla, Goregaon, BKC")
+        service_area_location = input("📍 Primary Service Location (from above list): ").strip()
+        
+        # Service area radius based on vehicle type
+        default_radius = {'Bike': 10, 'Van': 15, 'Truck': 25}
+        default_service_radius = default_radius.get(vehicle_type, 15)
+        
+        print(f"📏 Default service radius for {vehicle_type}: {default_service_radius} km")
+        custom_radius = input(f"Enter service radius in km (press Enter for default {default_service_radius}): ").strip()
+        
+        if custom_radius:
+            try:
+                service_radius = int(custom_radius)
+                if service_radius < 5 or service_radius > 50:
+                    print("❌ Service radius must be between 5km and 50km")
+                    service_radius = default_service_radius
+            except ValueError:
+                print("❌ Invalid radius, using default")
+                service_radius = default_service_radius
+        else:
+            service_radius = default_service_radius
+        
+        # Get coordinates for service area
+        from .fuel_delivery_user_service import fuel_delivery_user_service
+        coordinates = fuel_delivery_user_service.geocode_location(service_area_location)
+        service_lat, service_lon = coordinates
+        
+        print(f"📍 Service Area Coordinates: {service_lat:.4f}, {service_lon:.4f}")
+        print(f"🗺️ Service Area: {service_area_location} ({service_radius} km radius)")
+        
         # Document Uploads (simulated)
         print("\n📁 DOCUMENT UPLOADS:")
         print("📄 Please upload the following documents:")
@@ -77,6 +112,11 @@ def fuel_delivery_agent_signup():
             'city': city,
             'vehicle_type': vehicle_type,
             'vehicle_number': vehicle_number,
+            'service_area_city': service_area_city,
+            'service_area_location': service_area_location,
+            'service_area_km': service_radius,
+            'latitude': service_lat,
+            'longitude': service_lon,
             'vehicle_photo_path': vehicle_photo if vehicle_photo else None,
             'rc_book_photo_path': rc_book if rc_book else None,
             'pollution_certificate_path': pollution_cert if pollution_cert else None,
@@ -90,16 +130,22 @@ def fuel_delivery_agent_signup():
         print("\n🔄 Submitting registration...")
         response = requests.post(f"{API}/api/fuel-delivery/register", json=agent_data)
         
-        if response.status_code == 200:
+        if response.status_code in (200, 201):
             result = response.json()
             if result['success']:
                 print("✅ Registration successful!")
                 print("📧 Please check your email for approval status.")
                 print("⏳ You will be notified once approved by admin.")
+                if result.get('car_worker_id'):
+                    print(f"🆔 Admin pending worker ID: {result['car_worker_id']}")
             else:
                 print(f"❌ Registration failed: {result.get('error', 'Unknown error')}")
         else:
-            print("❌ Failed to connect to server")
+            try:
+                err = response.json().get('error', 'Unknown error')
+                print(f"❌ Registration failed [{response.status_code}]: {err}")
+            except Exception:
+                print(f"❌ Registration failed [{response.status_code}]")
         
     except Exception as e:
         print(f"❌ Error: {e}")
@@ -122,7 +168,7 @@ def fuel_delivery_agent_login():
             'password': password
         })
         
-        if response.status_code == 200:
+        if response.status_code in (200, 201):
             result = response.json()
             if result['success']:
                 agent = result['agent']
@@ -139,7 +185,11 @@ def fuel_delivery_agent_login():
             else:
                 print(f"❌ Login failed: {result.get('error', 'Unknown error')}")
         else:
-            print("❌ Failed to connect to server")
+            try:
+                err = response.json().get('error', 'Unknown error')
+                print(f"❌ Login failed [{response.status_code}]: {err}")
+            except Exception:
+                print(f"❌ Login failed [{response.status_code}]")
         
     except Exception as e:
         print(f"❌ Error: {e}")
@@ -169,7 +219,7 @@ def fuel_delivery_agent_dashboard(agent_info):
         choice = input("\nSelect option: ").strip()
         
         if choice == "1":
-            toggle_online_status(agent_info)
+            toggle_availability(agent_info)
         elif choice == "2":
             view_fuel_requests_queue(agent_info)
         elif choice == "3":
@@ -184,23 +234,80 @@ def fuel_delivery_agent_dashboard(agent_info):
             print("❌ Invalid choice")
             time.sleep(1)
 
-def toggle_online_status(agent_info):
-    """Toggle agent online status"""
+def view_active_delivery(agent_info):
+    """View active fuel delivery"""
+    print("\n" + "="*60)
+    print("🚚 ACTIVE FUEL DELIVERY")
+    print("="*60)
+    print("📭 No active delivery")
+    input("\nPress Enter to continue...")
+
+def view_delivery_history(agent_info):
+    """View delivery history and earnings"""
+    print("\n" + "="*60)
+    print("📜 DELIVERY HISTORY & EARNINGS")
+    print("="*60)
+    print("💰 Total Earnings: ₹0.00")
+    print("📦 Total Deliveries: 0")
+    print("⭐ Average Rating: 0.0/5.0")
+    print("\n📭 No delivery history")
+    input("\nPress Enter to continue...")
+
+def call_user_for_delivery(request):
+    """Call user for delivery"""
+    print(f"\n📞 Calling {request.get('user_name', 'N/A')}...")
+    print(f"📱 Phone: {request.get('user_phone', 'N/A')}")
+    input("\nPress Enter after call...")
+
+def navigate_to_location(request):
+    """Navigate to delivery location"""
+    print(f"\n📍 Navigating to: {request.get('delivery_address', 'N/A')}")
+    print("🗺️ Opening maps application...")
+    input("\nPress Enter when arrived...")
+
+def add_delivery_note(request):
+    """Add delivery note"""
+    note = input("\n📝 Enter delivery note: ").strip()
+    if note:
+        print(f"✅ Note added: {note}")
+    else:
+        print("❌ No note entered")
+
+def complete_delivery(agent_info, request):
+    """Complete fuel delivery"""
+    print(f"\n✅ Completing delivery for {request.get('user_name', 'N/A')}")
+    print("✅ Delivery completed successfully!")
+    print("💰 Earnings: ₹0.00")
+    agent_info['online_status'] = 'ONLINE_AVAILABLE'
+    input("\nPress Enter to continue...")
+
+def cancel_delivery(agent_info, request):
+    """Cancel fuel delivery"""
+    confirm = input("\n❌ Confirm delivery cancellation? (y/n): ").strip().lower()
+    if confirm == 'y':
+        print("✅ Delivery cancelled")
+        agent_info['online_status'] = 'ONLINE_AVAILABLE'
+    else:
+        print("❌ Cancellation cancelled")
+    input("\nPress Enter to continue...")
+
+def toggle_availability(agent_info):
+    """Toggle agent availability status"""
+    print("\n🔄 Updating availability...")
+    
     try:
         current_status = agent_info.get('online_status', 'OFFLINE')
         
         if current_status == 'OFFLINE':
-            print("🔄 Going online...")
             new_status = 'ONLINE_AVAILABLE'
+            print("🔄 Going online...")
         elif current_status == 'ONLINE_AVAILABLE':
-            print("🔄 Going offline...")
             new_status = 'OFFLINE'
-        elif current_status == 'BUSY':
-            print("⚠️ You are currently busy with a delivery")
+            print("🔄 Going offline...")
+        else:
+            print("❌ Cannot change status while busy")
             input("\nPress Enter to continue...")
             return
-        else:
-            new_status = 'ONLINE_AVAILABLE'
         
         response = requests.post(f"{API}/api/fuel-delivery/status", json={
             'agent_id': agent_info['id'],
@@ -212,6 +319,19 @@ def toggle_online_status(agent_info):
             if result['success']:
                 agent_info['online_status'] = new_status
                 print(f"✅ {result['message']}")
+                
+                # Show demand insights if going online
+                if new_status == 'ONLINE_AVAILABLE':
+                    try:
+                        insights_response = requests.get(f"{API}/api/fuel-delivery/demand-insights")
+                        if insights_response.status_code == 200:
+                            insights_data = insights_response.json()
+                            if insights_data['success']:
+                                insights = insights_data['insights']
+                                print(f"\n📊 {insights.get('demand_message', 'Normal demand')}")
+                                print(f"💡 Suggestion: {insights.get('suggestion', '')}")
+                    except:
+                        pass
             else:
                 print(f"❌ {result.get('error', 'Status update failed')}")
         else:
@@ -229,57 +349,95 @@ def view_fuel_requests_queue(agent_info):
     print("="*60)
     
     try:
-        response = requests.get(f"{API}/api/fuel-delivery/requests")
+        # Use the working requests endpoint but add smart dispatch logic
+        response = requests.get(f"{API}/api/fuel-delivery/requests", params={
+            'agent_id': agent_info['id']
+        })
         
         if response.status_code == 200:
             result = response.json()
-            requests = result.get('requests', [])
-            
-            if not requests:
-                print("📭 No fuel requests in queue")
-                input("\nPress Enter to continue...")
-                return
-            
-            print(f"📊 Total Requests: {len(requests)}\n")
-            
-            for i, request in enumerate(requests, 1):
-                priority_emoji = "🔴" if request.get('priority_level') >= 4 else "🟡" if request.get('priority_level') >= 3 else "🟢"
-                fuel_emoji = "⛽" if request.get('fuel_type') == 'Petrol' else "🛢️"
+            if result['success']:
+                requests_data = result.get('requests', [])
                 
-                print(f"{i}. {fuel_emoji} {request.get('fuel_type', 'N/A')}")
-                print(f"   📦 Quantity: {request.get('quantity_liters', 0)} liters")
-                print(f"   📍 Location: {request.get('delivery_address', 'N/A')}")
-                print(f"   📊 Priority: {priority_emoji} Level {request.get('priority_level', 1)}")
-                print(f"   👤 User: {request.get('user_name', 'N/A')}")
-                print(f"   📞 Contact: {request.get('user_phone', 'N/A')}")
-                print(f"   📅 Created: {request.get('created_at', 'N/A')}")
-                print()
-            
-            # Accept request option
-            try:
-                choice = input("Enter request number to accept (0 to cancel): ").strip()
+                if not requests_data:
+                    print("📭 No fuel requests in queue")
+                    input("\nPress Enter to continue...")
+                    return
+                
+                print(f"📊 Total Requests: {len(requests_data)}\n")
+                
+                # Apply smart dispatch logic locally
+                enhanced_requests = []
+                for request in requests_data:
+                    # Calculate distance (simplified)
+                    distance_km = 2.5  # Placeholder distance
+                    eta_minutes = int(distance_km * 3)  # 3 min per km
+                    
+                    # Calculate assignment score
+                    agent = agent_info
+                    rating_score = agent.get('rating', 0) / 5.0
+                    eta_score = max(0, 1 - (eta_minutes / 30))
+                    completion_score = 0.8  # Placeholder
+                    fairness_score = 0.5  # Placeholder
+                    
+                    score = (
+                        0.35 * eta_score +
+                        0.25 * rating_score +
+                        0.20 * completion_score +
+                        0.20 * fairness_score
+                    )
+                    
+                    # Determine assigned reason
+                    if score >= 0.8:
+                        assigned_reason = "Closest available agent with excellent rating"
+                    elif score >= 0.6:
+                        assigned_reason = "Nearby agent with good reliability"
+                    elif score >= 0.4:
+                        assigned_reason = "Available agent within service area"
+                    else:
+                        assigned_reason = "Next available agent in queue"
+                    
+                    enhanced_requests.append({
+                        **request,
+                        'distance_km': round(distance_km, 2),
+                        'eta_minutes': eta_minutes,
+                        'assignment_score': round(score, 2),
+                        'assigned_reason': assigned_reason
+                    })
+                
+                # Sort by score (highest first)
+                enhanced_requests.sort(key=lambda x: x['assignment_score'], reverse=True)
+                
+                for i, request in enumerate(enhanced_requests, 1):
+                    priority_emoji = "🔴" if request.get('priority_level') >= 4 else "🟡" if request.get('priority_level') >= 3 else "🟢"
+                    fuel_emoji = "⛽" if request.get('fuel_type') == 'Petrol' else "🛢️"
+                    
+                    print(f"{i}. {fuel_emoji} {request.get('fuel_type', 'N/A')} - {request.get('quantity_liters', 0)}L")
+                    print(f"   👤 {request.get('user_name', 'N/A')} | 📱 {request.get('user_phone', 'N/A')}")
+                    print(f"   📍 {request.get('delivery_address', 'N/A')}")
+                    print(f"   📏 {request.get('distance_km', 0)}km away | ⏱️ {request.get('eta_minutes', 0)} min")
+                    print(f"   {priority_emoji} Priority {request.get('priority_level', 3)}")
+                    print(f"   🎯 Score: {request.get('assignment_score', 0):.2f}")
+                    print(f"   💡 {request.get('assigned_reason', 'N/A')}")
+                    print()
+                
+                print("-" * 60)
+                choice = input("\nSelect request number to accept (0 to go back): ").strip()
+                
                 if choice == "0":
                     return
                 
-                request_id = int(choice)
-                selected_request = None
-                
-                for request in requests:
-                    if request['request_id'] == request_id:
-                        selected_request = request
-                        break
-                
-                if selected_request:
+                if choice.isdigit() and int(choice) >= 1 and int(choice) <= len(enhanced_requests):
+                    selected_request = enhanced_requests[int(choice) - 1]
                     accept_fuel_request(agent_info, selected_request)
                 else:
                     print("❌ Invalid request number")
-                    
-            except ValueError:
-                print("❌ Invalid input")
-        
+                    time.sleep(1)
+            else:
+                print(f"❌ {result.get('error', 'Failed to fetch requests')}")
         else:
-            print("❌ Failed to load requests")
-        
+            print("❌ Failed to fetch requests")
+            
     except Exception as e:
         print(f"❌ Error: {e}")
     
@@ -293,30 +451,27 @@ def accept_fuel_request(agent_info, request):
         print(f"📦 Quantity: {request.get('quantity_liters', 0)} liters")
         print(f"📍 Delivery: {request.get('delivery_address', 'N/A')}")
         
-        confirm = input("Accept this request? (y/N): ").strip().lower()
+        confirm = input("\nConfirm acceptance? (y/n): ").strip().lower()
         if confirm != 'y':
+            print("❌ Request acceptance cancelled")
             return
         
-        response = requests.post(f"{API}/api/fuel-delivery/assign", json={
-            'request_id': request['request_id'],
-            'agent_id': agent_info['id']
+        response = requests.post(f"{API}/api/fuel-delivery/queue/assign", json={
+            'agent_id': agent_info['id'],
+            'request_id': request.get('request_id')
         })
         
         if response.status_code == 200:
             result = response.json()
             if result['success']:
                 print("✅ Request accepted successfully!")
-                print("🚚 Navigate to delivery location")
-                print("📞 Contact user if needed")
                 agent_info['online_status'] = 'BUSY'
-                
-                # Start delivery interface
-                start_fuel_delivery(agent_info, request)
+                print("📱 You are now BUSY. Navigate to customer location.")
             else:
                 print(f"❌ {result.get('error', 'Failed to accept request')}")
         else:
             print("❌ Failed to accept request")
-        
+            
     except Exception as e:
         print(f"❌ Error: {e}")
     
@@ -327,8 +482,8 @@ def start_fuel_delivery(agent_info, request):
     print("\n" + "="*60)
     print("🚚 ACTIVE FUEL DELIVERY")
     print("="*60)
-    print(f"⛽ Fuel: {request.get('fuel_type', 'N/A')} - {request.get('quantity_liters', 0)} liters")
-    print(f"📍 Location: {request.get('delivery_address', 'N/A')}")
+    print(f"⛽ Fuel: {request.get('fuel_type', 'N/A')} - {request.get('quantity', 0)} liters")
+    print(f"📍 Location: {request.get('address', 'N/A')}")
     print(f"👤 User: {request.get('user_name', 'N/A')}")
     print(f"📞 Phone: {request.get('user_phone', 'N/A')}")
     
@@ -365,6 +520,63 @@ def start_fuel_delivery(agent_info, request):
         else:
             print("❌ Invalid choice")
             time.sleep(1)
+
+def view_active_delivery(agent_info):
+    """View active fuel delivery"""
+    print("\n" + "="*60)
+    print("🚚 ACTIVE FUEL DELIVERY")
+    print("="*60)
+    print("📭 No active delivery")
+    input("\nPress Enter to continue...")
+
+def view_delivery_history(agent_info):
+    """View delivery history and earnings"""
+    print("\n" + "="*60)
+    print("📜 DELIVERY HISTORY & EARNINGS")
+    print("="*60)
+    print("💰 Total Earnings: ₹0.00")
+    print("📦 Total Deliveries: 0")
+    print("⭐ Average Rating: 0.0/5.0")
+    print("\n📭 No delivery history")
+    input("\nPress Enter to continue...")
+
+def call_user_for_delivery(request):
+    """Call user for delivery"""
+    print(f"\n📞 Calling {request.get('user_name', 'N/A')}...")
+    print(f"📱 Phone: {request.get('user_phone', 'N/A')}")
+    input("\nPress Enter after call...")
+
+def navigate_to_location(request):
+    """Navigate to delivery location"""
+    print(f"\n📍 Navigating to: {request.get('delivery_address', 'N/A')}")
+    print("🗺️ Opening maps application...")
+    input("\nPress Enter when arrived...")
+
+def add_delivery_note(request):
+    """Add delivery note"""
+    note = input("\n📝 Enter delivery note: ").strip()
+    if note:
+        print(f"✅ Note added: {note}")
+    else:
+        print("❌ No note entered")
+
+def complete_delivery(agent_info, request):
+    """Complete fuel delivery"""
+    print(f"\n✅ Completing delivery for {request.get('user_name', 'N/A')}")
+    print("✅ Delivery completed successfully!")
+    print("💰 Earnings: ₹0.00")
+    agent_info['online_status'] = 'ONLINE_AVAILABLE'
+    input("\nPress Enter to continue...")
+
+def cancel_delivery(agent_info, request):
+    """Cancel fuel delivery"""
+    confirm = input("\n❌ Confirm delivery cancellation? (y/n): ").strip().lower()
+    if confirm == 'y':
+        print("✅ Delivery cancelled")
+        agent_info['online_status'] = 'ONLINE_AVAILABLE'
+    else:
+        print("❌ Cancellation cancelled")
+    input("\nPress Enter to continue...")
 
 def call_user_for_delivery(request):
     """Call user for delivery details"""
@@ -554,3 +766,60 @@ def fuel_delivery_agent_menu():
         else:
             print("❌ Invalid choice")
             time.sleep(1)
+
+def view_active_delivery(agent_info):
+    """View active fuel delivery"""
+    print("\n" + "="*60)
+    print("🚚 ACTIVE FUEL DELIVERY")
+    print("="*60)
+    print("📭 No active delivery")
+    input("\nPress Enter to continue...")
+
+def view_delivery_history(agent_info):
+    """View delivery history and earnings"""
+    print("\n" + "="*60)
+    print("📜 DELIVERY HISTORY & EARNINGS")
+    print("="*60)
+    print("💰 Total Earnings: ₹0.00")
+    print("📦 Total Deliveries: 0")
+    print("⭐ Average Rating: 0.0/5.0")
+    print("\n📭 No delivery history")
+    input("\nPress Enter to continue...")
+
+def call_user_for_delivery(request):
+    """Call user for delivery"""
+    print(f"\n📞 Calling {request.get('user_name', 'N/A')}...")
+    print(f"📱 Phone: {request.get('user_phone', 'N/A')}")
+    input("\nPress Enter after call...")
+
+def navigate_to_location(request):
+    """Navigate to delivery location"""
+    print(f"\n📍 Navigating to: {request.get('delivery_address', 'N/A')}")
+    print("🗺️ Opening maps application...")
+    input("\nPress Enter when arrived...")
+
+def add_delivery_note(request):
+    """Add delivery note"""
+    note = input("\n📝 Enter delivery note: ").strip()
+    if note:
+        print(f"✅ Note added: {note}")
+    else:
+        print("❌ No note entered")
+
+def complete_delivery(agent_info, request):
+    """Complete fuel delivery"""
+    print(f"\n✅ Completing delivery for {request.get('user_name', 'N/A')}")
+    print("✅ Delivery completed successfully!")
+    print("💰 Earnings: ₹0.00")
+    agent_info['online_status'] = 'ONLINE_AVAILABLE'
+    input("\nPress Enter to continue...")
+
+def cancel_delivery(agent_info, request):
+    """Cancel fuel delivery"""
+    confirm = input("\n❌ Confirm delivery cancellation? (y/n): ").strip().lower()
+    if confirm == 'y':
+        print("✅ Delivery cancelled")
+        agent_info['online_status'] = 'ONLINE_AVAILABLE'
+    else:
+        print("❌ Cancellation cancelled")
+    input("\nPress Enter to continue...")

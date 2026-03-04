@@ -22,7 +22,7 @@ def tts_speak(text, lang=None):
 def check_server_connection():
     """Check if Flask server is running"""
     try:
-        _ = requests.get(f"{API}/workers/available", timeout=2)
+        _ = requests.get(f"{API}/services", timeout=2)
         return True
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         return False
@@ -1869,7 +1869,8 @@ def car_service_worker_menu():
         print("2. ⛽ Fuel Delivery Agent")
         print("3. 🚛 Tow Truck Operator")
         print("4. 🧠 Automobile Expert")
-        print("5. ⬅️ Back")
+        print("5. 🚚 Truck Operator")
+        print("6. ⬅️ Back")
         
         choice = input("\nSelect worker type: ").strip()
         
@@ -1877,13 +1878,18 @@ def car_service_worker_menu():
             from car_service.unified_mechanic_cli import unified_mechanic_menu
             unified_mechanic_menu()
         elif choice == "2":
-            print("🚧 Fuel Delivery Agent coming soon!")
+            from car_service.fuel_delivery_cli import fuel_delivery_agent_menu
+            fuel_delivery_agent_menu()
         elif choice == "3":
-            print("🚧 Tow Truck Operator coming soon!")
+            from car_service.worker_cli import tow_truck_operator_signup
+            tow_truck_operator_signup()
         elif choice == "4":
             from car_service.automobile_expert_cli import automobile_expert_menu
             automobile_expert_menu()
         elif choice == "5":
+            from car_service.truck_operator_cli import truck_operator_signup
+            truck_operator_signup()
+        elif choice == "6":
             return
         else:
             print("❌ Invalid choice")
@@ -3468,7 +3474,9 @@ def admin_menu():
         print("\n=== ADMIN DASHBOARD ===")
         print("1. 👷 Car Service Workers")
         print("2. 🏥 Healthcare Workers")
-        print("3. 👋 Logout")
+        print("3. ⛽ Fuel Delivery Agents")
+        print("4. 🚚 Truck Operators")
+        print("5. 👋 Logout")
 
         c = input("Choice: ").strip()
 
@@ -3478,9 +3486,480 @@ def admin_menu():
         elif c == "2":
             healthcare_admin_menu()
         elif c == "3":
+            fuel_delivery_admin_menu()
+        elif c == "4":
+            truck_operator_admin_menu()
+        elif c == "5":
             return
         else:
             print("❌ Invalid choice")
+
+def fuel_delivery_admin_menu():
+    """Fuel delivery agent admin management"""
+    while True:
+        print("\n" + "="*60)
+        print("⛽ FUEL DELIVERY AGENT ADMIN")
+        print("="*60)
+        print("1. 📋 Pending Agents")
+        print("2. ✅ Approved Agents")
+        print("3. 🔍 Agent Details")
+        print("4. ⬅️ Back")
+        
+        choice = input("\nSelect option: ").strip()
+        
+        if choice == "1":
+            fuel_delivery_pending_agents()
+        elif choice == "2":
+            fuel_delivery_approved_agents()
+        elif choice == "3":
+            fuel_delivery_agent_details()
+        elif choice == "4":
+            return
+        else:
+            print("❌ Invalid choice")
+            time.sleep(1)
+
+def fuel_delivery_pending_agents():
+    """Show pending fuel delivery agents"""
+    print("\n" + "="*60)
+    print("📋 PENDING FUEL DELIVERY AGENTS")
+    print("="*60)
+    
+    try:
+        response = requests.get(f"{API}/api/fuel-delivery/admin/pending")
+        
+        if response.status_code == 200:
+            agents = response.json()
+            
+            if not agents:
+                print("📭 No pending fuel delivery agents found")
+            else:
+                for idx, agent in enumerate(agents, 1):
+                    print(f"\n[{idx}] 📋 Agent ID: {agent['id']}")
+                    print(f"    👤 Name: {agent['name']}")
+                    print(f"    📧 Email: {agent['email']}")
+                    print(f"    📱 Phone: {agent['phone_number']}")
+                    print(f"    🏙️ City: {agent['city']}")
+                    print(f"    🚗 Vehicle: {agent['vehicle_type']} - {agent['vehicle_number']}")
+                    print(f"    📅 Applied: {agent['created_at']}")
+                    print(f"    📊 Status: {agent['approval_status']}")
+                
+                print("\n" + "-"*60)
+                choice = input("\nSelect agent number for actions (0 to go back): ").strip()
+                
+                if choice == "0":
+                    return
+                
+                if choice.isdigit() and int(choice) >= 1 and int(choice) <= len(agents):
+                    selected_agent = agents[int(choice) - 1]
+                    fuel_delivery_agent_actions(selected_agent)
+                else:
+                    print("❌ Invalid selection")
+                    time.sleep(1)
+        else:
+            print("❌ Failed to fetch pending agents")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def fuel_delivery_approved_agents():
+    """Show approved fuel delivery agents"""
+    print("\n" + "="*60)
+    print("✅ APPROVED FUEL DELIVERY AGENTS")
+    print("="*60)
+    
+    try:
+        response = requests.get(f"{API}/api/fuel-delivery/admin/approved")
+        
+        if response.status_code == 200:
+            agents = response.json()
+            
+            if not agents:
+                print("📭 No approved fuel delivery agents found")
+            else:
+                for idx, agent in enumerate(agents, 1):
+                    print(f"\n[{idx}] 📋 Agent ID: {agent['id']}")
+                    print(f"    👤 Name: {agent['name']}")
+                    print(f"    📧 Email: {agent['email']}")
+                    print(f"    📱 Phone: {agent['phone_number']}")
+                    print(f"    🏙️ City: {agent['city']}")
+                    print(f"    🚗 Vehicle: {agent['vehicle_type']} - {agent['vehicle_number']}")
+                    print(f"    📅 Approved: {agent['approved_at']}")
+            
+        else:
+            print("❌ Failed to fetch approved agents")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def fuel_delivery_agent_details():
+    """Search for specific fuel delivery agent"""
+    print("\n" + "="*60)
+    print("🔍 FUEL DELIVERY AGENT DETAILS")
+    print("="*60)
+    
+    try:
+        agent_id = input("Enter Agent ID: ").strip()
+        
+        if not agent_id:
+            print("❌ Agent ID is required")
+            input("\nPress Enter to continue...")
+            return
+        
+        response = requests.get(f"{API}/api/fuel-delivery/admin/agent/{agent_id}")
+        
+        if response.status_code == 200:
+            agent = response.json()
+            
+            print(f"\n📋 Agent Details:")
+            print(f"    🆔 ID: {agent['id']}")
+            print(f"    👤 Name: {agent['name']}")
+            print(f"    📧 Email: {agent['email']}")
+            print(f"    📱 Phone: {agent['phone_number']}")
+            print(f"    🏙️ City: {agent['city']}")
+            print(f"    🚗 Vehicle Type: {agent['vehicle_type']}")
+            print(f"    🔢 Vehicle Number: {agent['vehicle_number']}")
+            print(f"    📊 Status: {agent['approval_status']}")
+            print(f"    📅 Created: {agent['created_at']}")
+            
+            if agent.get('approved_at'):
+                print(f"    ✅ Approved: {agent['approved_at']}")
+                
+        else:
+            print("❌ Agent not found")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def fuel_delivery_agent_actions(agent):
+    """Actions for fuel delivery agent"""
+    while True:
+        print(f"\n" + "="*60)
+        print(f"⚡ AGENT ACTIONS - {agent['name']}")
+        print("="*60)
+        print("1. ✅ Approve Agent")
+        print("2. ❌ Reject Agent")
+        print("3. 📄 View Documents")
+        print("4. ⬅️ Back")
+        
+        choice = input("\nSelect action: ").strip()
+        
+        if choice == "1":
+            fuel_delivery_approve_agent(agent['id'])
+            return
+        elif choice == "2":
+            fuel_delivery_reject_agent(agent['id'])
+            return
+        elif choice == "3":
+            fuel_delivery_view_documents(agent)
+        elif choice == "4":
+            return
+        else:
+            print("❌ Invalid choice")
+            time.sleep(1)
+
+def fuel_delivery_approve_agent(agent_id):
+    """Approve fuel delivery agent"""
+    try:
+        response = requests.post(f"{API}/api/fuel-delivery/admin/approve", json={
+            "agent_id": agent_id
+        })
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result['success']:
+                print("✅ Agent approved successfully!")
+            else:
+                print(f"❌ Approval failed: {result.get('error', 'Unknown error')}")
+        else:
+            print("❌ Failed to approve agent")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def fuel_delivery_reject_agent(agent_id):
+    """Reject fuel delivery agent"""
+    try:
+        response = requests.post(f"{API}/api/fuel-delivery/admin/reject", json={
+            "agent_id": agent_id
+        })
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result['success']:
+                print("❌ Agent rejected successfully!")
+            else:
+                print(f"❌ Rejection failed: {result.get('error', 'Unknown error')}")
+        else:
+            print("❌ Failed to reject agent")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def fuel_delivery_view_documents(agent):
+    """View agent documents"""
+    print("\n" + "="*60)
+    print("📄 AGENT DOCUMENTS")
+    print("="*60)
+    
+    documents = [
+        ("Vehicle Photo", agent.get('vehicle_photo_path')),
+        ("RC Book", agent.get('rc_book_photo_path')),
+        ("Pollution Certificate", agent.get('pollution_certificate_path')),
+        ("Fuel Contract", agent.get('fuel_contract_path')),
+        ("Employee Proof", agent.get('employee_proof_path')),
+        ("Govt ID", agent.get('govt_id_path'))
+    ]
+    
+    for doc_name, doc_path in documents:
+        if doc_path:
+            print(f"✅ {doc_name}: {doc_path}")
+        else:
+            print(f"❌ {doc_name}: Not uploaded")
+    
+    input("\nPress Enter to continue...")
+
+def truck_operator_admin_menu():
+    """Truck operator admin management"""
+    while True:
+        print("\n" + "="*60)
+        print("🚚 TRUCK OPERATOR ADMIN")
+        print("="*60)
+        print("1. 📋 Pending Operators")
+        print("2. ✅ Approved Operators")
+        print("3. 🔍 Operator Details")
+        print("4. ⬅️ Back")
+        
+        choice = input("\nSelect option: ").strip()
+        
+        if choice == "1":
+            truck_operator_pending_operators()
+        elif choice == "2":
+            truck_operator_approved_operators()
+        elif choice == "3":
+            truck_operator_operator_details()
+        elif choice == "4":
+            return
+        else:
+            print("❌ Invalid choice")
+            time.sleep(1)
+
+def truck_operator_pending_operators():
+    """Show pending truck operators"""
+    print("\n" + "="*60)
+    print("📋 PENDING TRUCK OPERATORS")
+    print("="*60)
+    
+    try:
+        response = requests.get(f"{API}/api/truck-operator/admin/pending")
+        
+        if response.status_code == 200:
+            operators = response.json()
+            
+            if not operators:
+                print("📭 No pending truck operators found")
+            else:
+                for idx, operator in enumerate(operators, 1):
+                    print(f"\n[{idx}] 📋 Operator ID: {operator['id']}")
+                    print(f"    👤 Name: {operator['name']}")
+                    print(f"    📧 Email: {operator['email']}")
+                    print(f"    📱 Phone: {operator['phone']}")
+                    print(f"    🏙️ City: {operator['city']}")
+                    print(f"    🚗 Vehicle: {operator['vehicle_type']} - {operator['vehicle_number']}")
+                    print(f"    📅 Applied: {operator['created_at']}")
+                    print(f"    📊 Status: {operator['status']}")
+                
+                print("\n" + "-"*60)
+                choice = input("\nSelect operator number for actions (0 to go back): ").strip()
+                
+                if choice == "0":
+                    return
+                
+                if choice.isdigit() and int(choice) >= 1 and int(choice) <= len(operators):
+                    selected_operator = operators[int(choice) - 1]
+                    truck_operator_operator_actions(selected_operator)
+                else:
+                    print("❌ Invalid selection")
+                    time.sleep(1)
+        else:
+            print("❌ Failed to fetch pending operators")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def truck_operator_approved_operators():
+    """Show approved truck operators"""
+    print("\n" + "="*60)
+    print("✅ APPROVED TRUCK OPERATORS")
+    print("="*60)
+    
+    try:
+        response = requests.get(f"{API}/api/truck-operator/admin/approved")
+        
+        if response.status_code == 200:
+            operators = response.json()
+            
+            if not operators:
+                print("📭 No approved truck operators found")
+            else:
+                for idx, operator in enumerate(operators, 1):
+                    print(f"\n[{idx}] 📋 Operator ID: {operator['id']}")
+                    print(f"    👤 Name: {operator['name']}")
+                    print(f"    📧 Email: {operator['email']}")
+                    print(f"    📱 Phone: {operator['phone']}")
+                    print(f"    🏙️ City: {operator['city']}")
+                    print(f"    🚗 Vehicle: {operator['vehicle_type']} - {operator['vehicle_number']}")
+                    print(f"    📅 Approved: {operator['approved_at']}")
+            
+        else:
+            print("❌ Failed to fetch approved operators")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def truck_operator_operator_details():
+    """Search for specific truck operator"""
+    print("\n" + "="*60)
+    print("🔍 TRUCK OPERATOR DETAILS")
+    print("="*60)
+    
+    try:
+        operator_id = input("Enter Operator ID: ").strip()
+        
+        if not operator_id:
+            print("❌ Operator ID is required")
+            input("\nPress Enter to continue...")
+            return
+        
+        response = requests.get(f"{API}/api/truck-operator/admin/operator/{operator_id}")
+        
+        if response.status_code == 200:
+            operator = response.json()
+            
+            print(f"\n📋 Operator Details:")
+            print(f"    🆔 ID: {operator['id']}")
+            print(f"    👤 Name: {operator['name']}")
+            print(f"    📧 Email: {operator['email']}")
+            print(f"    📱 Phone: {operator['phone']}")
+            print(f"    🏙️ City: {operator['city']}")
+            print(f"    🚗 Vehicle Type: {operator['vehicle_type']}")
+            print(f"    🔢 Vehicle Number: {operator['vehicle_number']}")
+            print(f"    📊 Status: {operator['status']}")
+            print(f"    📅 Created: {operator['created_at']}")
+            
+            if operator.get('approved_at'):
+                print(f"    ✅ Approved: {operator['approved_at']}")
+                
+        else:
+            print("❌ Operator not found")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def truck_operator_operator_actions(operator):
+    """Actions for truck operator"""
+    while True:
+        print(f"\n" + "="*60)
+        print(f"⚡ OPERATOR ACTIONS - {operator['name']}")
+        print("="*60)
+        print("1. ✅ Approve Operator")
+        print("2. ❌ Reject Operator")
+        print("3. 📄 View Documents")
+        print("4. ⬅️ Back")
+        
+        choice = input("\nSelect action: ").strip()
+        
+        if choice == "1":
+            truck_operator_approve_operator(operator['id'])
+            return
+        elif choice == "2":
+            truck_operator_reject_operator(operator['id'])
+            return
+        elif choice == "3":
+            truck_operator_view_documents(operator)
+        elif choice == "4":
+            return
+        else:
+            print("❌ Invalid choice")
+            time.sleep(1)
+
+def truck_operator_approve_operator(operator_id):
+    """Approve truck operator"""
+    try:
+        response = requests.post(f"{API}/api/truck-operator/admin/approve", json={
+            "operator_id": operator_id
+        })
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result['success']:
+                print("✅ Operator approved successfully!")
+            else:
+                print(f"❌ Approval failed: {result.get('error', 'Unknown error')}")
+        else:
+            print("❌ Failed to approve operator")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def truck_operator_reject_operator(operator_id):
+    """Reject truck operator"""
+    try:
+        response = requests.post(f"{API}/api/truck-operator/admin/reject", json={
+            "operator_id": operator_id
+        })
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result['success']:
+                print("❌ Operator rejected successfully!")
+            else:
+                print(f"❌ Rejection failed: {result.get('error', 'Unknown error')}")
+        else:
+            print("❌ Failed to reject operator")
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
+def truck_operator_view_documents(operator):
+    """View operator documents"""
+    print("\n" + "="*60)
+    print("📄 OPERATOR DOCUMENTS")
+    print("="*60)
+    
+    documents = [
+        ("Vehicle Photo", operator.get('vehicle_photo_path')),
+        ("RC Book", operator.get('rc_book_path')),
+        ("Petrol Pump Authorization", operator.get('petrol_pump_authorization_path'))
+    ]
+    
+    for doc_name, doc_path in documents:
+        if doc_path:
+            print(f"✅ {doc_name}: {doc_path}")
+        else:
+            print(f"❌ {doc_name}: Not uploaded")
+    
+    input("\nPress Enter to continue...")
 
 # ==================================================
 # ========== HOTFIX EXTENSION (COPY-PASTE) =========

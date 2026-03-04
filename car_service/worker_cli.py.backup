@@ -228,3 +228,187 @@ def tow_dashboard(worker, token):
 def expert_dashboard(worker, token):
     print("🧠 Expert dashboard - Coming soon!")
     time.sleep(1)
+            print("� You will receive a notification once approved")
+            print("🔐 After approval, you can login and access your dashboard")
+            print("\n📞 For urgent inquiries, contact support")
+            print("="*60)
+        else:
+            error = response.json().get("error", "Signup failed")
+            print(f"❌ {error}")
+        
+    except Exception as e:
+        print(f"❌ Signup error: {e}")
+
+def worker_login():
+    """Worker login process"""
+    print("\n" + "="*50)
+    print("🔐 WORKER LOGIN")
+    print("="*50)
+    
+    try:
+        email = input("� Email: ").strip()
+        
+        if not email:
+            print("❌ Email is required")
+            return
+        
+        # Call API with email only
+        response = requests.post(f"{API}/api/car/worker/login", json={
+            "email": email
+        })
+        
+        if response.status_code == 200:
+            result = response.json()
+            worker = result.get("worker", {})
+            token = result.get("token")
+            
+            print(f"\n✅ Login successful!")
+            print(f"👤 Welcome, {worker.get('name', 'Worker')}!")
+            print(f"🎯 Role: {worker.get('role', 'Unknown')}")
+            print(f"🏙️ City: {worker.get('city', 'Unknown')}")
+            print(f"💼 Experience: {worker.get('experience', 0)} years")
+            
+            # Redirect to role-specific dashboard
+            role = worker.get('role')
+            if role == "Mechanic":
+                mechanic_dashboard(worker, token)
+            elif role == "Fuel Delivery Agent":
+                from fuel_delivery_cli import fuel_delivery_agent_dashboard
+                fuel_delivery_agent_dashboard(worker, token)
+            elif role == "Tow Truck Operator":
+                tow_dashboard(worker, token)
+            elif role == "Automobile Expert":
+                expert_dashboard(worker, token)
+            elif role == "Truck Operator":
+                from .truck_operator_cli import truck_operator_dashboard
+                truck_operator_dashboard(worker)
+            else:
+                print("🚧 Dashboard not available for this role yet")
+                
+        elif response.status_code == 401:
+            print("❌ Invalid email")
+        elif response.status_code == 403:
+            result = response.json()
+            status = result.get("status", "PENDING")
+            print("\n" + "="*60)
+            print("⏳ ACCOUNT PENDING APPROVAL")
+            print("="*60)
+            print("📝 Your account is still under admin review")
+            print("⏱️  Expected approval time: 2-24 hours")
+            print("📧 You will receive a notification once approved")
+            print("📊 Current status: " + status)
+            print("\n🔐 Please try logging in again after approval")
+            print("📞 For urgent inquiries, contact support")
+            print("="*60)
+        else:
+            error = response.json().get("error", "Login failed")
+            print(f"❌ {error}")
+            
+    except Exception as e:
+        print(f"❌ Login error: {e}")
+
+def mechanic_dashboard(worker, token):
+    """Mechanic dashboard"""
+    while True:
+        print("\n" + "="*60)
+        print("🔧 MECHANIC DASHBOARD")
+        print("="*60)
+        print(f"👤 {worker.get('name')}")
+        print(f"📱 {worker.get('phone')}")
+        print(f"🏙️ {worker.get('city')}")
+        print("\nOptions:")
+        print("1. 📋 View Jobs")
+        print("2. 📊 My Stats")
+        print("3. 👤 Profile")
+        print("4. ⬅️ Logout")
+        
+        choice = input("\nSelect option: ").strip()
+        
+        if choice == "1":
+            print("🚧 Job management coming soon!")
+        elif choice == "2":
+            print("🚧 Statistics coming soon!")
+        elif choice == "3":
+            print("🚧 Profile management coming soon!")
+        elif choice == "4":
+            print("👋 Logged out successfully")
+            return
+        else:
+            print("❌ Invalid choice")
+
+def fuel_dashboard(worker, token):
+    """Fuel delivery agent dashboard"""
+    # Import and use our comprehensive fuel delivery CLI
+    from fuel_delivery_cli import fuel_delivery_agent_dashboard
+    
+    # Get agent details from worker data
+    agent_info = {
+        'id': worker.get('worker_id'),
+        'name': worker.get('name'),
+        'email': worker.get('email'),
+        'vehicle_type': worker.get('vehicle_model'),
+        'vehicle_number': worker.get('vehicle_number'),
+        'online_status': 'OFFLINE',  # Would need to get from API
+        'rating': 0.0,  # Would need to get from API
+        'total_deliveries': 0  # Would need to get from API
+    }
+    
+    fuel_delivery_agent_dashboard(agent_info)
+
+def tow_dashboard(worker, token):
+    """Tow truck operator dashboard"""
+    while True:
+        print("\n" + "="*60)
+        print("🚛 TOW TRUCK DASHBOARD")
+        print("="*60)
+        print(f"👤 {worker.get('name')}")
+        print(f"🚗 Vehicle: {worker.get('vehicle_model', 'N/A')}")
+        print(f"⚖️ Capacity: {worker.get('loading_capacity', 'N/A')}")
+        print("\nOptions:")
+        print("1. 📋 View Requests")
+        print("2. 📍 Active Jobs")
+        print("3. 👤 Profile")
+        print("4. ⬅️ Logout")
+        
+        choice = input("\nSelect option: ").strip()
+        
+        if choice == "1":
+            print("🚧 Tow request management coming soon!")
+        elif choice == "2":
+            print("🚧 Active job tracking coming soon!")
+        elif choice == "3":
+            print("🚧 Profile management coming soon!")
+        elif choice == "4":
+            print("👋 Logged out successfully")
+            return
+        else:
+            print("❌ Invalid choice")
+
+def expert_dashboard(worker, token):
+    """Automobile expert dashboard"""
+    while True:
+        print("\n" + "="*60)
+        print("👨‍🔧 AUTOMOBILE EXPERT DASHBOARD")
+        print("="*60)
+        print(f"👤 {worker.get('name')}")
+        print(f"💼 Experience: {worker.get('experience', 0)} years")
+        print(f"🔧 Skills: {worker.get('skills', 'N/A')}")
+        print("\nOptions:")
+        print("1. 📋 Consultations")
+        print("2. 💬 Messages")
+        print("3. 👤 Profile")
+        print("4. ⬅️ Logout")
+        
+        choice = input("\nSelect option: ").strip()
+        
+        if choice == "1":
+            print("🚧 Consultation management coming soon!")
+        elif choice == "2":
+            print("🚧 Message system coming soon!")
+        elif choice == "3":
+            print("🚧 Profile management coming soon!")
+        elif choice == "4":
+            print("👋 Logged out successfully")
+            return
+        else:
+            print("❌ Invalid choice")

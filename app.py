@@ -145,6 +145,14 @@ try:
 except Exception as e:
     print(f"⚠️ Could not register smart search routes blueprint: {e}")
 
+# Register truck operator routes blueprint
+try:
+    from car_service.truck_operator_routes import truck_operator_bp
+    app.register_blueprint(truck_operator_bp)
+    print("✅ Truck operator routes blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register truck operator routes blueprint: {e}")
+
 # Register Ask Expert blueprint
 try:
     from car_service.ask_expert import ask_expert_bp, init_ask_expert_db
@@ -189,7 +197,7 @@ except Exception as e:
 # Register Fuel Delivery blueprint
 try:
     from car_service.fuel_delivery_routes import fuel_delivery_bp
-    app.register_blueprint(fuel_delivery_bp, url_prefix='/fuel-delivery')
+    app.register_blueprint(fuel_delivery_bp, url_prefix='/api/fuel-delivery')
     print("✅ Fuel Delivery blueprint registered")
 except Exception as e:
     print(f"⚠️ Could not register Fuel Delivery blueprint: {e}")
