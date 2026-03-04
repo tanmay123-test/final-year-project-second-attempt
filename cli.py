@@ -7,6 +7,18 @@ API = "http://127.0.0.1:5000"
 TOKEN = None
 USER_ID = None
 
+def tts_speak(text, lang=None):
+    try:
+        from ai_engine import speak as _speak
+        if lang is not None:
+            _speak(text, lang)
+        else:
+            _speak(text)
+    except Exception:
+        try:
+            print(f"🔊 {text}")
+        except Exception:
+            pass
 def check_server_connection():
     """Check if Flask server is running"""
     try:
@@ -109,7 +121,7 @@ def service_selection():
         elif choice == "3":
             print("🚧 Resource Management service coming soon!")
         elif choice == "4":
-            print("🚧 Car Services coming soon!")
+            open_car_service()
         elif choice == "5":
             print("🚧 Money Management coming soon!")
         elif choice == "6":
@@ -119,6 +131,529 @@ def service_selection():
             return
         else:
             print("❌ Invalid choice")
+
+def open_car_service():
+    global TOKEN, USER_ID
+    if not TOKEN:
+        print("⚠️ Please login first")
+        return
+    from car_service.home_cli import show_car_home
+    if not USER_ID:
+        r = requests.get(f"{API}/user/info", headers={"Authorization": f"Bearer {TOKEN}"})
+        if r.status_code == 200:
+            USER_ID = r.json().get("user_id")
+        else:
+            print("❌ Could not fetch user info")
+            return
+    pr = requests.get(f"{API}/api/car/profile", headers={"Authorization": f"Bearer {TOKEN}"})
+    if pr.status_code == 404:
+        print("\n" + "="*60)
+        print("🚗 CAR SERVICE SETUP")
+        print("="*60)
+        city = input("Enter City: ").strip()
+        address = input("Enter Address: ").strip()
+        emergency_name = input("Enter Emergency Contact Name: ").strip()
+        emergency_phone = input("Enter Emergency Contact Phone: ").strip()
+        print("\nAdd Car:")
+        brand = input("Enter Brand: ").strip()
+        model = input("Enter Model: ").strip()
+        year = input("Enter Year: ").strip()
+        fuel = input("Enter Fuel Type: ").strip()
+        reg = input("Enter Registration Number: ").strip()
+        data = {
+            "city": city,
+            "address": address,
+            "emergency_contact_name": emergency_name,
+            "emergency_contact_phone": emergency_phone,
+            "brand": brand,
+            "model": model,
+            "year": int(year) if year.isdigit() else year,
+            "fuel_type": fuel,
+            "registration_number": reg
+        }
+        sr = requests.post(f"{API}/api/car/setup-profile", json=data, headers={"Authorization": f"Bearer {TOKEN}"})
+        if sr.status_code not in (200, 201):
+            print("❌ Failed to setup car service profile")
+            return
+        print("✅ Car service profile created")
+    elif pr.status_code != 200:
+        print(" Failed to load profile")
+        return
+    while True:
+        print("\n" + "="*60)
+        print("🚗 CAR SERVICE")
+        print("="*60)
+        print("1. 🏠 Home")
+        print("2. 🔧 Book Mechanic")
+        print("3. 🤖 AI Mechanic")
+        print("4. 🚗 My Garage")
+        print("5. 📅 My Bookings")
+        print("6. 👤 Profile")
+        print("7. 🧠 ASK EXPERT")
+        print("8. 👋 Logout")
+        print("9. ⬅️ Back")
+        c = input("\nSelect option: ").strip()
+        if c == "1":
+            from car_service.home_cli import show_car_home
+            show_car_home(USER_ID)
+        elif c == "2":
+            from car_service.book_mechanic_cli import book_mechanic
+            book_mechanic(USER_ID)
+        elif c == "3":
+            from car_service.trip_planner_cli import trip_planner_menu
+            trip_planner_menu(USER_ID, TOKEN)
+        elif c == "4":
+            show_my_garage(USER_ID)
+        elif c == "5":
+            from car_service.my_bookings_cli import show_my_bookings
+            show_my_bookings(USER_ID, TOKEN)
+        elif c == "6":
+            from car_service.profile_cli import car_profile_screen
+            car_profile_screen(TOKEN)
+        elif c == "7":
+            from car_service.ask_expert_cli import ask_expert_menu
+            ask_expert_menu(USER_ID, TOKEN)
+        elif c == "8":
+            TOKEN = None
+            USER_ID = None
+            print("👋 Logged out successfully")
+            return
+        elif c == "9":
+            return
+        else:
+            print("❌ Invalid choice")
+
+def show_my_garage(user_id):
+    from car_service.car_profile_db import car_profile_db
+    while True:
+        cars = car_profile_db.get_user_cars(user_id)
+        print("\n" + "="*50)
+        print("🚗 MY GARAGE")
+        print("="*50)
+        print(f"\nTotal Cars: {len(cars)}\n")
+        for idx, car in enumerate(cars, 1):
+            print(f"[{idx}]")
+            print(f"Brand: {car.get('brand','')}")
+            print(f"Model: {car.get('model','')}")
+            print(f"Year: {car.get('year','')}")
+            print(f"Fuel: {car.get('fuel_type','')}")
+            print(f"Registration: {car.get('registration_number','')}")
+            if car.get('is_default') == 1:
+                print("⭐ DEFAULT")
+            print("")
+        print("----------------------------------------")
+        print("\nOptions:")
+        print("1. Add Car")
+        print("2. Set Default")
+        print("3. Back")
+        ch = input("\nSelect option: ").strip()
+        if ch == "1":
+            brand = input("Enter Brand: ").strip()
+            model = input("Enter Model: ").strip()
+            year = input("Enter Year: ").strip()
+            fuel = input("Enter Fuel Type: ").strip()
+            reg = input("Enter Registration Number: ").strip()
+            if not all([brand, model, year, fuel, reg]) or not year.isdigit():
+                print("❌ Invalid inputs")
+                continue
+            data = {"brand": brand, "model": model, "year": int(year), "fuel_type": fuel, "registration_number": reg}
+            ar = requests.post(f"{API}/api/car/add-car", json=data, headers={"Authorization": f"Bearer {TOKEN}"})
+            if ar.status_code in (200, 201):
+                print("✅ Car added")
+            else:
+                print("❌ Failed to add car")
+        elif ch == "2":
+            if not cars:
+                print("❌ No cars to set as default")
+                continue
+            sel = input("Enter car number to set default: ").strip()
+            if not sel.isdigit() or int(sel) < 1 or int(sel) > len(cars):
+                print("❌ Invalid selection")
+                continue
+            car_id = cars[int(sel)-1]['id']
+            from car_service.car_profile_db import car_profile_db
+            car_profile_db.set_default_car(user_id, car_id)
+            print("✅ Default car updated successfully")
+        elif ch == "3":
+            return
+        else:
+            print("❌ Invalid choice")
+
+
+
+def show_online_experts():
+    """Show online experts by category"""
+    try:
+        # Get categories first
+        r = requests.get(f"{API}/expert/categories")
+        if r.status_code != 200:
+            print("❌ Failed to load categories")
+            return
+        
+        categories = r.json().get("categories", [])
+        if not categories:
+            print("📭 No expert categories available")
+            return
+        
+        print("\n" + "="*60)
+        print("📂 EXPERT CATEGORIES")
+        print("="*60)
+        for idx, category in enumerate(categories, 1):
+            print(f"[{idx}] {category}")
+        print(f"[{len(categories) + 1}] All Categories")
+        print(f"[{len(categories) + 2}] Back")
+        
+        choice = input("\nSelect category: ").strip()
+        if not choice.isdigit():
+            print("❌ Invalid choice")
+            return
+        
+        choice_num = int(choice)
+        if choice_num == len(categories) + 2:
+            return
+        elif choice_num == len(categories) + 1:
+            category = None
+        elif 1 <= choice_num <= len(categories):
+            category = categories[choice_num - 1]
+        else:
+            print("❌ Invalid choice")
+            return
+        
+        # Get online experts
+        params = {}
+        if category:
+            params["category"] = category
+        
+        r = requests.get(f"{API}/expert/online", params=params)
+        if r.status_code != 200:
+            print("❌ Failed to load experts")
+            return
+        
+        experts = r.json().get("experts", [])
+        if not experts:
+            print("📭 No online experts found")
+            return
+        
+        print("\n" + "="*70)
+        print(f"🟢 ONLINE EXPERTS{' - ' + category if category else ''}")
+        print("="*70)
+        for idx, expert in enumerate(experts, 1):
+            print(f"\n[{idx}] {expert.get('full_name', 'Unknown')}  ⭐ {expert.get('rating', 0):.1f}/5.0")
+            print(f"   🎓 {expert.get('category', 'Unknown')}")
+            if expert.get('subcategory'):
+                print(f"   📚 {expert['subcategory']}")
+            print(f"   💰 Rate: ₹{expert.get('hourly_rate', 0)}/hr")
+            print(f"   ✅ {expert.get('total_jobs', 0)} jobs completed")
+            print(f"   🆔 Expert ID: {expert.get('id', 'Unknown')}")
+        
+        expert_choice = input("\nSelect expert to request (or 0 to go back): ").strip()
+        if expert_choice == "0":
+            return
+        
+        if not expert_choice.isdigit() or int(expert_choice) < 1 or int(expert_choice) > len(experts):
+            print("❌ Invalid selection")
+            return
+        
+        selected_expert = experts[int(expert_choice) - 1]
+        create_expert_request(selected_expert)
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+
+def browse_all_experts():
+    """Browse all experts by category"""
+    try:
+        # Get categories first
+        r = requests.get(f"{API}/expert/categories")
+        if r.status_code != 200:
+            print("❌ Failed to load categories")
+            return
+        
+        categories = r.json().get("categories", [])
+        if not categories:
+            print("📭 No expert categories available")
+            return
+        
+        print("\n" + "="*60)
+        print("📂 EXPERT CATEGORIES")
+        print("="*60)
+        for idx, category in enumerate(categories, 1):
+            print(f"[{idx}] {category}")
+        print(f"[{len(categories) + 1}] All Categories")
+        print(f"[{len(categories) + 2}] Back")
+        
+        choice = input("\nSelect category: ").strip()
+        if not choice.isdigit():
+            print("❌ Invalid choice")
+            return
+        
+        choice_num = int(choice)
+        if choice_num == len(categories) + 2:
+            return
+        elif choice_num == len(categories) + 1:
+            category = None
+        elif 1 <= choice_num <= len(categories):
+            category = categories[choice_num - 1]
+        else:
+            print("❌ Invalid choice")
+            return
+        
+        # Get all experts
+        params = {}
+        if category:
+            params["category"] = category
+        
+        r = requests.get(f"{API}/expert/all", params=params)
+        if r.status_code != 200:
+            print("❌ Failed to load experts")
+            return
+        
+        experts = r.json().get("experts", [])
+        if not experts:
+            print("📭 No experts found")
+            return
+        
+        print("\n" + "="*70)
+        print(f"👥 ALL EXPERTS{' - ' + category if category else ''}")
+        print("="*70)
+        for idx, expert in enumerate(experts, 1):
+            status = "🟢 Online" if expert.get('is_online') else "🔴 Offline"
+            print(f"\n[{idx}] {expert.get('full_name', 'Unknown')}  ⭐ {expert.get('rating', 0):.1f}/5.0")
+            print(f"   🎓 {expert.get('category', 'Unknown')}")
+            if expert.get('subcategory'):
+                print(f"   📚 {expert['subcategory']}")
+            print(f"   💰 Rate: ₹{expert.get('hourly_rate', 0)}/hr")
+            print(f"   ✅ {expert.get('total_jobs', 0)} jobs completed")
+            print(f"   📊 Status: {status}")
+            print(f"   🆔 Expert ID: {expert.get('id', 'Unknown')}")
+        
+        expert_choice = input("\nSelect expert to request (or 0 to go back): ").strip()
+        if expert_choice == "0":
+            return
+        
+        if not expert_choice.isdigit() or int(expert_choice) < 1 or int(expert_choice) > len(experts):
+            print("❌ Invalid selection")
+            return
+        
+        selected_expert = experts[int(expert_choice) - 1]
+        create_expert_request(selected_expert)
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+
+def search_experts():
+    """Search experts by name or specialization"""
+    try:
+        query = input("Enter search query (name, category, or keywords): ").strip()
+        if not query:
+            print("❌ Search query is required")
+            return
+        
+        # Optional category filter
+        r = requests.get(f"{API}/expert/categories")
+        if r.status_code == 200:
+            categories = r.json().get("categories", [])
+            if categories:
+                print("\nOptional: Filter by category")
+                for idx, category in enumerate(categories, 1):
+                    print(f"[{idx}] {category}")
+                print(f"[{len(categories) + 1}] No filter")
+                
+                cat_choice = input("\nSelect category filter (optional): ").strip()
+                category = None
+                if cat_choice.isdigit() and 1 <= int(cat_choice) <= len(categories):
+                    category = categories[int(cat_choice) - 1]
+        
+        params = {"q": query}
+        if category:
+            params["category"] = category
+        
+        r = requests.get(f"{API}/expert/search", params=params)
+        if r.status_code != 200:
+            print("❌ Failed to search experts")
+            return
+        
+        experts = r.json().get("experts", [])
+        if not experts:
+            print("📭 No experts found matching your search")
+            return
+        
+        print(f"\n🔍 Found {len(experts)} expert(s) matching '{query}'")
+        print("="*70)
+        for idx, expert in enumerate(experts, 1):
+            status = "🟢 Online" if expert.get('is_online') else "🔴 Offline"
+            print(f"\n[{idx}] {expert.get('full_name', 'Unknown')}  ⭐ {expert.get('rating', 0):.1f}/5.0")
+            print(f"   🎓 {expert.get('category', 'Unknown')}")
+            if expert.get('subcategory'):
+                print(f"   📚 {expert['subcategory']}")
+            print(f"   💰 Rate: ₹{expert.get('hourly_rate', 0)}/hr")
+            print(f"   ✅ {expert.get('total_jobs', 0)} jobs completed")
+            print(f"   📊 Status: {status}")
+            print(f"   🆔 Expert ID: {expert.get('id', 'Unknown')}")
+        
+        expert_choice = input("\nSelect expert to request (or 0 to go back): ").strip()
+        if expert_choice == "0":
+            return
+        
+        if not expert_choice.isdigit() or int(expert_choice) < 1 or int(expert_choice) > len(experts):
+            print("❌ Invalid selection")
+            return
+        
+        selected_expert = experts[int(expert_choice) - 1]
+        create_expert_request(selected_expert)
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+
+def create_expert_request(expert):
+    """Create a request for selected expert"""
+    try:
+        print(f"\n📝 Creating request for {expert.get('full_name', 'Unknown')}")
+        print("="*60)
+        
+        title = input("📋 Request Title: ").strip()
+        if not title:
+            print("❌ Title is required")
+            return
+        
+        description = input("📝 Describe your problem: ").strip()
+        if not description:
+            print("❌ Description is required")
+            return
+        
+        # Ask if user wants to upload an image
+        upload_image = input("📷 Do you want to upload an image? (y/n): ").strip().lower()
+        image_url = None
+        
+        if upload_image == 'y':
+            print("📷 Please upload an image using the web interface at:")
+            print(f"   {API}/expert/upload")
+            print("   (Copy the returned file_url and paste it below)")
+            image_url = input("📷 Image URL (or press Enter to skip): ").strip()
+        
+        priority = input("🚨 Priority (normal/urgent): ").strip().lower()
+        if priority not in ['normal', 'urgent']:
+            priority = 'normal'
+        
+        # Create request
+        request_data = {
+            "expert_id": expert.get('id'),
+            "category": expert.get('category'),
+            "title": title,
+            "description": description,
+            "priority": priority
+        }
+        
+        if image_url:
+            request_data["image_url"] = image_url
+        
+        r = requests.post(
+            f"{API}/expert/request",
+            json=request_data,
+            headers={"Authorization": f"Bearer {TOKEN}"}
+        )
+        
+        if r.status_code == 201:
+            response = r.json()
+            request_id = response.get('request_id')
+            print(f"\n✅ Expert request created successfully!")
+            print(f"📋 Request ID: {request_id}")
+            print(f"👨‍🏫 Expert: {expert.get('full_name', 'Unknown')}")
+            print(f"📋 Title: {title}")
+            print(f"🚨 Priority: {priority}")
+            print("⏳ Status: Pending expert response")
+            print("\n📱 You will be notified when the expert responds.")
+            print("💬 You can check your requests from the main menu.")
+        else:
+            error = r.json().get('error', 'Unknown error')
+            print(f"❌ Failed to create request: {error}")
+        
+        input("\nPress Enter to continue...")
+        
+    except Exception as e:
+        print(f"❌ Error creating request: {e}")
+        input("\nPress Enter to continue...")
+
+
+def show_my_requests():
+    """Show user's expert requests"""
+    try:
+        r = requests.get(
+            f"{API}/expert/user/requests",
+            headers={"Authorization": f"Bearer {TOKEN}"}
+        )
+        
+        if r.status_code != 200:
+            print("❌ Failed to load requests")
+            return
+        
+        requests = r.json().get("requests", [])
+        if not requests:
+            print("📭 You haven't made any expert requests yet")
+            input("\nPress Enter to continue...")
+            return
+        
+        print("\n" + "="*70)
+        print("📋 MY EXPERT REQUESTS")
+        print("="*70)
+        for idx, req in enumerate(requests, 1):
+            status_emoji = {"pending": "⏳", "accepted": "✅", "rejected": "❌", "completed": "✨"}
+            status = req.get('status', 'unknown')
+            print(f"\n[{idx}] {req.get('title', 'Unknown Request')}")
+            print(f"   👨‍🏫 Expert: {req.get('expert_name', 'Unknown')}")
+            print(f"   🎓 Category: {req.get('category', 'Unknown')}")
+            print(f"   📊 Status: {status_emoji.get(status, '❓')} {status.title()}")
+            print(f"   📅 Created: {req.get('created_at', 'Unknown')}")
+            print(f"   🆔 Request ID: {req.get('id', 'Unknown')}")
+        
+        input("\nPress Enter to continue...")
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        input("\nPress Enter to continue...")
+
+
+def show_my_chats():
+    """Show user's active chat sessions"""
+    try:
+        r = requests.get(
+            f"{API}/expert/chat/rooms/user",
+            headers={"Authorization": f"Bearer {TOKEN}"}
+        )
+        
+        if r.status_code != 200:
+            print("❌ Failed to load chat rooms")
+            return
+        
+        rooms = r.json().get("rooms", [])
+        if not rooms:
+            print("📭 You don't have any active chat sessions")
+            input("\nPress Enter to continue...")
+            return
+        
+        print("\n" + "="*70)
+        print("💬 MY ACTIVE CHATS")
+        print("="*70)
+        for idx, room in enumerate(rooms, 1):
+            unread = room.get('unread_count', 0)
+            unread_text = f" ({unread} unread)" if unread > 0 else ""
+            print(f"\n[{idx}] {room.get('expert_name', 'Unknown Expert')}{unread_text}")
+            print(f"   💬 Room: {room.get('room_name', 'Unknown')}")
+            print(f"   🎓 Category: {room.get('category', 'Unknown')}")
+            print(f"   📅 Started: {room.get('created_at', 'Unknown')}")
+            print(f"   🆔 Room ID: {room.get('id', 'Unknown')}")
+        
+        input("\nPress Enter to continue...")
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        input("\nPress Enter to continue...")
+
+
+ 
 
 
 def healthcare_navigation():
@@ -215,6 +750,7 @@ def healthcare_home_tab():
                 print("❌ Invalid choice")
         else:
             print("❌ Please enter a number")
+
 
 
 def show_doctors_by_specialization(specialization):
@@ -461,8 +997,7 @@ def process_ai_conversation(symptoms: str, user_id: str, voice_available: bool) 
         # Voice output
         if voice_available:
             try:
-                from ai_engine import speak
-                speak(question)
+                tts_speak(question)
             except ImportError:
                 print(f"🔊 {question}")
         
@@ -518,7 +1053,7 @@ def display_ai_response(response: dict):
         
         # Voice output
         try:
-            speak(response.get('question', ''), detected_lang)
+            tts_speak(response.get('question', ''), detected_lang)
         except:
             pass
             
@@ -546,7 +1081,7 @@ def display_ai_response(response: dict):
         
         # Voice output for advice
         try:
-            speak(response.get('advice', ''), detected_lang)
+            tts_speak(response.get('advice', ''), detected_lang)
         except:
             pass
         
@@ -1313,12 +1848,42 @@ def worker_service_selection():
         elif choice == "2":
             print("🚧 Housekeeping worker module coming soon")
         elif choice == "3":
-            print("🚧 Car service worker module coming soon")
+            car_service_worker_menu()
         elif choice == "4":
             print("🚧 Resource worker module coming soon")
         elif choice == "5":
             print("🚧 Money management worker module coming soon")
         elif choice == "6":
+            return
+        else:
+            print("❌ Invalid choice")
+
+
+def car_service_worker_menu():
+    """Car service worker selection menu"""
+    while True:
+        print("\n" + "="*50)
+        print("🚗 CAR SERVICE WORKER")
+        print("="*50)
+        print("1. 🔧 Mechanic")
+        print("2. ⛽ Fuel Delivery Agent")
+        print("3. 🚛 Tow Truck Operator")
+        print("4. 🧠 Automobile Expert")
+        print("5. ⬅️ Back")
+        
+        choice = input("\nSelect worker type: ").strip()
+        
+        if choice == "1":
+            from car_service.unified_mechanic_cli import unified_mechanic_menu
+            unified_mechanic_menu()
+        elif choice == "2":
+            print("🚧 Fuel Delivery Agent coming soon!")
+        elif choice == "3":
+            print("🚧 Tow Truck Operator coming soon!")
+        elif choice == "4":
+            from car_service.automobile_expert_cli import automobile_expert_menu
+            automobile_expert_menu()
+        elif choice == "5":
             return
         else:
             print("❌ Invalid choice")
@@ -2901,14 +3466,14 @@ def doctor_start_video_call(token):
 def admin_menu():
     while True:
         print("\n=== ADMIN DASHBOARD ===")
-        print("1. View Pending Workers")
-        print("2. Approve Worker")
-        print("3. Reject Worker")
-        print("4. Logout")
+        print("1. 👷 Car Service Workers")
+        print("2. 🏥 Healthcare Workers")
+        print("3. 👋 Logout")
 
         c = input("Choice: ").strip()
 
         if c == "1":
+<<<<<<< HEAD
             services = ["healthcare", "housekeeping", "resource", "car", "money"]
             found_any = False
             for svc in services:
@@ -2927,18 +3492,16 @@ def admin_menu():
             if not found_any:
                 print("\nNo pending workers found.")
 
+=======
+            from car_service.worker_admin_cli import worker_admin_menu
+            worker_admin_menu()
+>>>>>>> d626f6f0d96c0ec937e4b2603f9c7f177e1b7dcc
         elif c == "2":
-            wid = input("Worker ID: ").strip()
-            requests.post(f"{API}/admin/worker/approve/{wid}")
-            print("✅ Worker approved")
-
+            healthcare_admin_menu()
         elif c == "3":
-            wid = input("Worker ID: ").strip()
-            requests.post(f"{API}/admin/worker/reject/{wid}")
-            print("❌ Worker rejected")
-
-        elif c == "4":
             return
+        else:
+            print("❌ Invalid choice")
 
 # ==================================================
 # ========== HOTFIX EXTENSION (COPY-PASTE) =========
@@ -3587,8 +4150,13 @@ def join_video_call_cli(user_id):
         input("\nPress Enter...")
         return
     
-    appointments = r.json()
-    video_appointments = [apt for apt in appointments if apt['status'] in ['in_progress']]
+    # Ensure we work with the list of appointments
+    appointments = r.json().get("appointments", [])
+    # Filter only video consultations that are live/in progress
+    video_appointments = [
+        apt for apt in appointments
+        if apt.get('appointment_type') == 'video' and apt.get('status') in ['in_progress']
+    ]
     
     if not video_appointments:
         print("📭 No video calls available to join")

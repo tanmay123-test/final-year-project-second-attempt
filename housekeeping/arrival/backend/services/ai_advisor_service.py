@@ -5,6 +5,33 @@ from housekeeping.models.database import housekeeping_db
 class AIAdvisorService:
     def __init__(self):
         self.db = housekeeping_db
+        self._ensure_schema()
+
+    def _ensure_schema(self):
+        """
+        Create required tables for AI advisor if missing.
+        """
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS cleaning_reminders (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    reminder_type TEXT NOT NULL,
+                    frequency_type TEXT NOT NULL,
+                    next_reminder_date TEXT NOT NULL,
+                    repeat INTEGER DEFAULT 0,
+                    is_active INTEGER DEFAULT 1,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.commit()
+        except Exception:
+            # Silent fail to avoid breaking page; operations will still error if schema invalid
+            pass
+        finally:
+            conn.close()
 
     def get_cleaning_status(self, user_id):
         """

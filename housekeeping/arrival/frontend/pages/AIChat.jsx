@@ -12,6 +12,7 @@ const AIChat = () => {
   const [cleaningStatus, setCleaningStatus] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [localMode, setLocalMode] = useState(false);
   
   // Reminder State
   const [reminderType, setReminderType] = useState('General Cleaning');
@@ -20,6 +21,31 @@ const AIChat = () => {
   const [repeat, setRepeat] = useState(false);
   const [reminderMessage, setReminderMessage] = useState('');
   const [myReminders, setMyReminders] = useState([]);
+
+  const LS_KEY = 'hk_ai_reminders';
+
+  const readLocalReminders = () => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const writeLocalReminders = (list) => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(list));
+    } catch {}
+  };
+
+  const computeNextDate = (freq, custom) => {
+    const d = new Date();
+    if (freq === 'custom' && custom) return custom;
+    const addDays = freq === '60_days' ? 60 : freq === '30_days' ? 30 : 15;
+    d.setDate(d.getDate() + addDays);
+    return d.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,7 +65,9 @@ const AIChat = () => {
         setMyReminders(remindersRes.data);
       } catch (error) {
         console.error("Failed to fetch AI data", error);
-        // Fallback mock data
+        // Enable local-mode fallbacks for AI tab only
+        setLocalMode(true);
+        // Fallback mock status
         setCleaningStatus({
             status: "Recommended Soon",
             last_clean_date: "Feb 15",
@@ -50,6 +78,8 @@ const AIChat = () => {
             recommendation: "Book cleaning within 3 days to maintain hygiene.",
             seasonal_tip: "Festival season is approaching. Consider Deep Cleaning."
         });
+        // Load local reminders if any
+        setMyReminders(readLocalReminders());
       } finally {
         setLoading(false);
       }
@@ -60,31 +90,52 @@ const AIChat = () => {
   const handleSetReminder = async () => {
     try {
       const userId = user.id || user.user_id;
-      const res = await api.post('/api/ai/set-reminder', {
-        user_id: userId,
-        reminder_type: reminderType,
-        frequency_type: frequencyType,
-        custom_date: customDate,
-        repeat: repeat
-      });
-      setReminderMessage(`Reminder set for ${res.data.next_reminder}`);
-      
-      // Refresh list
-      const remindersRes = await api.get(`/api/ai/get-reminders?user_id=${userId}`);
-      setMyReminders(remindersRes.data);
-      
-      setTimeout(() => setReminderMessage(''), 3000);
+      if (!localMode) {
+        const res = await api.post('/api/ai/set-reminder', {
+          user_id: userId,
+          reminder_type: reminderType,
+          frequency_type: frequencyType,
+          custom_date: customDate,
+          repeat: repeat
+        });
+        setReminderMessage(`Reminder set for ${res.data.next_reminder}`);
+        const remindersRes = await api.get(`/api/ai/get-reminders?user_id=${userId}`);
+        setMyReminders(remindersRes.data);
+        setTimeout(() => setReminderMessage(''), 3000);
+      } else {
+        // Local fallback: store in localStorage
+        const nextDate = computeNextDate(frequencyType, customDate);
+        const newItem = {
+          id: Date.now(),
+          reminder_type: reminderType,
+          next_reminder_date: nextDate,
+          repeat
+        };
+        const updated = [newItem, ...readLocalReminders()];
+        writeLocalReminders(updated);
+        setMyReminders(updated);
+        setReminderMessage(`Reminder set for ${nextDate}`);
+        setTimeout(() => setReminderMessage(''), 3000);
+      }
     } catch (error) {
       console.error("Failed to set reminder", error);
-      const errorMsg = error.response?.data?.error || "Failed to set reminder";
-      alert(errorMsg);
+      if (!localMode) {
+        const errorMsg = error.response?.data?.error || "Failed to set reminder";
+        alert(errorMsg);
+      }
     }
   };
 
   const handleDeleteReminder = async (id) => {
     try {
-        await api.post('/api/ai/delete-reminder', { reminder_id: id });
-        setMyReminders(myReminders.filter(r => r.id !== id));
+        if (!localMode) {
+          await api.post('/api/ai/delete-reminder', { reminder_id: id });
+          setMyReminders(myReminders.filter(r => r.id !== id));
+        } else {
+          const updated = readLocalReminders().filter(r => r.id !== id);
+          writeLocalReminders(updated);
+          setMyReminders(updated);
+        }
     } catch (error) {
         console.error("Failed to delete reminder", error);
     }
