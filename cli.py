@@ -3473,29 +3473,13 @@ def admin_menu():
         c = input("Choice: ").strip()
 
         if c == "1":
-<<<<<<< HEAD
-            services = ["healthcare", "housekeeping", "resource", "car", "money"]
-            found_any = False
-            for svc in services:
-                try:
-                    r = requests.get(f"{API}/admin/workers/pending?service={svc}")
-                    if r.status_code == 200:
-                        workers = r.json()
-                        if workers:
-                            found_any = True
-                            print(f"\n=== Pending {svc.capitalize()} Workers ===")
-                            for w in workers:
-                                print(f"ID:{w['id']} | {w['full_name']} | {w['specialization']} | {w['status']}")
-                except Exception as e:
-                    print(f"Error fetching {svc}: {e}")
-            
-            if not found_any:
-                print("\nNo pending workers found.")
-
-=======
-            from car_service.worker_admin_cli import worker_admin_menu
-            worker_admin_menu()
->>>>>>> d626f6f0d96c0ec937e4b2603f9c7f177e1b7dcc
+            # Unified worker admin menu
+            try:
+                from car_service.worker_admin_cli import worker_admin_menu
+                worker_admin_menu()
+            except Exception as e:
+                print(f"⚠️ Worker admin menu unavailable: {e}")
+                print("Use the admin API endpoints to review pending workers.")
         elif c == "2":
             healthcare_admin_menu()
         elif c == "3":

@@ -66,7 +66,6 @@ except ImportError as e:
 app.register_blueprint(video_bp)
 print("✅ Video consultation blueprint registered")
 
-<<<<<<< HEAD
 # Register Housekeeping blueprints
 try:
     from housekeeping.arrival.backend.controllers.arrival_controller import arrival_bp
@@ -81,7 +80,6 @@ try:
     print("✅ Housekeeping blueprints registered")
 except ImportError as e:
     print(f"⚠️ Could not register housekeeping blueprints: {e}")
-=======
 try:
     from car_service.car_routes import car_bp
     app.register_blueprint(car_bp)
@@ -211,7 +209,6 @@ except Exception as e:
     print(f"⚠️ Could not register Fuel Delivery blueprint: {e}")
 
  
->>>>>>> d626f6f0d96c0ec937e4b2603f9c7f177e1b7dcc
 
 # Initialize WebSocket signaling server
 socketio = init_video_signaling(app)

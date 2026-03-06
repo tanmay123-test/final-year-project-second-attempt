@@ -12026,3 +12026,13 @@ Traceback (most recent call last):
            ^^^^^^^^^^^^^^^^^^^^^^
 AssertionError: write() before start_response
 2026-03-04 11:07:01,012 - INFO - Client connected: 1yNk2QUGbLQR2VPFAAAD
+2026-03-04 15:58:23,138 - INFO - Video signaling server initialized
+2026-03-04 15:58:23,218 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.229.162:5000
+2026-03-04 15:58:23,218 - INFO - [33mPress CTRL+C to quit[0m
+2026-03-04 15:58:23,218 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-04 15:58:26,576 - INFO - Video signaling server initialized
+2026-03-04 15:58:26,612 - WARNING -  * Debugger is active!
+2026-03-04 15:58:26,615 - INFO -  * Debugger PIN: 814-951-312
