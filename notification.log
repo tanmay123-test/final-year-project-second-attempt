@@ -12026,6 +12026,7 @@ Traceback (most recent call last):
            ^^^^^^^^^^^^^^^^^^^^^^
 AssertionError: write() before start_response
 2026-03-04 11:07:01,012 - INFO - Client connected: 1yNk2QUGbLQR2VPFAAAD
+<<<<<<< HEAD
 2026-03-04 15:58:23,138 - INFO - Video signaling server initialized
 2026-03-04 15:58:23,218 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
  * Running on all addresses (0.0.0.0)
@@ -12036,3 +12037,603 @@ AssertionError: write() before start_response
 2026-03-04 15:58:26,576 - INFO - Video signaling server initialized
 2026-03-04 15:58:26,612 - WARNING -  * Debugger is active!
 2026-03-04 15:58:26,615 - INFO -  * Debugger PIN: 814-951-312
+=======
+2026-03-04 19:45:58,700 - INFO - Video signaling server initialized
+2026-03-04 19:45:58,775 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.100:5000
+2026-03-04 19:45:58,775 - INFO - [33mPress CTRL+C to quit[0m
+2026-03-04 19:45:58,775 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-04 19:46:00,123 - INFO - Video signaling server initialized
+2026-03-04 19:46:00,194 - WARNING -  * Debugger is active!
+2026-03-04 19:46:00,198 - INFO -  * Debugger PIN: 373-540-567
+>>>>>>> e20e842dd44e6dfd54357f2b9cc355164de378e1
+2026-03-06 10:46:11,159 - INFO - Video signaling server initialized
+2026-03-06 10:46:11,288 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.191.169:5000
+2026-03-06 10:46:11,288 - INFO - [33mPress CTRL+C to quit[0m
+2026-03-06 10:46:11,288 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 10:46:13,851 - INFO - Video signaling server initialized
+2026-03-06 10:46:13,899 - WARNING -  * Debugger is active!
+2026-03-06 10:46:13,906 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 10:46:46,384 - INFO - 127.0.0.1 - - [06/Mar/2026 10:46:46] "OPTIONS /user/info HTTP/1.1" 200 -
+2026-03-06 10:46:46,387 - INFO - 127.0.0.1 - - [06/Mar/2026 10:46:46] "OPTIONS /user/info HTTP/1.1" 200 -
+2026-03-06 10:46:46,395 - INFO - 127.0.0.1 - - [06/Mar/2026 10:46:46] "[31m[1mGET /user/info HTTP/1.1[0m" 401 -
+2026-03-06 10:46:46,405 - INFO - 127.0.0.1 - - [06/Mar/2026 10:46:46] "[31m[1mGET /user/info HTTP/1.1[0m" 401 -
+2026-03-06 10:46:46,417 - INFO - 127.0.0.1 - - [06/Mar/2026 10:46:46] "OPTIONS /api/provider/auth/me HTTP/1.1" 200 -
+2026-03-06 10:46:46,419 - INFO - 127.0.0.1 - - [06/Mar/2026 10:46:46] "OPTIONS /api/provider/auth/me HTTP/1.1" 200 -
+2026-03-06 10:46:46,423 - INFO - 127.0.0.1 - - [06/Mar/2026 10:46:46] "[31m[1mGET /api/provider/auth/me HTTP/1.1[0m" 401 -
+2026-03-06 10:46:46,432 - INFO - 127.0.0.1 - - [06/Mar/2026 10:46:46] "[31m[1mGET /api/provider/auth/me HTTP/1.1[0m" 401 -
+2026-03-06 10:47:06,762 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:06] "OPTIONS /login HTTP/1.1" 200 -
+2026-03-06 10:47:07,089 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:07] "POST /login HTTP/1.1" 200 -
+2026-03-06 10:47:07,095 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:07] "OPTIONS /user/info HTTP/1.1" 200 -
+2026-03-06 10:47:07,101 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:07] "GET /user/info HTTP/1.1" 200 -
+2026-03-06 10:47:07,145 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:07] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 10:47:07,148 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:07] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 10:47:07,154 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:07] "GET /services HTTP/1.1" 200 -
+2026-03-06 10:47:07,161 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:07] "GET /services HTTP/1.1" 200 -
+2026-03-06 10:47:09,320 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:09] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:09,323 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:09] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:09,329 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:09] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:09,338 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:09] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:15,029 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "OPTIONS /api/ai/cleaning-status?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,032 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "OPTIONS /api/ai/upgrade-suggestion?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,033 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "OPTIONS /api/ai/get-reminders?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,036 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "OPTIONS /api/ai/cleaning-status?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,039 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "OPTIONS /api/ai/upgrade-suggestion?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,047 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "OPTIONS /api/ai/get-reminders?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,055 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "GET /api/ai/upgrade-suggestion?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,055 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "GET /api/ai/get-reminders?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,062 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "GET /api/ai/cleaning-status?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,068 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "GET /api/ai/upgrade-suggestion?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,069 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "GET /api/ai/get-reminders?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:15,070 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:15] "GET /api/ai/cleaning-status?user_id=21 HTTP/1.1" 200 -
+2026-03-06 10:47:17,243 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:17] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:17,245 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:17] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:17,260 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:17] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:17,268 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:17] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:32,278 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:32] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:32,284 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:32] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:47:42,380 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:42] "OPTIONS /api/housekeeping/services?specialization=General+Cleaning HTTP/1.1" 200 -
+2026-03-06 10:47:42,387 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:42] "GET /api/housekeeping/services?specialization=General+Cleaning HTTP/1.1" 200 -
+2026-03-06 10:47:43,488 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:43] "OPTIONS /api/housekeeping/services?specialization=Deep+Cleaning HTTP/1.1" 200 -
+2026-03-06 10:47:43,495 - INFO - 127.0.0.1 - - [06/Mar/2026 10:47:43] "GET /api/housekeeping/services?specialization=Deep+Cleaning HTTP/1.1" 200 -
+2026-03-06 10:48:00,804 - INFO - 127.0.0.1 - - [06/Mar/2026 10:48:00] "GET /services HTTP/1.1" 200 -
+2026-03-06 10:48:00,810 - INFO - 127.0.0.1 - - [06/Mar/2026 10:48:00] "GET /services HTTP/1.1" 200 -
+2026-03-06 10:48:07,266 - INFO - 127.0.0.1 - - [06/Mar/2026 10:48:07] "OPTIONS /worker/login HTTP/1.1" 200 -
+2026-03-06 10:48:07,274 - INFO - 127.0.0.1 - - [06/Mar/2026 10:48:07] "[33mPOST /worker/login HTTP/1.1[0m" 404 -
+2026-03-06 10:48:17,736 - INFO - 127.0.0.1 - - [06/Mar/2026 10:48:17] "OPTIONS /worker/login HTTP/1.1" 200 -
+2026-03-06 10:48:17,743 - INFO - 127.0.0.1 - - [06/Mar/2026 10:48:17] "[31m[1mPOST /worker/login HTTP/1.1[0m" 403 -
+2026-03-06 10:48:25,945 - INFO - 127.0.0.1 - - [06/Mar/2026 10:48:25] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:48:25,953 - INFO - 127.0.0.1 - - [06/Mar/2026 10:48:25] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 10:49:10,304 - INFO - 127.0.0.1 - - [06/Mar/2026 10:49:10] "OPTIONS /worker/signup HTTP/1.1" 200 -
+2026-03-06 10:49:10,453 - INFO - 127.0.0.1 - - [06/Mar/2026 10:49:10] "[35m[1mPOST /worker/signup HTTP/1.1[0m" 201 -
+2026-03-06 10:50:03,477 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 10:50:03,477 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 10:50:04,026 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 10:50:06,945 - INFO - Video signaling server initialized
+2026-03-06 10:50:06,992 - WARNING -  * Debugger is active!
+2026-03-06 10:50:06,995 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 10:50:07,019 - INFO - 127.0.0.1 - - [06/Mar/2026 10:50:07] "GET /services HTTP/1.1" 200 -
+2026-03-06 10:50:16,265 - INFO - 127.0.0.1 - - [06/Mar/2026 10:50:16] "GET /api/car/service/workers/pending HTTP/1.1" 200 -
+2026-03-06 10:50:16,269 - INFO - 127.0.0.1 - - [06/Mar/2026 10:50:16] "GET /api/automobile-expert/experts?status=PENDING HTTP/1.1" 200 -
+2026-03-06 10:51:52,428 - INFO - 127.0.0.1 - - [06/Mar/2026 10:51:52] "GET /services HTTP/1.1" 200 -
+2026-03-06 10:51:52,433 - INFO - 127.0.0.1 - - [06/Mar/2026 10:51:52] "GET /services HTTP/1.1" 200 -
+2026-03-06 10:51:56,349 - INFO - 127.0.0.1 - - [06/Mar/2026 10:51:56] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 10:51:56,353 - INFO - 127.0.0.1 - - [06/Mar/2026 10:51:56] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 10:52:22,924 - INFO - 127.0.0.1 - - [06/Mar/2026 10:52:22] "OPTIONS /worker/healthcare/signup HTTP/1.1" 200 -
+2026-03-06 10:52:22,929 - INFO - 127.0.0.1 - - [06/Mar/2026 10:52:22] "[31m[1mPOST /worker/healthcare/signup HTTP/1.1[0m" 400 -
+2026-03-06 10:52:44,487 - INFO - 127.0.0.1 - - [06/Mar/2026 10:52:44] "OPTIONS /worker/healthcare/signup HTTP/1.1" 200 -
+2026-03-06 10:52:44,626 - INFO - 127.0.0.1 - - [06/Mar/2026 10:52:44] "[35m[1mPOST /worker/healthcare/signup HTTP/1.1[0m" 201 -
+2026-03-06 10:52:57,589 - INFO - 127.0.0.1 - - [06/Mar/2026 10:52:57] "GET /services HTTP/1.1" 200 -
+2026-03-06 10:54:23,462 - INFO - 127.0.0.1 - - [06/Mar/2026 10:54:23] "GET /services HTTP/1.1" 200 -
+2026-03-06 11:00:52,196 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:52] "OPTIONS /login HTTP/1.1" 200 -
+2026-03-06 11:00:52,575 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:52] "POST /login HTTP/1.1" 200 -
+2026-03-06 11:00:52,583 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:52] "OPTIONS /user/info HTTP/1.1" 200 -
+2026-03-06 11:00:52,593 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:52] "GET /user/info HTTP/1.1" 200 -
+2026-03-06 11:00:52,625 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:52] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 11:00:52,633 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:52] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 11:00:52,634 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:52] "GET /services HTTP/1.1" 200 -
+2026-03-06 11:00:52,644 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:52] "GET /services HTTP/1.1" 200 -
+2026-03-06 11:00:54,781 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:54] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:00:54,785 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:54] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:00:54,793 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:54] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:00:54,801 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:54] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:00:57,559 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "OPTIONS /api/ai/cleaning-status?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,563 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "OPTIONS /api/ai/upgrade-suggestion?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,564 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "OPTIONS /api/ai/get-reminders?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,565 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "OPTIONS /api/ai/cleaning-status?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,571 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "OPTIONS /api/ai/upgrade-suggestion?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,578 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "OPTIONS /api/ai/get-reminders?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,584 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "GET /api/ai/upgrade-suggestion?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,587 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "GET /api/ai/get-reminders?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,594 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "GET /api/ai/cleaning-status?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,598 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "GET /api/ai/upgrade-suggestion?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,601 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "GET /api/ai/get-reminders?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:00:57,602 - INFO - 127.0.0.1 - - [06/Mar/2026 11:00:57] "GET /api/ai/cleaning-status?user_id=21 HTTP/1.1" 200 -
+2026-03-06 11:01:03,415 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:03] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:01:03,418 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:03] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:01:03,424 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:03] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:01:03,433 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:03] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:01:05,934 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:05] "OPTIONS /api/housekeeping/my-bookings?_t=1772775065910 HTTP/1.1" 200 -
+2026-03-06 11:01:05,935 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:05] "OPTIONS /api/housekeeping/my-bookings?_t=1772775065921 HTTP/1.1" 200 -
+2026-03-06 11:01:05,940 - INFO - Client connected: UcAaoUucD9BafakhAAAB
+2026-03-06 11:01:05,948 - INFO - Client UcAaoUucD9BafakhAAAB joined room: user_21
+2026-03-06 11:01:05,949 - INFO - Client UcAaoUucD9BafakhAAAB left room: user_21
+2026-03-06 11:01:05,950 - INFO - Client UcAaoUucD9BafakhAAAB joined room: user_21
+2026-03-06 11:01:05,951 - INFO - Client UcAaoUucD9BafakhAAAB joined room: user_21
+2026-03-06 11:01:05,957 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:05] "GET /api/housekeeping/my-bookings?_t=1772775065910 HTTP/1.1" 200 -
+2026-03-06 11:01:05,959 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:05] "GET /api/housekeeping/my-bookings?_t=1772775065921 HTTP/1.1" 200 -
+2026-03-06 11:01:29,084 - INFO - Client UcAaoUucD9BafakhAAAB left room: user_21
+2026-03-06 11:01:32,250 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:32] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:01:32,254 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:32] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:01:32,264 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:32] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:01:32,273 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:32] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 11:01:41,923 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:41] "OPTIONS /api/housekeeping/services?specialization=Deep+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:01:41,929 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:41] "GET /api/housekeeping/services?specialization=Deep+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:01:43,355 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:43] "OPTIONS /api/housekeeping/services?specialization=Bathroom+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:01:43,362 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:43] "GET /api/housekeeping/services?specialization=Bathroom+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:01:44,325 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:44] "OPTIONS /api/housekeeping/services?specialization=Kitchen+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:01:44,332 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:44] "GET /api/housekeeping/services?specialization=Kitchen+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:01:45,909 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:45] "GET /api/housekeeping/services?specialization=Bathroom+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:01:46,706 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:46] "GET /api/housekeeping/services?specialization=Deep+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:01:47,540 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:47] "OPTIONS /api/housekeeping/services?specialization=General+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:01:47,546 - INFO - 127.0.0.1 - - [06/Mar/2026 11:01:47] "GET /api/housekeeping/services?specialization=General+Cleaning HTTP/1.1" 200 -
+2026-03-06 11:02:00,525 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:00] "OPTIONS /login HTTP/1.1" 200 -
+2026-03-06 11:02:00,957 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:00] "POST /login HTTP/1.1" 200 -
+2026-03-06 11:02:00,963 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:00] "OPTIONS /user/info HTTP/1.1" 200 -
+2026-03-06 11:02:00,969 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:00] "GET /user/info HTTP/1.1" 200 -
+2026-03-06 11:02:01,001 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:01] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 11:02:01,004 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:01] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 11:02:01,016 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:01] "GET /services HTTP/1.1" 200 -
+2026-03-06 11:02:01,030 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:01] "GET /services HTTP/1.1" 200 -
+2026-03-06 11:02:02,148 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:02] "OPTIONS /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:02,150 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:02] "OPTIONS /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:02,156 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:02] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:02,165 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:02] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:02,174 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:02] "OPTIONS /healthcare/doctors HTTP/1.1" 200 -
+2026-03-06 11:02:02,183 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:02] "GET /healthcare/doctors HTTP/1.1" 200 -
+2026-03-06 11:02:02,190 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:02] "GET /healthcare/doctors HTTP/1.1" 200 -
+2026-03-06 11:02:08,765 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:08] "OPTIONS /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:08,771 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:08] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:08,782 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:08] "OPTIONS /healthcare/doctors/HEART HTTP/1.1" 200 -
+2026-03-06 11:02:08,796 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:08] "GET /healthcare/doctors/HEART HTTP/1.1" 200 -
+2026-03-06 11:02:12,327 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:12] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:12,338 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:12] "OPTIONS /healthcare/doctors HTTP/1.1" 200 -
+2026-03-06 11:02:12,344 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:12] "GET /healthcare/doctors HTTP/1.1" 200 -
+2026-03-06 11:02:15,556 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:15] "OPTIONS /user/appointments HTTP/1.1" 200 -
+2026-03-06 11:02:15,558 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:15] "OPTIONS /user/appointments HTTP/1.1" 200 -
+2026-03-06 11:02:15,568 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:15] "GET /user/appointments HTTP/1.1" 200 -
+2026-03-06 11:02:15,576 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:15] "GET /user/appointments HTTP/1.1" 200 -
+2026-03-06 11:02:21,183 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:21] "OPTIONS /user/appointments HTTP/1.1" 200 -
+2026-03-06 11:02:21,184 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:21] "OPTIONS /user/appointments HTTP/1.1" 200 -
+2026-03-06 11:02:21,192 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:21] "GET /user/appointments HTTP/1.1" 200 -
+2026-03-06 11:02:21,199 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:21] "GET /user/appointments HTTP/1.1" 200 -
+2026-03-06 11:02:22,151 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:22] "OPTIONS /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:22,153 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:22] "OPTIONS /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:22,158 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:22] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:22,164 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:22] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 11:02:22,167 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:22] "OPTIONS /healthcare/doctors HTTP/1.1" 200 -
+2026-03-06 11:02:22,181 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:22] "GET /healthcare/doctors HTTP/1.1" 200 -
+2026-03-06 11:02:22,190 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:22] "GET /healthcare/doctors HTTP/1.1" 200 -
+2026-03-06 11:02:23,719 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:23] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 11:02:23,722 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:23] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 11:02:23,728 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:23] "GET /services HTTP/1.1" 200 -
+2026-03-06 11:02:23,734 - INFO - 127.0.0.1 - - [06/Mar/2026 11:02:23] "GET /services HTTP/1.1" 200 -
+2026-03-06 11:06:26,043 - INFO - Client disconnected: UcAaoUucD9BafakhAAAB
+2026-03-06 11:06:26,075 - INFO - 127.0.0.1 - - [06/Mar/2026 11:06:26] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-03-06 11:06:26,151 - ERROR - Error on request:
+Traceback (most recent call last):
+  File "C:\Users\Admin\AppData\Roaming\Python\Python313\site-packages\werkzeug\serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+    ~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Roaming\Python\Python313\site-packages\werkzeug\serving.py", line 336, in execute
+    write(b"")
+    ~~~~~^^^^^
+  File "C:\Users\Admin\AppData\Roaming\Python\Python313\site-packages\werkzeug\serving.py", line 261, in write
+    assert status_set is not None, "write() before start_response"
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: write() before start_response
+2026-03-06 11:06:26,155 - INFO -  * Detected change in 'C:\\Users\\Admin\\AppData\\Roaming\\Python\\Python313\\site-packages\\werkzeug\\serving.py', reloading
+2026-03-06 11:06:27,008 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 11:06:29,781 - INFO - Video signaling server initialized
+2026-03-06 11:06:29,827 - WARNING -  * Debugger is active!
+2026-03-06 11:06:29,830 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 11:08:54,817 - INFO -  * Detected change in 'C:\\Program Files\\Python313\\Lib\\xmlrpc\\__init__.py', reloading
+2026-03-06 11:08:55,870 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 11:08:59,155 - INFO - Video signaling server initialized
+2026-03-06 11:08:59,199 - WARNING -  * Debugger is active!
+2026-03-06 11:08:59,204 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 11:09:01,084 - INFO -  * Detected change in 'C:\\Program Files\\Python313\\Lib\\encodings\\shift_jisx0213.py', reloading
+2026-03-06 11:09:01,510 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 11:09:04,247 - INFO - Video signaling server initialized
+2026-03-06 11:09:04,284 - WARNING -  * Debugger is active!
+2026-03-06 11:09:04,288 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 11:09:10,774 - INFO -  * Detected change in 'C:\\Program Files\\Python313\\Lib\\encodings\\iso8859_13.py', reloading
+2026-03-06 11:09:11,616 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 11:09:14,572 - INFO - Video signaling server initialized
+2026-03-06 11:09:14,617 - WARNING -  * Debugger is active!
+2026-03-06 11:09:14,621 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 11:09:17,481 - INFO -  * Detected change in 'C:\\Program Files\\Python313\\Lib\\encodings\\utf_8.py', reloading
+2026-03-06 11:09:18,021 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 11:09:21,068 - INFO - Video signaling server initialized
+2026-03-06 11:09:21,134 - WARNING -  * Debugger is active!
+2026-03-06 11:09:21,141 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 11:09:22,116 - INFO -  * Detected change in 'C:\\Program Files\\Python313\\Lib\\encodings\\cp1257.py', reloading
+2026-03-06 11:09:22,497 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 11:09:26,004 - INFO - Video signaling server initialized
+2026-03-06 11:09:26,046 - WARNING -  * Debugger is active!
+2026-03-06 11:09:26,049 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 13:27:14,300 - INFO - Video signaling server initialized
+2026-03-06 13:27:14,376 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.76.128.162:5000
+2026-03-06 13:27:14,376 - INFO - [33mPress CTRL+C to quit[0m
+2026-03-06 13:27:14,376 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 13:27:16,368 - INFO - Video signaling server initialized
+2026-03-06 13:27:16,418 - WARNING -  * Debugger is active!
+2026-03-06 13:27:16,424 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 13:27:35,172 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\admin.py', reloading
+2026-03-06 13:27:35,198 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\admin_auth.py', reloading
+2026-03-06 13:27:35,227 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\admin_cli.py', reloading
+2026-03-06 13:27:35,229 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\admin_db.py', reloading
+2026-03-06 13:27:35,249 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\admin_routes.py', reloading
+2026-03-06 13:27:35,254 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\ai_doctor_analyzer.py', reloading
+2026-03-06 13:27:35,284 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\ai_engine.py', reloading
+2026-03-06 13:27:35,338 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\assign_free_trial.py', reloading
+2026-03-06 13:27:35,342 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\auth_utils.py', reloading
+2026-03-06 13:27:35,359 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\availability_db.py', reloading
+2026-03-06 13:27:35,420 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\ask_expert\\__init__.py', reloading
+2026-03-06 13:27:35,462 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\ask_expert\\cli.py', reloading
+2026-03-06 13:27:35,466 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\ask_expert\\db.py', reloading
+2026-03-06 13:27:35,490 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\ask_expert\\enhanced_cli.py', reloading
+2026-03-06 13:27:35,492 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\ask_expert\\models.py', reloading
+2026-03-06 13:27:35,517 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\ask_expert\\routes.py', reloading
+2026-03-06 13:27:35,543 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\ask_expert\\services.py', reloading
+2026-03-06 13:27:35,571 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\ask_expert_cli.py', reloading
+2026-03-06 13:27:35,605 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\automobile_expert_cli.py', reloading
+2026-03-06 13:27:35,609 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\automobile_expert_db.py', reloading
+2026-03-06 13:27:35,639 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\automobile_expert_routes.py', reloading
+2026-03-06 13:27:35,668 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\book_mechanic_cli.py', reloading
+2026-03-06 13:27:35,697 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\booking_db.py', reloading
+2026-03-06 13:27:35,700 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\car_profile_db.py', reloading
+2026-03-06 13:27:35,704 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\car_service\\car_routes.py', reloading
+2026-03-06 13:27:35,965 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 13:27:37,819 - INFO - Video signaling server initialized
+2026-03-06 13:27:37,852 - WARNING -  * Debugger is active!
+2026-03-06 13:27:37,857 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 13:27:39,167 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\get_worker_email.py', reloading
+2026-03-06 13:27:39,168 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\healthcare.py', reloading
+2026-03-06 13:27:39,199 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\healthcare_admin.py', reloading
+2026-03-06 13:27:39,322 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\__init__.py', reloading
+2026-03-06 13:27:39,345 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\arrival\\backend\\controllers\\ai_advisor_controller.py', reloading
+2026-03-06 13:27:39,367 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\arrival\\backend\\controllers\\arrival_controller.py', reloading
+2026-03-06 13:27:39,400 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\arrival\\backend\\services\\ai_advisor_service.py', reloading
+2026-03-06 13:27:39,425 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\arrival\\backend\\services\\arrival_service.py', reloading
+2026-03-06 13:27:39,642 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\cli.py', reloading
+2026-03-06 13:27:39,645 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\migrations\\add_otp_columns.py', reloading
+2026-03-06 13:27:39,674 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\models\\database.py', reloading
+2026-03-06 13:27:39,677 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\provider\\backend\\controllers\\auth_controller.py', reloading
+2026-03-06 13:27:39,699 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\provider\\backend\\services\\auth_service.py', reloading
+2026-03-06 13:27:40,144 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 13:27:41,766 - INFO - Video signaling server initialized
+2026-03-06 13:27:41,796 - WARNING -  * Debugger is active!
+2026-03-06 13:27:41,798 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 13:28:45,159 - INFO - Video signaling server initialized
+2026-03-06 13:28:45,221 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.76.128.162:5000
+2026-03-06 13:28:45,221 - INFO - [33mPress CTRL+C to quit[0m
+2026-03-06 13:28:45,222 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 13:28:47,145 - INFO - Video signaling server initialized
+2026-03-06 13:28:47,182 - WARNING -  * Debugger is active!
+2026-03-06 13:28:47,193 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 13:29:04,641 - INFO - 127.0.0.1 - - [06/Mar/2026 13:29:04] "GET /services HTTP/1.1" 200 -
+2026-03-06 13:29:10,978 - INFO - 127.0.0.1 - - [06/Mar/2026 13:29:10] "POST /login HTTP/1.1" 200 -
+2026-03-06 13:29:14,190 - INFO - 127.0.0.1 - - [06/Mar/2026 13:29:14] "[33mGET /api/car/profile HTTP/1.1[0m" 404 -
+2026-03-06 13:30:46,749 - INFO - 127.0.0.1 - - [06/Mar/2026 13:30:46] "[35m[1mPOST /api/car/setup-profile HTTP/1.1[0m" 201 -
+2026-03-06 13:31:11,047 - INFO - 127.0.0.1 - - [06/Mar/2026 13:31:11] "GET /api/car/service/workers/pending HTTP/1.1" 200 -
+2026-03-06 13:31:11,052 - INFO - 127.0.0.1 - - [06/Mar/2026 13:31:11] "GET /api/automobile-expert/experts?status=PENDING HTTP/1.1" 200 -
+2026-03-06 13:31:14,141 - INFO - 127.0.0.1 - - [06/Mar/2026 13:31:14] "GET /api/car/service/workers/approved HTTP/1.1" 200 -
+2026-03-06 13:31:14,146 - INFO - 127.0.0.1 - - [06/Mar/2026 13:31:14] "GET /api/automobile-expert/experts?status=APPROVED HTTP/1.1" 200 -
+2026-03-06 13:33:30,551 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:30] "OPTIONS /user/info HTTP/1.1" 200 -
+2026-03-06 13:33:30,554 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:30] "OPTIONS /user/info HTTP/1.1" 200 -
+2026-03-06 13:33:30,560 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:30] "[31m[1mGET /user/info HTTP/1.1[0m" 401 -
+2026-03-06 13:33:30,567 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:30] "[31m[1mGET /user/info HTTP/1.1[0m" 401 -
+2026-03-06 13:33:30,575 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:30] "OPTIONS /api/provider/auth/me HTTP/1.1" 200 -
+2026-03-06 13:33:30,580 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:30] "OPTIONS /api/provider/auth/me HTTP/1.1" 200 -
+2026-03-06 13:33:30,586 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:30] "[31m[1mGET /api/provider/auth/me HTTP/1.1[0m" 401 -
+2026-03-06 13:33:30,596 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:30] "[31m[1mGET /api/provider/auth/me HTTP/1.1[0m" 401 -
+2026-03-06 13:33:32,435 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:32] "GET /services HTTP/1.1" 200 -
+2026-03-06 13:33:32,440 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:32] "GET /services HTTP/1.1" 200 -
+2026-03-06 13:33:38,307 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:38] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 13:33:38,316 - INFO - 127.0.0.1 - - [06/Mar/2026 13:33:38] "GET /healthcare/specializations HTTP/1.1" 200 -
+2026-03-06 13:34:42,695 - INFO - 127.0.0.1 - - [06/Mar/2026 13:34:42] "OPTIONS /worker/healthcare/signup HTTP/1.1" 200 -
+2026-03-06 13:34:42,719 - INFO - 127.0.0.1 - - [06/Mar/2026 13:34:42] "[35m[1mPOST /worker/healthcare/signup HTTP/1.1[0m" 201 -
+2026-03-06 19:52:59,833 - INFO - Video signaling server initialized
+2026-03-06 19:52:59,941 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.0.104:5000
+2026-03-06 19:52:59,942 - INFO - [33mPress CTRL+C to quit[0m
+2026-03-06 19:52:59,942 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 19:53:02,576 - INFO - Video signaling server initialized
+2026-03-06 19:53:02,618 - WARNING -  * Debugger is active!
+2026-03-06 19:53:02,623 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 19:53:08,664 - INFO - 127.0.0.1 - - [06/Mar/2026 19:53:08] "GET /services HTTP/1.1" 200 -
+2026-03-06 19:54:13,691 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 19:54:14,915 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 19:54:16,982 - INFO - Video signaling server initialized
+2026-03-06 19:54:17,022 - WARNING -  * Debugger is active!
+2026-03-06 19:54:17,028 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 19:56:27,676 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 19:56:27,677 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 19:56:28,248 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 19:56:30,200 - INFO - Video signaling server initialized
+2026-03-06 19:56:30,240 - WARNING -  * Debugger is active!
+2026-03-06 19:56:30,245 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 19:56:48,758 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 19:56:48,758 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 19:56:49,848 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 19:56:52,179 - INFO - Video signaling server initialized
+2026-03-06 19:56:52,221 - WARNING -  * Debugger is active!
+2026-03-06 19:56:52,226 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 19:57:59,681 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 19:57:59,685 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 19:58:00,462 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 19:58:02,415 - INFO - Video signaling server initialized
+2026-03-06 19:58:02,450 - WARNING -  * Debugger is active!
+2026-03-06 19:58:02,453 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 19:58:38,161 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 19:58:38,162 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\cli.py', reloading
+2026-03-06 19:58:39,296 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 19:58:41,120 - INFO - Video signaling server initialized
+2026-03-06 19:58:41,154 - WARNING -  * Debugger is active!
+2026-03-06 19:58:41,157 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 19:58:46,189 - INFO - 127.0.0.1 - - [06/Mar/2026 19:58:46] "GET /services HTTP/1.1" 200 -
+2026-03-06 19:58:56,667 - INFO - 127.0.0.1 - - [06/Mar/2026 19:58:56] "GET /services HTTP/1.1" 200 -
+2026-03-06 19:59:04,778 - INFO - 127.0.0.1 - - [06/Mar/2026 19:59:04] "GET /admin/workers/pending?service=healthcare HTTP/1.1" 200 -
+2026-03-06 20:00:15,993 - INFO - 127.0.0.1 - - [06/Mar/2026 20:00:15] "GET /services HTTP/1.1" 200 -
+2026-03-06 20:00:15,998 - INFO - 127.0.0.1 - - [06/Mar/2026 20:00:15] "GET /services HTTP/1.1" 200 -
+2026-03-06 20:00:24,319 - INFO - 127.0.0.1 - - [06/Mar/2026 20:00:24] "OPTIONS /worker/login HTTP/1.1" 200 -
+2026-03-06 20:00:24,330 - INFO - 127.0.0.1 - - [06/Mar/2026 20:00:24] "[33mPOST /worker/login HTTP/1.1[0m" 404 -
+2026-03-06 20:00:31,154 - INFO - 127.0.0.1 - - [06/Mar/2026 20:00:31] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 20:00:31,165 - INFO - 127.0.0.1 - - [06/Mar/2026 20:00:31] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 20:00:47,870 - INFO - 127.0.0.1 - - [06/Mar/2026 20:00:47] "OPTIONS /worker/signup HTTP/1.1" 200 -
+2026-03-06 20:00:47,900 - INFO - 127.0.0.1 - - [06/Mar/2026 20:00:47] "[35m[1mPOST /worker/signup HTTP/1.1[0m" 201 -
+2026-03-06 20:00:58,157 - INFO - 127.0.0.1 - - [06/Mar/2026 20:00:58] "GET /services HTTP/1.1" 200 -
+2026-03-06 20:01:02,556 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:02] "GET /admin/workers/pending?service=housekeeping HTTP/1.1" 200 -
+2026-03-06 20:01:17,703 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:17] "GET /admin/workers/pending?service=housekeeping HTTP/1.1" 200 -
+2026-03-06 20:01:31,033 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:31] "GET /admin/workers/pending?service=housekeeping HTTP/1.1" 200 -
+2026-03-06 20:01:32,772 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:32] "POST /admin/worker/approve/11 HTTP/1.1" 200 -
+2026-03-06 20:01:46,820 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "OPTIONS /worker/login HTTP/1.1" 200 -
+2026-03-06 20:01:46,830 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "POST /worker/login HTTP/1.1" 200 -
+2026-03-06 20:01:46,913 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "OPTIONS /api/housekeeping/my-bookings?_t=1772807506903 HTTP/1.1" 200 -
+2026-03-06 20:01:46,918 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "OPTIONS /api/housekeeping/worker/status HTTP/1.1" 200 -
+2026-03-06 20:01:46,921 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "OPTIONS /api/housekeeping/my-bookings?_t=1772807506907 HTTP/1.1" 200 -
+2026-03-06 20:01:46,928 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "OPTIONS /api/housekeeping/worker/status HTTP/1.1" 200 -
+2026-03-06 20:01:46,934 - INFO - Client connected: _15BidUK37pikTDsAAAB
+2026-03-06 20:01:46,952 - INFO - Client _15BidUK37pikTDsAAAB joined room: worker_11
+2026-03-06 20:01:46,955 - INFO - Client _15BidUK37pikTDsAAAB left room: worker_11
+2026-03-06 20:01:46,957 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "GET /api/housekeeping/worker/status HTTP/1.1" 200 -
+2026-03-06 20:01:46,958 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "GET /api/housekeeping/my-bookings?_t=1772807506903 HTTP/1.1" 200 -
+2026-03-06 20:01:46,959 - INFO - Client _15BidUK37pikTDsAAAB joined room: worker_11
+2026-03-06 20:01:46,961 - INFO - Client _15BidUK37pikTDsAAAB joined room: worker_11
+2026-03-06 20:01:46,965 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "GET /api/housekeeping/my-bookings?_t=1772807506907 HTTP/1.1" 200 -
+2026-03-06 20:01:46,969 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:46] "GET /api/housekeeping/worker/status HTTP/1.1" 200 -
+2026-03-06 20:01:50,781 - INFO - Client _15BidUK37pikTDsAAAB left room: worker_11
+2026-03-06 20:01:57,929 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:57] "OPTIONS /login HTTP/1.1" 200 -
+2026-03-06 20:01:58,718 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:58] "POST /login HTTP/1.1" 200 -
+2026-03-06 20:01:58,725 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:58] "OPTIONS /user/info HTTP/1.1" 200 -
+2026-03-06 20:01:58,732 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:58] "GET /user/info HTTP/1.1" 200 -
+2026-03-06 20:01:58,771 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:58] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 20:01:58,775 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:58] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 20:01:58,781 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:58] "GET /services HTTP/1.1" 200 -
+2026-03-06 20:01:58,794 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:58] "GET /services HTTP/1.1" 200 -
+2026-03-06 20:01:59,634 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:59] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 20:01:59,637 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:59] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 20:01:59,644 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:59] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 20:01:59,657 - INFO - 127.0.0.1 - - [06/Mar/2026 20:01:59] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 20:02:02,337 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:02] "OPTIONS /api/housekeeping/services?worker_id=11 HTTP/1.1" 200 -
+2026-03-06 20:02:02,342 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:02] "OPTIONS /api/housekeeping/services?worker_id=11 HTTP/1.1" 200 -
+2026-03-06 20:02:02,354 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:02] "GET /api/housekeeping/services?worker_id=11 HTTP/1.1" 200 -
+2026-03-06 20:02:02,366 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:02] "GET /api/housekeeping/services?worker_id=11 HTTP/1.1" 200 -
+2026-03-06 20:02:05,887 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:05] "OPTIONS /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 20:02:05,897 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:05] "GET /api/housekeeping/services HTTP/1.1" 200 -
+2026-03-06 20:02:07,668 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:07] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807527661&_t=1772807527661 HTTP/1.1[0m" 404 -
+2026-03-06 20:02:12,671 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:12] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807532665&_t=1772807532665 HTTP/1.1[0m" 404 -
+2026-03-06 20:02:18,612 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:18] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807538606&_t=1772807538606 HTTP/1.1[0m" 404 -
+2026-03-06 20:02:23,626 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:23] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807543618&_t=1772807543618 HTTP/1.1[0m" 404 -
+2026-03-06 20:02:28,626 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:28] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807548619&_t=1772807548619 HTTP/1.1[0m" 404 -
+2026-03-06 20:02:33,626 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:33] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807553618&_t=1772807553618 HTTP/1.1[0m" 404 -
+2026-03-06 20:02:38,618 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:38] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807558611&_t=1772807558611 HTTP/1.1[0m" 404 -
+2026-03-06 20:02:46,022 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:46] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807566018&_t=1772807566018 HTTP/1.1[0m" 404 -
+2026-03-06 20:02:51,033 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:51] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807571025&_t=1772807571025 HTTP/1.1[0m" 404 -
+2026-03-06 20:02:59,453 - INFO - 127.0.0.1 - - [06/Mar/2026 20:02:59] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807579449&_t=1772807579449 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:03,994 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:03] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807583986 HTTP/1.1" 200 -
+2026-03-06 20:03:04,015 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:04] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807583986 HTTP/1.1" 200 -
+2026-03-06 20:03:04,463 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:04] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807584458&_t=1772807584458 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:08,996 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:08] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807588989 HTTP/1.1" 200 -
+2026-03-06 20:03:09,018 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:09] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807588989 HTTP/1.1" 200 -
+2026-03-06 20:03:09,454 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:09] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807589449&_t=1772807589449 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:22,939 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:22] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807602932 HTTP/1.1" 200 -
+2026-03-06 20:03:22,941 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:22] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807602932&_t=1772807602932 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:22,974 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:22] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807602932 HTTP/1.1" 200 -
+2026-03-06 20:03:27,946 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:27] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807607939 HTTP/1.1" 200 -
+2026-03-06 20:03:27,949 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:27] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807607940&_t=1772807607940 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:27,975 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:27] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807607939 HTTP/1.1" 200 -
+2026-03-06 20:03:33,733 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:33] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807613724 HTTP/1.1" 200 -
+2026-03-06 20:03:33,735 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:33] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807613726&_t=1772807613726 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:33,749 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:33] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807613724 HTTP/1.1" 200 -
+2026-03-06 20:03:38,729 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:38] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807618722 HTTP/1.1" 200 -
+2026-03-06 20:03:38,732 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:38] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807618723&_t=1772807618723 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:38,748 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:38] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807618722 HTTP/1.1" 200 -
+2026-03-06 20:03:43,730 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:43] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807623725 HTTP/1.1" 200 -
+2026-03-06 20:03:43,733 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:43] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807623727&_t=1772807623727 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:43,748 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:43] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807623725 HTTP/1.1" 200 -
+2026-03-06 20:03:48,739 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:48] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807628734 HTTP/1.1" 200 -
+2026-03-06 20:03:48,741 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:48] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807628734&_t=1772807628734 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:48,752 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:48] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807628734 HTTP/1.1" 200 -
+2026-03-06 20:03:53,730 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:53] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807633724 HTTP/1.1" 200 -
+2026-03-06 20:03:53,733 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:53] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807633726&_t=1772807633726 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:53,743 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:53] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807633724 HTTP/1.1" 200 -
+2026-03-06 20:03:58,734 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:58] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807638726 HTTP/1.1" 200 -
+2026-03-06 20:03:58,736 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:58] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807638727&_t=1772807638727 HTTP/1.1[0m" 404 -
+2026-03-06 20:03:58,751 - INFO - 127.0.0.1 - - [06/Mar/2026 20:03:58] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807638726 HTTP/1.1" 200 -
+2026-03-06 20:04:03,741 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:03] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807643734 HTTP/1.1" 200 -
+2026-03-06 20:04:03,744 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:03] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807643735&_t=1772807643735 HTTP/1.1[0m" 404 -
+2026-03-06 20:04:03,755 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:03] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807643734 HTTP/1.1" 200 -
+2026-03-06 20:04:08,739 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:08] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807648732 HTTP/1.1" 200 -
+2026-03-06 20:04:08,740 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:08] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807648732&_t=1772807648732 HTTP/1.1[0m" 404 -
+2026-03-06 20:04:08,753 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:08] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807648732 HTTP/1.1" 200 -
+2026-03-06 20:04:13,731 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:13] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807653724 HTTP/1.1" 200 -
+2026-03-06 20:04:13,734 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:13] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807653725&_t=1772807653725 HTTP/1.1[0m" 404 -
+2026-03-06 20:04:13,744 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:13] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807653724 HTTP/1.1" 200 -
+2026-03-06 20:04:18,740 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:18] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807658734 HTTP/1.1" 200 -
+2026-03-06 20:04:18,742 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:18] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807658736&_t=1772807658736 HTTP/1.1[0m" 404 -
+2026-03-06 20:04:18,753 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:18] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807658734 HTTP/1.1" 200 -
+2026-03-06 20:04:23,743 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:23] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807663733 HTTP/1.1" 200 -
+2026-03-06 20:04:23,745 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:23] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807663735&_t=1772807663735 HTTP/1.1[0m" 404 -
+2026-03-06 20:04:23,758 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:23] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807663733 HTTP/1.1" 200 -
+2026-03-06 20:04:44,730 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:44] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807684722 HTTP/1.1" 200 -
+2026-03-06 20:04:44,732 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:44] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807684724&_t=1772807684724 HTTP/1.1[0m" 404 -
+2026-03-06 20:04:44,743 - INFO - 127.0.0.1 - - [06/Mar/2026 20:04:44] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807684722 HTTP/1.1" 200 -
+2026-03-06 20:05:44,730 - INFO - 127.0.0.1 - - [06/Mar/2026 20:05:44] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807744721 HTTP/1.1" 200 -
+2026-03-06 20:05:44,732 - INFO - 127.0.0.1 - - [06/Mar/2026 20:05:44] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807744722&_t=1772807744722 HTTP/1.1[0m" 404 -
+2026-03-06 20:05:44,744 - INFO - 127.0.0.1 - - [06/Mar/2026 20:05:44] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807744721 HTTP/1.1" 200 -
+2026-03-06 20:06:44,739 - INFO - 127.0.0.1 - - [06/Mar/2026 20:06:44] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807804733 HTTP/1.1" 200 -
+2026-03-06 20:06:44,740 - INFO - 127.0.0.1 - - [06/Mar/2026 20:06:44] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807804734&_t=1772807804734 HTTP/1.1[0m" 404 -
+2026-03-06 20:06:44,751 - INFO - 127.0.0.1 - - [06/Mar/2026 20:06:44] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807804733 HTTP/1.1" 200 -
+2026-03-06 20:07:44,735 - INFO - 127.0.0.1 - - [06/Mar/2026 20:07:44] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807864729 HTTP/1.1" 200 -
+2026-03-06 20:07:44,737 - INFO - 127.0.0.1 - - [06/Mar/2026 20:07:44] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807864731&_t=1772807864731 HTTP/1.1[0m" 404 -
+2026-03-06 20:07:44,749 - INFO - 127.0.0.1 - - [06/Mar/2026 20:07:44] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807864729 HTTP/1.1" 200 -
+2026-03-06 20:08:44,738 - INFO - 127.0.0.1 - - [06/Mar/2026 20:08:44] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807924728 HTTP/1.1" 200 -
+2026-03-06 20:08:44,739 - INFO - 127.0.0.1 - - [06/Mar/2026 20:08:44] "[33mOPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807924731&_t=1772807924731 HTTP/1.1[0m" 404 -
+2026-03-06 20:08:44,752 - INFO - 127.0.0.1 - - [06/Mar/2026 20:08:44] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807924728 HTTP/1.1" 200 -
+2026-03-06 20:08:48,867 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\controllers\\booking_controller.py', reloading
+2026-03-06 20:08:48,868 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\controllers\\booking_controller.py', reloading
+2026-03-06 20:08:49,234 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 20:08:51,576 - INFO - Video signaling server initialized
+2026-03-06 20:08:51,611 - WARNING -  * Debugger is active!
+2026-03-06 20:08:51,614 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 20:08:51,637 - INFO - Client connected: OOSd5D15-ONVy1eBAAAB
+2026-03-06 20:08:58,690 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:08:58,691 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:08:58,931 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 20:09:00,553 - INFO - Video signaling server initialized
+2026-03-06 20:09:00,597 - WARNING -  * Debugger is active!
+2026-03-06 20:09:00,602 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 20:09:00,626 - INFO - Client connected: r3Ip7bXr0hJlD54dAAAB
+2026-03-06 20:09:08,853 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:09:08,854 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:09:10,002 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 20:09:11,928 - INFO - Video signaling server initialized
+2026-03-06 20:09:11,962 - WARNING -  * Debugger is active!
+2026-03-06 20:09:11,966 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 20:09:11,986 - INFO - Client connected: 8Y3zYTuErcyapwcvAAAB
+2026-03-06 20:09:44,734 - INFO - 127.0.0.1 - - [06/Mar/2026 20:09:44] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807984727 HTTP/1.1" 200 -
+2026-03-06 20:09:44,736 - INFO - 127.0.0.1 - - [06/Mar/2026 20:09:44] "OPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807984728&_t=1772807984728 HTTP/1.1" 200 -
+2026-03-06 20:09:44,744 - INFO - 127.0.0.1 - - [06/Mar/2026 20:09:44] "GET /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772807984728&_t=1772807984728 HTTP/1.1" 200 -
+2026-03-06 20:09:44,756 - INFO - 127.0.0.1 - - [06/Mar/2026 20:09:44] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772807984727 HTTP/1.1" 200 -
+2026-03-06 20:10:09,660 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:10:09,661 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:10:10,255 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 20:10:12,695 - INFO - Video signaling server initialized
+2026-03-06 20:10:12,743 - WARNING -  * Debugger is active!
+2026-03-06 20:10:12,747 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 20:10:21,701 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:10:21,702 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:10:22,208 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 20:10:24,532 - INFO - Video signaling server initialized
+2026-03-06 20:10:24,569 - WARNING -  * Debugger is active!
+2026-03-06 20:10:24,573 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 20:10:30,344 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:10:30,345 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\services\\booking_service.py', reloading
+2026-03-06 20:10:30,956 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 20:10:32,965 - INFO - Video signaling server initialized
+2026-03-06 20:10:32,995 - WARNING -  * Debugger is active!
+2026-03-06 20:10:32,999 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 20:11:37,088 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\controllers\\booking_controller.py', reloading
+2026-03-06 20:11:37,089 - INFO -  * Detected change in 'D:\\cdata13-04-2023\\Downloads\\ExpertEase\\ExpertEase\\housekeeping\\controllers\\booking_controller.py', reloading
+2026-03-06 20:11:38,194 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 20:11:40,117 - INFO - Video signaling server initialized
+2026-03-06 20:11:40,150 - WARNING -  * Debugger is active!
+2026-03-06 20:11:40,153 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 20:23:09,742 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:09] "GET /services HTTP/1.1" 200 -
+2026-03-06 20:23:17,461 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:17] "[31m[1mPOST /login HTTP/1.1[0m" 401 -
+2026-03-06 20:23:28,858 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:28] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808808804 HTTP/1.1" 200 -
+2026-03-06 20:23:28,862 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:28] "OPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808808846&_t=1772808808846 HTTP/1.1" 200 -
+2026-03-06 20:23:28,879 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:28] "GET /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808808846&_t=1772808808846 HTTP/1.1" 200 -
+2026-03-06 20:23:28,894 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:28] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808808804 HTTP/1.1" 200 -
+2026-03-06 20:23:29,899 - INFO - Client connected: obRpgj3Pi78PYw7RAAAB
+2026-03-06 20:23:33,707 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:33] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808813698 HTTP/1.1" 200 -
+2026-03-06 20:23:33,713 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:33] "OPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808813700&_t=1772808813700 HTTP/1.1" 200 -
+2026-03-06 20:23:33,724 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:33] "GET /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808813700&_t=1772808813700 HTTP/1.1" 200 -
+2026-03-06 20:23:33,731 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:33] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808813698 HTTP/1.1" 200 -
+2026-03-06 20:23:38,710 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:38] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808818700 HTTP/1.1" 200 -
+2026-03-06 20:23:38,715 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:38] "OPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808818702&_t=1772808818702 HTTP/1.1" 200 -
+2026-03-06 20:23:38,727 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:38] "GET /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808818702&_t=1772808818702 HTTP/1.1" 200 -
+2026-03-06 20:23:38,738 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:38] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808818700 HTTP/1.1" 200 -
+2026-03-06 20:23:43,708 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:43] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808823700 HTTP/1.1" 200 -
+2026-03-06 20:23:43,711 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:43] "OPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808823701&_t=1772808823701 HTTP/1.1" 200 -
+2026-03-06 20:23:43,722 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:43] "GET /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808823701&_t=1772808823701 HTTP/1.1" 200 -
+2026-03-06 20:23:43,735 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:43] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808823700 HTTP/1.1" 200 -
+2026-03-06 20:23:48,712 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:48] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808828705 HTTP/1.1" 200 -
+2026-03-06 20:23:48,715 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:48] "OPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808828706&_t=1772808828706 HTTP/1.1" 200 -
+2026-03-06 20:23:48,734 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:48] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808828705 HTTP/1.1" 200 -
+2026-03-06 20:23:48,737 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:48] "GET /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808828706&_t=1772808828706 HTTP/1.1" 200 -
+2026-03-06 20:23:53,714 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:53] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808833707 HTTP/1.1" 200 -
+2026-03-06 20:23:53,718 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:53] "OPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808833709&_t=1772808833709 HTTP/1.1" 200 -
+2026-03-06 20:23:53,729 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:53] "GET /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808833709&_t=1772808833709 HTTP/1.1" 200 -
+2026-03-06 20:23:53,740 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:53] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808833707 HTTP/1.1" 200 -
+2026-03-06 20:23:57,916 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:57] "OPTIONS /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808837913 HTTP/1.1" 200 -
+2026-03-06 20:23:57,919 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:57] "OPTIONS /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808837914&_t=1772808837914 HTTP/1.1" 200 -
+2026-03-06 20:23:57,928 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:57] "GET /api/housekeeping/recommendations/workers?service_type=General+Cleaning%26_t%3D1772808837914&_t=1772808837914 HTTP/1.1" 200 -
+2026-03-06 20:23:57,934 - INFO - 127.0.0.1 - - [06/Mar/2026 20:23:57] "GET /api/housekeeping/slots?service_type=General+Cleaning&date=2026-03-13&_t=1772808837913 HTTP/1.1" 200 -
+2026-03-06 20:24:09,376 - INFO - 127.0.0.1 - - [06/Mar/2026 20:24:09] "OPTIONS /login HTTP/1.1" 200 -
+2026-03-06 20:24:10,175 - INFO - 127.0.0.1 - - [06/Mar/2026 20:24:10] "POST /login HTTP/1.1" 200 -
+2026-03-06 20:24:10,183 - INFO - 127.0.0.1 - - [06/Mar/2026 20:24:10] "OPTIONS /user/info HTTP/1.1" 200 -
+2026-03-06 20:24:10,196 - INFO - 127.0.0.1 - - [06/Mar/2026 20:24:10] "GET /user/info HTTP/1.1" 200 -
+2026-03-06 20:24:10,227 - INFO - 127.0.0.1 - - [06/Mar/2026 20:24:10] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 20:24:10,230 - INFO - 127.0.0.1 - - [06/Mar/2026 20:24:10] "OPTIONS /services HTTP/1.1" 200 -
+2026-03-06 20:24:10,234 - INFO - 127.0.0.1 - - [06/Mar/2026 20:24:10] "GET /services HTTP/1.1" 200 -
+2026-03-06 20:24:10,248 - INFO - 127.0.0.1 - - [06/Mar/2026 20:24:10] "GET /services HTTP/1.1" 200 -
+2026-03-06 20:32:50,095 - INFO - Client disconnected: obRpgj3Pi78PYw7RAAAB
+2026-03-06 20:32:50,110 - INFO - 127.0.0.1 - - [06/Mar/2026 20:32:50] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-03-06 20:32:50,186 - ERROR - Error on request:
+Traceback (most recent call last):
+  File "C:\Users\Admin\AppData\Roaming\Python\Python313\site-packages\werkzeug\serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+    ~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Roaming\Python\Python313\site-packages\werkzeug\serving.py", line 336, in execute
+    write(b"")
+    ~~~~~^^^^^
+  File "C:\Users\Admin\AppData\Roaming\Python\Python313\site-packages\werkzeug\serving.py", line 261, in write
+    assert status_set is not None, "write() before start_response"
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: write() before start_response
+2026-03-06 20:32:50,194 - INFO -  * Detected change in 'C:\\Users\\Admin\\AppData\\Roaming\\Python\\Python313\\site-packages\\werkzeug\\serving.py', reloading
+2026-03-06 20:32:51,621 - INFO -  * Restarting with watchdog (windowsapi)
+2026-03-06 20:32:53,439 - INFO - Video signaling server initialized
+2026-03-06 20:32:53,482 - WARNING -  * Debugger is active!
+2026-03-06 20:32:53,490 - INFO -  * Debugger PIN: 814-951-312
+2026-03-06 20:38:49,754 - INFO - Client connected: JD-nqy7MHaPlvidkAAAB
+2026-03-06 20:44:49,909 - INFO - Client disconnected: JD-nqy7MHaPlvidkAAAB
+2026-03-06 20:44:49,983 - INFO - 127.0.0.1 - - [06/Mar/2026 20:44:49] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-03-06 20:44:50,052 - ERROR - Error on request:
+Traceback (most recent call last):
+  File "C:\Users\Admin\AppData\Roaming\Python\Python313\site-packages\werkzeug\serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+    ~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Admin\AppData\Roaming\Python\Python313\site-packages\werkzeug\serving.py", line 336, in execute
+    write(b"")
+    ~~~~~^^^^^
+  File "C:\Users\Admin\AppData\Roaming\Python\Python313\site-packages\werkzeug\serving.py", line 261, in write
+    assert status_set is not None, "write() before start_response"
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: write() before start_response

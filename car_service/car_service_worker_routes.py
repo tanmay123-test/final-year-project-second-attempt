@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from auth_utils import verify_token
 from car_service.car_service_worker_db import car_service_worker_db
+from car_service.fuel_delivery_db import fuel_delivery_db
 
 car_service_worker_bp = Blueprint("car_service_worker", __name__)
 
@@ -222,6 +223,19 @@ def update_worker_admin_status():
         
         success = car_service_worker_db.update_worker_status(int(worker_id), status)
         if success:
+            # Sync approval status for Fuel Delivery Agent in fuel_delivery_agents
+            try:
+                w = car_service_worker_db.get_worker_by_id(int(worker_id))
+                if w and w.get("role") == "Fuel Delivery Agent":
+                    cur = fuel_delivery_db.conn.cursor()
+                    cur.execute(
+                        "UPDATE fuel_delivery_agents SET approval_status = ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?",
+                        (status, w.get("email"))
+                    )
+                    fuel_delivery_db.conn.commit()
+                    cur.close()
+            except Exception as e:
+                print(f"⚠️ Fuel agent approval sync failed: {e}")
             return jsonify({"success": True, "message": f"Worker status updated to {status}"}), 200
         else:
             return jsonify({"error": "Worker not found"}), 404
@@ -229,6 +243,21 @@ def update_worker_admin_status():
     except Exception as e:
         print(f"❌ Update worker status error: {e}")
         return jsonify({"error": "Failed to update status"}), 500
+
+@car_service_worker_bp.route("/api/car/service/workers/pending", methods=["GET"])
+def get_pending_workers():
+    """Get all pending car service workers for admin approval"""
+    try:
+        workers = car_service_worker_db.get_pending_workers()
+        clean_workers = []
+        for w in workers:
+            cw = dict(w)
+            cw.pop("password_hash", None)
+            clean_workers.append(cw)
+        return jsonify({"workers": clean_workers}), 200
+    except Exception as e:
+        print(f"❌ Get pending car service workers error: {e}")
+        return jsonify({"error": "Failed to get pending workers"}), 500
 
 @car_service_worker_bp.route("/api/car/service/workers/approved", methods=["GET"])
 def get_approved_workers():
@@ -325,26 +354,3 @@ def update_worker_availability():
     except Exception as e:
         print(f"❌ Update worker availability error: {e}")
         return jsonify({"error": "Failed to update availability"}), 500
-
-@car_service_worker_bp.route("/api/car/service/worker/status", methods=["PUT"])
-def update_worker_admin_status():
-    """Update worker status (admin only) - public endpoint for CLI"""
-    try:
-        worker_id = request.json.get("worker_id")
-        status = request.json.get("status")
-        
-        if not worker_id or not status:
-            return jsonify({"error": "Worker ID and status are required"}), 400
-        
-        if status not in ["PENDING", "APPROVED", "REJECTED"]:
-            return jsonify({"error": "Invalid status"}), 400
-        
-        success = car_service_worker_db.update_worker_status(int(worker_id), status)
-        if success:
-            return jsonify({"success": True, "message": f"Worker status updated to {status}"}), 200
-        else:
-            return jsonify({"error": "Worker not found"}), 404
-            
-    except Exception as e:
-        print(f"❌ Update worker status error: {e}")
-        return jsonify({"error": "Failed to update status"}), 500

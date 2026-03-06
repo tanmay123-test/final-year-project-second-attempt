@@ -103,10 +103,9 @@ class UserDB:
         return row[0]  # Return user_id
 
     def get_user_by_id(self, user_id):
-        """Get user details by ID"""
         cursor = self.conn.cursor()
         cursor.execute(
-            "SELECT id, name, username, email FROM users WHERE id=?",
+            "SELECT id, name, username, email, is_verified FROM users WHERE id=?",
             (user_id,)
         )
         row = cursor.fetchone()
@@ -116,5 +115,6 @@ class UserDB:
             "id": row[0],
             "name": row[1],
             "username": row[2],
-            "email": row[3]
+            "email": row[3],
+            "is_verified": bool(row[4])
         }

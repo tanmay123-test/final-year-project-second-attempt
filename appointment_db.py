@@ -33,28 +33,12 @@ class AppointmentDB:
         
         # Required columns for the system
         required_columns = {
-            'id',
-            'user_id',
-            'worker_id',
-            'user_name',
-            'patient_symptoms',
-            'booking_date',
-            'time_slot',
-            'appointment_type',
-            'status',
-            'meeting_link',
-            'doctor_otp',
-            'otp_verified',
-            'created_at',
-            'video_room',
-            'video_status',
-            'prescription_file',
-            'insurance_details',
-            'payment_status',
-            'payment_amount',
-            'razorpay_order_id',
-            'razorpay_payment_id',
-            'payout_status'
+            'id', 'user_id', 'worker_id', 'user_name', 'patient_symptoms',
+            'booking_date', 'time_slot', 'appointment_type', 'status',
+            'meeting_link', 'doctor_otp', 'otp_verified', 'created_at',
+            'video_room', 'video_status', 'prescription_file',
+            'insurance_details', 'payment_status', 'payment_amount',
+            'razorpay_order_id', 'razorpay_payment_id', 'payout_status'
         }
         
         # Add missing columns
@@ -84,11 +68,11 @@ class AppointmentDB:
                 'video_status': 'TEXT DEFAULT \"ready\"',
                 'prescription_file': 'TEXT',
                 'insurance_details': 'TEXT',
-                'payment_status': 'TEXT DEFAULT \"pending\"',
+                'payment_status': 'TEXT DEFAULT "pending"',
                 'payment_amount': 'INTEGER',
                 'razorpay_order_id': 'TEXT',
                 'razorpay_payment_id': 'TEXT',
-                'payout_status': 'TEXT DEFAULT \"pending\"'
+                'payout_status': 'TEXT DEFAULT "pending"'
             }
             
             try:
