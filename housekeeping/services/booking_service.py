@@ -4,6 +4,7 @@ import random
 from housekeeping.models.database import housekeeping_db
 from worker_db import WorkerDB
 from user_db import UserDB
+from availability_db import AvailabilityDB
 from notification_service import notify_user, notify_worker
 
 class BookingService:
@@ -11,6 +12,7 @@ class BookingService:
         self.db = housekeeping_db
         self.worker_db = WorkerDB()
         self.user_db = UserDB()
+        self.availability_db = AvailabilityDB()
 
     def get_service_types(self, worker_id=None):
         """
@@ -64,16 +66,32 @@ class BookingService:
 
         available_workers = []
         for worker in candidates:
-            # check if worker is online (optional)
+            # check if worker is online
             is_online = self.db.get_worker_online_status(worker['id'])
             
+            # RULE 1: For instant booking, worker MUST be online
+            if booking_type == 'instant' and not is_online:
+                continue
+                
+            # RULE 2: For scheduled (available) booking, online workers are reserved for instant ONLY
+            # (as per user requirement to prevent available booking for online workers)
+            if booking_type == 'schedule' and is_online:
+                continue
+
+            # RULE 3: For scheduled (available) booking, worker must have marked this slot as available
+            if booking_type == 'schedule':
+                slots = self.availability_db.get_availability(worker['id'], date)
+                is_available = any(s['time_slot'] == time for s in slots)
+                if not is_available:
+                    continue
+
             # check if worker has a booking at this time
             conn = self.db.get_conn()
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT count(*) FROM bookings 
                 WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
-                AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED')
+                AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
             """, (worker['id'], date, time))
             count = cursor.fetchone()[0]
             conn.close()
@@ -140,6 +158,37 @@ class BookingService:
         if worker_id:
             if not self.db.worker_offers_service(worker_id, service_type):
                 return {"error": "Selected worker does not offer this service"}
+            
+            is_online = self.db.get_worker_online_status(worker_id)
+            
+            # RULE 1: For instant booking, worker MUST be online
+            if booking_type == 'instant':
+                if not is_online:
+                    return {"error": "Worker is currently offline and unavailable for instant booking"}
+            
+            # RULE 2: For scheduled (available) booking, online workers are reserved for instant ONLY
+            if booking_type == 'schedule':
+                if is_online:
+                    return {"error": "This worker is currently online for instant booking. Please use Instant Booking or choose another worker."}
+                
+                # RULE 3: For scheduled (available) booking, worker must have marked this slot as available
+                slots = self.availability_db.get_availability(worker_id, date)
+                if not any(s['time_slot'] == time for s in slots):
+                    return {"error": "Worker has not listed availability for this time slot"}
+
+            # Check for conflicting bookings
+            conn = self.db.get_conn()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT count(*) FROM bookings 
+                WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
+                AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
+            """, (worker_id, date, time))
+            if cursor.fetchone()[0] > 0:
+                conn.close()
+                return {"error": "Worker already has a booking for this time slot"}
+            conn.close()
+
             price = compute_worker_price(worker_id, service_type, home_size, add_ons)
         else:
             price = self.db.get_service_price(service_type)

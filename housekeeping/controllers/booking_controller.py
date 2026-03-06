@@ -1,4 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
+import random
+import time
 from housekeeping.services.booking_service import BookingService
 from auth_utils import verify_token
 from user_db import UserDB
@@ -80,6 +82,34 @@ def get_wallet_balance():
         return jsonify({"error": "Worker not found"}), 404
         
     return jsonify({"balance": worker.get('wallet_balance', 0.0)}), 200
+
+@housekeeping_bp.route('/recommendations/workers', methods=['GET'])
+def get_recommended_workers():
+    service_type = request.args.get('service_type')
+    if not service_type:
+        return jsonify({"error": "service_type is required"}), 400
+        
+    # Get workers who offer this service
+    all_workers = worker_db.get_workers_by_service('housekeeping')
+    
+    recommended = []
+    for w in all_workers:
+        # Check if worker offers specific sub-service (e.g. Deep Cleaning)
+        if booking_service.db.worker_offers_service(w['id'], service_type):
+            # Add online status
+            w['is_online'] = booking_service.db.get_worker_online_status(w['id'])
+            
+            # Mock some matching data for the UI
+            w['rating'] = w.get('rating', round(random.uniform(4.0, 5.0), 1))
+            w['completed_jobs'] = w.get('completed_jobs', random.randint(10, 100))
+            w['score'] = random.uniform(0.8, 0.99) # Matching score
+            
+            recommended.append(w)
+            
+    # Sort: online first, then by rating
+    recommended.sort(key=lambda x: (x.get('is_online', False), x.get('rating', 0)), reverse=True)
+    
+    return jsonify(recommended), 200
 
 @housekeeping_bp.route('/services', methods=['GET'])
 def list_services():
