@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Healthcare Payment</title>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body style="font-family:Arial;text-align:center;margin-top:100px">
+
+<h1>Doctor Appointment Payment</h1>
+<button onclick="payNow()" style="padding:15px 30px;font-size:18px">
+Pay ₹500
+</button>
+
+<script>
+async function payNow(){
+
+ const res=await fetch("/payment/create-order",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({amount:500, booking_id:"BOOK101"})
+ });
+
+ const data=await res.json();
+
+ var options={
+   key:data.key,
+   amount:data.amount*100,
+   currency:"INR",
+   name:"ExpertEase Healthcare",
+   description:"Doctor Consultation",
+   order_id:data.order_id,
+   handler:function(res){ alert("Payment Successful!"); }
+ };
+
+ new Razorpay(options).open();
+}
+</script>
+
+</body>
+</html>

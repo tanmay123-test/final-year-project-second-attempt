@@ -68,10 +68,10 @@ print("✅ Video consultation blueprint registered")
 
 # Register Housekeeping blueprints
 try:
-    from services.housekeeping.arrival.backend.controllers.arrival_controller import arrival_bp
-    from services.housekeeping.provider.backend.controllers.auth_controller import provider_auth_bp
-    from services.housekeeping.controllers.booking_controller import housekeeping_bp
-    from services.housekeeping.arrival.backend.controllers.ai_advisor_controller import ai_advisor_bp
+    from housekeeping.arrival.backend.controllers.arrival_controller import arrival_bp
+    from housekeeping.provider.backend.controllers.auth_controller import provider_auth_bp
+    from housekeeping.controllers.booking_controller import housekeeping_bp
+    from housekeeping.arrival.backend.controllers.ai_advisor_controller import ai_advisor_bp
     
     app.register_blueprint(arrival_bp, url_prefix='/api/arrival')
     app.register_blueprint(provider_auth_bp, url_prefix='/api/provider')
@@ -82,7 +82,7 @@ except ImportError as e:
     print(f"⚠️ Could not register housekeeping blueprints: {e}")
 # Register car service blueprint
 try:
-    from services.car_service.car_routes import car_bp
+    from car_service.car_routes import car_bp
     app.register_blueprint(car_bp)
     print("✅ Car service blueprint registered")
 except Exception as e:
@@ -90,7 +90,7 @@ except Exception as e:
 
 # Register trip planner blueprint
 try:
-    from services.car_service.trip_routes import trip_bp
+    from car_service.trip_routes import trip_bp
     app.register_blueprint(trip_bp)
     print("✅ Trip planner blueprint registered")
 except Exception as e:
@@ -98,7 +98,7 @@ except Exception as e:
 
 # Register worker routes blueprint
 try:
-    from services.car_service.worker_routes import worker_bp
+    from car_service.worker_routes import worker_bp
     app.register_blueprint(worker_bp)
     print("✅ Worker routes blueprint registered")
 except Exception as e:
@@ -106,7 +106,7 @@ except Exception as e:
 
 # Register mechanic routes blueprint
 try:
-    from services.car_service.mechanic_routes import mechanic_bp
+    from car_service.mechanic_routes import mechanic_bp
     app.register_blueprint(mechanic_bp)
     print("✅ Mechanic routes blueprint registered")
 except Exception as e:
@@ -114,7 +114,7 @@ except Exception as e:
 
 # Register unified car service worker routes blueprint
 try:
-    from services.car_service.car_service_worker_routes import car_service_worker_bp
+    from car_service.car_service_worker_routes import car_service_worker_bp
     app.register_blueprint(car_service_worker_bp)
     print("✅ Unified car service worker routes blueprint registered")
 except Exception as e:
@@ -122,7 +122,7 @@ except Exception as e:
 
 # Register dispatch routes blueprint
 try:
-    from services.car_service.dispatch.routes import dispatch_bp
+    from car_service.dispatch.routes import dispatch_bp
     app.register_blueprint(dispatch_bp)
     print("✅ Dispatch routes blueprint registered")
 except Exception as e:
@@ -130,7 +130,7 @@ except Exception as e:
 
 # Register active job routes blueprint
 try:
-    from services.car_service.dispatch.active_routes import active_bp
+    from car_service.dispatch.active_routes import active_bp
     app.register_blueprint(active_bp)
     print("✅ Active job routes blueprint registered")
 except Exception as e:
@@ -138,7 +138,7 @@ except Exception as e:
 
 # Register earnings routes blueprint
 try:
-    from services.car_service.dispatch.earnings_routes import earnings_bp
+    from car_service.dispatch.earnings_routes import earnings_bp
     app.register_blueprint(earnings_bp)
     print("✅ Earnings routes blueprint registered")
 except Exception as e:
@@ -146,7 +146,7 @@ except Exception as e:
 
 # Register performance routes blueprint
 try:
-    from services.car_service.dispatch.performance_routes import performance_bp
+    from car_service.dispatch.performance_routes import performance_bp
     app.register_blueprint(performance_bp)
     print("✅ Performance routes blueprint registered")
 except Exception as e:
@@ -154,7 +154,7 @@ except Exception as e:
 
 # Register smart search routes blueprint
 try:
-    from services.car_service.smart_search_routes import smart_search_bp
+    from car_service.smart_search_routes import smart_search_bp
     app.register_blueprint(smart_search_bp)
     print("✅ Smart search routes blueprint registered")
 except Exception as e:
@@ -162,7 +162,7 @@ except Exception as e:
 
 # Register truck operator routes blueprint
 try:
-    from services.car_service.truck_operator_routes import truck_operator_bp
+    from car_service.truck_operator_routes import truck_operator_bp
     app.register_blueprint(truck_operator_bp)
     print("✅ Truck operator routes blueprint registered")
 except Exception as e:
@@ -170,7 +170,7 @@ except Exception as e:
 
 # Register Ask Expert blueprint
 try:
-    from services.car_service.ask_expert import ask_expert_bp, init_ask_expert_db
+    from car_service.ask_expert.routes import ask_expert_bp, init_ask_expert_db
     app.register_blueprint(ask_expert_bp)
     init_ask_expert_db(app)
     print("✅ Ask Expert blueprint registered")
@@ -179,7 +179,7 @@ except Exception as e:
 
 # Register Automobile Expert blueprint
 try:
-    from services.car_service.automobile_expert_routes import automobile_expert_bp
+    from car_service.automobile_expert_routes import automobile_expert_bp
     app.register_blueprint(automobile_expert_bp)
     print("✅ Automobile Expert blueprint registered")
 except Exception as e:
@@ -187,7 +187,7 @@ except Exception as e:
 
 # Register Expert Availability blueprint
 try:
-    from services.car_service.expert_availability_routes import expert_availability_bp
+    from car_service.expert_availability_routes import expert_availability_bp
     app.register_blueprint(expert_availability_bp)
     print("✅ Expert Availability blueprint registered")
 except Exception as e:
@@ -195,7 +195,7 @@ except Exception as e:
 
 # Register Consultation Session blueprint
 try:
-    from services.car_service.consultation_session_routes import consultation_session_bp
+    from car_service.consultation_session_routes import consultation_session_bp
     app.register_blueprint(consultation_session_bp)
     print("✅ Consultation Session blueprint registered")
 except Exception as e:
@@ -203,7 +203,7 @@ except Exception as e:
 
 # Register Expert History blueprint
 try:
-    from services.car_service.expert_history_routes import expert_history_bp
+    from car_service.expert_history_routes import expert_history_bp
     app.register_blueprint(expert_history_bp)
     print("✅ Expert History blueprint registered")
 except Exception as e:
@@ -211,7 +211,7 @@ except Exception as e:
 
 # Register Fuel Delivery blueprint
 try:
-    from services.car_service.fuel_delivery_routes import fuel_delivery_bp
+    from car_service.fuel_delivery_routes import fuel_delivery_bp
     app.register_blueprint(fuel_delivery_bp, url_prefix='/api/fuel-delivery')
     print("✅ Fuel Delivery blueprint registered")
 except Exception as e:
@@ -224,7 +224,7 @@ socketio = init_video_signaling(app)
 
 # Initialize Housekeeping Socket
 try:
-    from services.housekeeping.socket_handlers import init_housekeeping_socket
+    from housekeeping.socket_handlers import init_housekeeping_socket
     init_housekeeping_socket(socketio)
     print("✅ Housekeeping socket initialized")
 except Exception as e:
