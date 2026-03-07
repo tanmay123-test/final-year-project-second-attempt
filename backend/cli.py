@@ -123,7 +123,8 @@ def service_selection():
         elif choice == "4":
             open_car_service()
         elif choice == "5":
-            print("🚧 Money Management coming soon!")
+            from services.money_service.money_service_cli import money_service_menu
+            money_service_menu(USER_ID, "user")
         elif choice == "6":
             TOKEN = None
             USER_ID = None
@@ -1829,6 +1830,11 @@ def worker_dashboard(worker_id):
 
 def worker_service_selection():
     """Worker selects which service they belong to"""
+    from auth.worker_auth import TOKEN, WORKER_ID
+    
+    if not TOKEN:
+        print("⚠️ Please login first")
+        return
     
     while True:
         print("\n" + "="*50)
@@ -1852,7 +1858,8 @@ def worker_service_selection():
         elif choice == "4":
             print("🚧 Resource worker module coming soon")
         elif choice == "5":
-            print("🚧 Money management worker module coming soon")
+            from services.money_service.money_service_cli import money_service_menu
+            money_service_menu(WORKER_ID, "worker")
         elif choice == "6":
             return
         else:
@@ -4363,7 +4370,8 @@ def main():
         if c == "1":
             user_menu()
         elif c == "2":
-            worker_service_selection()
+            from auth.worker_auth import worker_menu
+            worker_menu()
         elif c == "3":
             admin_menu()
         elif c == "4":
