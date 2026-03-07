@@ -2,8 +2,8 @@ from .enhanced_finny import EnhancedFinny
 from .natural_language_finny import NaturalLanguageFinny
 from .intelligent_finny import IntelligentFinny as IntelligentFinnyMain
 from .budget_planner import BudgetPlanner
-from .loan_analyzer import LoanAnalyzer
-from .goal_jar import GoalJar
+from .smart_loan_analyzer import SmartLoanAnalyzer
+from .goal_jar.smart_goal_jar import SmartG
 from .ai_groups import AIGroups
 
 def money_service_menu(user_id, role="user"):
@@ -14,8 +14,8 @@ def money_service_menu(user_id, role="user"):
     natural_finny = NaturalLanguageFinny()
     intelligent_finny = IntelligentFinnyMain()
     budget_planner = BudgetPlanner()
-    loan_analyzer = LoanAnalyzer()
-    goal_jar = GoalJar()
+    loan_analyzer = SmartLoanAnalyzer()
+    goal_jar = SmartG()
     ai_groups = AIGroups()
     
     while True:
