@@ -1,0 +1,137 @@
+.service-selection-page {
+  min-height: 100vh;
+  background-color: var(--background-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.service-header {
+  background: var(--medical-gradient);
+  padding: 2rem 1.5rem;
+  color: white;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: -20px;
+  padding-bottom: 40px;
+  z-index: 1;
+}
+
+.header-top-row {
+  margin-bottom: 1rem;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+}
+
+.header-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.header-content p {
+  opacity: 0.9;
+  font-size: 1rem;
+}
+
+.services-grid-container {
+  padding: 0 1.5rem 2rem 1.5rem;
+  flex: 1;
+  z-index: 2;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.service-card {
+  background: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
+  text-decoration: none;
+  height: 100%;
+  min-height: 160px;
+  justify-content: center;
+}
+
+.service-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.service-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  background: rgba(142, 68, 173, 0.1); /* Light purple tint */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-blue);
+  transition: background 0.2s;
+}
+
+.service-card:hover .service-icon-wrapper {
+  background: var(--accent-blue);
+  color: white;
+}
+
+.service-label {
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+/* Specific styling for Housekeeping card to highlight it */
+.service-card:nth-child(2) .service-icon-wrapper {
+   /* Assuming Housekeeping is second, or we can target by content if possible, but generic is fine */
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .service-card {
+    padding: 1rem;
+    min-height: 140px;
+  }
+  
+  .service-icon-wrapper {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .service-icon-wrapper svg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .service-label {
+    font-size: 0.9rem;
+  }
+  
+  .header-content h1 {
+    font-size: 1.5rem;
+  }
+}
