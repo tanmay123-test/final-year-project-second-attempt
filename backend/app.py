@@ -41,6 +41,9 @@ from services.video_signaling import init_video_signaling
 from services.video_session_db import video_session_db
 from routes.video_routes import video_bp
 
+# Import freelance system
+from services.freelance.routes.freelance_routes import freelance_bp
+
 video_db = VideoConsultDB()
 video_db.create_table()
 
@@ -61,6 +64,10 @@ try:
 except ImportError as e:
     print(f"⚠️ Could not register payment blueprint: {e}")
     print("🔄 Subscription will use demo mode")
+
+# Register freelance blueprint
+app.register_blueprint(freelance_bp)
+print("✅ Freelance marketplace blueprint registered")
 
 # Register video consultation blueprint
 app.register_blueprint(video_bp)
@@ -267,7 +274,7 @@ def get_services():
     services = [
         {"id": "healthcare", "label": "Healthcare", "path": "/doctors"},
         {"id": "housekeeping", "label": "Housekeeping", "path": "/housekeeping/home"},
-        {"id": "resource", "label": "Resource Management", "path": "/worker/resource/login"},
+        {"id": "freelance", "label": "Freelance Marketplace", "path": "/freelance/home"},
         {"id": "car", "label": "Car Services", "path": "/worker/car/login"},
         {"id": "money", "label": "Money Management", "path": "/worker/money/login"}
     ]
@@ -1001,11 +1008,39 @@ def ai_care():
     }), 200
 
 
+@app.route("/worker/freelance/signup", methods=["POST"])
+def freelance_signup():
+    d = request.json
+    worker_id = worker_db.register_worker(
+        full_name=d["full_name"],
+        email=d["email"],
+        phone=d["phone"],
+        service="freelance",
+        specialization=d.get("skills", ""),
+        experience=0,
+        clinic_location="",
+        password=None,
+        aadhaar=d.get("aadhaar"),
+        id_proof=d.get("id_proof"),
+        skills=d.get("skills"),
+        hourly_rate=d.get("hourly_rate"),
+        bio=d.get("bio")
+    )
+    if not worker_id:
+        return jsonify({"error": "Freelancer exists"}), 400
+    return jsonify({"worker_id": worker_id}), 201
+
 # ================= ADMIN ROUTES =================
 @app.route("/admin/workers/pending")
 def admin_pending_workers():
     service = request.args.get('service')
     workers = worker_db.get_pending_workers(service)
+    return jsonify(workers), 200
+
+@app.route("/admin/workers/approved")
+def admin_approved_workers():
+    service = request.args.get('service')
+    workers = worker_db.get_workers_by_service(service)
     return jsonify(workers), 200
 
 @app.route("/admin/worker/approve/<int:worker_id>", methods=["POST"])

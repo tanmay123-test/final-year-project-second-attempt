@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Stethoscope, Home, Package, Car, Wallet, Mail, Loader2, ChevronLeft, Lock } from 'lucide-react';
+import { Stethoscope, Home, Briefcase, Car, Wallet, Mail, Loader2, ChevronLeft, Lock } from 'lucide-react';
 
 const SERVICE_CONFIG = {
   healthcare: { label: 'Healthcare', icon: Stethoscope, color: '#8E44AD' },
   housekeeping: { label: 'Housekeeping', icon: Home, color: '#8E44AD' },
-  resource: { label: 'Resource Management', icon: Package, color: '#3498DB' },
+  freelance: { label: 'Freelance Marketplace', icon: Briefcase, color: '#7c3aed' },
   car: { label: 'Car Services', icon: Car, color: '#9B59B6' },
   money: { label: 'Money Management', icon: Wallet, color: '#2ECC71' }
 };
@@ -35,6 +35,8 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
         navigate('/worker/housekeeping/dashboard');
       } else if (serviceType === 'healthcare') {
         navigate('/doctor/dashboard');
+      } else if (serviceType === 'freelance') {
+        navigate('/freelancer/dashboard');
       } else {
         navigate('/worker/dashboard');
       }

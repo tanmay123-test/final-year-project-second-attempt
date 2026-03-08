@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 import { doctorService, workerService, housekeepingService } from '../shared/api';
-import { Stethoscope, Home, Package, Car, Wallet, User, Mail, Phone, MapPin, Briefcase, Loader2, ChevronLeft, BadgeCheck, Lock } from 'lucide-react';
+import { Stethoscope, Home, Car, Wallet, User, Mail, Phone, MapPin, Briefcase, Loader2, ChevronLeft, BadgeCheck, Lock, CreditCard } from 'lucide-react';
 
 const SERVICE_CONFIG = {
   healthcare: { label: 'Healthcare', icon: Stethoscope, color: '#8E44AD' },
   housekeeping: { label: 'Housekeeping', icon: Home, color: '#8E44AD' },
-  resource: { label: 'Resource Management', icon: Package, color: '#3498DB' },
+  freelance: { label: 'Freelance Marketplace', icon: Briefcase, color: '#7c3aed' },
   car: { label: 'Car Services', icon: Car, color: '#9B59B6' },
   money: { label: 'Money Management', icon: Wallet, color: '#2ECC71' }
 };
@@ -27,7 +28,12 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
     clinic_location: '',
     service: serviceType,
     license_number: '',
-    password: ''
+    password: '',
+    aadhaar: '',
+    skills: '',
+    hourly_rate: '',
+    bio: '',
+    id_proof: ''
   });
   const [specializations, setSpecializations] = useState([]);
   const [error, setError] = useState('');
@@ -88,11 +94,14 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
     setSuccess('');
     setLoading(true);
     
-    try {
+      try {
       const payload = { ...formData, service: serviceType };
       let response;
       if (serviceType === 'healthcare') {
         response = await workerService.registerHealthcare(payload);
+      } else if (serviceType === 'freelance') {
+        // Direct call to freelance signup endpoint
+        response = await axios.post('http://127.0.0.1:5000/worker/freelance/signup', payload);
       } else {
         response = await workerService.register(payload);
       }
@@ -143,6 +152,50 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
         
         {!success && (
           <form onSubmit={handleSubmit} className="auth-form">
+            {serviceType === 'freelance' && (
+              <>
+                <div className="input-group">
+                  <label htmlFor="skills">Professional Skills</label>
+                  <div className="input-wrapper">
+                    <Briefcase className="input-icon" size={20} />
+                    <input id="skills" name="skills" value={formData.skills} onChange={handleChange} required placeholder="React, Node.js, UI/UX" />
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label htmlFor="hourly_rate">Hourly Rate (₹)</label>
+                  <div className="input-wrapper">
+                    <CreditCard className="input-icon" size={20} />
+                    <input id="hourly_rate" type="number" name="hourly_rate" value={formData.hourly_rate} onChange={handleChange} required placeholder="1500" />
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label htmlFor="bio">Professional Bio</label>
+                  <div className="input-wrapper">
+                    <User className="input-icon" size={20} />
+                    <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} required placeholder="Describe your expertise..." style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', minHeight: '80px' }} />
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label htmlFor="aadhaar">Aadhaar Card Number</label>
+                  <div className="input-wrapper">
+                    <BadgeCheck className="input-icon" size={20} />
+                    <input id="aadhaar" name="aadhaar" value={formData.aadhaar} onChange={handleChange} required placeholder="12-digit Aadhaar Number" />
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label htmlFor="id_proof">Aadhaar Card Image (URL for now)</label>
+                  <div className="input-wrapper">
+                    <Mail className="input-icon" size={20} />
+                    <input id="id_proof" name="id_proof" value={formData.id_proof} onChange={handleChange} placeholder="Upload to UI later or paste URL" />
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="input-group">
               <label htmlFor="full_name">Full Name</label>
               <div className="input-wrapper">

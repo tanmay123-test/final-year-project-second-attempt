@@ -34,6 +34,10 @@ import ProviderPricing from './services/housekeeping/provider/ProviderPricing';
 
 import UserLayout from './components/UserLayout';
 
+// Freelance Marketplace
+import FreelanceHome from './services/freelance/pages/FreelanceHome';
+import FreelancerDashboard from './services/freelance/pages/FreelancerDashboard';
+
 const ProtectedWorkerRoute = ({ children }) => {
   const { worker, loading } = useAuth();
   const location = useLocation();
@@ -74,6 +78,9 @@ const App = () => {
 
           {/* Service Selection (No Bottom Nav) */}
           <Route path="/services" element={<ProtectedRoute><ServiceSelection /></ProtectedRoute>} />
+          
+          {/* Freelance Marketplace Routes */}
+          <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />
 
           {/* Worker Routes - Service Specific */}
           <Route path="/provide-service" element={<ServiceSelection mode="worker" />} />
@@ -81,6 +88,18 @@ const App = () => {
           {/* Healthcare */}
           <Route path="/worker/healthcare/login" element={<DoctorLogin />} />
           <Route path="/worker/healthcare/signup" element={<WorkerSignup serviceType="healthcare" />} />
+          
+          {/* Freelance */}
+          <Route path="/worker/freelance/login" element={<WorkerLogin serviceType="freelance" />} />
+          <Route path="/worker/freelance/signup" element={<WorkerSignup serviceType="freelance" />} />
+          <Route 
+            path="/freelancer/dashboard" 
+            element={
+              <ProtectedWorkerRoute>
+                <FreelancerDashboard />
+              </ProtectedWorkerRoute>
+            } 
+          />
           <Route 
             path="/doctor/dashboard" 
             element={

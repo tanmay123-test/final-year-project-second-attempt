@@ -28,8 +28,152 @@ def check_server_connection():
         return False
 
 # ==================================================
-# ================= USER FLOW ======================
+# ================= FREELANCE FLOW =================
 # ==================================================
+
+def freelance_user_flow():
+    """Freelance Marketplace User Flow (Client)"""
+    while True:
+        print("\n" + "="*60)
+        print("💜 FREELANCE MARKETPLACE (User Portal)")
+        print("="*60)
+        print("1. 🏠 Home (Browse Freelancers)")
+        print("2. 📝 Post a Project")
+        print("3. 💼 My Projects")
+        print("4. 🤖 AI Project Assistant")
+        print("5. 💳 Wallet & History")
+        print("6. ⬅️ Back")
+        
+        choice = input("\nSelect tab: ").strip()
+        
+        if choice == "1":
+            browse_freelancers()
+        elif choice == "2":
+            post_freelance_project()
+        elif choice == "3":
+            view_my_projects()
+        elif choice == "4":
+            print("🤖 AI Assistant is analyzing marketplace trends...")
+            time.sleep(1)
+            print("💡 Recommended Budget: ₹5000 - ₹15000")
+            print("💡 Suggested Milestones: Design, Development, Testing")
+            input("\nPress Enter...")
+        elif choice == "5":
+            print("💰 Opening Wallet...")
+            # Reuse existing wallet display if available
+            input("\nPress Enter...")
+        elif choice == "6":
+            break
+
+def browse_freelancers():
+    print("\n🔍 Searching for top freelancers...")
+    # Mock data for now
+    freelancers = [
+        {"name": "Aditya Verma", "role": "Full Stack Developer", "rating": 4.9, "rate": "₹2500/hr", "skills": "React, Node.js"},
+        {"name": "Meera Nair", "role": "UI/UX Designer", "rating": 4.8, "rate": "₹1800/hr", "skills": "Figma, Adobe XD"}
+    ]
+    for f in freelancers:
+        print(f"\n👤 {f['name']} - {f['role']}")
+        print(f"⭐ {f['rating']} | 💰 {f['rate']}")
+        print(f"🔧 Skills: {f['skills']}")
+    input("\nPress Enter...")
+
+def post_freelance_project():
+    print("\n📝 POST NEW PROJECT")
+    title = input("Project Title: ").strip()
+    desc = input("Description: ").strip()
+    cat = input("Category (Web/App/Design/AI): ").strip()
+    budget_type = input("Budget Type (FIXED/HOURLY): ").strip().upper()
+    amount = float(input("Budget Amount: ") or 0)
+    
+    data = {
+        "title": title,
+        "description": desc,
+        "category": cat,
+        "budget_type": budget_type,
+        "budget_amount": amount,
+        "skills": input("Required Skills (comma separated): "),
+        "experience_level": input("Exp Level (Entry/Mid/Expert): ")
+    }
+    
+    r = requests.post(f"{API}/api/freelance/projects", json=data, headers={"Authorization": f"Bearer {TOKEN}"})
+    if r.status_code == 201:
+        print("✅ Project posted successfully! Status: OPEN")
+    else:
+        print("❌ Failed to post project")
+    input("\nPress Enter...")
+
+def view_my_projects():
+    print("\n💼 MY PROJECTS")
+    # Fetch from API
+    r = requests.get(f"{API}/api/freelance/projects", headers={"Authorization": f"Bearer {TOKEN}"})
+    if r.status_code == 200:
+        projects = r.json().get('projects', [])
+        for p in projects:
+            print(f"\nID: {p['id']} | {p['title']} ({p['status']})")
+            print(f"💰 {p['budget_type']}: ₹{p['budget_amount']}")
+    else:
+        print("❌ Failed to fetch projects")
+    input("\nPress Enter...")
+
+def freelance_worker_flow(worker_id):
+    """Freelance Marketplace Worker Flow (Freelancer)"""
+    while True:
+        print("\n" + "="*60)
+        print("👷 FREELANCER DASHBOARD")
+        print("="*60)
+        print("1. 📊 Overview (Earnings & Rating)")
+        print("2. 🔍 Browse Projects")
+        print("3. 📑 My Proposals")
+        print("4. 🛠️  My Work (Active Contracts)")
+        print("5. 👤 Profile & Portfolio")
+        print("6. ⬅️ Back")
+        
+        choice = input("\nSelect tab: ").strip()
+        
+        if choice == "1":
+            print("\n📈 PERFORMANCE OVERVIEW")
+            print("💰 Total Earnings: ₹0.00")
+            print("⭐ Rating: 0.0")
+            print("📦 Active Projects: 0")
+            input("\nPress Enter...")
+        elif choice == "2":
+            browse_and_apply_projects(worker_id)
+        elif choice == "3":
+            print("\n📑 MY PROPOSALS")
+            print("📭 No active proposals")
+            input("\nPress Enter...")
+        elif choice == "6":
+            break
+
+def browse_and_apply_projects(worker_id):
+    r = requests.get(f"{API}/api/freelance/projects")
+    if r.status_code == 200:
+        projects = r.json().get('projects', [])
+        print("\n🔍 AVAILABLE PROJECTS")
+        for idx, p in enumerate(projects, 1):
+            print(f"\n[{idx}] {p['title']}")
+            print(f"   📝 {p['description'][:100]}...")
+            print(f"   💰 Budget: ₹{p['budget_amount']}")
+        
+        sel = input("\nSelect project to apply (or 0): ").strip()
+        if sel.isdigit() and int(sel) > 0:
+            proj = projects[int(sel)-1]
+            price = float(input("Your Proposed Price: "))
+            msg = input("Cover Message: ").strip()
+            
+            data = {
+                "project_id": proj['id'],
+                "proposed_price": price,
+                "cover_message": msg
+            }
+            res = requests.post(f"{API}/api/freelance/proposals", json=data, headers={"Authorization": f"Bearer {TOKEN}"})
+            if res.status_code == 201:
+                print("✅ Proposal sent!")
+            else:
+                print("❌ Failed to send proposal")
+    input("\nPress Enter...")
+
 
 def user_signup():
     print("\n👤 User Signup (Email OTP)")
@@ -107,7 +251,7 @@ def service_selection():
         print("="*50)
         print("1. 🏥 Healthcare")
         print("2. 🏠 Housekeeping")
-        print("3. 📦 Resource Management")
+        print("3. 💜 Freelance Marketplace")
         print("4. 🚗 Car Services")
         print("5. 💰 Money Management")
         print("6. 👋 Logout")
@@ -119,7 +263,7 @@ def service_selection():
         elif choice == "2":
             print("🚧 Housekeeping service coming soon!")
         elif choice == "3":
-            print("🚧 Resource Management service coming soon!")
+            freelance_user_flow()
         elif choice == "4":
             open_car_service()
         elif choice == "5":
@@ -1763,6 +1907,40 @@ def user_menu():
 # ================= WORKER FLOW ====================
 # ==================================================
 
+def freelance_worker_signup():
+    print("\n💜 Freelance Worker Signup")
+
+    full_name = input("Full Name: ").strip()
+    email = input("Email: ").strip()
+    phone = input("Phone: ").strip()
+    skills = input("Skills (comma separated): ").strip()
+    hourly_rate = input("Hourly Rate (₹): ").strip()
+    bio = input("Short Bio: ").strip()
+    
+    print("\n📄 IDENTITY VERIFICATION")
+    aadhaar = input("Aadhaar Number: ").strip()
+    print("📷 Document upload (Aadhaar Card) required via Web UI")
+    id_proof_url = input("Document URL (or press Enter for now): ").strip()
+
+    r = requests.post(f"{API}/worker/freelance/signup", json={
+        "full_name": full_name,
+        "email": email,
+        "phone": phone,
+        "service": "freelance",
+        "skills": skills,
+        "hourly_rate": float(hourly_rate or 0),
+        "bio": bio,
+        "aadhaar": aadhaar,
+        "id_proof": id_proof_url
+    })
+    
+    if r.status_code == 201:
+        print("\n✅ Freelancer registered successfully!")
+        print("⏳ Status: Pending admin verification")
+    else:
+        print("❌ Signup failed:", r.json().get("error"))
+    input("\nPress Enter...")
+
 def healthcare_worker_signup():
     print("\n🩺 Healthcare Worker Signup")
 
@@ -1843,7 +2021,7 @@ def worker_service_selection():
         print("1. 🏥 Healthcare")
         print("2. 🏠 Housekeeping")
         print("3. 🚗 Car Services")
-        print("4. 📦 Resource Management")
+        print("4. 💜 Freelance Marketplace")
         print("5. 💰 Money Management")
         print("6. ⬅️ Back")
 
@@ -1856,7 +2034,7 @@ def worker_service_selection():
         elif choice == "3":
             car_service_worker_menu()
         elif choice == "4":
-            print("🚧 Resource worker module coming soon")
+            freelance_worker_flow(WORKER_ID)
         elif choice == "5":
             from services.money_service.money_service_cli import money_service_menu
             money_service_menu(WORKER_ID, "worker")
@@ -1908,16 +2086,19 @@ def healthcare_worker_menu():
     while True:
         print("\n--- HEALTHCARE WORKER MENU ---")
         print("1. Healthcare Signup")
-        print("2. Worker Login")
-        print("3. Back")
+        print("2. Freelance Signup")
+        print("3. Worker Login")
+        print("4. Back")
 
         c = input("Choice: ").strip()
 
         if c == "1":
             healthcare_worker_signup()
         elif c == "2":
-            worker_login()
+            freelance_worker_signup()
         elif c == "3":
+            worker_login()
+        elif c == "4":
             return
 
 
@@ -3481,9 +3662,10 @@ def admin_menu():
         print("\n=== ADMIN DASHBOARD ===")
         print("1. 👷 Car Service Workers")
         print("2. 🏥 Healthcare Workers")
-        print("3. ⛽ Fuel Delivery Agents")
-        print("4. 🚚 Truck Operators")
-        print("5. 👋 Logout")
+        print("3. 💜 Freelance Workers")
+        print("4. ⛽ Fuel Delivery Agents")
+        print("5. 🚚 Truck Operators")
+        print("6. 👋 Logout")
 
         c = input("Choice: ").strip()
 
@@ -3493,13 +3675,112 @@ def admin_menu():
         elif c == "2":
             healthcare_admin_menu()
         elif c == "3":
-            fuel_delivery_admin_menu()
+            freelance_admin_menu()
         elif c == "4":
-            truck_operator_admin_menu()
+            fuel_delivery_admin_menu()
         elif c == "5":
+            truck_operator_admin_menu()
+        elif c == "6":
             return
         else:
             print("❌ Invalid choice")
+
+def freelance_admin_menu():
+    """Freelance worker admin management"""
+    while True:
+        print("\n" + "="*60)
+        print("💜 FREELANCE WORKER ADMIN")
+        print("="*60)
+        print("1. 📋 Pending Freelancers")
+        print("2. ✅ Approved Freelancers")
+        print("3. 🔍 Freelancer Details")
+        print("4. ⬅️ Back")
+        
+        choice = input("\nSelect option: ").strip()
+        
+        if choice == "1":
+            admin_pending_workers_by_service("freelance")
+        elif choice == "2":
+            admin_approved_workers_by_service("freelance")
+        elif choice == "3":
+            admin_worker_details_view()
+        elif choice == "4":
+            return
+        else:
+            print("❌ Invalid choice")
+            time.sleep(1)
+
+def admin_pending_workers_by_service(service):
+    """List pending workers for a specific service"""
+    print(f"\n📋 PENDING {service.upper()} WORKERS")
+    r = requests.get(f"{API}/admin/workers/pending?service={service}")
+    if r.status_code == 200:
+        workers = r.json()
+        if not workers:
+            print("📭 No pending workers")
+        else:
+            for w in workers:
+                print(f"ID: {w['id']} | {w['full_name']} | {w['email']}")
+            
+            wid = input("\nEnter Worker ID to Approve (or press Enter to skip): ").strip()
+            if wid:
+                confirm = input(f"Approve worker {wid}? (y/n): ").lower()
+                if confirm == 'y':
+                    ra = requests.post(f"{API}/admin/worker/approve/{wid}")
+                    if ra.status_code == 200:
+                        print("✅ Worker approved!")
+                    else:
+                        print("❌ Failed to approve worker")
+    else:
+        print("❌ Error fetching pending workers")
+    input("\nPress Enter...")
+
+def admin_approved_workers_by_service(service):
+    """List approved workers for a specific service"""
+    print(f"\n✅ APPROVED {service.upper()} WORKERS")
+    # Using the same pending endpoint but we would need an approved endpoint in app.py
+    # For now, let's assume it exists or we use worker search
+    r = requests.get(f"{API}/admin/workers/approved?service={service}") 
+    if r.status_code == 200:
+        workers = r.json()
+        if not workers:
+            print("📭 No approved workers")
+        else:
+            for w in workers:
+                print(f"ID: {w['id']} | {w['full_name']} | {w['email']}")
+    else:
+        print("❌ Error fetching approved workers")
+    input("\nPress Enter...")
+
+def admin_worker_details_view():
+    """View specific worker details"""
+    wid = input("\nEnter Worker ID: ").strip()
+    if not wid: return
+    
+    r = requests.get(f"{API}/worker/{wid}")
+    if r.status_code == 200:
+        w = r.json().get("worker", {})
+        print("\n" + "="*40)
+        print("👤 WORKER DETAILS")
+        print("="*40)
+        print(f"ID: {w.get('id')}")
+        print(f"Name: {w.get('full_name')}")
+        print(f"Email: {w.get('email')}")
+        print(f"Phone: {w.get('phone')}")
+        print(f"Service: {w.get('service')}")
+        print(f"Specialization: {w.get('specialization')}")
+        print(f"Experience: {w.get('experience')} years")
+        print(f"Status: {w.get('status').upper()}")
+        
+        # Show freelance specific fields if applicable
+        if 'freelance' in (w.get('service') or ''):
+            print(f"Skills: {w.get('skills')}")
+            print(f"Hourly Rate: ₹{w.get('hourly_rate')}")
+            print(f"Bio: {w.get('bio')}")
+            print(f"Aadhaar: {w.get('aadhaar_number')}")
+    else:
+        print("❌ Worker not found")
+    input("\nPress Enter...")
 
 def fuel_delivery_admin_menu():
     """Fuel delivery agent admin management"""

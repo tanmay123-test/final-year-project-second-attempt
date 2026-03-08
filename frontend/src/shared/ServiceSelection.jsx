@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Stethoscope, Home, Package, Car, Wallet, ChevronLeft } from 'lucide-react';
+import { Stethoscope, Home, Briefcase, Car, Wallet, ChevronLeft } from 'lucide-react';
 import { commonService } from './api';
 import '../pages/ServiceSelection.css';
 
@@ -10,7 +10,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
   const defaultServices = [
     { id: 'healthcare', label: 'Healthcare', path: '/doctors' },
     { id: 'housekeeping', label: 'Housekeeping', path: '/housekeeping/home' },
-    { id: 'resource', label: 'Resource Management', path: '/worker/resource/login' },
+    { id: 'freelance', label: 'Freelance Marketplace', path: '/freelance/home' },
     { id: 'car', label: 'Car Services', path: '/worker/car/login' },
     { id: 'money', label: 'Money Management', path: '/worker/money/login' },
   ];
@@ -23,7 +23,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
   const iconMap = {
     healthcare: Stethoscope,
     housekeeping: Home,
-    resource: Package,
+    freelance: Briefcase,
     car: Car,
     money: Wallet
   };
@@ -66,7 +66,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
       <main className="services-grid-container">
         <div className="services-grid">
           {services.map((service) => {
-            const Icon = iconMap[service.id] || Package;
+            const Icon = iconMap[service.id] || Briefcase;
             return (
               <button 
                 key={service.id} 
@@ -83,6 +83,15 @@ const ServiceSelection = ({ mode = 'user' }) => {
                       navigate('/worker/housekeeping/login');
                       return;
                     }
+                    if (service.id === 'freelance') {
+                      navigate('/worker/freelance/login');
+                      return;
+                    }
+                  }
+                  
+                  if (service.id === 'freelance') {
+                    navigate('/freelance/home');
+                    return;
                   }
                   
                   navigate(service.path);

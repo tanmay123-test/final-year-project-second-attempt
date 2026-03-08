@@ -37,14 +37,30 @@ class WorkerDB:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 license_number TEXT,
                 password TEXT,
-                wallet_balance REAL DEFAULT 0.0
+                wallet_balance REAL DEFAULT 0.0,
+                aadhaar_number TEXT,
+                id_proof_url TEXT,
+                skills TEXT,
+                portfolio_url TEXT,
+                bio TEXT,
+                hourly_rate REAL
             )
         """)
-        # Migration: Add wallet_balance if not exists
-        try:
-            cursor.execute("ALTER TABLE workers ADD COLUMN wallet_balance REAL DEFAULT 0.0")
-        except sqlite3.OperationalError:
-            pass # Column likely exists
+        # Migration: Add new columns if missing
+        new_cols = [
+            ("aadhaar_number", "TEXT"),
+            ("id_proof_url", "TEXT"),
+            ("skills", "TEXT"),
+            ("portfolio_url", "TEXT"),
+            ("bio", "TEXT"),
+            ("hourly_rate", "REAL"),
+            ("wallet_balance", "REAL DEFAULT 0.0")
+        ]
+        for col_name, col_type in new_cols:
+            try:
+                cursor.execute(f"ALTER TABLE workers ADD COLUMN {col_name} {col_type}")
+            except sqlite3.OperationalError:
+                pass
             
         self.conn.commit()
 
@@ -60,22 +76,64 @@ class WorkerDB:
         # Basic regex for email validation
         return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
 
-    def register_worker(self, full_name, email, phone, service, specialization, experience, clinic_location="", license_number=None, password=None):
+    def register_worker(self, full_name, email, phone, service, specialization, experience, clinic_location="", license_number=None, password=None, aadhaar=None, id_proof=None, skills=None, hourly_rate=None, bio=None):
         # Validate email format
         if not self.is_valid_email(email):
             print(f"❌ Registration failed: Invalid email format '{email}'")
             return None
 
         cursor = self.conn.cursor()
+        
+        # Check if worker already exists by email
+        cursor.execute("SELECT id, service FROM workers WHERE email = ?", (email,))
+        existing_worker = cursor.fetchone()
+        
+        if existing_worker:
+            worker_id = existing_worker['id']
+            existing_services = existing_worker['service'] or ""
+            service_list = [s.strip() for s in existing_services.split(',') if s.strip()]
+            
+            if service not in service_list:
+                # Add new service to the list
+                service_list.append(service)
+                new_service_str = ",".join(service_list)
+                
+                # Update worker with new service and potentially other new info
+                update_fields = ["service = ?"]
+                params = [new_service_str]
+                
+                # If they are adding freelance info, update those fields too
+                if service == 'freelance':
+                    if aadhaar: 
+                        update_fields.append("aadhaar_number = ?")
+                        params.append(aadhaar)
+                    if skills:
+                        update_fields.append("skills = ?")
+                        params.append(skills)
+                    if hourly_rate:
+                        update_fields.append("hourly_rate = ?")
+                        params.append(hourly_rate)
+                    if bio:
+                        update_fields.append("bio = ?")
+                        params.append(bio)
+                
+                params.append(worker_id)
+                cursor.execute(f"UPDATE workers SET {', '.join(update_fields)} WHERE id = ?", params)
+                self.conn.commit()
+                return worker_id
+            else:
+                # Already registered for this service
+                return None
+
         hashed_pw = None
         if password:
             hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode('utf-8')
             
         try:
             cursor.execute("""
-                INSERT INTO workers (full_name, email, phone, service, specialization, experience, clinic_location, license_number, password)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (full_name, email, phone, service, specialization, int(experience or 0), clinic_location or "", license_number, hashed_pw))
+                INSERT INTO workers (full_name, email, phone, service, specialization, experience, clinic_location, license_number, password, aadhaar_number, id_proof_url, skills, hourly_rate, bio)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (full_name, email, phone, service, specialization, int(experience or 0), clinic_location or "", license_number, hashed_pw, aadhaar, id_proof, skills, hourly_rate, bio))
             self.conn.commit()
             return cursor.lastrowid
         except sqlite3.IntegrityError:
@@ -100,12 +158,12 @@ class WorkerDB:
 
     def get_all_specializations(self, service_type='healthcare'):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT DISTINCT specialization FROM workers WHERE specialization IS NOT NULL AND specialization != '' AND service = ?", (service_type,))
+        cursor.execute("SELECT DISTINCT specialization FROM workers WHERE specialization IS NOT NULL AND specialization != '' AND (',' || service || ',') LIKE ?", (f'%,{service_type},%',))
         return [r["specialization"] for r in cursor.fetchall()]
 
     def get_all_workers(self, service_type='healthcare'):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM workers WHERE status = 'approved' AND service = ?", (service_type,))
+        cursor.execute("SELECT * FROM workers WHERE status = 'approved' AND (',' || service || ',') LIKE ?", (f'%,{service_type},%',))
         return [self._row_to_dict(r) for r in cursor.fetchall()]
 
     def get_workers_by_specialization(self, specialization, service_type='healthcare'):
@@ -116,9 +174,9 @@ class WorkerDB:
         cursor.execute("""
             SELECT * FROM workers 
             WHERE status = 'approved' 
-            AND service = ? 
+            AND (',' || service || ',') LIKE ? 
             AND (specialization LIKE ? OR specialization = ?)
-        """, (service_type, pattern, specialization))
+        """, (f'%,{service_type},%', pattern, specialization))
         return [self._row_to_dict(r) for r in cursor.fetchall()]
 
     def search_workers(self, q, service_type='healthcare'):
@@ -127,15 +185,15 @@ class WorkerDB:
         cursor = self.conn.cursor()
         pattern = f"%{q.strip()}%"
         cursor.execute("""
-            SELECT * FROM workers WHERE status = 'approved' AND service = ?
+            SELECT * FROM workers WHERE status = 'approved' AND (',' || service || ',') LIKE ?
             AND (full_name LIKE ? OR specialization LIKE ? OR clinic_location LIKE ?)
-        """, (service_type, pattern, pattern, pattern))
+        """, (f'%,{service_type},%', pattern, pattern, pattern))
         return [self._row_to_dict(r) for r in cursor.fetchall()]
 
     def get_pending_workers(self, service_type=None):
         cursor = self.conn.cursor()
         if service_type:
-            cursor.execute("SELECT * FROM workers WHERE status = 'pending' AND service = ?", (service_type,))
+            cursor.execute("SELECT * FROM workers WHERE status = 'pending' AND (',' || service || ',') LIKE ?", (f'%,{service_type},%',))
         else:
             cursor.execute("SELECT * FROM workers WHERE status = 'pending'")
         return [self._row_to_dict(r) for r in cursor.fetchall()]
@@ -163,5 +221,5 @@ class WorkerDB:
 
     def get_workers_by_service(self, service_type):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM workers WHERE service = ? AND status = 'approved'", (service_type,))
+        cursor.execute("SELECT * FROM workers WHERE (',' || service || ',') LIKE ? AND status = 'approved'", (f'%,{service_type},%',))
         return [self._row_to_dict(r) for r in cursor.fetchall()]
