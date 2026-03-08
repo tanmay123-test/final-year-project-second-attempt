@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Search, Plus, Briefcase, Bot, User, Star } from 'lucide-react';
+import { Home, Search, PlusCircle, Folder, Bot, Wallet, Star } from 'lucide-react';
 import PostProject from './PostProject';
 import MyProjects from './MyProjects';
 import '../styles/FreelanceHome.css';
@@ -39,15 +39,6 @@ const FreelanceHome = () => {
       status: 'online'
     }
   ];
-
-  if (activeTab === 'post') {
-    return (
-      <PostProject 
-        onBack={() => setActiveTab('home')} 
-        onSuccess={() => setActiveTab('projects')} 
-      />
-    );
-  }
 
   const renderContent = () => {
     switch (activeTab) {
@@ -131,6 +122,13 @@ const FreelanceHome = () => {
             </section>
           </>
         );
+      case 'post':
+        return (
+          <PostProject 
+            onBack={() => setActiveTab('home')} 
+            onSuccess={() => setActiveTab('projects')} 
+          />
+        );
       case 'projects':
         return <MyProjects />;
       case 'ai':
@@ -141,12 +139,12 @@ const FreelanceHome = () => {
             <p>I can help you estimate budgets and write project descriptions. Coming soon!</p>
           </div>
         );
-      case 'profile':
+      case 'wallet':
         return (
-          <div className="profile-placeholder">
-            <User size={48} color="#7c3aed" />
-            <h3>My Profile</h3>
-            <p>Manage your account and freelancer settings.</p>
+          <div className="wallet-placeholder">
+            <Wallet size={48} color="#7c3aed" />
+            <h3>My Wallet</h3>
+            <p>View your transaction history and manage funds.</p>
           </div>
         );
       default:
@@ -171,14 +169,14 @@ const FreelanceHome = () => {
           className={`nav-item ${activeTab === 'post' ? 'active' : ''}`}
           onClick={() => setActiveTab('post')}
         >
-          <Plus size={24} />
+          <PlusCircle size={24} />
           <span>Post</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'projects' ? 'active' : ''}`}
           onClick={() => setActiveTab('projects')}
         >
-          <Briefcase size={24} />
+          <Folder size={24} />
           <span>Projects</span>
         </button>
         <button 
@@ -189,11 +187,11 @@ const FreelanceHome = () => {
           <span>AI</span>
         </button>
         <button 
-          className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-          onClick={() => setActiveTab('profile')}
+          className={`nav-item ${activeTab === 'wallet' ? 'active' : ''}`}
+          onClick={() => setActiveTab('wallet')}
         >
-          <User size={24} />
-          <span>Profile</span>
+          <Wallet size={24} />
+          <span>Wallet</span>
         </button>
       </nav>
     </div>
