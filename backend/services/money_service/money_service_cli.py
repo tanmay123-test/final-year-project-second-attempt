@@ -4,7 +4,7 @@ from .intelligent_finny import IntelligentFinny as IntelligentFinnyMain
 from .budget_planner import BudgetPlanner
 from .smart_loan_analyzer import SmartLoanAnalyzer
 from .goal_jar.smart_goal_jar import SmartG
-from .ai_groups import AIGroups
+from .ai_groups.smart_ai_groups import SmartAIGroups
 
 def money_service_menu(user_id, role="user"):
     """
@@ -16,7 +16,7 @@ def money_service_menu(user_id, role="user"):
     budget_planner = BudgetPlanner()
     loan_analyzer = SmartLoanAnalyzer()
     goal_jar = SmartG()
-    ai_groups = AIGroups()
+    ai_groups = SmartAIGroups()
     
     while True:
         print("\n" + "="*60)
