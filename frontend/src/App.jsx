@@ -38,6 +38,10 @@ import UserLayout from './components/UserLayout';
 import FreelanceHome from './services/freelance/pages/FreelanceHome';
 import FreelancerDashboard from './services/freelance/pages/FreelancerDashboard';
 
+// Money Management
+import MoneyDashboard from './services/money_management/pages/MoneyDashboard';
+import QuickMode from './services/money_management/pages/QuickMode';
+
 const ProtectedWorkerRoute = ({ children }) => {
   const { worker, loading } = useAuth();
   const location = useLocation();
@@ -81,6 +85,10 @@ const App = () => {
           
           {/* Freelance Marketplace Routes */}
           <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />
+
+          {/* Money Management Routes */}
+          <Route path="/money/dashboard" element={<ProtectedRoute><MoneyDashboard /></ProtectedRoute>} />
+          <Route path="/money/quick" element={<ProtectedRoute><QuickMode /></ProtectedRoute>} />
 
           {/* Worker Routes - Service Specific */}
           <Route path="/provide-service" element={<ServiceSelection mode="worker" />} />

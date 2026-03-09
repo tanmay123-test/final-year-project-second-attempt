@@ -44,6 +44,9 @@ from routes.video_routes import video_bp
 # Import freelance system
 from services.freelance.routes.freelance_routes import freelance_bp
 
+# Import money management system
+from services.money_service.routes.money_routes import money_bp
+
 video_db = VideoConsultDB()
 video_db.create_table()
 
@@ -68,6 +71,10 @@ except ImportError as e:
 # Register freelance blueprint
 app.register_blueprint(freelance_bp)
 print("✅ Freelance marketplace blueprint registered")
+
+# Register money management blueprint
+app.register_blueprint(money_bp)
+print("✅ Money management blueprint registered")
 
 # Register video consultation blueprint
 app.register_blueprint(video_bp)

@@ -96,7 +96,13 @@ class AIChatService:
         stock_keywords = [
             'analyze stock', 'stock analysis', 'stock price', 'stock performance',
             'explain stock', 'stock information', 'company stock', 'share price',
-            'analyze hdfc', 'analyze reliance', 'analyze tcs', 'analyze infosys'
+            'analyze hdfc', 'analyze reliance', 'analyze tcs', 'analyze infosys',
+            'explain hdfc', 'explain reliance', 'explain tcs', 'explain infosys',
+            'hdfc stock', 'reliance stock', 'tcs stock', 'infosys stock',
+            'hdfc shares', 'reliance shares', 'tcs shares', 'infosys shares',
+            'analyze wipro', 'analyze wipro stock', 'wipro stock', 'wipro shares',
+            'analyze icici', 'analyze icici stock', 'icici stock', 'icici shares',
+            'analyze sbi', 'analyze sbi stock', 'sbi stock', 'sbi shares'
         ]
         
         # Portfolio analysis keywords
@@ -137,7 +143,7 @@ class AIChatService:
             
             if stock_symbol:
                 # Use existing stock AI service (synchronous call)
-                analysis = stock_ai_service.generate_stock_analysis(f"analyze stock {stock_symbol}")
+                analysis = stock_ai_service.generate_stock_analysis_sync(f"analyze stock {stock_symbol}")
                 
                 if analysis.get('success'):
                     return self._format_stock_response(analysis)
@@ -176,7 +182,108 @@ class AIChatService:
                 return self._get_educational_response(message)
                 
         except Exception as e:
-            return f"Error retrieving knowledge: {str(e)}"
+            # Fallback to basic educational response
+            return self._get_basic_educational_response(message)
+    
+    def _get_basic_educational_response(self, message: str) -> str:
+        """Get basic educational response for common financial concepts"""
+        message_lower = message.lower()
+        
+        # Basic educational responses for common concepts
+        educational_responses = {
+            "diversification": """
+**Diversification - Educational Overview**
+
+Diversification is a risk management strategy that involves spreading investments across various assets, industries, and geographic areas.
+
+**Key Points:**
+- Reduces portfolio risk by not putting all eggs in one basket
+- Different assets perform differently under various market conditions
+- Helps protect against significant losses in any single investment
+
+**Example:**
+Instead of investing all money in one stock, diversify across:
+- Multiple stocks from different sectors
+- Bonds and fixed income
+- Real estate or commodities
+- International markets
+
+**Important Note:**
+This information is for educational purposes only and not financial advice.
+""",
+            "compound interest": """
+**Compound Interest - Educational Overview**
+
+Compound interest is the process where interest earns interest, creating exponential growth over time.
+
+**How It Works:**
+- You earn interest on your principal amount
+- You also earn interest on accumulated interest
+- This creates a snowball effect of growing wealth
+
+**Example:**
+If you invest ₹10,000 at 8% annual compound interest:
+- Year 1: ₹10,800
+- Year 2: ₹11,664 (interest on interest)
+- Year 3: ₹12,597 (compounding continues)
+
+**Key Insight:**
+The earlier you start, the more powerful compound interest becomes.
+
+**Important Note:**
+This information is for educational purposes only and not financial advice.
+""",
+            "mutual funds": """
+**Mutual Funds - Educational Overview**
+
+Mutual funds are investment vehicles that pool money from multiple investors to purchase a diversified portfolio of stocks, bonds, or other securities.
+
+**How They Work:**
+- Professional fund managers handle investment decisions
+- Investors buy shares representing ownership in the fund
+- Returns depend on the fund's performance
+
+**Types of Mutual Funds:**
+- Equity funds (stocks)
+- Debt funds (bonds)
+- Hybrid funds (balanced approach)
+- Index funds (track market indices)
+
+**Benefits:**
+- Professional management
+- Diversification
+- Liquidity
+- Affordable entry point
+
+**Important Note:**
+This information is for educational purposes only and not financial advice.
+"""
+        }
+        
+        # Check for matching concepts
+        for concept, response in educational_responses.items():
+            if concept in message_lower:
+                return response.strip()
+        
+        # Generic response for other concepts
+        return f"""
+**Financial Education - {message.title()}**
+
+I apologize, but I'm unable to provide detailed information on "{message}" at the moment.
+
+**What I can help with:**
+- Stock analysis (e.g., "analyze HDFC stock")
+- Basic concepts like diversification, compound interest, mutual funds
+- Market news and updates
+
+**Suggestions:**
+- Try rephrasing your question
+- Be more specific about the financial concept
+- Check if the concept is spelled correctly
+
+**Important Note:**
+This information is for educational purposes only and not financial advice.
+"""
     
     def _handle_market_news(self) -> str:
         """Handle market news requests"""
@@ -240,19 +347,20 @@ class AIChatService:
             'AMAZON': 'AMZN'
         }
         
-        # Check for exact company name matches
+        # Check for exact company name matches (case-insensitive)
         for company, symbol in company_mappings.items():
-            if company in cleaned_message:
+            if company.lower() in cleaned_message.lower():
                 return symbol
         
-        # Extract potential stock symbols (3-5 letter words)
-        words = re.findall(r'\b[A-Z]{3,5}\b', cleaned_message)
+        # Extract potential stock symbols (3-5 letter words, case-insensitive)
+        words = re.findall(r'\b[A-Za-z]{3,5}\b', cleaned_message)
         
         # Filter out common words that aren't stock symbols
         filtered_words = []
         for word in words:
-            if word not in words_to_remove and len(word) >= 3:
-                filtered_words.append(word)
+            upper_word = word.upper()
+            if upper_word not in words_to_remove and len(upper_word) >= 3:
+                filtered_words.append(upper_word)
         
         if filtered_words:
             return filtered_words[0]  # Return first potential symbol
@@ -262,19 +370,37 @@ class AIChatService:
     def _format_stock_response(self, analysis: Dict[str, Any]) -> str:
         """Format stock analysis response"""
         try:
-            symbol = analysis.get('symbol', 'Unknown')
-            price = analysis.get('price', 0)
-            change = analysis.get('change', 0)
-            change_percent = analysis.get('change_percent', 0)
-            insights = analysis.get('insights', [])
-            
-            response = f"📈 {symbol} Stock Analysis\n\n"
-            response += f"Current Price: ₹{price:.2f}\n"
-            response += f"Change: ₹{change:.2f} ({change_percent:.2f}%)\n\n"
-            
-            response += "Key Insights:\n"
-            for insight in insights[:3]:  # Show top 3 insights
-                response += f"• {insight}\n"
+            # Handle different response structures
+            if 'analysis' in analysis:
+                # New format with nested analysis
+                stock_data = analysis.get('stock_data', {})
+                ai_analysis = analysis.get('analysis', '')
+                
+                symbol = stock_data.get('symbol', 'Unknown')
+                price = stock_data.get('price', 0)
+                change = stock_data.get('change', 0)
+                change_percent = stock_data.get('change_percent', 0)
+                
+                response = f"📈 {symbol} Stock Analysis\n\n"
+                response += f"Current Price: ₹{price:.2f}\n"
+                response += f"Change: ₹{change:.2f} ({change_percent:.2f}%)\n\n"
+                response += f"AI Analysis:\n{ai_analysis}\n"
+                
+            else:
+                # Legacy format
+                symbol = analysis.get('symbol', 'Unknown')
+                price = analysis.get('price', 0)
+                change = analysis.get('change', 0)
+                change_percent = analysis.get('change_percent', 0)
+                insights = analysis.get('insights', [])
+                
+                response = f"📈 {symbol} Stock Analysis\n\n"
+                response += f"Current Price: ₹{price:.2f}\n"
+                response += f"Change: ₹{change:.2f} ({change_percent:.2f}%)\n\n"
+                
+                response += "Key Insights:\n"
+                for insight in insights[:3]:  # Show top 3 insights
+                    response += f"• {insight}\n"
             
             response += "\n💡 This analysis is for educational purposes only and not financial advice."
             response += "\n📊 Data provided by financial APIs"

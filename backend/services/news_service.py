@@ -425,6 +425,83 @@ Provide a helpful news summary and analysis:"""
             "How is the forex market performing?"
         ]
     
+    def get_market_news(self) -> Dict[str, Any]:
+        """
+        Get market news (synchronous version with fallback)
+        
+        Returns:
+            Dictionary with news data
+        """
+        try:
+            import asyncio
+            # Try to fetch real news
+            try:
+                news_data = asyncio.run(self.fetch_market_news("general", 5))
+                if news_data:
+                    return {
+                        'success': True,
+                        'articles': news_data,
+                        'timestamp': datetime.utcnow().isoformat()
+                    }
+            except Exception as e:
+                print(f"Failed to fetch real news: {e}")
+            
+            # Fallback to mock news
+            return self._get_mock_news()
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f"Error fetching market news: {str(e)}"
+            }
+    
+    def _get_mock_news(self) -> Dict[str, Any]:
+        """Get mock market news when API fails"""
+        mock_articles = [
+            {
+                "title": "Indian Markets End Higher on IT Sector Gains",
+                "source": "Financial Express",
+                "url": "https://www.financialexpress.com",
+                "summary": "Indian equity markets closed higher today led by gains in the IT sector, with Nifty IT index rising over 2%.",
+                "datetime": datetime.utcnow().isoformat()
+            },
+            {
+                "title": "HDFC Bank Reports Q3 Profit Growth",
+                "source": "Economic Times",
+                "url": "https://economictimes.indiatimes.com",
+                "summary": "HDFC Bank reported a 15% year-on-year growth in net profit for the third quarter, driven by strong loan growth.",
+                "datetime": datetime.utcnow().isoformat()
+            },
+            {
+                "title": "Reliance Industries Announces Green Energy Investment",
+                "source": "Business Standard",
+                "url": "https://www.business-standard.com",
+                "summary": "Reliance Industries announced a ₹75,000 crore investment in green energy projects over the next three years.",
+                "datetime": datetime.utcnow().isoformat()
+            },
+            {
+                "title": "IT Sector Shows Strong Performance in Q4",
+                "source": "Mint",
+                "url": "https://www.livemint.com",
+                "summary": "Indian IT companies reported strong Q4 results, with TCS and Infosys beating analyst expectations.",
+                "datetime": datetime.utcnow().isoformat()
+            },
+            {
+                "title": "Rupee Strengthens Against US Dollar",
+                "source": "Reuters",
+                "url": "https://www.reuters.com",
+                "summary": "The Indian rupee strengthened against the US dollar, supported by foreign fund inflows and positive market sentiment.",
+                "datetime": datetime.utcnow().isoformat()
+            }
+        ]
+        
+        return {
+            'success': True,
+            'articles': mock_articles,
+            'timestamp': datetime.utcnow().isoformat(),
+            'source': 'Mock Data (Educational)'
+        }
+    
     async def test_news_service(self) -> bool:
         """Test the news service functionality"""
         try:

@@ -15,8 +15,8 @@ def get_current_user_id():
     if not username:
         return None
     user_db = UserDB()
-    user = user_db.get_user_by_username(username)
-    return user['id'] if user else None
+    user_id = user_db.get_user_by_username(username)
+    return user_id
 
 @freelance_bp.route('/api/freelance/projects', methods=['POST'])
 def create_project():

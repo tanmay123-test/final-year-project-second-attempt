@@ -87,10 +87,19 @@ const ServiceSelection = ({ mode = 'user' }) => {
                       navigate('/worker/freelance/login');
                       return;
                     }
+                    if (service.id === 'money') {
+                      navigate('/worker/money/login');
+                      return;
+                    }
                   }
                   
                   if (service.id === 'freelance') {
                     navigate('/freelance/home');
+                    return;
+                  }
+                  
+                  if (service.id === 'money') {
+                    navigate('/money/dashboard');
                     return;
                   }
                   
