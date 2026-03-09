@@ -6,7 +6,7 @@ Handles all fuel delivery agent related endpoints
 from flask import Blueprint, request, jsonify
 from .fuel_delivery_service import fuel_delivery_service
 
-fuel_delivery_bp = Blueprint('fuel_delivery', __name__)
+fuel_delivery_bp = Blueprint('fuel_delivery_api', __name__)
 
 @fuel_delivery_bp.route('/agents/available', methods=['GET'])
 def get_available_agents():

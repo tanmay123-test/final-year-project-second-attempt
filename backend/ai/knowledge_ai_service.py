@@ -143,6 +143,63 @@ Provide a helpful educational response:"""
         
         return "\n".join(formatted_docs)
     
+    def get_financial_knowledge(self, query: str) -> Dict[str, Any]:
+        """
+        Get financial knowledge using Gemini API (simplified version)
+        
+        Args:
+            query: User query about financial concept
+            
+        Returns:
+            Dictionary with knowledge response
+        """
+        try:
+            # Build educational prompt
+            prompt = f"""
+You are a financial education assistant.
+
+Explain the following financial concept clearly and simply:
+
+Concept: {query}
+
+Rules:
+* Only provide educational explanations
+* Do not give financial advice
+* Do not say "buy", "sell", "hold", or "recommend"
+* Explain concepts clearly and simply
+* Include relevant examples when helpful
+* Mention risks and considerations when appropriate
+* Use simple, easy-to-understand language
+* Acknowledge if this is educational information only
+
+Provide a helpful educational response about this financial concept.
+"""
+            
+            # Generate response using Gemini (simplified synchronous call)
+            import asyncio
+            loop = asyncio.new_event_loop()
+            response = loop.run_until_complete(self.gemini_client.generate_ai_response(prompt))
+            loop.close()
+            
+            return {
+                'success': True,
+                'response': response,
+                'type': 'knowledge_response',
+                'query': query,
+                'timestamp': datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f"Error retrieving financial knowledge: {str(e)}",
+                'suggestions': [
+                    "Try rephrasing your question",
+                    "Ask about a more general financial topic",
+                    "Contact support if the issue persists"
+                ]
+            }
+    
     async def initialize_knowledge_base(self) -> bool:
         """
         Initialize the knowledge base with financial education content

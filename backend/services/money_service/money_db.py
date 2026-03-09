@@ -8,6 +8,7 @@ DB_PATH = os.path.join(BASE_DIR, "..", "..", "expertease.db")
 class MoneyServiceDB:
     def __init__(self):
         self.conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+        self.conn.row_factory = sqlite3.Row
         self.create_tables()
 
     def create_tables(self):
@@ -100,7 +101,8 @@ class MoneyServiceDB:
             cursor.execute("""
             SELECT * FROM transactions WHERE user_id=? ORDER BY date DESC
             """, (user_id,))
-        return cursor.fetchall()
+        rows = cursor.fetchall()
+        return [dict(r) for r in rows]
 
     def get_monthly_summary(self, user_id, month, year):
         cursor = self.conn.cursor()

@@ -67,8 +67,29 @@ class NaturalLanguageFinny:
                         if use_suggested in ['yes', 'y']:
                             trans['category'] = suggested_category
                     
-                    # Check for duplicates and save
-                    transaction_id = self.analytics.intelligent_transaction_entry(
+                    # Check for duplicates
+                    is_duplicate = self.analytics.check_duplicate_transaction(
+                        user_id, trans['amount'], trans['category'], 
+                        trans['merchant'], trans['date']
+                    )
+                    
+                    if is_duplicate:
+                        print(f"\n⚠️ Possible duplicate transaction detected!")
+                        print(f"💰 Amount: ₹{trans['amount']}")
+                        print(f"📂 Category: {trans['category']}")
+                        print(f"🏪 Merchant: {trans['merchant']}")
+                        print(f"📅 Date: {trans['date']}")
+                        
+                        confirm = input("Confirm save? (yes/no): ").strip().lower()
+                        if confirm not in ['yes', 'y']:
+                            print("❌ Transaction cancelled")
+                            continue
+                    
+                    # Learn merchant-category mapping
+                    self.analytics.learn_merchant_category(trans['merchant'], trans['category'])
+                    
+                    # Save transaction
+                    transaction_id = self.db.add_transaction(
                         user_id, trans['amount'], trans['category'], 
                         trans['merchant'], trans['date'], trans['description']
                     )
@@ -76,6 +97,9 @@ class NaturalLanguageFinny:
                     if transaction_id:
                         trans['id'] = transaction_id
                         saved_transactions.append(trans)
+                        print(f"✅ Transaction saved successfully! ID: {transaction_id}")
+                    else:
+                        print(f"❌ Failed to save transaction")
                 
                 # Show summary
                 self._show_parsed_summary(saved_transactions)

@@ -1,55 +1,42 @@
-from .enhanced_finny import EnhancedFinny
-from .natural_language_finny import NaturalLanguageFinny
-from .intelligent_finny import IntelligentFinny as IntelligentFinnyMain
-from .budget_planner import BudgetPlanner
-from .smart_loan_analyzer import SmartLoanAnalyzer
-from .goal_jar.smart_goal_jar import SmartG
-from .ai_groups.smart_ai_groups import SmartAIGroups
+from .unified_finny import unified_finny
+from .ai_financial_assistant import ai_financial_assistant
 
 def money_service_menu(user_id, role="user"):
     """
     Money Service Main Menu - Same for both Users and Workers
     """
-    finny = EnhancedFinny()
-    natural_finny = NaturalLanguageFinny()
-    intelligent_finny = IntelligentFinnyMain()
-    budget_planner = BudgetPlanner()
-    loan_analyzer = SmartLoanAnalyzer()
-    goal_jar = SmartG()
-    ai_groups = SmartAIGroups()
-    
     while True:
         print("\n" + "="*60)
         print("💰 MONEY SERVICE")
         print("="*60)
         print(f"👤 Logged in as: {role.title()}")
         print("-" * 60)
-        print("1. 💳 Enhanced Finny - Conversational Transaction Tracker")
-        print("2. 💬 Natural Language Finny - Chat Style")
-        print("3. 🧠 Intelligent Finny - Advanced Analytics")
-        print("4. 📊 Smart Budget Planner")
-        print("5. 🏦 Smart Loan Analyzer")
-        print("6. 🏆 Goal Jar - Savings Tracker")
-        print("7. 🤖 AI Groups")
-        print("8. ⬅️ Back to Services")
+        print("1. 💳 Unified Finny - Smart Transaction Tracker")
+        print("2. 📊 Smart Budget Planner")
+        print("3. 🏦 Smart Loan Analyzer")
+        print("4. 🏆 Goal Jar - Savings Tracker")
+        print("5. 🤖 AI Financial Assistant")
+        print("6. ⬅️ Back to Services")
         
         choice = input("\nSelect option: ").strip()
         
         if choice == "1":
-            finny.show_menu(user_id)
+            unified_finny.show_menu(user_id)
         elif choice == "2":
-            natural_finny.show_menu(user_id)
-        elif choice == "3":
-            intelligent_finny.show_menu(user_id)
-        elif choice == "4":
+            from .budget_planner import BudgetPlanner
+            budget_planner = BudgetPlanner()
             budget_planner.show_menu(user_id)
-        elif choice == "5":
+        elif choice == "3":
+            from .smart_loan_analyzer import SmartLoanAnalyzer
+            loan_analyzer = SmartLoanAnalyzer()
             loan_analyzer.show_menu(user_id)
-        elif choice == "6":
+        elif choice == "4":
+            from .goal_jar import GoalJar
+            goal_jar = GoalJar()
             goal_jar.show_menu(user_id)
-        elif choice == "7":
-            ai_groups.show_menu(user_id)
-        elif choice == "8":
+        elif choice == "5":
+            ai_financial_assistant.show_menu(user_id)
+        elif choice == "6":
             return
         else:
             print("❌ Invalid choice")

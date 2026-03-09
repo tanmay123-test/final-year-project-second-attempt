@@ -301,17 +301,91 @@ Select option: """)
         print("3. 👥 View Members")
         print("4. ⬅️ Back")
         
-        while True:
-            choice = input("\nSelect option: ").strip()
+        try:
+            while True:
+                choice = input("\nSelect option: ").strip()
+                
+                if choice == "1":
+                    self._send_chat_message(user_id, group['id'])
+                elif choice == "2":
+                    self._view_recent_messages(user_id, group['id'])
+                elif choice == "3":
+                    self._view_group_members(user_id, group['id'])
+                elif choice == "4":
+                    return
+                else:
+                    print("❌ Invalid choice")
+                
+        except Exception as e:
+            print(f"❌ Error: {e}")
+    
+    def _send_chat_message(self, user_id: int, group_id: int):
+        """Send a chat message to the group"""
+        try:
+            message = input("\n💬 Enter your message: ").strip()
             
-            if choice == "1":
-                self._send_chat_message(user_id, group['id'])
-            elif choice == "2":
-                self._view_recent_messages(user_id, group['id'])
-            elif choice == "3":
-                self._view_group_members(user_id, group['id'])
-            elif choice == "4":
+            if not message:
+                print("❌ Message cannot be empty")
                 return
+            
+            message_data = {
+                'group_id': group_id,
+                'message': message,
+                'message_type': 'user_message'
+            }
+            
+            result = self.service.send_message(user_id, message_data)
+            
+            if result['success']:
+                print(f"\n✅ Message sent: {message}")
+                
+                # Check if AI responded
+                ai_messages = [msg for msg in result.get('messages', []) 
+                              if msg.get('user_id') == -1 and msg.get('group_id') == group_id]
+                
+                if ai_messages:
+                    ai_response = ai_messages[-1]  # Get latest AI response
+                    message_type = ai_response.get('message_type', 'ai_response')
+                    
+                    # Display AI response based on type
+                    if message_type == 'ai_stock_comparison':
+                        print(f"\n📊 Stock Comparison:")
+                        print("-" * 50)
+                        print(f"🤖 {ai_response['message']}")
+                        print("-" * 50)
+                        print("💡 This is educational comparison only, not financial advice.")
+                        print("📊 Data provided by stock APIs")
+                    elif message_type == 'ai_stock_analysis':
+                        print(f"\n📈 Stock Analysis:")
+                        print("-" * 50)
+                        print(f"🤖 {ai_response['message']}")
+                        print("-" * 50)
+                        print("💡 This is educational analysis only, not financial advice.")
+                        print("📊 Data provided by Finnhub API")
+                    elif message_type == 'ai_portfolio_analysis':
+                        print(f"\n💼 Portfolio Analysis:")
+                        print("-" * 50)
+                        print(f"🤖 {ai_response['message']}")
+                        print("-" * 50)
+                        print("💡 This is educational analysis only, not financial advice.")
+                        print("📊 Based on your portfolio data")
+                    elif message_type == 'ai_knowledge_response':
+                        print(f"\n📚 Knowledge Response:")
+                        print("-" * 50)
+                        print(f"🤖 {ai_response['message']}")
+                        print("-" * 50)
+                        print("💡 Educational information from financial knowledge base")
+                        print("📚 Powered by vector search")
+                    elif message_type == 'ai_news_summary':
+                        print(f"\n📰 News Summary:")
+                        print("-" * 50)
+                        print(f"🤖 {ai_response['message']}")
+                        print("-" * 50)
+                        print("💡 Financial news summary and market analysis")
+                        print("📰 Data from Finnhub News API")
+                    else:
+                        print(f"\n🤖 AI Response:")
+                        print("-" * 50)
                         print(f"{ai_response['message']}")
                         print("-" * 50)
                         print("💡 Remember: This is educational information only, not financial advice.")
