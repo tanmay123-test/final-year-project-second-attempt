@@ -1,5 +1,6 @@
 import requests
 from .auth_db import AuthDB
+from cli import worker_service_selection
 
 API = "http://127.0.0.1:5000"
 TOKEN = None
@@ -49,30 +50,26 @@ def worker_login():
         return False
 
 def worker_menu():
-    """Main worker menu with authentication"""
-    global TOKEN, WORKER_ID
-    
+    """Main worker menu - show services first"""
     while True:
         print("\n" + "="*50)
         print("👷 WORKER MENU")
         print("="*50)
         print("1. 📝 Signup")
         print("2. 🔐 Login")
-        print("3. ⬅️ Back to Main Menu")
+        print("3. 🌐 Browse Services")
+        print("4. ⬅️ Back to Main Menu")
         
         choice = input("\nSelect option: ").strip()
         
         if choice == "1":
             worker_signup()
         elif choice == "2":
-            if worker_login():
-                # After successful login, go to service selection
-                import sys
-                import os
-                sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                from cli import worker_service_selection
-                worker_service_selection()
+            worker_login()
         elif choice == "3":
+            # Show service selection without authentication
+            worker_service_selection()
+        elif choice == "4":
             return
         else:
             print("❌ Invalid choice")

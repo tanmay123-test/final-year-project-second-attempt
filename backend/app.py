@@ -177,7 +177,7 @@ except Exception as e:
 
 # Register Ask Expert blueprint
 try:
-    from car_service.ask_expert.routes import ask_expert_bp, init_ask_expert_db
+    from car_service.ask_expert import ask_expert_bp, init_ask_expert_db
     app.register_blueprint(ask_expert_bp)
     init_ask_expert_db(app)
     print("✅ Ask Expert blueprint registered")

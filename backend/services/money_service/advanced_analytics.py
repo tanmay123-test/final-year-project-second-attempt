@@ -8,18 +8,19 @@ class AdvancedAnalytics:
     def get_comprehensive_dashboard(self, user_id):
         """Get complete analytics dashboard"""
         current_date = datetime.now()
-        month = current_date.strftime("%B")
+        month_name = current_date.strftime("%B")
+        month_num = current_date.month
         year = current_date.year
         
         dashboard = {
             'daily_summary': self.get_daily_summary(user_id),
-            'weekly_summary': self.get_weekly_summary(user_id, year, current_date.month),
-            'monthly_summary': self.get_monthly_summary(user_id, current_date.month, year),
-            'budget_alerts': self.get_budget_alerts(user_id, month, year),
-            'top_merchants': self.get_top_merchants_analysis(user_id, month, year),
-            'spending_predictions': self.get_spending_predictions(user_id, month, year),
-            'spending_spikes': self.get_spending_spikes(user_id, current_date.month, year),
-            'financial_health_score': self.get_financial_health_analysis(user_id, month, year)
+            'weekly_summary': self.get_weekly_summary(user_id, year, month_num),
+            'monthly_summary': self.get_monthly_summary(user_id, month_num, year),
+            'budget_alerts': self.get_budget_alerts(user_id, month_name, year),
+            'top_merchants': self.get_top_merchants_analysis(user_id, month_num, year),
+            'spending_predictions': self.get_spending_predictions(user_id, month_name, year),
+            'spending_spikes': self.get_spending_spikes(user_id, month_num, year),
+            'financial_health_score': self.get_financial_health_analysis(user_id, month_name, year)
         }
         
         return dashboard
@@ -166,18 +167,17 @@ class AdvancedAnalytics:
         
         return alerts
     
-    def get_top_merchants_analysis(self, user_id, month, year):
+    def get_top_merchants_analysis(self, user_id, month_num, year):
         """Get top merchants analysis"""
         cursor = self.db.conn.cursor()
-        
         cursor.execute("""
-        SELECT merchant, SUM(amount) as total, COUNT(*) as transaction_count
+        SELECT merchant, SUM(amount) as total, COUNT(*) as count
         FROM transactions 
         WHERE user_id=? AND strftime('%m', date)=? AND strftime('%Y', date)=?
         GROUP BY merchant
         ORDER BY total DESC
         LIMIT 10
-        """, (user_id, f"{month:02d}", str(year)))
+        """, (user_id, f"{month_num:02d}", str(year)))
         
         top_merchants = cursor.fetchall()
         
@@ -215,20 +215,23 @@ class AdvancedAnalytics:
         
         return insights
     
-    def get_spending_predictions(self, user_id, month, year):
+    def get_spending_predictions(self, user_id, month_name, year):
         """Get spending predictions for all categories"""
+        # Convert month name to month number
+        month_num = datetime.strptime(month_name, "%B").month
+        
         cursor = self.db.conn.cursor()
         
         cursor.execute("""
         SELECT DISTINCT category FROM transactions 
         WHERE user_id=? AND strftime('%m', date)=? AND strftime('%Y', date)=?
-        """, (user_id, f"{month:02d}", str(year)))
+        """, (user_id, f"{month_num:02d}", str(year)))
         
         categories = [row[0] for row in cursor.fetchall()]
         predictions = []
         
         for category in categories:
-            current_spending, predicted_spending = self.db.predict_monthly_spending(user_id, category, month, year)
+            current_spending, predicted_spending = self.db.predict_monthly_spending(user_id, category, month_num, year)
             
             predictions.append({
                 'category': category,

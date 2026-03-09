@@ -2006,14 +2006,37 @@ def worker_dashboard(worker_id):
     worker_menu(worker_id)
 
 
+def authenticate_worker_for_service(service_type):
+    """Authenticate worker for specific service"""
+    from auth.worker_auth import worker_login, TOKEN, WORKER_ID
+    
+    print(f"\n🔐 Authentication Required for {service_type.title()} Service")
+    print("="*60)
+    
+    # Try to login
+    if worker_login():
+        # Check if worker has the correct service type
+        from auth.auth_db import AuthDB
+        auth_db = AuthDB()
+        cursor = auth_db.conn.cursor()
+        cursor.execute("SELECT service_type FROM workers WHERE id=?", (WORKER_ID,))
+        result = cursor.fetchone()
+        
+        if result and result[0] == service_type:
+            print(f"✅ Authenticated for {service_type.title()} service")
+            return True
+        else:
+            print(f"❌ You are not registered for {service_type.title()} service")
+            print(f"📋 Your registered service: {result[0] if result else 'Unknown'}")
+            print("💡 Please signup for the correct service type")
+            return False
+    else:
+        print("❌ Authentication failed")
+        return False
+
+
 def worker_service_selection():
     """Worker selects which service they belong to"""
-    from auth.worker_auth import TOKEN, WORKER_ID
-    
-    if not TOKEN:
-        print("⚠️ Please login first")
-        return
-    
     while True:
         print("\n" + "="*50)
         print("👷 SELECT WORKER SERVICE")
@@ -2034,10 +2057,9 @@ def worker_service_selection():
         elif choice == "3":
             car_service_worker_menu()
         elif choice == "4":
-            freelance_worker_flow(WORKER_ID)
+            freelance_worker_flow(None)  # Will get worker_id after login
         elif choice == "5":
-            from services.money_service.money_service_cli import money_service_menu
-            money_service_menu(WORKER_ID, "worker")
+            print("🚧 Money Management worker module coming soon")
         elif choice == "6":
             return
         else:
@@ -2066,14 +2088,14 @@ def car_service_worker_menu():
             from car_service.fuel_delivery_cli import fuel_delivery_agent_menu
             fuel_delivery_agent_menu()
         elif choice == "3":
-            from car_service.worker_cli import tow_truck_operator_signup
-            tow_truck_operator_signup()
+            from car_service.tow_truck_operator_cli import tow_truck_operator_menu
+            tow_truck_operator_menu()
         elif choice == "4":
             from car_service.automobile_expert_cli import automobile_expert_menu
             automobile_expert_menu()
         elif choice == "5":
-            from car_service.truck_operator_cli import truck_operator_signup
-            truck_operator_signup()
+            from car_service.truck_operator_cli import truck_operator_menu
+            truck_operator_menu()
         elif choice == "6":
             return
         else:
@@ -2086,19 +2108,16 @@ def healthcare_worker_menu():
     while True:
         print("\n--- HEALTHCARE WORKER MENU ---")
         print("1. Healthcare Signup")
-        print("2. Freelance Signup")
-        print("3. Worker Login")
-        print("4. Back")
+        print("2. Worker Login")
+        print("3. Back")
 
         c = input("Choice: ").strip()
 
         if c == "1":
             healthcare_worker_signup()
         elif c == "2":
-            freelance_worker_signup()
-        elif c == "3":
             worker_login()
-        elif c == "4":
+        elif c == "3":
             return
 
 
@@ -4651,8 +4670,7 @@ def main():
         if c == "1":
             user_menu()
         elif c == "2":
-            from auth.worker_auth import worker_menu
-            worker_menu()
+            worker_service_selection()
         elif c == "3":
             admin_menu()
         elif c == "4":

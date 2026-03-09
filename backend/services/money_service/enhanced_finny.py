@@ -65,8 +65,29 @@ class EnhancedFinny:
                         if use_suggested in ['yes', 'y']:
                             transaction['category'] = suggested_category
                     
-                    # Check for duplicates and save
-                    transaction_id = self.analytics.intelligent_transaction_entry(
+                    # Check for duplicates
+                    is_duplicate = self.analytics.check_duplicate_transaction(
+                        user_id, transaction['amount'], transaction['category'], 
+                        transaction['merchant'], transaction['date']
+                    )
+                    
+                    if is_duplicate:
+                        print(f"\n⚠️ Possible duplicate transaction detected!")
+                        print(f"💰 Amount: ₹{transaction['amount']}")
+                        print(f"📂 Category: {transaction['category']}")
+                        print(f"🏪 Merchant: {transaction['merchant']}")
+                        print(f"📅 Date: {transaction['date']}")
+                        
+                        confirm = input("Confirm save? (yes/no): ").strip().lower()
+                        if confirm not in ['yes', 'y']:
+                            print("❌ Transaction cancelled")
+                            continue
+                    
+                    # Learn merchant-category mapping
+                    self.analytics.learn_merchant_category(transaction['merchant'], transaction['category'])
+                    
+                    # Save transaction
+                    transaction_id = self.db.add_transaction(
                         user_id, transaction['amount'], transaction['category'], 
                         transaction['merchant'], transaction['date'], transaction['description']
                     )
@@ -74,6 +95,9 @@ class EnhancedFinny:
                     if transaction_id:
                         transactions.append(transaction)
                         total_spent += transaction['amount']
+                        print(f"✅ Transaction saved successfully! ID: {transaction_id}")
+                    else:
+                        print(f"❌ Failed to save transaction")
         
         # Summary
         self._show_transaction_summary(transactions, total_spent)
