@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Home, Search, PlusCircle, Folder, Bot, Wallet, Star } from 'lucide-react';
+import { Home, Search, PlusCircle, Folder, Bot, Wallet, Star, LayoutDashboard, User } from 'lucide-react';
+import { useAuth } from '../../../context/AuthContext';
 import PostProject from './PostProject';
 import MyProjects from './MyProjects';
 import '../styles/FreelanceHome.css';
 
 const FreelanceHome = () => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('home');
   
@@ -45,28 +47,53 @@ const FreelanceHome = () => {
       case 'home':
         return (
           <>
+            {/* Top Navigation */}
+            <header className="freelance-top-nav">
+              <div className="nav-left">
+                <span className="brand-name">ExpertEase</span>
+              </div>
+              <div className="nav-right">
+                <div className="nav-item-link">
+                  <LayoutDashboard size={18} />
+                  <span>Dashboard</span>
+                </div>
+                <div className="nav-item-link">
+                  <Search size={18} />
+                  <span>Find Freelancers</span>
+                </div>
+                <div className="user-profile-nav">
+                  <div className="user-avatar-purple">
+                    <User size={16} color="white" />
+                  </div>
+                  <span>Hi, {user?.user_name || 'goat1'}</span>
+                </div>
+              </div>
+            </header>
+
             {/* Hero Section */}
             <section className="freelance-hero">
-              <h1>Find Top Freelancers</h1>
-              <p>Hire experts for your next project</p>
-              <div className="search-bar-wrapper">
-                <Search className="search-icon" size={20} />
-                <input 
-                  type="text" 
-                  placeholder="Search freelancers or skills..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              <div className="hero-content">
+                <h1>Find Top Freelancers</h1>
+                <p>Hire experts for your next project</p>
+                <div className="search-bar-wrapper-hero">
+                  <Search className="search-icon-hero" size={20} />
+                  <input 
+                    type="text" 
+                    placeholder="Search freelancers or skills..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
             </section>
 
             {/* Post Project Banner */}
-            <section className="post-project-banner">
+            <section className="post-project-banner-new">
               <div className="banner-content">
                 <h3>Have a project idea?</h3>
                 <p>Post it and get proposals from top freelancers</p>
               </div>
-              <button className="post-btn" onClick={() => setActiveTab('post')}>
+              <button className="post-btn-new" onClick={() => setActiveTab('post')}>
                 Post Project
               </button>
             </section>
@@ -134,7 +161,7 @@ const FreelanceHome = () => {
       case 'ai':
         return (
           <div className="ai-assistant-placeholder">
-            <Bot size={48} color="#7c3aed" />
+            <Bot size={48} color="#9B59B6" />
             <h3>AI Freelance Assistant</h3>
             <p>I can help you estimate budgets and write project descriptions. Coming soon!</p>
           </div>
@@ -142,7 +169,7 @@ const FreelanceHome = () => {
       case 'wallet':
         return (
           <div className="wallet-placeholder">
-            <Wallet size={48} color="#7c3aed" />
+            <Wallet size={48} color="#9B59B6" />
             <h3>My Wallet</h3>
             <p>View your transaction history and manage funds.</p>
           </div>

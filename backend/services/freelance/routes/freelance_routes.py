@@ -35,7 +35,8 @@ def create_project():
             budget_amount=data.get('budget_amount'),
             deadline=data.get('deadline'),
             skills=data.get('skills'),
-            exp_level=data.get('experience_level')
+            exp_level=data.get('experience_level'),
+            milestones=data.get('milestones')
         )
         return jsonify({"success": True, "project_id": project_id}), 201
     except Exception as e:
@@ -71,7 +72,9 @@ def list_my_projects():
     user_id = get_current_user_id()
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
-    projects = freelance_service.get_projects_by_client(client_id=user_id)
+    
+    status = request.args.get('status')
+    projects = freelance_service.get_projects_by_client(client_id=user_id, status=status)
     return jsonify({"projects": projects}), 200
 
 @freelance_bp.route('/api/freelance/proposals/accept', methods=['POST'])

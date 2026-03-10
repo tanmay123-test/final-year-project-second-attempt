@@ -53,8 +53,8 @@ video_db.create_table()
 from datetime import datetime
 
 app = Flask(__name__)
-# CORS: web (5173, 5174), Expo (8081), mobile (null), Android emulator
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://localhost:8081", "http://localhost:19006", "null"]}})
+# CORS: web (5173, 5174, 5175), Expo (8081), mobile (null), Android emulator
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5175", "http://localhost:8081", "http://localhost:19006", "null"]}})
 
 # Register subscription blueprint
 app.register_blueprint(subscription_bp)
@@ -341,19 +341,15 @@ def user_info():
     if not user_id:
         return jsonify({"error": "User not found"}), 404
     
-    # Get user name from database
-    conn = sqlite3.connect("data/users.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM users WHERE id=?", (user_id,))
-    result = cursor.fetchone()
-    conn.close()
-    
-    user_name = result[0] if result else f"User_{user_id}"
+    user_data = user_db.get_user_by_id(user_id)
+    if not user_data:
+        return jsonify({"error": "User details not found"}), 404
     
     return jsonify({
         "user_id": user_id,
-        "user_name": user_name,
-        "username": username
+        "user_name": user_data["name"],
+        "username": username,
+        "email": user_data["email"]
     }), 200
 
 

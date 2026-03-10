@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Clock, CheckCircle, AlertCircle, MessageSquare, ChevronRight } from 'lucide-react';
+import { Briefcase, Clock, CheckCircle, AlertCircle, MessageSquare, ChevronRight, MessageCircle, ShieldAlert } from 'lucide-react';
 import axios from 'axios';
 import '../styles/FreelanceHome.css';
 
@@ -7,102 +7,143 @@ const MyProjects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeStatus, setActiveStatus] = useState('OPEN');
+
+  const statusTabs = [
+    { label: 'Open', value: 'OPEN' },
+    { label: 'Active', value: 'IN_PROGRESS' },
+    { label: 'Done', value: 'COMPLETED' },
+    { label: 'Cancelled', value: 'CANCELLED' }
+  ];
 
   useEffect(() => {
     fetchMyProjects();
-  }, []);
+  }, [activeStatus]);
 
   const fetchMyProjects = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      // Note: We'll need a specific endpoint for user's own projects
-      const response = await axios.get('http://localhost:5000/api/freelance/my-projects', {
+      const response = await axios.get(`http://localhost:5000/api/freelance/my-projects?status=${activeStatus}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProjects(response.data.projects);
     } catch (err) {
       setError('Failed to load your projects');
-      // Fallback dummy data for demo
-      setProjects([
-        {
-          id: 1,
-          title: 'E-commerce App Development',
-          status: 'IN_PROGRESS',
-          proposals_count: 12,
-          budget_amount: 45000,
-          created_at: '2024-03-01',
-          freelancer: 'Aditya Verma'
-        },
-        {
-          id: 2,
-          title: 'Logo Design for Startup',
-          status: 'OPEN',
-          proposals_count: 5,
-          budget_amount: 5000,
-          created_at: '2024-03-05'
-        }
-      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusLabel = (status) => {
     switch (status) {
-      case 'OPEN': return <Clock size={16} className="text-blue" />;
-      case 'IN_PROGRESS': return <AlertCircle size={16} className="text-orange" />;
-      case 'COMPLETED': return <CheckCircle size={16} className="text-green" />;
-      default: return <Clock size={16} />;
+      case 'OPEN': return 'Open';
+      case 'IN_PROGRESS': return 'In Progress';
+      case 'COMPLETED': return 'Completed';
+      case 'CANCELLED': return 'Cancelled';
+      default: return status;
     }
   };
 
   return (
     <div className="my-projects-container">
-      <header className="page-header">
-        <h2>My Projects</h2>
-      </header>
+      {/* Header Banner */}
+      <div className="my-projects-hero">
+        <h1>My Projects</h1>
+        <p>Track and manage your posted projects</p>
+      </div>
+
+      {/* Status Tabs */}
+      <div className="status-tabs-container">
+        {statusTabs.map(tab => (
+          <button
+            key={tab.value}
+            className={`status-tab ${activeStatus === tab.value ? 'active' : ''}`}
+            onClick={() => setActiveStatus(tab.value)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
-        <div className="loading-state">Loading projects...</div>
+        <div className="loading-state">
+          <div className="spinner-purple"></div>
+          <p>Fetching your projects...</p>
+        </div>
+      ) : error ? (
+        <div className="error-state">{error}</div>
       ) : projects.length === 0 ? (
-        <div className="empty-state">
-          <Briefcase size={48} />
-          <p>You haven't posted any projects yet.</p>
+        <div className="empty-state-new">
+          <p>No {activeStatus.toLowerCase().replace('_', ' ')} projects</p>
         </div>
       ) : (
-        <div className="projects-list">
+        <div className="projects-list-new">
           {projects.map(project => (
-            <div key={project.id} className="project-status-card">
-              <div className="status-badge">
-                {getStatusIcon(project.status)}
-                <span>{project.status.replace('_', ' ')}</span>
+            <div key={project.id} className="project-card-new">
+              <div className="card-header-row">
+                <h3>{project.title}</h3>
+                <span className={`status-pill ${project.status.toLowerCase()}`}>
+                  {getStatusLabel(project.status)}
+                </span>
               </div>
               
-              <div className="project-main">
-                <h3>{project.title}</h3>
-                <p className="budget">Budget: ₹{project.budget_amount}</p>
+              <p className="card-meta">
+                {project.category} • {project.experience_level}
+              </p>
+
+              <p className="card-description">{project.description}</p>
+
+              <div className="card-details-grid">
+                <div className="detail-item">
+                  <span className="detail-icon">₹</span>
+                  <span>₹{project.budget_amount.toLocaleString()}</span>
+                </div>
+                <div className="detail-item">
+                  <Clock size={16} />
+                  <span>{project.deadline}</span>
+                </div>
+                <div className="detail-item">
+                  <MessageSquare size={16} />
+                  <span>{project.proposals_count} proposals</span>
+                </div>
               </div>
 
-              <div className="project-stats">
-                <div className="stat">
-                  <MessageSquare size={14} />
-                  <span>{project.proposals_count} Proposals</span>
-                </div>
-                <div className="stat">
-                  <Clock size={14} />
-                  <span>Posted {new Date(project.created_at).toLocaleDateString()}</span>
-                </div>
-              </div>
-
-              {project.freelancer && (
-                <div className="assigned-freelancer">
-                  <span>Working with: <strong>{project.freelancer}</strong></span>
+              {project.milestones && project.milestones.length > 0 && (
+                <div className="milestones-preview">
+                  <label>Milestones</label>
+                  {project.milestones.map((m, idx) => (
+                    <div key={idx} className="milestone-preview-row">
+                      <div className="m-left">
+                        <CheckCircle size={14} className={m.status === 'PAID' ? 'text-green' : 'text-gray'} />
+                        <span>{m.title}</span>
+                      </div>
+                      <span className="m-amount">₹{m.amount.toLocaleString()}</span>
+                    </div>
+                  ))}
                 </div>
               )}
 
-              <button className="view-details-btn">
-                View Details <ChevronRight size={16} />
-              </button>
+              <div className="card-actions">
+                {project.status === 'OPEN' && (
+                  <button className="primary-action-btn">
+                    <User size={18} />
+                    View Proposals ({project.proposals_count})
+                  </button>
+                )}
+                {project.status === 'IN_PROGRESS' && (
+                  <>
+                    <button className="secondary-action-btn">
+                      <MessageCircle size={18} />
+                      Chat
+                    </button>
+                    <button className="danger-action-btn">
+                      <ShieldAlert size={18} />
+                      Dispute
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           ))}
         </div>

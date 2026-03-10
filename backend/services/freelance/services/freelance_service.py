@@ -2,7 +2,7 @@ from ..models.database import freelance_db
 
 class FreelanceService:
     # --- Project Management ---
-    def create_project(self, client_id, title, description, category, budget_type, budget_amount, deadline, skills, exp_level):
+    def create_project(self, client_id, title, description, category, budget_type, budget_amount, deadline, skills, exp_level, milestones=None):
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
         try:
@@ -12,6 +12,15 @@ class FreelanceService:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (client_id, title, description, category, budget_type, budget_amount, deadline, skills, exp_level))
             project_id = cursor.lastrowid
+            
+            # Insert initial project milestones if provided
+            if milestones and isinstance(milestones, list):
+                for m in milestones:
+                    cursor.execute("""
+                        INSERT INTO freelance_project_milestones (project_id, title, amount)
+                        VALUES (?, ?, ?)
+                    """, (project_id, m.get('title'), m.get('amount')))
+            
             conn.commit()
             return project_id
         finally:
@@ -33,18 +42,33 @@ class FreelanceService:
         finally:
             conn.close()
 
-    def get_projects_by_client(self, client_id):
+    def get_projects_by_client(self, client_id, status=None):
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
         try:
-            cursor.execute("""
+            query = """
                 SELECT p.*, (SELECT COUNT(*) FROM freelance_proposals WHERE project_id = p.id) as proposals_count
                 FROM freelance_projects p 
                 WHERE p.client_id = ?
-                ORDER BY p.created_at DESC
-            """, (client_id,))
+            """
+            params = [client_id]
+            if status:
+                query += " AND p.status = ?"
+                params.append(status)
+            
+            query += " ORDER BY p.created_at DESC"
+            
+            cursor.execute(query, params)
             rows = cursor.fetchall()
-            return [freelance_db._row_to_dict(row, cursor) for row in rows]
+            projects = [freelance_db._row_to_dict(row, cursor) for row in rows]
+            
+            # Fetch milestones for each project
+            for p in projects:
+                cursor.execute("SELECT * FROM freelance_project_milestones WHERE project_id = ?", (p['id'],))
+                milestone_rows = cursor.fetchall()
+                p['milestones'] = [freelance_db._row_to_dict(mr, cursor) for mr in milestone_rows]
+                
+            return projects
         finally:
             conn.close()
 

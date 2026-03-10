@@ -33,6 +33,18 @@ class FreelanceDatabase:
         )
         """)
 
+        # Project Milestones Table (Proposed by client)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS freelance_project_milestones (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            amount REAL NOT NULL,
+            status TEXT DEFAULT 'PENDING',
+            FOREIGN KEY (project_id) REFERENCES freelance_projects (id)
+        )
+        """)
+
         # Proposals Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS freelance_proposals (
