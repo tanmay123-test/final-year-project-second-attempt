@@ -1,12 +1,10 @@
 from ..models.money_model import MoneyModel
-from ..unified_finny import UnifiedFinny
 from datetime import datetime, timedelta
 import json
 
 class MoneyService:
     def __init__(self):
         self.model = MoneyModel()
-        self.unified_finny = UnifiedFinny()
     
     def get_dashboard_data(self, user_id):
         """Get dashboard data including spending summary and recent transactions"""
@@ -40,7 +38,7 @@ class MoneyService:
         except Exception as e:
             raise Exception(f"Failed to get dashboard data: {str(e)}")
     
-    def add_transaction(self, user_id, category, amount, description, date, transaction_type='expense'):
+    def add_transaction(self, user_id, category, amount, description, date, transaction_type='expense', merchant=''):
         """Add a new transaction"""
         try:
             # Validate amount
@@ -60,7 +58,8 @@ class MoneyService:
                 amount=amount,
                 description=description,
                 date=transaction_date,
-                type=transaction_type
+                type=transaction_type,
+                merchant=merchant
             )
             
             # Check budget alerts
@@ -160,11 +159,8 @@ class MoneyService:
             # Get user context
             user_data = self.model.get_user_financial_summary(user_id)
             
-            # Process message with AI
-            response = self.unified_finny.process_natural_language_input(
-                message=message,
-                user_context=user_data
-            )
+            # Simple AI response for now
+            response = f"I understand you're asking about: {message}. Based on your financial data, I can help you track expenses and manage your budget."
             
             return response
         except Exception as e:

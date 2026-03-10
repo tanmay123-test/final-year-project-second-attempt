@@ -1,9 +1,16 @@
 import sqlite3
+import os
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
 class MoneyModel:
-    def __init__(self, db_path='money_service.db'):
+    def __init__(self, db_path=None):
+        if db_path is None:
+            # Use the same path as other services
+            db_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'money_service.db')
+        
+        # Ensure data directory exists
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
         self.db_path = db_path
         self.init_database()
     
@@ -20,12 +27,22 @@ class MoneyModel:
                     category TEXT NOT NULL,
                     amount REAL NOT NULL,
                     description TEXT,
+                    merchant TEXT,
                     date DATE NOT NULL,
                     type TEXT DEFAULT 'expense',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users (id)
                 )
             ''')
+            
+            # Add merchant column if it doesn't exist (for existing tables)
+            try:
+                cursor.execute('''
+                    ALTER TABLE transactions ADD COLUMN merchant TEXT
+                ''')
+            except sqlite3.OperationalError:
+                # Column already exists, ignore error
+                pass
             
             # Budgets table
             cursor.execute('''
@@ -89,14 +106,14 @@ class MoneyModel:
             
             conn.commit()
     
-    def add_transaction(self, user_id, category, amount, description, date, type='expense'):
+    def add_transaction(self, user_id, category, amount, description, date, type='expense', merchant=''):
         """Add a new transaction"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO transactions (user_id, category, amount, description, date, type)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (user_id, category, amount, description, date, type))
+                INSERT INTO transactions (user_id, category, amount, description, date, type, merchant)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (user_id, category, amount, description, date, type, merchant))
             conn.commit()
             return cursor.lastrowid
     

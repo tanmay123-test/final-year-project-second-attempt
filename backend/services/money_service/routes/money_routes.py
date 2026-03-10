@@ -44,7 +44,8 @@ def add_transaction():
             amount=data.get('amount'),
             description=data.get('description'),
             date=data.get('date'),
-            type=data.get('type', 'expense')
+            type=data.get('type', 'expense'),
+            merchant=data.get('merchant', '')
         )
         return jsonify({"success": True, "transaction_id": transaction_id}), 201
     except Exception as e:

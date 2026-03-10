@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Settings, User, TrendingUp, MessageCircle, Target, PiggyBank, CreditCard, Brain, Loader2 } from 'lucide-react';
+import { Bell, Settings, User, TrendingUp, MessageCircle, PieChart, BarChart3, Brain, List, Target, CreditCard, PiggyBank } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { moneyService } from '../../../shared/api';
 import { useAuth } from '../../../context/AuthContext';
@@ -174,15 +174,33 @@ const MoneyDashboard = () => {
                       <TrendingUp size={24} />
                     </div>
                     <div className="mode-info">
-                      <h3>Quick Mode</h3>
-                      <p>Fast & Simple</p>
+                      <h3>Add Transaction</h3>
+                      <p>Quick Mode</p>
                     </div>
                   </div>
                   <button 
                     className="mode-btn quick"
-                    onClick={() => setActiveTab('quick')}
+                    onClick={() => navigate('/money/add-exact')}
                   >
-                    Open Quick Mode
+                    Add Transaction
+                  </button>
+                </div>
+
+                <div className="mode-card">
+                  <div className="mode-header">
+                    <div className="mode-icon transactions">
+                      <List size={24} />
+                    </div>
+                    <div className="mode-info">
+                      <h3>All Transactions</h3>
+                      <p>View & Search</p>
+                    </div>
+                  </div>
+                  <button 
+                    className="mode-btn transactions"
+                    onClick={() => navigate('/money/transactions')}
+                  >
+                    View Transactions
                   </button>
                 </div>
 

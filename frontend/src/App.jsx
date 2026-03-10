@@ -41,6 +41,13 @@ import FreelancerDashboard from './services/freelance/pages/FreelancerDashboard'
 // Money Management
 import MoneyDashboard from './services/money_management/pages/MoneyDashboard';
 import QuickMode from './services/money_management/pages/QuickMode';
+import QuickModeFinny from './services/money_management/components/QuickModeFinny';
+import AddTransactionQuick from './services/money_management/pages/AddTransactionQuick';
+import AddTransactionExact from './services/money_management/pages/AddTransactionExact';
+import TransactionsList from './services/money_management/pages/TransactionsList';
+import FinnyQuick from './pages/finny/quick';
+import MonthlySummary from './services/money_management/pages/MonthlySummary';
+import AnalyticsDashboard from './services/money_management/pages/AnalyticsDashboard';
 
 const ProtectedWorkerRoute = ({ children }) => {
   const { worker, loading } = useAuth();
@@ -89,6 +96,13 @@ const App = () => {
           {/* Money Management Routes */}
           <Route path="/money/dashboard" element={<ProtectedRoute><MoneyDashboard /></ProtectedRoute>} />
           <Route path="/money/quick" element={<ProtectedRoute><QuickMode /></ProtectedRoute>} />
+          <Route path="/money/quick-finny" element={<ProtectedRoute><QuickModeFinny /></ProtectedRoute>} />
+          <Route path="/money/add-quick" element={<ProtectedRoute><AddTransactionQuick /></ProtectedRoute>} />
+          <Route path="/money/add-exact" element={<ProtectedRoute><AddTransactionExact /></ProtectedRoute>} />
+          <Route path="/money/transactions" element={<ProtectedRoute><TransactionsList /></ProtectedRoute>} />
+          <Route path="/money/summary" element={<ProtectedRoute><MonthlySummary /></ProtectedRoute>} />
+          <Route path="/money/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
+          <Route path="/finny/quick" element={<ProtectedRoute><FinnyQuick /></ProtectedRoute>} />
 
           {/* Worker Routes - Service Specific */}
           <Route path="/provide-service" element={<ServiceSelection mode="worker" />} />

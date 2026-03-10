@@ -1,261 +1,152 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Search } from 'lucide-react';
+import { ArrowLeft, Plus, List, BarChart3, Brain, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { moneyService } from '../../../shared/api';
 import { useAuth } from '../../../context/AuthContext';
+import QuickAddTransactionModal from '../../../components/money/QuickAddTransactionModal';
+import QuickAnalyticsSummary from '../../../components/money/QuickAnalyticsSummary';
 import '../styles/QuickMode.css';
 
 const QuickMode = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+  const [notification, setNotification] = useState(null);
 
-  // Debug state
-  console.log('showAddForm:', showAddForm);
+  const handleQuickAddSuccess = (transaction) => {
+    setNotification(`₹${transaction.amount} – ${transaction.category} at ${transaction.merchant}`);
+    
+    // Hide notification after 3 seconds
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+  };
 
-  // Form state
-  const [formData, setFormData] = useState({
-    category: 'Food',
-    amount: '',
-    description: '',
-    date: new Date().toISOString().split('T')[0],
-    type: 'expense' // Always expense, no income option
-  });
+  const handleMenuOptionClick = (option) => {
+    if (option.action) {
+      option.action();
+    } else if (option.route) {
+      navigate(option.route);
+    }
+  };
 
-  const categories = [
-    'Food', 'Shopping', 'Bills', 'Transport', 'Entertainment', 
-    'Healthcare', 'Education', 'Other'
+  const menuOptions = [
+    {
+      id: 'quick-add',
+      icon: <Plus size={32} />,
+      title: 'Quick Add Transaction',
+      description: 'Fast & Simple',
+      color: 'blue',
+      action: () => setShowQuickAddModal(true)
+    },
+    {
+      id: 'view-transactions',
+      icon: <List size={32} />,
+      title: 'View Transactions',
+      description: 'View & Search',
+      color: 'gray',
+      route: '/money/transactions'
+    },
+    {
+      id: 'monthly-summary',
+      icon: <BarChart3 size={32} />,
+      title: 'Monthly Summary',
+      description: 'Spending Overview',
+      color: 'green',
+      route: '/money/summary'
+    },
+    {
+      id: 'analytics',
+      icon: <Brain size={32} />,
+      title: 'Advanced Analytics Dashboard',
+      description: 'Deep Insights',
+      color: 'orange',
+      route: '/money/analytics'
+    }
   ];
 
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
-
-  const fetchTransactions = async () => {
-    try {
-      setLoading(true);
-      const response = await moneyService.getTransactions();
-      setTransactions(response.data.transactions || []);
-    } catch (err) {
-      console.error('Failed to fetch transactions:', err);
-      setError('Failed to load transactions');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddTransaction = async (e) => {
-    e.preventDefault();
-    try {
-      await moneyService.addTransaction({
-        ...formData,
-        amount: parseFloat(formData.amount)
-      });
-      
-      // Reset form
-      setFormData({
-        category: 'Food',
-        amount: '',
-        description: '',
-        date: new Date().toISOString().split('T')[0],
-        type: 'expense' // Always expense
-      });
-      setShowAddForm(false);
-      
-      // Refresh transactions
-      fetchTransactions();
-    } catch (err) {
-      console.error('Failed to add transaction:', err);
-      setError('Failed to add transaction');
-    }
-  };
-
-  const filteredTransactions = transactions.filter(transaction => 
-    transaction.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    transaction.category?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <div className="quick-mode-container">
-      {/* ExpertEase Header */}
-      <header className="experthease-header">
-        <div className="header-left">
-          <div className="logo">
-            <span className="expert-text">Expert</span>
-            <span className="ease-text">Ease</span>
-          </div>
-        </div>
-        
-        <nav className="header-nav">
-          <a href="#" className="nav-link">Dashboard</a>
-          <a href="#" className="nav-link">Find Housekeeping Worker</a>
-        </nav>
-        
-        <div className="header-right">
-          <div className="user-info">
-            <span>Hi, {user?.name || 'Sarthak Surendra Sawant'}</span>
-          </div>
-          <button className="logout-btn">Logout</button>
-        </div>
-      </header>
-
-      {/* Quick Mode Banner */}
-      <div className="quick-mode-banner">
-        <button className="back-arrow" onClick={() => navigate('/money/dashboard')}>
+    <div className="finny-mobile-container">
+      {/* Mobile Header */}
+      <header className="finny-header">
+        <button className="back-btn" onClick={() => navigate('/money/dashboard')}>
           <ArrowLeft size={24} />
         </button>
-        <h1>Quick Mode</h1>
-        <div className="banner-spacer"></div>
-      </div>
+        <div className="header-title">
+          <h1>Quick Mode</h1>
+          <p>Fast & Simple tracking</p>
+        </div>
+        <div className="header-spacer"></div>
+      </header>
 
-      {/* Main Content */}
-      <main className="quick-main-content">
-        <div className="transactions-section">
-          <div className="transactions-header">
-            <h2>Recent Transactions</h2>
-            <button 
-              className="quick-add-btn"
-              onClick={() => {
-                console.log('Quick Add button clicked!');
-                setShowAddForm(true);
-              }}
+      {/* Main Content - Analytics Summary and Menu Options */}
+      <main className="finny-main-content">
+        {/* Quick Analytics Summary */}
+        <QuickAnalyticsSummary />
+
+        {/* Menu Options */}
+        <div className="menu-options-grid">
+          {menuOptions.map((option) => (
+            <div
+              key={option.id}
+              className="menu-option-card"
+              onClick={() => handleMenuOptionClick(option)}
             >
-              <Plus size={20} />
-              Quick Add
-            </button>
-          </div>
-
-          <div className="search-container">
-            <Search size={20} className="search-icon" />
-            <input
-              type="text"
-              placeholder="Search transactions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-          </div>
-
-          <div className="transactions-list">
-            {loading ? (
-              <div className="loading-state">
-                <p>Loading transactions...</p>
+              <div className={`option-icon ${option.color}`}>
+                {option.icon}
               </div>
-            ) : error ? (
-              <div className="error-state">
-                <p>{error}</p>
-                <button onClick={fetchTransactions}>Retry</button>
+              <div className="option-content">
+                <h3>{option.title}</h3>
+                <p>{option.description}</p>
               </div>
-            ) : filteredTransactions.length === 0 ? (
-              <div className="no-transactions">
-                <p>No transactions found</p>
+              <div className="option-arrow">
+                <ArrowLeft size={20} style={{ transform: 'rotate(180deg)' }} />
               </div>
-            ) : (
-              filteredTransactions.map((transaction, index) => (
-                <div key={index} className="transaction-item">
-                  <div className="transaction-info">
-                    <div className="transaction-category">{transaction.category}</div>
-                    <div className="transaction-description">{transaction.description || 'No description'}</div>
-                    <div className="transaction-date">
-                      {new Date(transaction.date).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <div className={`transaction-amount ${transaction.type}`}>
-                    {transaction.type === 'expense' ? '-' : '+'}₹{transaction.amount.toLocaleString()}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+            </div>
+          ))}
         </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <div className="bottom-navigation">
-        <button className="nav-item active">
-          Transactions
-        </button>
-        <button className="nav-item">
-          Summary
-        </button>
-        <button className="nav-item">
-          Analytics
-        </button>
-      </div>
-
-      {/* Add Transaction Modal */}
-      {showAddForm && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Add Transaction</h3>
-              <button className="close-btn" onClick={() => setShowAddForm(false)}>
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleAddTransaction} className="transaction-form">
-              <div className="form-group">
-                <label>Category</label>
-                <select 
-                  value={formData.category}
-                  onChange={(e) => setFormData({...formData, category: e.target.value})}
-                  required
-                >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Amount</label>
-                <input 
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Description</label>
-                <input 
-                  type="text"
-                  placeholder="Enter description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Date</label>
-                <input 
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({...formData, date: e.target.value})}
-                  required
-                />
-              </div>
-
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowAddForm(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn">
-                  Add Transaction
-                </button>
-              </div>
-            </form>
-          </div>
+      {/* Success Notification */}
+      {notification && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse">
+          Transaction added successfully.
+          <div className="text-sm opacity-90">{notification}</div>
         </div>
       )}
+
+      {/* Quick Add Modal */}
+      <QuickAddTransactionModal
+        isOpen={showQuickAddModal}
+        onClose={() => setShowQuickAddModal(false)}
+        onSuccess={handleQuickAddSuccess}
+      />
+
+      {/* Bottom Navigation */}
+      <div className="finny-bottom-nav">
+        <button className="bottom-nav-item active">
+          <div className="nav-icon finny-icon">F</div>
+          <span>Finny</span>
+        </button>
+        <button className="bottom-nav-item">
+          <div className="nav-icon budget-icon">B</div>
+          <span>Budget</span>
+        </button>
+        <button className="bottom-nav-item">
+          <div className="nav-icon loan-icon">L</div>
+          <span>Loan</span>
+        </button>
+        <button className="bottom-nav-item">
+          <div className="nav-icon goal-icon">G</div>
+          <span>Goal Jar</span>
+        </button>
+        <button className="bottom-nav-item">
+          <div className="nav-icon ai-icon">AI</div>
+          <span>AI Coach</span>
+        </button>
+      </div>
     </div>
   );
 };
