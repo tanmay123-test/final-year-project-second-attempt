@@ -89,3 +89,103 @@ def accept_proposal():
     if freelance_service.accept_proposal(proposal_id):
         return jsonify({"success": True, "message": "Proposal accepted and contract created"}), 200
     return jsonify({"error": "Failed to accept proposal"}), 400
+
+@freelance_bp.route('/api/freelance/my-proposals', methods=['GET'])
+def list_my_proposals():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    proposals = freelance_service.get_proposals_by_freelancer(freelancer_id=user_id)
+    return jsonify({"proposals": proposals}), 200
+
+@freelance_bp.route('/api/freelance/active-work', methods=['GET'])
+def list_active_work():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    contracts = freelance_service.get_contracts_by_freelancer(freelancer_id=user_id)
+    return jsonify({"contracts": contracts}), 200
+
+@freelance_bp.route('/api/freelance/stats', methods=['GET'])
+def get_stats():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    stats = freelance_service.get_freelancer_stats(freelancer_id=user_id)
+    notifications = freelance_service.get_notifications(user_id=user_id)
+    return jsonify({"stats": stats, "notifications": notifications}), 200
+
+@freelance_bp.route('/api/freelance/milestones/submit', methods=['POST'])
+def submit_milestone():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    milestone_id = data.get('milestone_id')
+    if freelance_service.submit_milestone(milestone_id):
+        return jsonify({"success": True}), 200
+    return jsonify({"error": "Failed to submit milestone"}), 400
+
+@freelance_bp.route('/api/freelance/messages', methods=['POST'])
+def send_message():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    if freelance_service.send_message(
+        contract_id=data.get('contract_id'),
+        sender_id=user_id,
+        message=data.get('message'),
+        file_attachment=data.get('file_attachment')
+    ):
+        return jsonify({"success": True}), 200
+    return jsonify({"error": "Failed to send message"}), 400
+
+# --- Direct Booking Routes ---
+@freelance_bp.route('/api/freelance/bookings', methods=['POST'])
+def create_booking():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    try:
+        booking_id = freelance_service.create_booking_request(
+            client_id=user_id,
+            freelancer_id=data.get('freelancer_id'),
+            title=data.get('title'),
+            description=data.get('description'),
+            amount=data.get('amount')
+        )
+        return jsonify({"success": True, "booking_id": booking_id}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+@freelance_bp.route('/api/freelance/my-bookings', methods=['GET'])
+def list_my_bookings():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    status = request.args.get('status', 'PENDING')
+    bookings = freelance_service.get_booking_requests_by_freelancer(freelancer_id=user_id, status=status)
+    return jsonify({"bookings": bookings}), 200
+
+@freelance_bp.route('/api/freelance/bookings/respond', methods=['POST'])
+def respond_to_booking():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    booking_id = data.get('booking_id')
+    status = data.get('status') # 'ACCEPTED' or 'DECLINED'
+    
+    if freelance_service.update_booking_status(booking_id, status):
+        return jsonify({"success": True}), 200
+    return jsonify({"error": "Failed to respond to booking request"}), 400

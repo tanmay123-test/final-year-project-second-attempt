@@ -170,6 +170,20 @@ class FreelanceDatabase:
         )
         """)
 
+        # Direct Bookings Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS freelance_bookings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id INTEGER NOT NULL,
+            freelancer_id INTEGER NOT NULL,
+            project_title TEXT NOT NULL,
+            project_description TEXT,
+            amount REAL NOT NULL,
+            status TEXT DEFAULT 'PENDING', -- 'PENDING', 'ACCEPTED', 'DECLINED', 'CANCELLED'
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
         conn.commit()
         conn.close()
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { workerService } from '../../../shared/api';
 import ProviderBottomNav from '../../../components/ProviderBottomNav';
+import './ProviderAvailability.css';
 import { 
   ChevronLeft, Plus, Trash2, Clock, Loader2
 } from 'lucide-react';
@@ -126,14 +127,12 @@ const ProviderAvailability = () => {
     <div className="provider-availability-page">
       {/* Header Section with Purple Background */}
       <div className="availability-header">
-        <div className="header-content">
-            <Link to="/worker/housekeeping/dashboard" className="back-btn">
-                <ChevronLeft size={24} color="white" />
-            </Link>
-            <div className="header-text">
-                <h1>Availability</h1>
-                <p>Manage your available dates and time slots</p>
-            </div>
+        <Link to="/worker/housekeeping/dashboard" className="back-btn">
+            <ChevronLeft size={24} color="white" />
+        </Link>
+        <div className="header-text">
+            <h1>Availability</h1>
+            <p>Manage your available dates and time slots</p>
         </div>
       </div>
 
@@ -162,7 +161,7 @@ const ProviderAvailability = () => {
         <div className="availability-card">
             <div className="card-header">
                 <div className="icon-box">
-                    <Plus size={20} color="#9333ea" />
+                    <Plus size={20} color="#9B59B6" />
                 </div>
                 <div>
                     <h3>Add Time Slot</h3>
@@ -206,7 +205,7 @@ const ProviderAvailability = () => {
             <div className="slots-container">
                 {loading ? (
                     <div className="loading-state">
-                        <Loader2 className="spin" size={30} color="#9333ea" />
+                        <Loader2 className="spin" size={30} color="#9B59B6" />
                     </div>
                 ) : daySlots.length > 0 ? (
                     <div className="slots-grid">

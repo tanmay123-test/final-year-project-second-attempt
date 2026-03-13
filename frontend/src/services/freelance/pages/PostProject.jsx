@@ -275,7 +275,7 @@ const PostProject = ({ onBack, onSuccess }) => {
           )}
         </section>
 
-        <button type="submit" className="submit-project-btn-green" disabled={loading}>
+        <button type="submit" className="submit-project-btn-purple" disabled={loading}>
           {loading ? 'Posting...' : 'Post Project'}
         </button>
       </form>
