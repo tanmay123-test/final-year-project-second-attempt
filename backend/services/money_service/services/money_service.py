@@ -9,6 +9,9 @@ class MoneyService:
     def get_dashboard_data(self, user_id):
         """Get dashboard data including spending summary and recent transactions"""
         try:
+            # Ensure user exists in money service database
+            self.model._ensure_user_exists(user_id)
+            
             # Get monthly spending data
             current_month = datetime.now().strftime('%Y-%m')
             monthly_data = self.model.get_monthly_spending(user_id, current_month)
@@ -26,14 +29,12 @@ class MoneyService:
             goals = self.model.get_active_goals(user_id)
             
             return {
-                'monthly_summary': {
-                    'total_spending': total_spending,
-                    'categories': monthly_data,
-                    'month': current_month
-                },
+                'total_spending': total_spending,
+                'categories': monthly_data,
                 'recent_transactions': recent_transactions,
                 'budgets': budgets,
-                'goals': goals
+                'goals': goals,
+                'month': current_month
             }
         except Exception as e:
             raise Exception(f"Failed to get dashboard data: {str(e)}")

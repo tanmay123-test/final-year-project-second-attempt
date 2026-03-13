@@ -19,6 +19,16 @@ class MoneyModel:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             
+            # Create users table to maintain referential integrity
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY,
+                    username TEXT UNIQUE,
+                    email TEXT UNIQUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
             # Transactions table
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS transactions (
@@ -110,12 +120,49 @@ class MoneyModel:
         """Add a new transaction"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
+            
+            # Ensure user exists in money service database
+            self._ensure_user_exists(user_id)
+            
             cursor.execute('''
                 INSERT INTO transactions (user_id, category, amount, description, date, type, merchant)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (user_id, category, amount, description, date, type, merchant))
             conn.commit()
             return cursor.lastrowid
+    
+    def _ensure_user_exists(self, user_id):
+        """Ensure user exists in money service database"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            # Check if user exists
+            cursor.execute('SELECT id FROM users WHERE id = ?', (user_id,))
+            if cursor.fetchone() is None:
+                # Get user info from main database and insert
+                try:
+                    # Import here to avoid circular imports
+                    import sys
+                    sys.path.append(os.path.dirname(__file__).replace('services/money_service/models', ''))
+                    from user_db import UserDB
+                    
+                    user_db = UserDB()
+                    user_info = user_db.get_user_by_id(user_id)
+                    
+                    if user_info:
+                        cursor.execute('''
+                            INSERT INTO users (id, username, email)
+                            VALUES (?, ?, ?)
+                        ''', (user_id, user_info.get('username'), user_info.get('email')))
+                        conn.commit()
+                except Exception as e:
+                    print(f"Warning: Could not sync user info: {e}")
+                    # Create minimal user record
+                    cursor.execute('''
+                        INSERT INTO users (id, username, email)
+                        VALUES (?, ?, ?)
+                    ''', (user_id, f'user_{user_id}', f'user_{user_id}@example.com'))
+                    conn.commit()
     
     def get_transactions(self, user_id, limit=None, category=None, start_date=None, end_date=None):
         """Get transactions with filters"""

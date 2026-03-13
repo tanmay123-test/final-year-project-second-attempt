@@ -38,16 +38,14 @@ import UserLayout from './components/UserLayout';
 import FreelanceHome from './services/freelance/pages/FreelanceHome';
 import FreelancerDashboard from './services/freelance/pages/FreelancerDashboard';
 
-// Money Management
-import MoneyDashboard from './services/money_management/pages/MoneyDashboard';
-import QuickMode from './services/money_management/pages/QuickMode';
-import QuickModeFinny from './services/money_management/components/QuickModeFinny';
-import AddTransactionQuick from './services/money_management/pages/AddTransactionQuick';
-import AddTransactionExact from './services/money_management/pages/AddTransactionExact';
-import TransactionsList from './services/money_management/pages/TransactionsList';
-import FinnyQuick from './pages/finny/quick';
-import MonthlySummary from './services/money_management/pages/MonthlySummary';
-import AnalyticsDashboard from './services/money_management/pages/AnalyticsDashboard';
+// Finny Smart Transaction Tracker
+import FinnyHomeScreen from './services/finny/pages/FinnyHomeScreen';
+import QuickModePage from './services/finny/pages/QuickModePage';
+import SummaryPage from './services/finny/pages/SummaryPage';
+import AnalyticsPage from './services/finny/pages/AnalyticsPage';
+import ChatModePage from './services/finny/pages/ChatModePage';
+import ChatFinancialAssistantPage from './services/finny/pages/ChatFinancialAssistantPage';
+import AnalyticsDashboardPage from './services/finny/pages/AnalyticsDashboardPage';
 
 const ProtectedWorkerRoute = ({ children }) => {
   const { worker, loading } = useAuth();
@@ -77,6 +75,13 @@ const App = () => {
             <Route path="/doctors" element={<DoctorSearch />} />
             <Route path="/book/:doctorId" element={<Booking />} />
             <Route path="/profile" element={<div style={{padding: '2rem'}}><h2>Profile Page</h2><p>Coming Soon</p></div>} />
+            
+            {/* Finny Smart Transaction Tracker Routes */}
+            <Route path="/finny" element={<ProtectedRoute><FinnyHomeScreen /></ProtectedRoute>} />
+            <Route path="/finny/quick" element={<ProtectedRoute><QuickModePage /></ProtectedRoute>} />
+            <Route path="/finny/summary" element={<ProtectedRoute><SummaryPage /></ProtectedRoute>} />
+            <Route path="/finny/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
+            <Route path="/finny/chat" element={<ProtectedRoute><ChatModePage /></ProtectedRoute>} />
           </Route>
 
           {/* Housekeeping Arrival Routes */}
@@ -92,17 +97,6 @@ const App = () => {
           
           {/* Freelance Marketplace Routes */}
           <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />
-
-          {/* Money Management Routes */}
-          <Route path="/money/dashboard" element={<ProtectedRoute><MoneyDashboard /></ProtectedRoute>} />
-          <Route path="/money/quick" element={<ProtectedRoute><QuickMode /></ProtectedRoute>} />
-          <Route path="/money/quick-finny" element={<ProtectedRoute><QuickModeFinny /></ProtectedRoute>} />
-          <Route path="/money/add-quick" element={<ProtectedRoute><AddTransactionQuick /></ProtectedRoute>} />
-          <Route path="/money/add-exact" element={<ProtectedRoute><AddTransactionExact /></ProtectedRoute>} />
-          <Route path="/money/transactions" element={<ProtectedRoute><TransactionsList /></ProtectedRoute>} />
-          <Route path="/money/summary" element={<ProtectedRoute><MonthlySummary /></ProtectedRoute>} />
-          <Route path="/money/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
-          <Route path="/finny/quick" element={<ProtectedRoute><FinnyQuick /></ProtectedRoute>} />
 
           {/* Worker Routes - Service Specific */}
           <Route path="/provide-service" element={<ServiceSelection mode="worker" />} />
@@ -206,10 +200,6 @@ const App = () => {
           {/* Car Services */}
           <Route path="/worker/car/login" element={<WorkerLogin serviceType="car" />} />
           <Route path="/worker/car/signup" element={<WorkerSignup serviceType="car" />} />
-
-          {/* Money Management */}
-          <Route path="/worker/money/login" element={<WorkerLogin serviceType="money" />} />
-          <Route path="/worker/money/signup" element={<WorkerSignup serviceType="money" />} />
 
           {/* Legacy/Fallback Routes */}
           <Route path="/worker/login" element={<WorkerLogin serviceType="healthcare" />} />

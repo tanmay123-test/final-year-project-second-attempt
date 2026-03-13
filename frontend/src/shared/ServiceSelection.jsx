@@ -12,7 +12,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
     { id: 'housekeeping', label: 'Housekeeping', path: '/housekeeping/home' },
     { id: 'freelance', label: 'Freelance Marketplace', path: '/freelance/home' },
     { id: 'car', label: 'Car Services', path: '/worker/car/login' },
-    { id: 'money', label: 'Money Management', path: '/worker/money/login' },
+    { id: 'money', label: 'Finny', path: '/finny' },
   ];
 
   const [services, setServices] = useState(() => {
@@ -99,7 +99,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
                   }
                   
                   if (service.id === 'money') {
-                    navigate('/money/dashboard');
+                    navigate('/finny');
                     return;
                   }
                   

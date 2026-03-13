@@ -1,0 +1,397 @@
+/* Finny Home Screen Styles */
+
+.finny-home-screen {
+  min-height: 100vh;
+  background-color: #F9FAFB;
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+/* Header Styles */
+.finny-header {
+  background: linear-gradient(135deg, #1F5F7A 0%, #2C7DA0 100%);
+  padding: 20px 16px;
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+}
+
+.app-subtitle {
+  font-size: 14px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.header-icons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #E5E7EB;
+  border-top: 3px solid #1F5F7A;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p,
+.error-state p {
+  color: #6B7280;
+  font-size: 14px;
+  margin: 0 0 16px 0;
+}
+
+.retry-button {
+  background: #1F5F7A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retry-button:hover {
+  background: #1A4F63;
+}
+
+/* Main Content */
+.main-content {
+  padding: 16px;
+}
+
+/* Monthly Summary Card */
+.monthly-summary-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 20px 0;
+  color: #1F2937;
+}
+
+.summary-content {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.donut-chart-container {
+  flex-shrink: 0;
+}
+
+.donut-chart {
+  width: 120px;
+  height: 120px;
+}
+
+.chart-segment {
+  transition: opacity 0.2s;
+}
+
+.chart-segment:hover {
+  opacity: 0.8;
+}
+
+.summary-details {
+  flex: 1;
+}
+
+.total-spending {
+  margin-bottom: 16px;
+}
+
+.total-label {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0 0 4px 0;
+}
+
+.total-amount {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1F2937;
+  margin: 0;
+}
+
+.categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.category-name {
+  font-size: 14px;
+  color: #374151;
+}
+
+.category-amount {
+  font-size: 14px;
+  color: #1F2937;
+  font-weight: 500;
+}
+
+/* Mode Section */
+.mode-section {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #1F2937;
+}
+
+.mode-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mode-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mode-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.mode-content {
+  margin-bottom: 16px;
+}
+
+.mode-left {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.mode-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mode-text {
+  flex: 1;
+}
+
+.mode-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #1F2937;
+}
+
+.mode-subtitle {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0 0 8px 0;
+}
+
+.mode-description {
+  font-size: 13px;
+  color: #6B7280;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.mode-button {
+  width: 100%;
+  background: #1F5F7A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.mode-button:hover {
+  background: #1A4F63;
+}
+
+/* Bottom Navigation */
+.bottom-navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 16px 0;
+  z-index: 1000;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.nav-item:hover {
+  transform: translateY(-1px);
+}
+
+.nav-item.active .nav-label {
+  color: #F4B400;
+}
+
+.nav-label {
+  font-size: 12px;
+  color: #6B7280;
+  transition: color 0.2s;
+}
+
+.nav-label.active {
+  color: #F4B400;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .summary-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .categories-list {
+    align-items: center;
+  }
+  
+  .mode-left {
+    gap: 12px;
+  }
+  
+  .mode-icon-circle {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .mode-icon-circle svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .header-content {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .header-icons {
+    justify-content: center;
+  }
+  
+  .app-title {
+    font-size: 18px;
+  }
+  
+  .app-subtitle {
+    font-size: 13px;
+  }
+}
