@@ -1046,6 +1046,12 @@ def admin_approved_workers():
     workers = worker_db.get_workers_by_service(service)
     return jsonify(workers), 200
 
+@app.route("/admin/workers/all")
+def admin_all_workers():
+    """Get all workers regardless of status or service"""
+    workers = worker_db.get_all_workers_unfiltered()
+    return jsonify(workers), 200
+
 @app.route("/admin/worker/approve/<int:worker_id>", methods=["POST"])
 def admin_approve_worker(worker_id):
     worker_db.approve_worker(worker_id)
