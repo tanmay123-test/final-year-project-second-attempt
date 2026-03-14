@@ -21,7 +21,7 @@ const BottomNav = () => {
         <span>Home</span>
       </Link>
       <Link 
-        to="#" 
+        to="/ai-care" 
         className={`nav-item ${isActive('/ai-care')}`}
         aria-label="AI Care"
       >

@@ -17,6 +17,16 @@
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
 }
 
+.dark {
+  --background-light: #0F172A;
+  --text-primary: #E5E7EB;
+  --text-secondary: #9CA3AF;
+  --primary-white: #0B1220;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.6);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

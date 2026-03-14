@@ -43,7 +43,7 @@ const Navbar = () => {
               </Link>
               <Link to="/doctors" className={`nav-link ${isActive('/doctors')}`} onClick={closeMenu}>
                 <Search size={18} />
-                <span>Find Housekeeping Worker</span>
+                <span>Find Doctors</span>
               </Link>
               <div className="user-profile">
                 <div className="user-avatar">

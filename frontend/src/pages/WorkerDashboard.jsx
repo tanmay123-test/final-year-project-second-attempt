@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { appointmentService } from '../shared/api';
+import { appointmentService } from '../services/api';
 
 const WorkerDashboard = () => {
   const { worker } = useAuth();

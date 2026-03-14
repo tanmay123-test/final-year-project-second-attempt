@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import DoctorProfile from './DoctorProfile';
+import DoctorProfile from '../components/DoctorProfile';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock AuthContext

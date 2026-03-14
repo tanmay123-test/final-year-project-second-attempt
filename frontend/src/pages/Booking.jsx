@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doctorService, appointmentService } from '../shared/api';
-import { useAuth } from '../context/AuthContext';
+import { authService, appointmentService, doctorService } from '../shared/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import { 
   ChevronLeft, Calendar, Clock, Video, MapPin, 
   User, AlertCircle, CheckCircle2, Star, ShieldCheck

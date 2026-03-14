@@ -19,6 +19,7 @@ from emergency_detector import is_emergency
 from auth_utils import generate_token, verify_token
 from otp_service import send_otp, verify_otp
 from email_service import send_email
+from ai_engine import AIEngine, get_session_info, reset_session
 from config import (EXPERT_IMAGES_DIR, ALLOWED_EXTENSIONS, MAX_FILE_SIZE)
 
 from video_db import VideoConsultDB

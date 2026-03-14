@@ -2,11 +2,11 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import DoctorSearch from '../../pages/DoctorSearch';
-import { doctorService } from '../shared/api';
+import { doctorService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 // Mock dependencies
-vi.mock('../shared/api', () => ({
+vi.mock('../../services/api', () => ({
   doctorService: {
     getAllDoctors: vi.fn(),
     getSpecializations: vi.fn(),

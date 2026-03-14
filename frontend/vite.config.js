@@ -19,12 +19,6 @@ export default defineConfig({
     setupFiles: './src/setupTests.js',
   },
   server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
+    port: 5173,
   },
 })

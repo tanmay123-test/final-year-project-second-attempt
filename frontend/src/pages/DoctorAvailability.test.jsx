@@ -3,10 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import DoctorAvailability from './DoctorAvailability';
 import { AuthProvider } from '../context/AuthContext';
 import { MemoryRouter } from 'react-router-dom';
-import * as apiModule from '../shared/api';
+import * as apiModule from '../services/api';
 
 // Mock the API module
-vi.mock('../shared/api', () => ({
+vi.mock('../services/api', () => ({
   workerService: {
     getAvailability: vi.fn(),
     addAvailability: vi.fn(),

@@ -1,0 +1,111 @@
+/* Cards Styles - Empty - All styles moved to dashboard.css */
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .specialization-card {
+    padding: 12px 8px;
+    min-width: 80px;
+  }
+  
+  .spec-icon-container {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 6px;
+  }
+  
+  .spec-icon-container svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .spec-name {
+    font-size: 11px;
+  }
+  
+  .doctor-card {
+    padding: 16px;
+  }
+  
+  .doctor-avatar {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 12px;
+  }
+  
+  .doctor-initial {
+    font-size: 20px;
+  }
+  
+  .doctor-name {
+    font-size: 16px;
+  }
+  
+  .doctor-specialty {
+    font-size: 13px;
+  }
+  
+  .doctor-details {
+    gap: 12px;
+  }
+  
+  .doctor-footer {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .book-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .specialization-card {
+    padding: 10px 6px;
+    min-width: 70px;
+  }
+  
+  .spec-icon-container {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .spec-icon-container svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .spec-name {
+    font-size: 10px;
+  }
+  
+  .doctor-card {
+    padding: 12px;
+  }
+  
+  .doctor-avatar {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .doctor-initial {
+    font-size: 18px;
+  }
+  
+  .doctor-name {
+    font-size: 15px;
+  }
+  
+  .doctor-specialty {
+    font-size: 12px;
+  }
+  
+  .doctor-details {
+    gap: 8px;
+  }
+  
+  .detail-item {
+    font-size: 13px;
+  }
+}

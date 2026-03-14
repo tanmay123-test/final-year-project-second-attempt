@@ -1,0 +1,359 @@
+/* AI Care Page Styles */
+
+/* Main Container */
+.ai-care-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding-bottom: 80px;
+}
+
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* AI Care Header */
+.ai-care-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #718096;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background-color: #f7fafc;
+  color: #7b3fe4;
+}
+
+.back-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1.2;
+}
+
+/* Info Card */
+.info-card {
+  background: linear-gradient(135deg, #7b3fe4 0%, #a15ce6 100%);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 32px;
+  color: white;
+}
+
+.info-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.info-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.info-title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.info-text {
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Chat Input Section */
+.chat-input-section {
+  margin-bottom: 32px;
+}
+
+.input-container {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.chat-input {
+  width: 100%;
+  padding: 16px;
+  font-size: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  outline: none;
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+.chat-input:focus {
+  border-color: #7b3fe4;
+  box-shadow: 0 0 0 3px rgba(123, 63, 228, 0.1);
+}
+
+.chat-input::placeholder {
+  color: #a0aec0;
+}
+
+.send-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #7b3fe4, #a15ce6);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 16px;
+}
+
+.send-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(123, 63, 228, 0.3);
+}
+
+.send-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.send-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Symptoms Section */
+.symptoms-section {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.symptoms-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.symptoms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.symptom-button {
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.symptom-button:hover {
+  background-color: #7b3fe4;
+  color: white;
+  border-color: #7b3fe4;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ai-care-container {
+    padding-bottom: 70px;
+  }
+  
+  .main-content {
+    padding: 16px;
+  }
+  
+  .ai-care-header {
+    margin-bottom: 24px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+  }
+  
+  .info-card {
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  
+  .info-title {
+    font-size: 18px;
+  }
+  
+  .info-text {
+    font-size: 15px;
+  }
+  
+  .chat-input-section {
+    margin-bottom: 24px;
+  }
+  
+  .input-container {
+    padding: 16px;
+  }
+  
+  .chat-input {
+    padding: 14px;
+    font-size: 15px;
+    min-height: 100px;
+  }
+  
+  .send-button {
+    padding: 10px 20px;
+    font-size: 15px;
+  }
+  
+  .symptoms-section {
+    padding: 20px;
+  }
+  
+  .symptoms-title {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .symptoms-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .symptom-button {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 12px;
+  }
+  
+  .ai-care-header {
+    margin-bottom: 20px;
+    gap: 12px;
+  }
+  
+  .page-title {
+    font-size: 22px;
+  }
+  
+  .info-card {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .info-title {
+    font-size: 17px;
+  }
+  
+  .info-text {
+    font-size: 14px;
+  }
+  
+  .chat-input-section {
+    margin-bottom: 20px;
+  }
+  
+  .input-container {
+    padding: 12px;
+  }
+  
+  .chat-input {
+    padding: 12px;
+    font-size: 14px;
+    min-height: 80px;
+  }
+  
+  .send-button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  .symptoms-section {
+    padding: 16px;
+  }
+  
+  .symptoms-title {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+  
+  .symptoms-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .symptom-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Small Mobile Phones */
+@media (max-width: 360px) {
+  .ai-care-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .page-title {
+    font-size: 20px;
+  }
+  
+  .info-card {
+    padding: 14px;
+  }
+  
+  .info-title {
+    font-size: 16px;
+  }
+  
+  .info-text {
+    font-size: 13px;
+  }
+  
+  .symptoms-grid {
+    grid-template-columns: 1fr;
+  }
+}

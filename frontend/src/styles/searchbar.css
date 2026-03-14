@@ -1,0 +1,30 @@
+/* Search Bar Styles - Empty - Styles moved to dashboard.css */
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .search-bar {
+    max-width: 100%;
+  }
+  
+  .search-input {
+    padding: 14px 14px 14px 44px;
+    font-size: 15px;
+  }
+  
+  .search-icon {
+    left: 14px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-input {
+    padding: 12px 12px 12px 40px;
+    font-size: 14px;
+  }
+  
+  .search-icon {
+    left: 12px;
+    font-size: 14px;
+  }
+}

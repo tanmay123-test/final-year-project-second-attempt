@@ -9,6 +9,7 @@ from datetime import datetime
 import re
 
 try:
+    import google.generativeai as genai
     from .gemini_client import gemini_client
     from .stock_ai_service import stock_ai_service
     from .portfolio_ai_service import portfolio_ai_service

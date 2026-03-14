@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { authService } from '../shared/api';
+import { authService } from '../services/api';
 import { Mail, ArrowLeft, RotateCcw, CheckCircle, Loader2 } from 'lucide-react';
 
 const VerifyEmail = () => {

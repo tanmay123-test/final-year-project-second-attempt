@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { authService } from '../shared/api';
+import { authService } from '../services/api';
 import { User, AtSign, Mail, Lock, Eye, EyeOff, KeyRound } from 'lucide-react';
 
 const Signup = () => {
