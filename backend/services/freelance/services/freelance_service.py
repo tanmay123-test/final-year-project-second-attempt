@@ -30,10 +30,18 @@ class FreelanceService:
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
         try:
-            query = "SELECT * FROM freelance_projects WHERE status = ?"
+            from config import USER_DB
+            cursor.execute(f"ATTACH DATABASE '{USER_DB}' AS user_db")
+            
+            query = """
+                SELECT p.*, u.name as client_name 
+                FROM freelance_projects p
+                LEFT JOIN user_db.users u ON p.client_id = u.id
+                WHERE p.status = ?
+            """
             params = [status]
             if category:
-                query += " AND category = ?"
+                query += " AND p.category = ?"
                 params.append(category)
             
             cursor.execute(query, params)
@@ -46,9 +54,17 @@ class FreelanceService:
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
         try:
+            from config import WORKER_DB
+            cursor.execute(f"ATTACH DATABASE '{WORKER_DB}' AS worker_db")
+            
             query = """
-                SELECT p.*, (SELECT COUNT(*) FROM freelance_proposals WHERE project_id = p.id) as proposals_count
+                SELECT p.*, 
+                       (SELECT COUNT(*) FROM freelance_proposals WHERE project_id = p.id) as proposals_count,
+                       c.freelancer_id,
+                       w.full_name as freelancer_name
                 FROM freelance_projects p 
+                LEFT JOIN freelance_contracts c ON p.id = c.project_id
+                LEFT JOIN worker_db.workers w ON c.freelancer_id = w.id
                 WHERE p.client_id = ?
             """
             params = [client_id]
@@ -101,7 +117,15 @@ class FreelanceService:
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
         try:
-            cursor.execute("SELECT * FROM freelance_proposals WHERE project_id = ?", (project_id,))
+            from config import WORKER_DB
+            cursor.execute(f"ATTACH DATABASE '{WORKER_DB}' AS worker_db")
+            
+            cursor.execute("""
+                SELECT p.*, w.full_name as freelancer_name, w.rating as freelancer_rating
+                FROM freelance_proposals p
+                LEFT JOIN worker_db.workers w ON p.freelancer_id = w.id
+                WHERE p.project_id = ?
+            """, (project_id,))
             rows = cursor.fetchall()
             return [freelance_db._row_to_dict(row, cursor) for row in rows]
         finally:
@@ -127,10 +151,14 @@ class FreelanceService:
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
         try:
+            from config import USER_DB
+            cursor.execute(f"ATTACH DATABASE '{USER_DB}' AS user_db")
+            
             cursor.execute("""
-                SELECT c.*, p.title as project_title, p.description as project_description
+                SELECT c.*, p.title as project_title, p.description as project_description, u.name as client_name
                 FROM freelance_contracts c
                 JOIN freelance_projects p ON c.project_id = p.id
+                LEFT JOIN user_db.users u ON c.client_id = u.id
                 WHERE c.freelancer_id = ? AND c.status = ?
                 ORDER BY c.start_date DESC
             """, (freelancer_id, status))
@@ -194,7 +222,12 @@ class FreelanceService:
         finally:
             conn.close()
 
-    def add_notification(self, user_id, type, message):
+    def add_notification(self, user_id, type, message, conn=None):
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO freelance_notifications (user_id, type, message) VALUES (?, ?, ?)", (user_id, type, message))
+            return
+
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
         try:
@@ -210,11 +243,24 @@ class FreelanceService:
             # Get proposal details
             cursor.execute("SELECT * FROM freelance_proposals WHERE id = ?", (proposal_id,))
             proposal = cursor.fetchone()
-            if not proposal: return False
+            if not proposal:
+                print(f"Error: Proposal {proposal_id} not found")
+                return False, "Proposal not found"
             
             proposal_dict = freelance_db._row_to_dict(proposal, cursor)
             project_id = proposal_dict['project_id']
             freelancer_id = proposal_dict['freelancer_id']
+
+            # Check if project exists and get client_id
+            cursor.execute("SELECT client_id, status FROM freelance_projects WHERE id = ?", (project_id,))
+            project_row = cursor.fetchone()
+            if not project_row:
+                print(f"Error: Project {project_id} not found")
+                return False, "Project not found"
+            
+            client_id, project_status = project_row
+            if project_status != 'OPEN':
+                return False, f"Project is already {project_status}"
 
             # Update proposal status
             cursor.execute("UPDATE freelance_proposals SET status = 'ACCEPTED' WHERE id = ?", (proposal_id,))
@@ -226,9 +272,6 @@ class FreelanceService:
             cursor.execute("UPDATE freelance_projects SET status = 'IN_PROGRESS' WHERE id = ?", (project_id,))
             
             # Create contract
-            cursor.execute("SELECT client_id FROM freelance_projects WHERE id = ?", (project_id,))
-            client_id = cursor.fetchone()[0]
-            
             cursor.execute("""
                 INSERT INTO freelance_contracts (project_id, client_id, freelancer_id, status)
                 VALUES (?, ?, ?, 'ACTIVE')
@@ -245,10 +288,14 @@ class FreelanceService:
                 """, (contract_id, m[0], m[1]))
             
             # Notify freelancer
-            self.add_notification(freelancer_id, 'PROPOSAL_ACCEPTED', f"Your proposal for project {project_id} has been accepted!")
+            self.add_notification(freelancer_id, 'PROPOSAL_ACCEPTED', f"Your proposal for project {project_id} has been accepted!", conn=conn)
             
             conn.commit()
-            return True
+            return True, "Success"
+        except Exception as e:
+            conn.rollback()
+            print(f"Exception in accept_proposal: {str(e)}")
+            return False, str(e)
         finally:
             conn.close()
 
@@ -266,7 +313,7 @@ class FreelanceService:
             """, (milestone_id,))
             row = cursor.fetchone()
             if row:
-                self.add_notification(row[0], 'MILESTONE_SUBMITTED', f"Milestone '{row[1]}' has been submitted for review.")
+                self.add_notification(row[0], 'MILESTONE_SUBMITTED', f"Milestone '{row[1]}' has been submitted for review.", conn=conn)
                 
             conn.commit()
             return True
@@ -287,7 +334,7 @@ class FreelanceService:
             row = cursor.fetchone()
             if row:
                 recipient_id = row[1] if sender_id == row[0] else row[0]
-                self.add_notification(recipient_id, 'NEW_MESSAGE', f"New message in project chat.")
+                self.add_notification(recipient_id, 'NEW_MESSAGE', f"New message in project chat.", conn=conn)
                 
             conn.commit()
             return True
@@ -319,7 +366,7 @@ class FreelanceService:
             booking_id = cursor.lastrowid
             
             # Notify freelancer
-            self.add_notification(freelancer_id, 'NEW_BOOKING_REQUEST', f"New direct booking request: {title}")
+            self.add_notification(freelancer_id, 'NEW_BOOKING_REQUEST', f"New direct booking request: {title}", conn=conn)
             
             conn.commit()
             return booking_id
@@ -330,10 +377,14 @@ class FreelanceService:
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
         try:
+            # Attach user database to allow joining with users table
+            from config import USER_DB
+            cursor.execute(f"ATTACH DATABASE '{USER_DB}' AS user_db")
+            
             cursor.execute("""
-                SELECT b.*, u.user_name as client_name 
+                SELECT b.*, u.name as client_name 
                 FROM freelance_bookings b
-                JOIN users u ON b.client_id = u.id
+                JOIN user_db.users u ON b.client_id = u.id
                 WHERE b.freelancer_id = ? AND b.status = ?
                 ORDER BY b.created_at DESC
             """, (freelancer_id, status))
@@ -371,9 +422,9 @@ class FreelanceService:
                     VALUES (?, ?, ?, 'ACTIVE')
                 """, (project_id, client_id, freelancer_id))
                 
-                self.add_notification(client_id, 'BOOKING_ACCEPTED', f"Your booking request '{title}' was accepted!")
+                self.add_notification(client_id, 'BOOKING_ACCEPTED', f"Your booking request '{title}' was accepted!", conn=conn)
             elif status == 'DECLINED':
-                self.add_notification(client_id, 'BOOKING_DECLINED', f"Your booking request '{title}' was declined.")
+                self.add_notification(client_id, 'BOOKING_DECLINED', f"Your booking request '{title}' was declined.", conn=conn)
             
             conn.commit()
             return True

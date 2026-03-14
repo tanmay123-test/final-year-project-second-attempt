@@ -11,12 +11,23 @@ def get_current_user_id():
     if not auth_header or not auth_header.startswith('Bearer '):
         return None
     token = auth_header.split(' ')[1]
-    username = verify_token(token)
-    if not username:
+    username_or_email = verify_token(token)
+    if not username_or_email:
         return None
+    
+    # 1. Check UserDB (for clients)
     user_db = UserDB()
-    user_id = user_db.get_user_by_username(username)
-    return user_id
+    user_id = user_db.get_user_by_username(username_or_email)
+    if user_id:
+        return user_id
+        
+    # 2. Check WorkerDB (for freelancers)
+    worker_db = WorkerDB()
+    worker = worker_db.get_worker_by_email(username_or_email)
+    if worker:
+        return worker['id']
+        
+    return None
 
 @freelance_bp.route('/api/freelance/projects', methods=['POST'])
 def create_project():
@@ -52,19 +63,27 @@ def list_projects():
 def submit_proposal():
     user_id = get_current_user_id()
     if not user_id:
-        return jsonify({"error": "Unauthorized"}), 401
+        return jsonify({"error": "Unauthorized - Please login again"}), 401
     
     data = request.json
     try:
+        # Validate required fields
+        project_id = data.get('project_id')
+        price = data.get('proposed_price')
+        
+        if not project_id or not price:
+            return jsonify({"error": "Missing required fields: project_id and proposed_price"}), 400
+
         proposal_id = freelance_service.submit_proposal(
-            project_id=data.get('project_id'),
+            project_id=int(project_id),
             freelancer_id=user_id,
-            price=data.get('proposed_price'),
+            price=float(price),
             delivery_time=data.get('delivery_time'),
             message=data.get('cover_message')
         )
         return jsonify({"success": True, "proposal_id": proposal_id}), 201
     except Exception as e:
+        print(f"Error in submit_proposal: {str(e)}")
         return jsonify({"error": str(e)}), 400
 
 @freelance_bp.route('/api/freelance/my-projects', methods=['GET'])
@@ -77,6 +96,15 @@ def list_my_projects():
     projects = freelance_service.get_projects_by_client(client_id=user_id, status=status)
     return jsonify({"projects": projects}), 200
 
+@freelance_bp.route('/api/freelance/projects/<int:project_id>/proposals', methods=['GET'])
+def list_project_proposals(project_id):
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    proposals = freelance_service.get_proposals_by_project(project_id=project_id)
+    return jsonify({"proposals": proposals}), 200
+
 @freelance_bp.route('/api/freelance/proposals/accept', methods=['POST'])
 def accept_proposal():
     user_id = get_current_user_id()
@@ -86,9 +114,10 @@ def accept_proposal():
     data = request.json
     proposal_id = data.get('proposal_id')
     
-    if freelance_service.accept_proposal(proposal_id):
+    success, message = freelance_service.accept_proposal(proposal_id)
+    if success:
         return jsonify({"success": True, "message": "Proposal accepted and contract created"}), 200
-    return jsonify({"error": "Failed to accept proposal"}), 400
+    return jsonify({"error": message}), 400
 
 @freelance_bp.route('/api/freelance/my-proposals', methods=['GET'])
 def list_my_proposals():

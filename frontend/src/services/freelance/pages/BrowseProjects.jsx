@@ -66,7 +66,8 @@ const BrowseProjects = () => {
       setSelectedProject(null);
     } catch (error) {
       console.error('Error submitting proposal:', error);
-      alert('Failed to submit proposal. Please try again.');
+      const errorMsg = error.response?.data?.error || 'Failed to submit proposal. Please try again.';
+      alert(errorMsg);
     } finally {
       setSubmitting(false);
     }

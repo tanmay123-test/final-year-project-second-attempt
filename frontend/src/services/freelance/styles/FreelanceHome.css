@@ -64,7 +64,30 @@
   justify-content: center;
 }
 
-/* Hero Section */
+.active-freelancer-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #f1f5f9;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.active-freelancer-info strong {
+  color: #9B59B6;
+}
+
+.proposal-rating-small {
+  font-size: 0.85rem;
+  color: #f59e0b;
+  font-weight: 600;
+  background: #fef3c7;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+}
 .freelance-hero {
   background: linear-gradient(135deg, #9B59B6 0%, #8E44AD 100%);
   color: white;
@@ -313,6 +336,178 @@
   border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+/* Modal Styles */
+.modal-overlay-new {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.modal-content-new {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header-new {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header-new h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.close-btn-new {
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.modal-body-new {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Proposal Cards */
+.proposal-item-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.proposal-item-card:last-child {
+  margin-bottom: 0;
+}
+
+.proposal-card-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.freelancer-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.f-avatar-small {
+  width: 36px;
+  height: 36px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9B59B6;
+}
+
+.f-name-small {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.proposal-price-tag {
+  font-weight: 700;
+  color: #9B59B6;
+  font-size: 1.1rem;
+}
+
+.proposal-msg-text {
+  font-size: 0.95rem;
+  color: #475569;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.proposal-meta-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.p-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.proposal-actions-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.accept-proposal-btn {
+  flex: 1;
+  background: #9B59B6;
+  color: white;
+  border: none;
+  padding: 0.7rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reject-proposal-btn {
+  flex: 1;
+  background: white;
+  color: #ef4444;
+  border: 1px solid #fee2e2;
+  padding: 0.7rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.accept-proposal-btn:disabled, .reject-proposal-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinner-purple {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(155, 89, 182, 0.2);
+  border-top-color: #9B59B6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Bottom Nav Fixes */
