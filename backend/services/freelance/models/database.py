@@ -170,6 +170,39 @@ class FreelanceDatabase:
         )
         """)
 
+        # Audit Log Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS freelance_audit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entity_type TEXT NOT NULL, -- 'BOOKING', 'PROJECT', 'CONTRACT'
+            entity_id INTEGER NOT NULL,
+            action TEXT NOT NULL, -- 'CREATED', 'UPDATED', 'DELETED', 'STATUS_CHANGE'
+            old_value TEXT,
+            new_value TEXT,
+            performed_by INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+
+        # Skills Master Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS freelance_skills (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            category TEXT
+        )
+        """)
+
+        # Provider Skills Junction Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS freelance_provider_skills (
+            provider_id INTEGER NOT NULL,
+            skill_id INTEGER NOT NULL,
+            PRIMARY KEY (provider_id, skill_id),
+            FOREIGN KEY (skill_id) REFERENCES freelance_skills (id)
+        )
+        """)
+
         # Direct Bookings Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS freelance_bookings (
@@ -183,6 +216,20 @@ class FreelanceDatabase:
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # Seed initial skills if table is empty
+        cursor.execute("SELECT COUNT(*) FROM freelance_skills")
+        if cursor.fetchone()[0] == 0:
+            initial_skills = [
+                ('React', 'Web Development'), ('Node.js', 'Web Development'), 
+                ('Python', 'Backend'), ('Django', 'Backend'),
+                ('Flutter', 'Mobile'), ('React Native', 'Mobile'),
+                ('UI Design', 'Design'), ('UX Design', 'Design'),
+                ('SEO', 'Marketing'), ('Content Writing', 'Writing'),
+                ('Graphic Design', 'Design'), ('Data Science', 'Data'),
+                ('Cybersecurity', 'IT'), ('Cloud Computing', 'IT')
+            ]
+            cursor.executemany("INSERT INTO freelance_skills (name, category) VALUES (?, ?)", initial_skills)
 
         conn.commit()
         conn.close()

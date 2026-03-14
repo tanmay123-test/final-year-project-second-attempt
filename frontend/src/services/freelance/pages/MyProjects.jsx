@@ -4,7 +4,9 @@ import axios from 'axios';
 import '../styles/FreelanceHome.css';
 
 const MyProjects = () => {
+  const [viewMode, setViewMode] = useState('posted'); // 'posted' or 'direct'
   const [projects, setProjects] = useState([]);
+  const [directBookings, setDirectBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeStatus, setActiveStatus] = useState('OPEN');
@@ -24,8 +26,12 @@ const MyProjects = () => {
   ];
 
   useEffect(() => {
-    fetchMyProjects();
-  }, [activeStatus]);
+    if (viewMode === 'posted') {
+      fetchMyProjects();
+    } else {
+      fetchDirectBookings();
+    }
+  }, [activeStatus, viewMode]);
 
   const fetchMyProjects = async () => {
     setLoading(true);
@@ -37,6 +43,25 @@ const MyProjects = () => {
       setProjects(response.data.projects);
     } catch (err) {
       setError('Failed to load your projects');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDirectBookings = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      // We need a consumer-side direct bookings endpoint. 
+      // Let's assume we use list_my_bookings but filtered by client_id.
+      // Wait, list_my_bookings in freelance_routes.py is for freelancers (get_booking_requests_by_freelancer).
+      // We need a client-side one. Let's add it to backend.
+      const response = await axios.get(`http://localhost:5000/api/freelance/client/bookings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDirectBookings(response.data.bookings);
+    } catch (err) {
+      setError('Failed to load direct bookings');
     } finally {
       setLoading(false);
     }
@@ -97,113 +122,185 @@ const MyProjects = () => {
       {/* Header Banner */}
       <div className="my-projects-hero">
         <h1>My Projects</h1>
-        <p>Track and manage your posted projects</p>
+        <p>Track and manage your freelance engagements</p>
       </div>
 
-      {/* Status Tabs */}
-      <div className="status-tabs-container">
-        {statusTabs.map(tab => (
-          <button
-            key={tab.value}
-            className={`status-tab ${activeStatus === tab.value ? 'active' : ''}`}
-            onClick={() => setActiveStatus(tab.value)}
+      {/* View Mode Toggle */}
+      <div className="segmented-tabs-wrapper" style={{ margin: '2rem 0' }}>
+        <div className="segmented-tabs">
+          <button 
+            className={viewMode === 'posted' ? 'active' : ''} 
+            onClick={() => setViewMode('posted')}
           >
-            {tab.label}
+            Posted Projects
           </button>
-        ))}
+          <button 
+            className={viewMode === 'direct' ? 'active' : ''} 
+            onClick={() => setViewMode('direct')}
+          >
+            Direct Bookings
+          </button>
+        </div>
       </div>
+
+      {/* Status Tabs (Only for Posted Projects) */}
+      {viewMode === 'posted' && (
+        <div className="status-tabs-container">
+          {statusTabs.map(tab => (
+            <button
+              key={tab.value}
+              className={`status-tab ${activeStatus === tab.value ? 'active' : ''}`}
+              onClick={() => setActiveStatus(tab.value)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className="loading-state">
           <div className="spinner-purple"></div>
-          <p>Fetching your projects...</p>
+          <p>Fetching your data...</p>
         </div>
       ) : error ? (
         <div className="error-state">{error}</div>
-      ) : projects.length === 0 ? (
-        <div className="empty-state-new">
-          <p>No {activeStatus.toLowerCase().replace('_', ' ')} projects</p>
-        </div>
-      ) : (
-        <div className="projects-list-new">
-          {projects.map(project => (
-            <div key={project.id} className="project-card-new">
-              <div className="card-header-row">
-                <h3>{project.title}</h3>
-                <span className={`status-pill ${(project.status || 'OPEN').toLowerCase()}`}>
-                  {getStatusLabel(project.status || 'OPEN')}
-                </span>
-              </div>
-              
-              <p className="card-meta">
-                {project.category || 'General'} • {project.experience_level || 'Any level'}
-              </p>
-
-              <p className="card-description">{project.description}</p>
-
-              {project.status === 'IN_PROGRESS' && project.freelancer_name && (
-                <div className="active-freelancer-info">
-                  <User size={16} />
-                  <span>Working with: <strong>{project.freelancer_name}</strong></span>
+      ) : viewMode === 'posted' ? (
+        projects.length === 0 ? (
+          <div className="empty-state-new">
+            <p>No {activeStatus.toLowerCase().replace('_', ' ')} projects</p>
+          </div>
+        ) : (
+          <div className="projects-list-new">
+            {projects.map(project => (
+              <div key={project.id} className="project-card-new">
+                <div className="card-header-row">
+                  <h3>{project.title}</h3>
+                  <span className={`status-pill ${(project.status || 'OPEN').toLowerCase()}`}>
+                    {getStatusLabel(project.status || 'OPEN')}
+                  </span>
                 </div>
-              )}
+                
+                <p className="card-meta">
+                  {project.category || 'General'} • {project.experience_level || 'Any level'}
+                </p>
 
-              <div className="card-details-grid">
-                <div className="detail-item">
-                  <span className="detail-icon">₹</span>
-                  <span>₹{(project.budget_amount || 0).toLocaleString()}</span>
-                </div>
-                <div className="detail-item">
-                  <Clock size={16} />
-                  <span>{project.deadline || 'No deadline'}</span>
-                </div>
-                <div className="detail-item">
-                  <MessageSquare size={16} />
-                  <span>{project.proposals_count || 0} proposals</span>
-                </div>
-              </div>
+                <p className="card-description">{project.description}</p>
 
-              {project.milestones && project.milestones.length > 0 && (
-                <div className="milestones-preview">
-                  <label>Milestones</label>
-                  {project.milestones.map((m, idx) => (
-                    <div key={idx} className="milestone-preview-row">
-                      <div className="m-left">
-                        <CheckCircle size={14} className={m.status === 'PAID' ? 'text-green' : 'text-gray'} />
-                        <span>{m.title}</span>
+                {project.status === 'IN_PROGRESS' && project.freelancer_name && (
+                  <div className="active-freelancer-info">
+                    <User size={16} />
+                    <span>Working with: <strong>{project.freelancer_name}</strong></span>
+                  </div>
+                )}
+
+                <div className="card-details-grid">
+                  <div className="detail-item">
+                    <span className="detail-icon">₹</span>
+                    <span>₹{(project.budget_amount || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="detail-item">
+                    <Clock size={16} />
+                    <span>{project.deadline || 'No deadline'}</span>
+                  </div>
+                  <div className="detail-item">
+                    <MessageSquare size={16} />
+                    <span>{project.proposals_count || 0} proposals</span>
+                  </div>
+                </div>
+
+                {project.milestones && project.milestones.length > 0 && (
+                  <div className="milestones-preview">
+                    <label>Milestones</label>
+                    {project.milestones.map((m, idx) => (
+                      <div key={idx} className="milestone-preview-row">
+                        <div className="m-left">
+                          <CheckCircle size={14} className={m.status === 'PAID' ? 'text-green' : 'text-gray'} />
+                          <span>{m.title}</span>
+                        </div>
+                        <span className="m-amount">₹{(m.amount || 0).toLocaleString()}</span>
                       </div>
-                      <span className="m-amount">₹{(m.amount || 0).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
 
-              <div className="card-actions">
-                {(project.status === 'OPEN' || !project.status) && (
-                  <button 
-                    className="primary-action-btn"
-                    onClick={() => handleViewProposals(project)}
-                  >
-                    <User size={18} />
-                    View Proposals ({project.proposals_count || 0})
-                  </button>
-                )}
-                {project.status === 'IN_PROGRESS' && (
-                  <>
-                    <button className="secondary-action-btn">
-                      <MessageCircle size={18} />
-                      Chat
+                <div className="card-actions">
+                  {(project.status === 'OPEN' || !project.status) && (
+                    <button 
+                      className="primary-action-btn"
+                      onClick={() => handleViewProposals(project)}
+                    >
+                      <User size={18} />
+                      View Proposals ({project.proposals_count || 0})
                     </button>
-                    <button className="danger-action-btn">
-                      <ShieldAlert size={18} />
-                      Dispute
-                    </button>
-                  </>
-                )}
+                  )}
+                  {project.status === 'IN_PROGRESS' && (
+                    <>
+                      <button className="secondary-action-btn">
+                        <MessageCircle size={18} />
+                        Chat
+                      </button>
+                      <button className="danger-action-btn">
+                        <ShieldAlert size={18} />
+                        Dispute
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )
+      ) : (
+        /* Direct Bookings View */
+        directBookings.length === 0 ? (
+          <div className="empty-state-new">
+            <p>No direct bookings yet</p>
+          </div>
+        ) : (
+          <div className="projects-list-new">
+            {directBookings.map(booking => (
+              <div key={booking.id} className="project-card-new">
+                <div className="card-header-row">
+                  <h3>{booking.project_title}</h3>
+                  <span className={`status-pill ${booking.status.toLowerCase()}`}>
+                    {booking.status}
+                  </span>
+                </div>
+                
+                <p className="card-meta">
+                  Booked Freelancer: <strong>{booking.freelancer_name}</strong>
+                </p>
+
+                <p className="card-description">{booking.project_description}</p>
+
+                <div className="card-details-grid">
+                  <div className="detail-item">
+                    <span className="detail-icon">₹</span>
+                    <span>₹{(booking.amount || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="detail-item">
+                    <Clock size={16} />
+                    <span>{new Date(booking.created_at).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="card-actions">
+                  {booking.status === 'PENDING' && (
+                    <button className="secondary-action-btn" disabled>
+                      Waiting for freelancer...
+                    </button>
+                  )}
+                  {booking.status === 'ACCEPTED' && (
+                    <button className="primary-action-btn">
+                      Go to Project
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       )}
 
       {/* Proposals Modal */}

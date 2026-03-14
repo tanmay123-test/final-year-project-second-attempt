@@ -7,7 +7,7 @@ import { Stethoscope, Home, Car, Wallet, User, Mail, Phone, MapPin, Briefcase, L
 const SERVICE_CONFIG = {
   healthcare: { label: 'Healthcare', icon: Stethoscope, color: '#8E44AD' },
   housekeeping: { label: 'Housekeeping', icon: Home, color: '#8E44AD' },
-  freelance: { label: 'Freelance Marketplace', icon: Briefcase, color: '#7c3aed' },
+  freelance: { label: 'Freelance Marketplace', icon: Briefcase, color: '#9B59B6' },
   car: { label: 'Car Services', icon: Car, color: '#9B59B6' },
   money: { label: 'Money Management', icon: Wallet, color: '#2ECC71' }
 };
@@ -31,10 +31,14 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
     password: '',
     aadhaar: '',
     skills: '',
+    selectedSkills: [], // Multi-select skill IDs
     hourly_rate: '',
     bio: '',
     id_proof: ''
   });
+  const [availableSkills, setAvailableSkills] = useState([]);
+  const [skillSearch, setSkillSearch] = useState('');
+  const [showSkillDropdown, setShowSkillDropdown] = useState(false);
   const [specializations, setSpecializations] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -42,6 +46,18 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (serviceType === 'freelance') {
+      const fetchSkills = async () => {
+        try {
+          const res = await axios.get('http://127.0.0.1:5000/api/freelance/skills');
+          setAvailableSkills(res.data.skills);
+        } catch (err) {
+          console.error("Failed to load skills", err);
+        }
+      };
+      fetchSkills();
+    }
+    
     if (serviceType === 'healthcare') {
       const fetchSpecs = async () => {
         try {
@@ -88,14 +104,43 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
     setFormData({ ...formData, specialization: currentSpecs.join(',') });
   };
 
+  const toggleSkill = (skill) => {
+    let currentSkills = [...formData.selectedSkills];
+    if (currentSkills.some(s => s.id === skill.id)) {
+      currentSkills = currentSkills.filter(s => s.id !== skill.id);
+    } else {
+      currentSkills.push(skill);
+    }
+    setFormData({ ...formData, selectedSkills: currentSkills });
+    setSkillSearch('');
+    setShowSkillDropdown(false);
+  };
+
+  const filteredSkills = availableSkills.filter(skill => 
+    skill.name.toLowerCase().includes(skillSearch.toLowerCase()) &&
+    !formData.selectedSkills.some(s => s.id === skill.id)
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (serviceType === 'freelance' && formData.selectedSkills.length === 0) {
+      setError('Please select at least one professional skill');
+      return;
+    }
+
     setLoading(true);
     
       try {
-      const payload = { ...formData, service: serviceType };
+      const skillsStr = formData.selectedSkills.map(s => s.name).join(', ');
+      const payload = { 
+        ...formData, 
+        service: serviceType,
+        skills: skillsStr, // Maintain backward compatibility
+        skill_ids: formData.selectedSkills.map(s => s.id) // Phase 1 junction storage
+      };
       let response;
       if (serviceType === 'healthcare') {
         response = await workerService.registerHealthcare(payload);
@@ -155,10 +200,44 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
             {serviceType === 'freelance' && (
               <>
                 <div className="input-group">
-                  <label htmlFor="skills">Professional Skills</label>
-                  <div className="input-wrapper">
-                    <Briefcase className="input-icon" size={20} />
-                    <input id="skills" name="skills" value={formData.skills} onChange={handleChange} required placeholder="React, Node.js, UI/UX" />
+                  <label htmlFor="skills">Professional Skills (Select multiple)</label>
+                  <div className="multi-select-container">
+                    <div className="selected-skills-chips">
+                      {formData.selectedSkills.map(skill => (
+                        <span key={skill.id} className="skill-chip">
+                          {skill.name}
+                          <button type="button" onClick={() => toggleSkill(skill)}>×</button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="input-wrapper">
+                      <Briefcase className="input-icon" size={20} />
+                      <input 
+                        id="skills-search" 
+                        value={skillSearch} 
+                        onChange={(e) => {
+                          setSkillSearch(e.target.value);
+                          setShowSkillDropdown(true);
+                        }} 
+                        onFocus={() => setShowSkillDropdown(true)}
+                        placeholder="Search and select skills..." 
+                      />
+                    </div>
+                    {showSkillDropdown && skillSearch && (
+                      <div className="skills-dropdown">
+                        {filteredSkills.length > 0 ? filteredSkills.map(skill => (
+                          <div 
+                            key={skill.id} 
+                            className="skill-option"
+                            onClick={() => toggleSkill(skill)}
+                          >
+                            {skill.name} <span className="skill-cat">({skill.category})</span>
+                          </div>
+                        )) : (
+                          <div className="skill-no-results">No matching skills found</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 

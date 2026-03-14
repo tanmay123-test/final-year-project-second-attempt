@@ -17,8 +17,8 @@ const FreelancerDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    // Polling for real-time updates every 30 seconds
-    const interval = setInterval(fetchDashboardData, 30000);
+    // Phase 3: Poll for direct bookings every 5 seconds for status = pending
+    const interval = setInterval(fetchDashboardData, 5000);
     return () => clearInterval(interval);
   }, []);
 

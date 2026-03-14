@@ -38,17 +38,97 @@ class BookingService:
         workers.sort(key=lambda x: x.get('is_online', False), reverse=True)
         return workers
 
+    def _normalize_date(self, date_str):
+        """
+        Normalize date string to 'YYYY-MM-DD' format
+        """
+        if not date_str:
+            return ""
+        try:
+            # HTML5 date inputs are YYYY-MM-DD, but let's be robust
+            for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y"):
+                try:
+                    return datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
+                except ValueError:
+                    continue
+        except Exception as e:
+            logging.error(f"Error normalizing date '{date_str}': {e}")
+            
+        return date_str
+
+    def _normalize_time(self, time_str):
+        """
+        Normalize time string to 'HH:MM AM/PM' format (e.g., '9:00 AM' -> '09:00 AM')
+        """
+        if not time_str:
+            return ""
+        try:
+            # Try to parse the time string
+            # It could be '9:00 AM', '09:00 AM', '13:00', etc.
+            t = None
+            time_str = time_str.strip().upper()
+            
+            if 'AM' in time_str or 'PM' in time_str:
+                # Handle AM/PM format
+                try:
+                    t = datetime.strptime(time_str, "%I:%M %p")
+                except ValueError:
+                    t = datetime.strptime(time_str, "%H:%M %p")
+            else:
+                # Handle 24h format
+                t = datetime.strptime(time_str, "%H:%M")
+                
+            if t:
+                return t.strftime("%I:%M %p")
+        except Exception as e:
+            logging.error(f"Error normalizing time '{time_str}': {e}")
+            
+        return time_str
+
     def get_aggregated_slots(self, service_type, date, worker_id=None):
         """
         Get available time slots for a given date and service type.
+        Returns a list of dicts: [{"time": "09:00 AM", "count": 2}, ...]
         """
-        slots = ["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"]
-        available_slots = []
+        date = self._normalize_date(date)
+        # Define standard slots
+        standard_slots = ["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"]
         
-        for time in slots:
+        all_potential_slots = set(standard_slots)
+        
+        if worker_id:
+            # Specific worker: only their slots + standard
+            worker_slots = self.availability_db.get_availability(worker_id, date)
+            for s in worker_slots:
+                all_potential_slots.add(self._normalize_time(s['time_slot']))
+        else:
+            # General discovery: include ALL custom slots from ALL workers who offer this service
+            # This ensures that if a worker added '08:30 AM', it shows up in the general list.
+            workers = self.worker_db.get_workers_by_service('housekeeping')
+            for w in workers:
+                if self.db.worker_offers_service(w['id'], service_type):
+                    w_slots = self.availability_db.get_availability(w['id'], date)
+                    for s in w_slots:
+                        all_potential_slots.add(self._normalize_time(s['time_slot']))
+        
+        # Convert to sorted list
+        # Sorting "09:00 AM", "10:00 AM" correctly requires a bit of logic
+        def sort_key(t_str):
+            try:
+                return datetime.strptime(t_str, "%I:%M %p")
+            except:
+                return datetime.min
+
+        slots_to_check = sorted(list(all_potential_slots), key=sort_key)
+        
+        available_slots = []
+        for time in slots_to_check:
             workers = self.check_availability(service_type, date, time, None, worker_id=worker_id)
             if workers:
-                available_slots.append(time)
+                available_slots.append({
+                    "time": time,
+                    "count": len(workers)
+                })
                 
         return available_slots
 
@@ -56,6 +136,9 @@ class BookingService:
         """
         Check which workers are available for a given slot.
         """
+        date = self._normalize_date(date)
+        time = self._normalize_time(time)
+
         if worker_id:
             worker = self.worker_db.get_worker_by_id(worker_id)
             if not worker: 
@@ -66,26 +149,18 @@ class BookingService:
 
         available_workers = []
         for worker in candidates:
-            # check if worker is online
+            # 1. Check if worker offers the specific service
+            if not self.db.worker_offers_service(worker['id'], service_type):
+                continue
+
+            # 2. Check online status
             is_online = self.db.get_worker_online_status(worker['id'])
             
-            # RULE 1: For instant booking, worker MUST be online
+            # For instant booking, worker MUST be online
             if booking_type == 'instant' and not is_online:
                 continue
-                
-            # RULE 2: For scheduled (available) booking, online workers are reserved for instant ONLY
-            # (as per user requirement to prevent available booking for online workers)
-            if booking_type == 'schedule' and is_online:
-                continue
 
-            # RULE 3: For scheduled (available) booking, worker must have marked this slot as available
-            if booking_type == 'schedule':
-                slots = self.availability_db.get_availability(worker['id'], date)
-                is_available = any(s['time_slot'] == time for s in slots)
-                if not is_available:
-                    continue
-
-            # check if worker has a booking at this time
+            # 3. Check for conflict in bookings
             conn = self.db.get_conn()
             cursor = conn.cursor()
             cursor.execute("""
@@ -96,9 +171,28 @@ class BookingService:
             count = cursor.fetchone()[0]
             conn.close()
             
-            if count == 0:
-                worker['is_online'] = is_online
-                available_workers.append(worker)
+            if count > 0:
+                continue
+
+            # 4. Check explicit availability slots from provider
+            # For scheduled bookings, we check if they've marked the slot as available
+            # For instant bookings, being online is usually enough (on-demand), 
+            # but let's check slots if they exist to be safe, or just online if no slots.
+            worker_slots = self.availability_db.get_availability(worker['id'], date)
+            
+            # Normalize and check
+            has_explicit_slot = any(self._normalize_time(s['time_slot']) == time for s in worker_slots)
+            
+            # If they have slots but NOT this one, skip (only for scheduled)
+            if booking_type == 'schedule' and not has_explicit_slot:
+                continue
+            
+            # If instant booking, and they have slots for today, they should have this slot or at least be online
+            # Actually, most systems treat 'online' as 'available right now'.
+            # If they are online, we include them for instant.
+            
+            worker['is_online'] = is_online
+            available_workers.append(worker)
                 
         return available_workers
 

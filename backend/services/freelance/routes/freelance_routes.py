@@ -205,6 +205,87 @@ def list_my_bookings():
     bookings = freelance_service.get_booking_requests_by_freelancer(freelancer_id=user_id, status=status)
     return jsonify({"bookings": bookings}), 200
 
+@freelance_bp.route('/api/freelance/skills', methods=['GET'])
+def get_skills():
+    skills = freelance_service.get_all_skills()
+    return jsonify({"skills": skills}), 200
+
+@freelance_bp.route('/api/freelance/provider/skills', methods=['POST'])
+def update_skills():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    skill_ids = data.get('skill_ids', [])
+    
+    if not skill_ids:
+        return jsonify({"error": "At least one skill must be selected"}), 400
+        
+    if freelance_service.update_provider_skills(user_id, skill_ids):
+        return jsonify({"success": True}), 200
+    return jsonify({"error": "Failed to update skills"}), 500
+
+@freelance_bp.route('/api/freelance/provider/skills', methods=['GET'])
+def get_provider_skills():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    skills = freelance_service.get_provider_skills(user_id)
+    return jsonify({"skills": skills}), 200
+
+@freelance_bp.route('/api/freelance/workers', methods=['GET'])
+def list_workers():
+    skill_ids_str = request.args.get('skills')
+    skill_ids = []
+    if skill_ids_str:
+        try:
+            skill_ids = [int(sid) for sid in skill_ids_str.split(',')]
+        except ValueError:
+            return jsonify({"error": "Invalid skill IDs"}), 400
+            
+    workers = freelance_service.get_workers_by_skills(skill_ids)
+    return jsonify({"workers": workers}), 200
+
+@freelance_bp.route('/api/freelance/client/bookings', methods=['GET'])
+def list_client_bookings():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    bookings = freelance_service.get_bookings_by_client(user_id)
+    return jsonify({"bookings": bookings}), 200
+
+@freelance_bp.route('/api/freelance/bookings', methods=['POST'])
+def create_direct_booking():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    freelancer_id = data.get('freelancer_id')
+    title = data.get('title')
+    description = data.get('description')
+    amount = data.get('amount')
+    
+    if not all([freelancer_id, title, amount]):
+        return jsonify({"error": "Missing required fields"}), 400
+        
+    booking_id = freelance_service.create_booking_request(
+        client_id=user_id,
+        freelancer_id=freelancer_id,
+        title=title,
+        description=description,
+        amount=float(amount)
+    )
+    
+    if booking_id:
+        # Audit log for creation
+        freelance_service.add_audit_log('BOOKING', booking_id, 'CREATED', None, 'PENDING', user_id)
+        return jsonify({"booking_id": booking_id, "success": True}), 201
+    return jsonify({"error": "Failed to create booking"}), 500
+
 @freelance_bp.route('/api/freelance/bookings/respond', methods=['POST'])
 def respond_to_booking():
     user_id = get_current_user_id()
@@ -213,8 +294,16 @@ def respond_to_booking():
     
     data = request.json
     booking_id = data.get('booking_id')
-    status = data.get('status') # 'ACCEPTED' or 'DECLINED'
+    status = data.get('status')
     
-    if freelance_service.update_booking_status(booking_id, status):
-        return jsonify({"success": True}), 200
-    return jsonify({"error": "Failed to respond to booking request"}), 400
+    if status not in ['ACCEPTED', 'DECLINED']:
+        return jsonify({"error": "Invalid status"}), 400
+        
+    # Verify ownership
+    booking = freelance_service.get_booking_by_id(booking_id)
+    if not booking or booking['freelancer_id'] != user_id:
+        return jsonify({"error": "Booking not found or unauthorized"}), 404
+        
+    if freelance_service.update_booking_status(booking_id, status, performer_id=user_id):
+        return jsonify({"success": True, "message": f"Booking {status.lower()} successfully"}), 200
+    return jsonify({"error": "Failed to update booking"}), 500

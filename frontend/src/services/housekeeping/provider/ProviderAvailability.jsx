@@ -210,14 +210,17 @@ const ProviderAvailability = () => {
                 ) : daySlots.length > 0 ? (
                     <div className="slots-grid">
                         {daySlots.map((slot, index) => (
-                            <div key={index} className="time-chip">
+                            <div key={index} className={`time-chip ${slot.is_booked ? 'booked' : ''}`}>
                                 <span>{slot.time_slot}</span>
-                                <button 
-                                    className="remove-slot-btn"
-                                    onClick={() => handleRemoveSlot(slot.time_slot)}
-                                >
-                                    <Trash2 size={14} />
-                                </button>
+                                {slot.is_booked && <span className="booked-badge">Booked</span>}
+                                {!slot.is_booked && (
+                                    <button 
+                                        className="remove-slot-btn"
+                                        onClick={() => handleRemoveSlot(slot.time_slot)}
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                )}
                             </div>
                         ))}
                     </div>

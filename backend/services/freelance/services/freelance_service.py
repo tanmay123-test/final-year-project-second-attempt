@@ -393,22 +393,43 @@ class FreelanceService:
         finally:
             conn.close()
 
-    def update_booking_status(self, booking_id, status):
+    def add_audit_log(self, entity_type, entity_id, action, old_val=None, new_val=None, user_id=None, conn=None):
+        should_close = False
+        if not conn:
+            conn = freelance_db.get_conn()
+            should_close = True
+        
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO freelance_audit_logs (entity_type, entity_id, action, old_value, new_value, performed_by)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (entity_type, entity_id, action, str(old_val) if old_val else None, str(new_val) if new_val else None, user_id))
+            if should_close:
+                conn.commit()
+        finally:
+            if should_close:
+                conn.close()
+
+    def update_booking_status(self, booking_id, status, performer_id=None):
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
         try:
-            # Check current status
-            cursor.execute("SELECT status, client_id, project_title, freelancer_id, amount FROM freelance_bookings WHERE id = ?", (booking_id,))
-            row = cursor.fetchone()
-            if not row or row[0] != 'PENDING':
+            # Get current status for audit
+            cursor.execute("SELECT status, client_id, freelancer_id, project_title, amount FROM freelance_bookings WHERE id = ?", (booking_id,))
+            booking = cursor.fetchone()
+            if not booking:
                 return False
-                
-            client_id, title, freelancer_id, amount = row[1:]
-            
+            old_status, client_id, freelancer_id, title, amount = booking
+
+            # Update status
             cursor.execute("UPDATE freelance_bookings SET status = ? WHERE id = ?", (status, booking_id))
             
+            # Audit log
+            self.add_audit_log('BOOKING', booking_id, 'STATUS_CHANGE', old_status, status, performer_id, conn=conn)
+
             if status == 'ACCEPTED':
-                # Create a project and contract automatically
+                # Create project for tracking
                 cursor.execute("""
                     INSERT INTO freelance_projects 
                     (client_id, title, description, category, budget_type, budget_amount, status)
@@ -428,6 +449,118 @@ class FreelanceService:
             
             conn.commit()
             return True
+        finally:
+            conn.close()
+
+    def get_all_skills(self):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT * FROM freelance_skills ORDER BY category, name")
+            rows = cursor.fetchall()
+            return [freelance_db._row_to_dict(row, cursor) for row in rows]
+        finally:
+            conn.close()
+
+    def update_provider_skills(self, provider_id, skill_ids):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            # Clear existing skills
+            cursor.execute("DELETE FROM freelance_provider_skills WHERE provider_id = ?", (provider_id,))
+            
+            # Insert new skills
+            if skill_ids:
+                skill_data = [(provider_id, sid) for sid in skill_ids]
+                cursor.executemany("INSERT INTO freelance_provider_skills (provider_id, skill_id) VALUES (?, ?)", skill_data)
+            
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"Error updating provider skills: {e}")
+            return False
+        finally:
+            conn.close()
+
+    def get_provider_skills(self, provider_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT s.* FROM freelance_skills s
+                JOIN freelance_provider_skills ps ON s.id = ps.skill_id
+                WHERE ps.provider_id = ?
+            """, (provider_id,))
+            rows = cursor.fetchall()
+            return [freelance_db._row_to_dict(row, cursor) for row in rows]
+        finally:
+            conn.close()
+
+    def get_workers_by_skills(self, skill_ids=None):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            from config import WORKER_DB
+            cursor.execute(f"ATTACH DATABASE '{WORKER_DB}' AS worker_db")
+            
+            if skill_ids:
+                # Get workers matching all specified skills
+                placeholders = ','.join(['?'] * len(skill_ids))
+                cursor.execute(f"""
+                    SELECT w.* FROM worker_db.workers w
+                    WHERE w.id IN (
+                        SELECT provider_id FROM freelance_provider_skills
+                        WHERE skill_id IN ({placeholders})
+                        GROUP BY provider_id
+                        HAVING COUNT(DISTINCT skill_id) = ?
+                    )
+                """, skill_ids + [len(skill_ids)])
+            else:
+                cursor.execute("SELECT * FROM worker_db.workers WHERE status = 'approved'")
+            
+            rows = cursor.fetchall()
+            workers = [freelance_db._row_to_dict(row, cursor) for row in rows]
+            
+            # Attach skills to each worker
+            for w in workers:
+                cursor.execute("""
+                    SELECT s.name FROM freelance_skills s
+                    JOIN freelance_provider_skills ps ON s.id = ps.skill_id
+                    WHERE ps.provider_id = ?
+                """, (w['id'],))
+                w['skills_list'] = [row[0] for row in cursor.fetchall()]
+                
+            return workers
+        finally:
+            conn.close()
+
+    def get_bookings_by_client(self, client_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            from config import WORKER_DB
+            cursor.execute(f"ATTACH DATABASE '{WORKER_DB}' AS worker_db")
+            
+            cursor.execute("""
+                SELECT b.*, w.full_name as freelancer_name
+                FROM freelance_bookings b
+                JOIN worker_db.workers w ON b.freelancer_id = w.id
+                WHERE b.client_id = ?
+                ORDER BY b.created_at DESC
+            """, (client_id,))
+            rows = cursor.fetchall()
+            return [freelance_db._row_to_dict(row, cursor) for row in rows]
+        finally:
+            conn.close()
+
+    def get_booking_by_id(self, booking_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT * FROM freelance_bookings WHERE id = ?", (booking_id,))
+            row = cursor.fetchone()
+            return freelance_db._row_to_dict(row, cursor) if row else None
         finally:
             conn.close()
 

@@ -400,8 +400,32 @@ def search_doctors():
 @app.route("/worker/<int:worker_id>/availability", methods=["GET"])
 def get_worker_availability(worker_id):
     date = request.args.get("date")
+    availability = availability_db.get_availability(worker_id, date)
+    
+    # Enrich availability with booking status from Housekeeping
+    # (Other services can also add their booking check here)
+    from housekeeping.services.booking_service import BookingService
+    hk_booking_service = BookingService()
+    
+    enriched = []
+    for slot in availability:
+        # Check for conflicts in housekeeping bookings
+        # status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
+        conn = hk_booking_service.db.get_conn()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT count(*) FROM bookings 
+            WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
+            AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
+        """, (worker_id, slot['date'], slot['time_slot']))
+        count = cursor.fetchone()[0]
+        conn.close()
+        
+        slot['is_booked'] = count > 0
+        enriched.append(slot)
+        
     return jsonify({
-        "availability": availability_db.get_availability(worker_id, date)
+        "availability": enriched
     }), 200
 
 
@@ -1014,6 +1038,11 @@ def ai_care():
 @app.route("/worker/freelance/signup", methods=["POST"])
 def freelance_signup():
     d = request.json
+    skill_ids = d.get("skill_ids", [])
+    
+    if not skill_ids:
+        return jsonify({"error": "At least one skill must be selected"}), 400
+
     worker_id = worker_db.register_worker(
         full_name=d["full_name"],
         email=d["email"],
@@ -1031,6 +1060,11 @@ def freelance_signup():
     )
     if not worker_id:
         return jsonify({"error": "Freelancer exists"}), 400
+        
+    # Phase 1: Store skills in junction table
+    from services.freelance.services.freelance_service import freelance_service
+    freelance_service.update_provider_skills(worker_id, skill_ids)
+    
     return jsonify({"worker_id": worker_id}), 201
 
 # ================= ADMIN ROUTES =================

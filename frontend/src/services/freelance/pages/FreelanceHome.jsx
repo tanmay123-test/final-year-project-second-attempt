@@ -1,14 +1,58 @@
 import React, { useState } from 'react';
-import { Home, Search, PlusCircle, Folder, Bot, Wallet, Star, LayoutDashboard, User } from 'lucide-react';
+import { Home, Search, PlusCircle, Folder, Bot, Wallet, Star, LayoutDashboard, User, X } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import PostProject from './PostProject';
 import MyProjects from './MyProjects';
+import FindFreelancers from './FindFreelancers';
+import axios from 'axios';
 import '../styles/FreelanceHome.css';
 
 const FreelanceHome = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('home');
+  
+  // Direct Booking State
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedWorker, setSelectedWorker] = useState(null);
+  const [bookingData, setBookingData] = useState({
+    title: '',
+    description: '',
+    amount: ''
+  });
+  const [bookingLoading, setBookingLoading] = useState(false);
+
+  const handleBookNow = (worker) => {
+    setSelectedWorker(worker);
+    setBookingData({
+      title: `Direct Booking — ${worker.full_name}`,
+      description: '',
+      amount: worker.hourly_rate?.toString() || '1000'
+    });
+    setShowBookingModal(true);
+  };
+
+  const handleDirectBookingSubmit = async (e) => {
+    e.preventDefault();
+    setBookingLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('http://localhost:5000/api/freelance/bookings', {
+        freelancer_id: selectedWorker.id,
+        ...bookingData
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Direct booking request sent! You can track it in the Projects tab.');
+      setShowBookingModal(false);
+      setActiveTab('projects');
+    } catch (error) {
+      console.error('Error creating direct booking:', error);
+      alert(error.response?.data?.error || 'Failed to create booking');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
   
   const categories = [
     { id: 'web', name: 'Web Development', projects: '245 projects', icon: '🌐' },
@@ -57,7 +101,7 @@ const FreelanceHome = () => {
                   <LayoutDashboard size={18} />
                   <span>Dashboard</span>
                 </div>
-                <div className="nav-item-link">
+                <div className="nav-item-link" onClick={() => setActiveTab('find')}>
                   <Search size={18} />
                   <span>Find Freelancers</span>
                 </div>
@@ -158,6 +202,8 @@ const FreelanceHome = () => {
         );
       case 'projects':
         return <MyProjects />;
+      case 'find':
+        return <FindFreelancers onBook={handleBookNow} />;
       case 'ai':
         return (
           <div className="ai-assistant-placeholder">
@@ -182,6 +228,58 @@ const FreelanceHome = () => {
   return (
     <div className="freelance-container">
       {renderContent()}
+
+      {/* Direct Booking Modal */}
+      {showBookingModal && selectedWorker && (
+        <div className="modal-overlay-new">
+          <div className="modal-content-new booking-modal">
+            <div className="modal-header-new">
+              <h2>Book {selectedWorker.full_name}</h2>
+              <button className="close-btn-new" onClick={() => setShowBookingModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleDirectBookingSubmit} className="direct-booking-form">
+              <div className="form-group-v2">
+                <label>Project Title</label>
+                <input 
+                  type="text" 
+                  value={bookingData.title}
+                  onChange={(e) => setBookingData({...bookingData, title: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="form-group-v2">
+                <label>Description of work</label>
+                <textarea 
+                  rows="4"
+                  placeholder="What do you need help with?"
+                  value={bookingData.description}
+                  onChange={(e) => setBookingData({...bookingData, description: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="form-group-v2">
+                <label>Budget (₹)</label>
+                <input 
+                  type="number" 
+                  value={bookingData.amount}
+                  onChange={(e) => setBookingData({...bookingData, amount: e.target.value})}
+                  required
+                />
+              </div>
+              <div className="modal-actions-v2">
+                <button type="button" className="cancel-btn-v2" onClick={() => setShowBookingModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn-v2" disabled={bookingLoading}>
+                  {bookingLoading ? 'Sending...' : 'Send Booking Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Nav */}
       <nav className="freelance-bottom-nav">

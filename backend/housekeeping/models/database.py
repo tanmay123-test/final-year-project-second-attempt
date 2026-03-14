@@ -424,10 +424,21 @@ class HousekeepingDatabase:
     def worker_offers_service(self, worker_id, service_name):
         """
         Check if the worker has enabled a given service.
+        If the worker has NO services configured in worker_services, we assume
+        they offer all default services for their category.
         """
         conn = self.get_conn()
         cursor = conn.cursor()
         try:
+            # 1. Check if worker has ANY configuration at all
+            cursor.execute("SELECT count(*) FROM worker_services WHERE worker_id = ?", (worker_id,))
+            has_config = cursor.fetchone()[0] > 0
+            
+            if not has_config:
+                # No custom configuration? They offer everything by default.
+                return True
+
+            # 2. If they have config, check for the specific service
             cursor.execute("SELECT id FROM services WHERE name = ?", (service_name,))
             row = cursor.fetchone()
             if not row:

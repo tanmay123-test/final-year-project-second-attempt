@@ -224,17 +224,31 @@
 }
 
 .time-chip {
-  background: #F9FAFB;
-  border: 1px solid #E5E7EB;
-  padding: 10px 12px;
-  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  border-radius: 12px;
+  font-weight: 600;
   color: #374151;
-  font-weight: 500;
-  text-align: left !important;
+  border: 1px solid #e5e7eb;
+}
+
+.time-chip.booked {
+  background: #fef2f2;
+  border-color: #fee2e2;
+  color: #991b1b;
+}
+
+.booked-badge {
+  font-size: 0.7rem;
+  background: #ef4444;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .remove-slot-btn {
