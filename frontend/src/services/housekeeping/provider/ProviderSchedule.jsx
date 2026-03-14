@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Check, X, Navigation, Play, Calendar } from 'lucide-react';
-import api from '../../../shared/api';
+import api, { housekeepingService } from '../../../shared/api';
 import ProviderBottomNav from '../../../components/ProviderBottomNav';
 import OtpModal from '../../../components/OtpModal';
 
@@ -58,7 +58,7 @@ const ProviderSchedule = () => {
 
   const handleStartJob = async (id) => {
     try {
-      await api.post('/api/housekeeping/worker/start-job', { booking_id: id });
+      await housekeepingService.startJob(id);
       setActiveTab('active');
       fetchJobs();
     } catch (error) {
@@ -73,14 +73,10 @@ const ProviderSchedule = () => {
 
   const handleOtpSubmit = async (bookingId, otp) => {
     try {
-        await api.post('/api/housekeeping/worker/complete-job', { 
-            booking_id: bookingId,
-            otp: otp
-        });
+        await housekeepingService.completeJob(bookingId, otp);
         setOtpModal({ isOpen: false, bookingId: null });
         setActiveTab('history');
-        fetchJobs();
-        alert('Job completed successfully! 🎉');
+        fetchJobs(); // Refresh
     } catch (error) {
         throw new Error(error.response?.data?.error || 'Verification failed');
     }

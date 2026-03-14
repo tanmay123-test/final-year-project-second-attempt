@@ -3684,7 +3684,8 @@ def admin_menu():
         print("3. 💜 Freelance Workers")
         print("4. ⛽ Fuel Delivery Agents")
         print("5. 🚚 Truck Operators")
-        print("6. 👋 Logout")
+        print("6. 🏠 Housekeeping Workers")
+        print("7. 👋 Logout")
 
         c = input("Choice: ").strip()
 
@@ -3700,7 +3701,93 @@ def admin_menu():
         elif c == "5":
             truck_operator_admin_menu()
         elif c == "6":
+            housekeeping_admin_menu()
+        elif c == "7":
             return
+        else:
+            print("❌ Invalid choice")
+
+def housekeeping_admin_menu():
+    """Housekeeping worker admin management"""
+    from worker_db import WorkerDB
+    
+    worker_db = WorkerDB()
+    
+    while True:
+        print("\n" + "="*60)
+        print("🏠 HOUSEKEEPING WORKER ADMIN")
+        print("="*60)
+        print("1. 📋 List Pending Workers")
+        print("2. ✅ Approve Worker")
+        print("3. ❌ Reject Worker")
+        print("4. 👥 List All Workers")
+        print("5. 📊 Worker Statistics")
+        print("6. ⬅️ Back")
+        
+        choice = input("\nSelect option: ").strip()
+        
+        if choice == "1":
+            # List pending workers
+            workers = worker_db.get_pending_workers('housekeeping')
+            if workers:
+                print(f"\n📋 Pending Housekeeping Workers ({len(workers)}):")
+                for worker in workers:
+                    print(f"ID: {worker['id']} | Name: {worker['full_name']} | Email: {worker['email']} | Service: {worker['service']}")
+            else:
+                print("\n✅ No pending housekeeping workers found!")
+                
+        elif choice == "2":
+            # Approve worker
+            worker_id = input("Enter worker ID to approve: ").strip()
+            if worker_id.isdigit():
+                success = worker_db.update_worker_status(int(worker_id), 'approved')
+                if success:
+                    print(f"✅ Worker {worker_id} approved successfully!")
+                else:
+                    print(f"❌ Failed to approve worker {worker_id}")
+            else:
+                print("❌ Invalid worker ID")
+                
+        elif choice == "3":
+            # Reject worker
+            worker_id = input("Enter worker ID to reject: ").strip()
+            if worker_id.isdigit():
+                success = worker_db.update_worker_status(int(worker_id), 'rejected')
+                if success:
+                    print(f"❌ Worker {worker_id} rejected successfully!")
+                else:
+                    print(f"❌ Failed to reject worker {worker_id}")
+            else:
+                print("❌ Invalid worker ID")
+                
+        elif choice == "4":
+            # List all workers
+            workers = worker_db.get_all_workers_unfiltered()
+            housekeeping_workers = [w for w in workers if 'housekeeping' in w.get('service', '').split(',')]
+            if housekeeping_workers:
+                print(f"\n👥 All Housekeeping Workers ({len(housekeeping_workers)}):")
+                for worker in housekeeping_workers:
+                    status_emoji = "✅" if worker['status'] == 'approved' else "⏳" if worker['status'] == 'pending' else "❌"
+                    print(f"{status_emoji} ID: {worker['id']} | Name: {worker['full_name']} | Email: {worker['email']} | Status: {worker['status']}")
+            else:
+                print("\n📭 No housekeeping workers found!")
+                
+        elif choice == "5":
+            # Worker statistics
+            all_workers = worker_db.get_all_workers_unfiltered()
+            housekeeping_workers = [w for w in all_workers if 'housekeeping' in w.get('service', '').split(',')]
+            pending_workers = worker_db.get_pending_workers('housekeeping')
+            approved_workers = worker_db.get_approved_workers('housekeeping')
+            rejected_workers = worker_db.get_rejected_workers('housekeeping')
+            
+            print(f"\n📊 Housekeeping Worker Statistics:")
+            print(f"Total Housekeeping Workers: {len(housekeeping_workers)}")
+            print(f"✅ Approved: {len(approved_workers)}")
+            print(f"⏳ Pending: {len(pending_workers)}")
+            print(f"❌ Rejected: {len(rejected_workers)}")
+            
+        elif choice == "6":
+            break
         else:
             print("❌ Invalid choice")
 

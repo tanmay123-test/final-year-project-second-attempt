@@ -85,26 +85,41 @@ def get_wallet_balance():
 
 @housekeeping_bp.route('/recommendations/workers', methods=['GET'])
 def get_recommended_workers():
+    import random
     service_type = request.args.get('service_type')
+    date = request.args.get('date')
+    time_slot = request.args.get('time')
+    booking_type = request.args.get('booking_type', 'schedule')
+    address = request.args.get('address')
+    
     if not service_type:
         return jsonify({"error": "service_type is required"}), 400
         
-    # Get workers who offer this service
-    all_workers = worker_db.get_workers_by_service('housekeeping')
+    # If date and time are provided, we filter by actual availability for that slot
+    if date and time_slot:
+        all_workers = booking_service.check_availability(
+            service_type, date, time_slot, address, booking_type=booking_type
+        )
+    else:
+        # Fallback to general list of workers who offer this service
+        all_workers = worker_db.get_workers_by_service('housekeeping')
     
     recommended = []
     for w in all_workers:
         # Check if worker offers specific sub-service (e.g. Deep Cleaning)
-        if booking_service.db.worker_offers_service(w['id'], service_type):
-            # Add online status
-            w['is_online'] = booking_service.db.get_worker_online_status(w['id'])
+        # Note: check_availability already checks this, but general fallback doesn't
+        if not (date and time_slot) and not booking_service.db.worker_offers_service(w['id'], service_type):
+            continue
             
-            # Mock some matching data for the UI
-            w['rating'] = w.get('rating', round(random.uniform(4.0, 5.0), 1))
-            w['completed_jobs'] = w.get('completed_jobs', random.randint(10, 100))
-            w['score'] = random.uniform(0.8, 0.99) # Matching score
-            
-            recommended.append(w)
+        # Add online status
+        w['is_online'] = booking_service.db.get_worker_online_status(w['id'])
+        
+        # Mock some matching data for the UI
+        w['rating'] = w.get('rating', round(random.uniform(4.0, 5.0), 1))
+        w['completed_jobs'] = w.get('completed_jobs', random.randint(10, 100))
+        w['score'] = random.uniform(0.8, 0.99) # Matching score
+        
+        recommended.append(w)
             
     # Sort: online first, then by rating
     recommended.sort(key=lambda x: (x.get('is_online', False), x.get('rating', 0)), reverse=True)
@@ -209,20 +224,25 @@ def confirm_booking():
         return jsonify({"error": "Missing required fields"}), 400
 
     # 1. Check availability
+    worker_id = data.get('worker_id')
+    if not worker_id:
+        return jsonify({"error": "A professional must be selected to complete the booking"}), 400
+
     workers = booking_service.check_availability(
         data['service_type'], 
         data['date'], 
         data['time'], 
         data.get('address'),
-        worker_id=data.get('worker_id'),
-        booking_type=data.get('booking_type', 'schedule')
+        worker_id=worker_id,
+        booking_type=booking_type
     )
-    if not workers:
-        return jsonify({"error": "No workers available for this slot", "retry": True}), 404
+    
+    # Strictly verify that the SELECTED worker is in the available list
+    is_available = any(str(w['id']) == str(worker_id) for w in workers)
+    if not is_available:
+        return jsonify({"error": "The selected professional is no longer available for this slot. Please try another professional or slot.", "retry": True}), 404
 
     # 2. Create booking request
-    worker_id = data.get('worker_id')
-    
     result = booking_service.create_booking_request(
         user['data']['id'], 
         data['service_type'], 
@@ -232,7 +252,7 @@ def confirm_booking():
         worker_id=worker_id,
         home_size=data.get('home_size'),
         add_ons=data.get('add_ons'),
-        booking_type=data.get('booking_type')
+        booking_type=booking_type
     )
     
     if result.get('error'):

@@ -223,6 +223,37 @@ Provide a helpful educational response:"""
                 return True
         
         return False
+    
+    def generate_response(self, message: str) -> str:
+        """
+        Synchronous wrapper for generate_ai_response
+        
+        Args:
+            message: User message
+            
+        Returns:
+            AI response string
+        """
+        try:
+            import asyncio
+            # Check if there's already an event loop running
+            try:
+                loop = asyncio.get_running_loop()
+                # If there's already a loop running, create a new one in a thread
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(self._run_async, message)
+                    return future.result()
+            except RuntimeError:
+                # No loop running, create a new one
+                return asyncio.run(self.generate_ai_response(message))
+        except Exception as e:
+            return f"I apologize, but I couldn't process that request. Please try asking in a different way."
+    
+    def _run_async(self, message: str) -> str:
+        """Helper method to run async function in thread"""
+        import asyncio
+        return asyncio.run(self.generate_ai_response(message))
 
 # Singleton instance for reuse
 gemini_client = GeminiClient()

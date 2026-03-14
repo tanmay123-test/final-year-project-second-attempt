@@ -45,14 +45,17 @@ from routes.video_routes import video_bp
 # Import freelance system
 from services.freelance.routes.freelance_routes import freelance_bp
 
+# Import money management system
+from services.money_service.routes.money_routes import money_bp
+
 video_db = VideoConsultDB()
 video_db.create_table()
 
 from datetime import datetime
 
 app = Flask(__name__)
-# CORS: web (5173, 5174), Expo (8081), mobile (null), Android emulator
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://localhost:8081", "http://localhost:19006", "null"]}})
+# CORS: web (5173, 5174, 5175), Expo (8081), mobile (null), Android emulator
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5175", "http://localhost:8081", "http://localhost:19006", "null"]}})
 
 # Register subscription blueprint
 app.register_blueprint(subscription_bp)
@@ -69,6 +72,10 @@ except ImportError as e:
 # Register freelance blueprint
 app.register_blueprint(freelance_bp)
 print("✅ Freelance marketplace blueprint registered")
+
+# Register money management blueprint
+app.register_blueprint(money_bp)
+print("✅ Money management blueprint registered")
 
 # Register video consultation blueprint
 app.register_blueprint(video_bp)
@@ -335,19 +342,15 @@ def user_info():
     if not user_id:
         return jsonify({"error": "User not found"}), 404
     
-    # Get user name from database
-    conn = sqlite3.connect("data/users.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM users WHERE id=?", (user_id,))
-    result = cursor.fetchone()
-    conn.close()
-    
-    user_name = result[0] if result else f"User_{user_id}"
+    user_data = user_db.get_user_by_id(user_id)
+    if not user_data:
+        return jsonify({"error": "User details not found"}), 404
     
     return jsonify({
         "user_id": user_id,
-        "user_name": user_name,
-        "username": username
+        "user_name": user_data["name"],
+        "username": username,
+        "email": user_data["email"]
     }), 200
 
 
@@ -398,8 +401,32 @@ def search_doctors():
 @app.route("/worker/<int:worker_id>/availability", methods=["GET"])
 def get_worker_availability(worker_id):
     date = request.args.get("date")
+    availability = availability_db.get_availability(worker_id, date)
+    
+    # Enrich availability with booking status from Housekeeping
+    # (Other services can also add their booking check here)
+    from housekeeping.services.booking_service import BookingService
+    hk_booking_service = BookingService()
+    
+    enriched = []
+    for slot in availability:
+        # Check for conflicts in housekeeping bookings
+        # status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
+        conn = hk_booking_service.db.get_conn()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT count(*) FROM bookings 
+            WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
+            AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
+        """, (worker_id, slot['date'], slot['time_slot']))
+        count = cursor.fetchone()[0]
+        conn.close()
+        
+        slot['is_booked'] = count > 0
+        enriched.append(slot)
+        
     return jsonify({
-        "availability": availability_db.get_availability(worker_id, date)
+        "availability": enriched
     }), 200
 
 
@@ -1012,6 +1039,11 @@ def ai_care():
 @app.route("/worker/freelance/signup", methods=["POST"])
 def freelance_signup():
     d = request.json
+    skill_ids = d.get("skill_ids", [])
+    
+    if not skill_ids:
+        return jsonify({"error": "At least one skill must be selected"}), 400
+
     worker_id = worker_db.register_worker(
         full_name=d["full_name"],
         email=d["email"],
@@ -1029,6 +1061,11 @@ def freelance_signup():
     )
     if not worker_id:
         return jsonify({"error": "Freelancer exists"}), 400
+        
+    # Phase 1: Store skills in junction table
+    from services.freelance.services.freelance_service import freelance_service
+    freelance_service.update_provider_skills(worker_id, skill_ids)
+    
     return jsonify({"worker_id": worker_id}), 201
 
 # ================= ADMIN ROUTES =================
@@ -1042,6 +1079,12 @@ def admin_pending_workers():
 def admin_approved_workers():
     service = request.args.get('service')
     workers = worker_db.get_workers_by_service(service)
+    return jsonify(workers), 200
+
+@app.route("/admin/workers/all")
+def admin_all_workers():
+    """Get all workers regardless of status or service"""
+    workers = worker_db.get_all_workers_unfiltered()
     return jsonify(workers), 200
 
 @app.route("/admin/worker/approve/<int:worker_id>", methods=["POST"])

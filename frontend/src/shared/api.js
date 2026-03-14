@@ -134,6 +134,20 @@ export const housekeepingService = {
   getWorkerServices: () => api.get('/api/housekeeping/worker/services'),
   saveWorkerServices: (services) => api.post('/api/housekeeping/worker/services', { services }),
   cancelBooking: (bookingId) => api.post('/api/housekeeping/cancel-booking', { booking_id: bookingId }),
+  startJob: (bookingId) => api.post('/api/housekeeping/worker/start-job', { booking_id: bookingId }),
+  completeJob: (bookingId, otp) => api.post('/api/housekeeping/worker/complete-job', { booking_id: bookingId, otp }),
+};
+
+export const moneyService = {
+  getDashboardData: () => api.get('/api/money/dashboard'),
+  addTransaction: (data) => api.post('/api/money/transactions', data),
+  getTransactions: (filters = {}) => api.get('/api/money/transactions', { params: filters }),
+  setBudget: (data) => api.post('/api/money/budget', data),
+  getBudgets: () => api.get('/api/money/budget'),
+  createGoal: (data) => api.post('/api/money/goals', data),
+  getGoals: () => api.get('/api/money/goals'),
+  getMonthlyAnalytics: (months = 6) => api.get('/api/money/analytics/monthly', { params: { months } }),
+  chatWithAI: (message) => api.post('/api/money/chat', { message }),
 };
 
 export default api;

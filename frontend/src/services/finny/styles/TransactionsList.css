@@ -1,0 +1,258 @@
+/* Transactions List Styles */
+
+.transactions-list {
+  padding: 16px;
+}
+
+/* Search and Filter Controls */
+.transactions-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-bar {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #111827;
+  margin-left: 12px;
+  background: transparent;
+}
+
+.search-input::placeholder {
+  color: #9CA3AF;
+}
+
+.filter-dropdown {
+  position: relative;
+}
+
+.filter-select {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  min-width: 120px;
+  outline: none;
+}
+
+.filter-select:focus {
+  border-color: #1F5F7A;
+  box-shadow: 0 0 0 3px rgba(31, 95, 122, 0.1);
+}
+
+/* Transactions Container */
+.transactions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Loading State */
+.transactions-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.transactions-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #E5E7EB;
+  border-top: 3px solid #1F5F7A;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.transactions-loading p {
+  color: #6B7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Empty State */
+.no-transactions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.no-transactions p {
+  color: #6B7280;
+  font-size: 14px;
+  margin: 0 0 8px 0;
+}
+
+.no-transactions p:first-child {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Transaction Cards */
+.transaction-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.transaction-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.transaction-left {
+  flex-shrink: 0;
+}
+
+.category-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.transaction-center {
+  flex: 1;
+  min-width: 0;
+}
+
+.merchant-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.transaction-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.category-text {
+  font-size: 13px;
+  color: #6B7280;
+  background: #F3F4F6;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.date-text {
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.description-text {
+  font-size: 13px;
+  color: #9CA3AF;
+  font-style: italic;
+}
+
+.transaction-right {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.amount {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .transactions-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .search-bar {
+    order: 1;
+  }
+  
+  .filter-dropdown {
+    order: 2;
+  }
+  
+  .filter-select {
+    width: 100%;
+  }
+  
+  .transaction-card {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .merchant-name {
+    font-size: 15px;
+  }
+  
+  .amount {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 360px) {
+  .transactions-list {
+    padding: 12px;
+  }
+  
+  .transaction-card {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .transaction-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .merchant-name {
+    font-size: 14px;
+  margin-bottom: 2px;
+  }
+  
+  .amount {
+    font-size: 14px;
+  }
+}

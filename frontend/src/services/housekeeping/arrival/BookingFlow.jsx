@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { housekeepingService } from '../../../shared/api';
-import { Calendar, Clock, MapPin, CheckCircle, AlertCircle, Home, Check, Plus, Minus, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckCircle, AlertCircle, Home, Check, Plus, Minus, ArrowRight, ArrowLeft, Star } from 'lucide-react';
 import '../../../pages/Housekeeping/Housekeeping.css';
 
 const BookingFlow = () => {
@@ -95,18 +95,15 @@ const BookingFlow = () => {
   }, [location.state]);
 
   useEffect(() => {
-    let interval;
-    if ((step === 'details' || step === 'schedule') && selectedService) {
+    // Only fetch general recommendations if we haven't reached the slot selection yet
+    if (step === 'details' && selectedService) {
        const fetchWorkers = () => {
-           // Add timestamp to prevent caching
            housekeepingService.getRecommendedWorkers(selectedService.name + `&_t=${new Date().getTime()}`)
              .then(res => {
-                console.log("[DEBUG] Fetched workers:", res.data);
                 if (Array.isArray(res.data)) {
                    const newWorkers = res.data;
                    setRecommendedWorkers(newWorkers);
                    
-                   // Update selectedWorker if it exists in the new list to reflect status changes
                    setSelectedWorker(prevSelected => {
                        if (!prevSelected) return null;
                        const updated = newWorkers.find(w => w.id === prevSelected.id);
@@ -117,10 +114,10 @@ const BookingFlow = () => {
              .catch(err => console.error("Failed to fetch recommended workers", err));
        };
        
-       fetchWorkers(); // Initial fetch
-       interval = setInterval(fetchWorkers, 5000); // Poll every 5s for real-time status
+       fetchWorkers();
+       const interval = setInterval(fetchWorkers, 30000); // refresh every 30s
+       return () => clearInterval(interval);
     }
-    return () => clearInterval(interval);
   }, [step, selectedService]);
 
   const handleSelectService = (service) => {
@@ -159,6 +156,8 @@ const BookingFlow = () => {
     };
   };
 
+  const [availableWorkers, setAvailableWorkers] = useState([]);
+
   const handleCheckAvailability = async () => {
     setLoading(true);
     setError(null);
@@ -169,7 +168,18 @@ const BookingFlow = () => {
         booking_type: bookingType,
         ...formData
       });
-      // We rely on local calculation for price, but use API for worker availability
+      
+      // If a worker is already selected, we don't need to fetch a list of recommended workers
+      if (!selectedWorker) {
+        const workersRes = await housekeepingService.getRecommendedWorkers(
+          `${selectedService.name}&date=${formData.date || ''}&time=${formData.time || ''}&booking_type=${bookingType}&address=${formData.address}`
+        );
+        setAvailableWorkers(workersRes.data || []);
+      } else {
+        // Just put the selected worker in the list for the confirmation screen
+        setAvailableWorkers([selectedWorker]);
+      }
+      
       setEstimate({
         ...calculateTotal(),
         workers_count: res.data.workers_count
@@ -182,13 +192,13 @@ const BookingFlow = () => {
     }
   };
 
-  const handleConfirmBooking = async () => {
+  const handleConfirmBooking = async (workerId) => {
     setLoading(true);
     try {
       const totals = calculateTotal();
       await housekeepingService.confirmBooking({
         service_type: selectedService.name,
-        worker_id: selectedWorker?.id,
+        worker_id: workerId,
         ...formData,
         home_size: homeSize,
         add_ons: JSON.stringify(addOns),
@@ -291,7 +301,7 @@ const BookingFlow = () => {
                 <h3>{service.name}</h3>
                 <p>{service.description}</p>
                 <div className="card-footer">
-                  <span className="price-tag">${service.price}</span>
+                  <span className="price-tag">₹{service.price}</span>
                   {service.available_count !== undefined && (
                      <span className={`status-text ${service.available_count > 0 ? 'available' : 'busy'}`}>
                        {service.available_count > 0 ? `${service.available_count} Online` : 'Busy'}
@@ -336,74 +346,20 @@ const BookingFlow = () => {
                     {addOns.includes(addon.id) ? <Check size={16} /> : <div className="unchecked" />}
                   </div>
                   <span>{addon.label}</span>
-                  <span className="price">+${addon.price}</span>
+                  <span className="price">+₹{addon.price}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="form-section">
-            <label>Extra Hours (${EXTRA_HOUR_PRICE}/hr)</label>
+            <label>Extra Hours (₹{EXTRA_HOUR_PRICE}/hr)</label>
             <div className="counter-control">
               <button onClick={() => setExtraHours(Math.max(0, extraHours - 1))}><Minus size={16}/></button>
               <span>{extraHours}</span>
               <button onClick={() => setExtraHours(extraHours + 1)}><Plus size={16}/></button>
             </div>
           </div>
-
-          {recommendedWorkers.length > 0 && (
-             <div className="form-section">
-                <label>Recommended Professionals (Optional)</label>
-                <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', padding: '4px' }}>
-                   {recommendedWorkers.map(worker => (
-                      <div 
-                         key={worker.id}
-                         onClick={() => setSelectedWorker(selectedWorker?.id === worker.id ? null : worker)}
-                         style={{
-                            minWidth: '140px',
-                            border: selectedWorker?.id === worker.id ? '2px solid #8E44AD' : '1px solid #E5E7EB',
-                            borderRadius: '12px',
-                            padding: '12px',
-                            cursor: 'pointer',
-                            backgroundColor: selectedWorker?.id === worker.id ? '#F3E5F5' : 'white',
-                            position: 'relative',
-                            transition: 'all 0.2s'
-                         }}
-                      >
-                         {selectedWorker?.id === worker.id && (
-                            <div style={{ position: 'absolute', top: -6, right: -6, backgroundColor: '#8E44AD', borderRadius: '50%', padding: '2px' }}>
-                               <Check size={12} color="white" />
-                            </div>
-                         )}
-                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <div style={{ position: 'relative', width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#E0E0E0', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                               {worker.photo_url ? <img src={worker.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{worker.name[0]}</span>}
-                               {/* Online Status Dot */}
-                               <div style={{
-                                   position: 'absolute', 
-                                   bottom: 2, 
-                                   right: 2, 
-                                   width: 8, 
-                                   height: 8, 
-                                   borderRadius: '50%', 
-                                   backgroundColor: worker.is_online ? '#2ECC71' : '#95A5A6',
-                                   border: '1px solid white'
-                               }} title={worker.is_online ? "Online" : "Offline"} />
-                            </div>
-                            <div>
-                               <p style={{ margin: 0, fontWeight: 'bold', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '80px' }}>{worker.name}</p>
-                               <p style={{ margin: 0, fontSize: '10px', color: '#666' }}>⭐ {worker.rating}</p>
-                            </div>
-                         </div>
-                         <div style={{ fontSize: '10px', color: '#4B5563' }}>
-                            <p style={{ margin: '0 0 2px 0' }}>{worker.completed_jobs} Jobs</p>
-                            <p style={{ margin: 0, color: '#8E44AD', fontWeight: '500' }}>{Math.round(worker.score * 100)}% Match</p>
-                         </div>
-                      </div>
-                   ))}
-                </div>
-             </div>
-          )}
 
           <div className="form-actions">
             <button className="secondary-btn" onClick={() => setStep('select')}>Back</button>
@@ -474,13 +430,13 @@ const BookingFlow = () => {
               
               <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#666'}}>
                   <span>Base Price</span>
-                  <span>${selectedService?.price}</span>
+                  <span>₹{selectedService?.price}</span>
               </div>
               
               {(addOns.length > 0 || extraHours > 0) && (
                   <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#666'}}>
                       <span>Add-ons</span>
-                      <span>${
+                      <span>₹{
                           addOns.reduce((sum, id) => sum + (ADD_ONS.find(a => a.id === id)?.price || 0), 0) + 
                           (extraHours * EXTRA_HOUR_PRICE)
                       }</span>
@@ -489,7 +445,7 @@ const BookingFlow = () => {
               
               <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: '#666'}}>
                   <span>Tax (18%)</span>
-                  <span>${calculateTotal().tax.toFixed(2)}</span>
+                  <span>₹{calculateTotal().tax.toFixed(2)}</span>
               </div>
               
               <div style={{
@@ -502,7 +458,7 @@ const BookingFlow = () => {
                   color: '#2C3E50'
               }}>
                   <span>Total</span>
-                  <span style={{color: '#2ECC71'}}>${calculateTotal().total.toFixed(2)}</span>
+                  <span style={{color: '#2ECC71'}}>₹{calculateTotal().total.toFixed(2)}</span>
               </div>
           </div>
 
@@ -621,7 +577,7 @@ const BookingFlow = () => {
                   <p style={{margin: 0}}>
                     {selectedWorker 
                       ? `Request will be sent directly to ${selectedWorker.name}.` 
-                      : "Please select a professional to proceed with instant booking."}
+                      : "A professional will be assigned to you automatically."}
                   </p>
                 </div>
               )}
@@ -632,8 +588,11 @@ const BookingFlow = () => {
               <button 
                 className="primary-btn" 
                 onClick={handleCheckAvailability}
-                disabled={!formData.address || !selectedWorker || (bookingType === 'schedule' && (!formData.date || !formData.time))}
-                title={!selectedWorker ? "Please select a professional first" : ""}
+                disabled={
+                  !formData.address || 
+                  (bookingType === 'schedule' && (!selectedWorker || !formData.date || !formData.time))
+                }
+                title={bookingType === 'schedule' && !selectedWorker ? "Please select a professional first" : ""}
               >
                 {loading ? 'Checking...' : 'Check Availability'}
               </button>
@@ -644,72 +603,85 @@ const BookingFlow = () => {
       )}
 
       {step === 'confirm' && estimate && (
-        <div className="step-content confirm-container">
-          <h2>Order Summary</h2>
-          <div className="summary-card">
-            <div className="summary-row">
-              <span>Service</span>
+        <div className="step-content confirm-container" style={{ maxWidth: '500px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '24px', textAlign: 'center' }}>Confirm Your Booking</h2>
+          
+          <div className="summary-card" style={{ padding: '24px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+            <div className="summary-row" style={{ marginBottom: '12px' }}>
+              <span style={{ color: '#666' }}>Service</span>
               <strong>{selectedService.name}</strong>
             </div>
-            <div className="summary-row">
-              <span>Home Size</span>
-              <strong>{homeSize}</strong>
-            </div>
-            <div className="summary-row">
-              <span>Type</span>
+            <div className="summary-row" style={{ marginBottom: '12px' }}>
+              <span style={{ color: '#666' }}>Type</span>
               <strong>{bookingType === 'instant' ? 'Instant' : 'Schedule'}</strong>
             </div>
             {bookingType === 'schedule' && (
-              <div className="summary-row">
-                <span>Date & Time</span>
+              <div className="summary-row" style={{ marginBottom: '12px' }}>
+                <span style={{ color: '#666' }}>Date & Time</span>
                 <strong>{formData.date} at {formData.time}</strong>
               </div>
             )}
-            <div className="summary-row">
-              <span>Address</span>
+            <div className="summary-row" style={{ marginBottom: '12px' }}>
+              <span style={{ color: '#666' }}>Address</span>
               <strong>{formData.address}</strong>
             </div>
-            
-            <div className="divider"></div>
-            
-            <div className="summary-row">
-              <span>Base Price</span>
-              <strong>${selectedService.price}</strong>
-            </div>
-            {addOns.length > 0 && (
-              <div className="summary-row">
-                <span>Add-ons</span>
-                <strong>+${addOns.reduce((sum, id) => sum + (ADD_ONS.find(a => a.id === id)?.price || 0), 0)}</strong>
+
+            {/* Display pre-selected worker info concisely if available */}
+            {selectedWorker && (
+              <div style={{ 
+                marginTop: '16px', 
+                padding: '12px', 
+                backgroundColor: '#F3E5F5', 
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#E0E0E0', overflow: 'hidden' }}>
+                  {selectedWorker.photo_url ? <img src={selectedWorker.photo_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '12px' }}>{selectedWorker.name[0]}</div>}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold' }}>{selectedWorker.name}</p>
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>⭐ {selectedWorker.rating} • Professional</p>
+                </div>
               </div>
             )}
-            {extraHours > 0 && (
-              <div className="summary-row">
-                <span>Extra Hours ({extraHours})</span>
-                <strong>+${extraHours * EXTRA_HOUR_PRICE}</strong>
-              </div>
-            )}
-            <div className="summary-row">
-              <span>Tax (18%)</span>
-              <strong>${estimate.tax.toFixed(2)}</strong>
-            </div>
             
-            <div className="summary-row total">
-              <span>Total</span>
-              <strong>${estimate.total.toFixed(2)}</strong>
+            <div className="divider" style={{ margin: '20px 0', borderTop: '1px dashed #E5E7EB' }}></div>
+            
+            <div className="summary-row total" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>Total Amount</span>
+              <strong style={{ color: '#8E44AD', fontSize: '1.5rem' }}>₹{estimate.total.toFixed(2)}</strong>
             </div>
-          </div>
-          
-          <div className="workers-found">
-            <CheckCircle size={16} color="green"/> {estimate.workers_count} professionals available nearby
+
+            <button 
+              className="primary-btn" 
+              onClick={() => handleConfirmBooking(selectedWorker?.id || availableWorkers[0]?.id)}
+              disabled={loading || (!selectedWorker && availableWorkers.length === 0)}
+              style={{ 
+                width: '100%', 
+                justifyContent: 'center', 
+                padding: '14px', 
+                marginTop: '24px',
+                fontSize: '1.1rem',
+                borderRadius: '12px'
+              }}
+            >
+              {loading ? 'Processing...' : 'Confirm & Book Now'}
+            </button>
           </div>
 
-          <div className="form-actions">
-             <button className="secondary-btn" onClick={() => setStep('schedule')}>Back</button>
-             <button className="primary-btn" onClick={handleConfirmBooking} disabled={loading}>
-               {loading ? 'Processing...' : 'Confirm Booking'} <ArrowRight size={16}/>
-             </button>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+            <button 
+              className="secondary-btn" 
+              onClick={() => setStep('schedule')} 
+              style={{ border: 'none', background: 'none', color: '#666', textDecoration: 'underline' }}
+            >
+              Back to Schedule
+            </button>
           </div>
-          {error && <div className="error-msg" style={{marginTop: '1rem'}}><AlertCircle size={16}/> {error}</div>}
+          
+          {error && <div className="error-msg" style={{ marginTop: '20px' }}><AlertCircle size={16} /> {error}</div>}
         </div>
       )}
 

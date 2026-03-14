@@ -5,6 +5,7 @@ import sqlite3
 import bcrypt
 import re
 from config import WORKER_DB, DATA_DIR
+from pricing_config import get_worker_default_rate
 import os
 
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -126,6 +127,10 @@ class WorkerDB:
                 return None
 
         hashed_pw = None
+        # Use default hourly rate if not provided
+        if hourly_rate is None:
+            hourly_rate = get_worker_default_rate(service)
+        
         if password:
             hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode('utf-8')
             
@@ -196,7 +201,10 @@ class WorkerDB:
             cursor.execute("SELECT * FROM workers WHERE status = 'pending' AND (',' || service || ',') LIKE ?", (f'%,{service_type},%',))
         else:
             cursor.execute("SELECT * FROM workers WHERE status = 'pending'")
-        return [self._row_to_dict(r) for r in cursor.fetchall()]
+        rows = cursor.fetchall()
+        if not rows:
+            return []
+        return [self._row_to_dict(r) for r in rows]
 
     def get_worker_by_id(self, worker_id):
         cursor = self.conn.cursor()
@@ -223,3 +231,41 @@ class WorkerDB:
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM workers WHERE (',' || service || ',') LIKE ? AND status = 'approved'", (f'%,{service_type},%',))
         return [self._row_to_dict(r) for r in cursor.fetchall()]
+
+    def update_worker_status(self, worker_id, status):
+        """Update worker status (approved, rejected, pending)"""
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE workers SET status = ? WHERE id = ?", (status, worker_id))
+        self.conn.commit()
+        return cursor.rowcount > 0
+
+    def get_approved_workers(self, service_type=None):
+        cursor = self.conn.cursor()
+        if service_type:
+            cursor.execute("SELECT * FROM workers WHERE status = 'approved' AND (',' || service || ',') LIKE ?", (f'%,{service_type},%',))
+        else:
+            cursor.execute("SELECT * FROM workers WHERE status = 'approved'")
+        rows = cursor.fetchall()
+        if not rows:
+            return []
+        return [self._row_to_dict(r) for r in rows]
+
+    def get_rejected_workers(self, service_type=None):
+        cursor = self.conn.cursor()
+        if service_type:
+            cursor.execute("SELECT * FROM workers WHERE status = 'rejected' AND (',' || service || ',') LIKE ?", (f'%,{service_type},%',))
+        else:
+            cursor.execute("SELECT * FROM workers WHERE status = 'rejected'")
+        rows = cursor.fetchall()
+        if not rows:
+            return []
+        return [self._row_to_dict(r) for r in rows]
+
+    def get_all_workers_unfiltered(self):
+        """Get all workers regardless of status or service type"""
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM workers")
+        rows = cursor.fetchall()
+        if not rows:
+            return []
+        return [self._row_to_dict(r) for r in rows]

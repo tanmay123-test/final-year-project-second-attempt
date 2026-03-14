@@ -24,10 +24,20 @@ class MoneyServiceDB:
             merchant TEXT,
             date TEXT,
             description TEXT,
+            type TEXT DEFAULT 'expense',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
         """)
+        
+        # Add type column if it doesn't exist (for existing tables)
+        try:
+            cursor.execute('''
+                ALTER TABLE transactions ADD COLUMN type TEXT DEFAULT 'expense'
+            ''')
+        except sqlite3.OperationalError:
+            # Column already exists, ignore error
+            pass
         
         # Budgets table for Smart Budget Planner
         cursor.execute("""
@@ -77,12 +87,12 @@ class MoneyServiceDB:
         self.conn.commit()
 
     # Finny - Transaction Management
-    def add_transaction(self, user_id, amount, category, merchant, date, description=""):
+    def add_transaction(self, user_id, amount, category, merchant, date, description="", type="expense"):
         cursor = self.conn.cursor()
         cursor.execute("""
-        INSERT INTO transactions (user_id, amount, category, merchant, date, description)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """, (user_id, amount, category, merchant, date, description))
+        INSERT INTO transactions (user_id, amount, category, merchant, date, description, type)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, amount, category, merchant, date, description, type))
         self.conn.commit()
         
         # Update budget spending

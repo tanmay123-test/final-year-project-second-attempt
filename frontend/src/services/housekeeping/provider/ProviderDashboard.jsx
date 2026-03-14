@@ -184,7 +184,7 @@ const ProviderDashboard = () => {
     if (processingId) return;
     setProcessingId(id);
     try {
-      await api.post('/api/housekeeping/worker/start-job', { booking_id: id });
+      await housekeepingService.startJob(id);
       fetchBookings();
       alert('Job started! OTP sent to user.');
     } catch (error) {
@@ -201,10 +201,7 @@ const ProviderDashboard = () => {
 
   const handleOtpSubmit = async (bookingId, otp) => {
     try {
-        await api.post('/api/housekeeping/worker/complete-job', { 
-            booking_id: bookingId,
-            otp: otp
-        });
+        await housekeepingService.completeJob(bookingId, otp);
         setOtpModal({ isOpen: false, bookingId: null });
         fetchBookings();
         alert('Job completed successfully! 🎉');

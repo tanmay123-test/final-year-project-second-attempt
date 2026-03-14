@@ -295,7 +295,7 @@ const UserHousekeeping = () => {
                     <h3>{service.name}</h3>
                     <p>{service.description}</p>
                     <div className="card-footer">
-                      <span className="price-tag">${getDisplayPrice(service)}</span>
+                      <span className="price-tag">₹{getDisplayPrice(service)}</span>
                       {service.available_count !== undefined && (
                          <span className={`status-text ${service.available_count > 0 ? 'available' : 'busy'}`}>
                            {service.available_count > 0 ? 'Available' : 'Busy'}
@@ -359,14 +359,14 @@ const UserHousekeeping = () => {
                     {addOns.includes(addon.id) ? <Check size={16} /> : <div className="unchecked" />}
                   </div>
                   <span>{addon.label}</span>
-                  <span className="price">+${addon.price}</span>
+                  <span className="price">+₹{addon.price}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="form-section">
-            <label>Extra Hours (${EXTRA_HOUR_PRICE}/hr)</label>
+            <label>Extra Hours (₹{EXTRA_HOUR_PRICE}/hr)</label>
             <div className="counter-control">
               <button onClick={() => setExtraHours(Math.max(0, extraHours - 1))}><Minus size={16}/></button>
               <span>{extraHours}</span>
@@ -500,28 +500,28 @@ const UserHousekeeping = () => {
             
             <div className="summary-row">
               <span>Base Price</span>
-              <strong>${getServicePriceForSelection(selectedService, homeSize)}</strong>
+              <strong>₹{getServicePriceForSelection(selectedService, homeSize)}</strong>
             </div>
             {addOns.length > 0 && (
               <div className="summary-row">
                 <span>Add-ons</span>
-                <strong>+${addOns.reduce((sum, id) => sum + (ADD_ONS.find(a => a.id === id)?.price || 0), 0)}</strong>
+                <strong>+₹{addOns.reduce((sum, id) => sum + (ADD_ONS.find(a => a.id === id)?.price || 0), 0)}</strong>
               </div>
             )}
             {extraHours > 0 && (
               <div className="summary-row">
                 <span>Extra Hours ({extraHours})</span>
-                <strong>+${extraHours * EXTRA_HOUR_PRICE}</strong>
+                <strong>+₹{extraHours * EXTRA_HOUR_PRICE}</strong>
               </div>
             )}
             <div className="summary-row">
               <span>Tax (18%)</span>
-              <strong>${estimate.tax.toFixed(2)}</strong>
+              <strong>₹{estimate.tax.toFixed(2)}</strong>
             </div>
             
             <div className="summary-row total">
               <span>Total</span>
-              <strong>${estimate.total.toFixed(2)}</strong>
+              <strong>₹{estimate.total.toFixed(2)}</strong>
             </div>
           </div>
           

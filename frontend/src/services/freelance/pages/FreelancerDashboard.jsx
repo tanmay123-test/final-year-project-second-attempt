@@ -1,103 +1,280 @@
-import React, { useState } from 'react';
-import { Home, Search, FileText, Briefcase, Wallet, Bell, Star, CheckCircle, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, Search, FileText, Briefcase, Wallet, Bell, Star, CheckCircle, Clock, MessageSquare, Calendar, Check, X } from 'lucide-react';
+import axios from 'axios';
+import BrowseProjects from './BrowseProjects';
+import FreelancerProposals from './FreelancerProposals';
+import FreelancerWork from './FreelancerWork';
 import '../styles/FreelancerDashboard.css';
 
 const FreelancerDashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
+  const [statsData, setStatsData] = useState(null);
+  const [notificationsData, setNotificationsData] = useState([]);
+  const [bookingsData, setBookingsData] = useState([]);
+  const [standardProjects, setStandardProjects] = useState([]);
+  const [dashboardTab, setDashboardTab] = useState('posted'); // 'posted' or 'direct'
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+    // Phase 3: Poll for direct bookings every 5 seconds for status = pending
+    const interval = setInterval(fetchDashboardData, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const [statsRes, bookingsRes, projectsRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/freelance/stats', {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get('http://localhost:5000/api/freelance/my-bookings', {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get('http://localhost:5000/api/freelance/projects', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      setStatsData(statsRes.data.stats);
+      setNotificationsData(statsRes.data.notifications);
+      setBookingsData(bookingsRes.data.bookings);
+      setStandardProjects(projectsRes.data.projects);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBookingResponse = async (bookingId, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('http://localhost:5000/api/freelance/bookings/respond', {
+        booking_id: bookingId,
+        status: status
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error responding to booking:', error);
+    }
+  };
+
+  const ProjectCard = ({ project, type }) => {
+    const isDirect = type === 'direct';
+    return (
+      <div className="project-card-unified">
+        <div className="card-header-unified">
+          <div className="title-area">
+            <h4>{isDirect ? `${project.client_name} — ${project.project_title}` : project.title}</h4>
+            {isDirect && <span className="direct-label">Direct Booking</span>}
+          </div>
+          <span className={`status-badge-unified ${project.status?.toLowerCase() || 'open'}`}>
+            {project.status || 'OPEN'}
+          </span>
+        </div>
+        
+        <p className="description-text">
+          {isDirect ? project.project_description : project.description}
+        </p>
+
+        <div className="card-meta-unified">
+          <div className="meta-item">
+            <Wallet size={14} />
+            <span>₹{(isDirect ? project.amount : project.budget_amount).toLocaleString()}</span>
+          </div>
+          <div className="meta-item">
+            <Clock size={14} />
+            <span>{new Date(project.created_at).toLocaleDateString()}</span>
+          </div>
+          {!isDirect && project.category && (
+            <div className="meta-item">
+              <Briefcase size={14} />
+              <span>{project.category}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="card-actions-unified">
+          {isDirect ? (
+            <div className="booking-actions-bar">
+              <button className="accept-btn-v2" onClick={() => handleBookingResponse(project.id, 'ACCEPTED')}>
+                <Check size={16} /> Accept
+              </button>
+              <button className="decline-btn-v2" onClick={() => handleBookingResponse(project.id, 'DECLINED')}>
+                <X size={16} /> Decline
+              </button>
+            </div>
+          ) : (
+            <>
+              <button className="action-btn-outline">View Details</button>
+              <button className="action-btn-outline">Message Client</button>
+              <button className="action-btn-purple">Send Proposal</button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const stats = [
-    { label: 'Total Earnings', value: '₹12,450', icon: Wallet, color: '#10b981' },
-    { label: 'Active Projects', value: '3', icon: Briefcase, color: '#3b82f6' },
-    { label: 'Proposals Sent', value: '24', icon: FileText, color: '#6366f1' },
-    { label: 'Rating', value: '4.8', icon: Star, color: '#f59e0b' },
+    { label: 'Total Earnings', value: statsData ? `₹${statsData.total_earnings.toLocaleString()}` : '₹0', icon: Wallet, color: '#10b981' },
+    { label: 'Active Projects', value: statsData ? statsData.active_projects.toString() : '0', icon: Briefcase, color: '#3b82f6' },
+    { label: 'Proposals Sent', value: statsData ? statsData.proposals_sent.toString() : '0', icon: FileText, color: '#6366f1' },
+    { label: 'Rating', value: statsData ? statsData.rating.toString() : '0.0', icon: Star, color: '#f59e0b' },
   ];
 
-  const activeProjects = [
-    { id: 1, title: 'E-commerce Website Redesign', client: 'John Doe', status: 'Working', earnings: '₹5,000', deadline: '2 days left' },
-    { id: 2, title: 'Mobile App API Development', client: 'Tech Corp', status: 'Milestone Submitted', earnings: '₹8,500', deadline: '5 days left' },
-  ];
+  const getNotifIcon = (type) => {
+    switch (type) {
+      case 'PROPOSAL_ACCEPTED': return CheckCircle;
+      case 'NEW_MESSAGE': return MessageSquare;
+      case 'MILESTONE_SUBMITTED': return Bell;
+      default: return Bell;
+    }
+  };
+
+  const getNotifColor = (type) => {
+    switch (type) {
+      case 'PROPOSAL_ACCEPTED': return '#10b981';
+      case 'NEW_MESSAGE': return '#3b82f6';
+      case 'MILESTONE_SUBMITTED': return '#6366f1';
+      default: return '#94a3b8';
+    }
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'home':
+        return (
+          <>
+            <section className="welcome-section">
+              <h1>Freelancer Dashboard</h1>
+            </section>
+
+            {/* Stats Grid */}
+            <div className="stats-grid">
+              {stats.map((stat, i) => (
+                <div key={i} className="stat-card">
+                  <div className="stat-icon" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
+                    <stat.icon size={20} />
+                  </div>
+                  <div className="stat-info">
+                    <p>{stat.label}</p>
+                    <h3>{stat.value}</h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Segmented Control Tabs */}
+            <div className="segmented-tabs-wrapper">
+              <div className="segmented-tabs">
+                <button 
+                  className={dashboardTab === 'posted' ? 'active' : ''} 
+                  onClick={() => setDashboardTab('posted')}
+                >
+                  Posted Projects ({standardProjects.length})
+                </button>
+                <button 
+                  className={dashboardTab === 'direct' ? 'active' : ''} 
+                  onClick={() => setDashboardTab('direct')}
+                >
+                  Direct Bookings ({bookingsData.length})
+                </button>
+              </div>
+            </div>
+
+            {/* Dual Section Content */}
+            <section className="dual-projects-section">
+              {dashboardTab === 'posted' ? (
+                <div className="projects-list-unified">
+                  {standardProjects.length === 0 ? (
+                    <div className="empty-state-dashboard">
+                      <Search size={40} color="#cbd5e1" />
+                      <p>No projects posted yet.</p>
+                    </div>
+                  ) : (
+                    standardProjects.map(proj => <ProjectCard key={proj.id} project={proj} type="posted" />)
+                  )}
+                </div>
+              ) : (
+                <div className="projects-list-unified">
+                  {bookingsData.length === 0 ? (
+                    <div className="empty-state-dashboard">
+                      <Calendar size={40} color="#cbd5e1" />
+                      <p>No direct bookings yet.</p>
+                    </div>
+                  ) : (
+                    bookingsData.map(booking => <ProjectCard key={booking.id} project={booking} type="direct" />)
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* Earnings Chart Placeholder */}
+            <section className="earnings-overview">
+              <div className="section-header">
+                <h3>Earnings Overview</h3>
+                <select>
+                  <option>This Week</option>
+                  <option>This Month</option>
+                </select>
+              </div>
+              <div className="chart-placeholder">
+                <div className="chart-empty-message">Earnings chart placeholder</div>
+              </div>
+            </section>
+
+            {/* Notifications */}
+            <section className="notifications-section">
+              <div className="section-header">
+                <h3><Bell size={18} /> Notifications</h3>
+              </div>
+              <div className="notifications-list">
+                {notificationsData.length === 0 ? (
+                  <p className="empty-notif">No new notifications</p>
+                ) : (
+                  notificationsData.map(notif => (
+                    <div key={notif.id} className="notification-item">
+                      <div className="notif-icon-circle" style={{ backgroundColor: `${getNotifColor(notif.type)}15`, color: getNotifColor(notif.type) }}>
+                        {React.createElement(getNotifIcon(notif.type), { size: 16 })}
+                      </div>
+                      <div className="notif-content">
+                        <p>{notif.message}</p>
+                        <span>{new Date(notif.created_at).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </>
+        );
+      case 'browse':
+        return <BrowseProjects />;
+      case 'proposals':
+        return <FreelancerProposals />;
+      case 'work':
+        return <FreelancerWork />;
+      case 'wallet':
+        return (
+          <div className="placeholder-content">
+            <Wallet size={48} color="#9B59B6" />
+            <h3>My Earnings</h3>
+            <p>Withdraw funds and view transaction history.</p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="freelancer-dashboard">
-      {/* Header */}
-      <header className="dashboard-header">
-        <div className="logo">
-          <div className="logo-icon">💼</div>
-          <h2>ProTasks</h2>
-        </div>
-        <div className="header-actions">
-          <button className="icon-btn"><Bell size={20} /></button>
-          <div className="user-avatar">AD</div>
-        </div>
-      </header>
-
       <main className="dashboard-main">
-        <section className="welcome-section">
-          <h1>Freelancer Dashboard</h1>
-        </section>
-
-        {/* Stats Grid */}
-        <div className="stats-grid">
-          {stats.map((stat, i) => (
-            <div key={i} className="stat-card">
-              <div className="stat-icon" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
-                <stat.icon size={20} />
-              </div>
-              <div className="stat-info">
-                <p>{stat.label}</p>
-                <h3>{stat.value}</h3>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Earnings Chart Placeholder */}
-        <section className="earnings-overview">
-          <div className="section-header">
-            <h3>Earnings Overview</h3>
-            <select>
-              <option>This Week</option>
-              <option>This Month</option>
-            </select>
-          </div>
-          <div className="chart-placeholder">
-            <div className="bar-container">
-              {[40, 70, 45, 90, 65, 80, 55].map((h, i) => (
-                <div key={i} className="bar" style={{ height: `${h}%` }}></div>
-              ))}
-            </div>
-            <div className="chart-labels">
-              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Active Projects */}
-        <section className="active-projects-section">
-          <div className="section-header">
-            <h3>Active Projects</h3>
-            <button className="view-all">View All</button>
-          </div>
-          <div className="projects-list">
-            {activeProjects.map(proj => (
-              <div key={proj.id} className="project-item">
-                <div className="project-info">
-                  <h4>{proj.title}</h4>
-                  <p>Client: {proj.client}</p>
-                </div>
-                <div className="project-status">
-                  <span className={`status-badge ${proj.status.toLowerCase().replace(' ', '-')}`}>
-                    {proj.status}
-                  </span>
-                  <div className="project-meta">
-                    <Clock size={12} />
-                    <span>{proj.deadline}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        {renderContent()}
       </main>
 
       {/* Bottom Navigation */}

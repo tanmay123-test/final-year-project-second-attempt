@@ -223,11 +223,12 @@ class PortfolioAIService:
         """
         # Mock prices - in real implementation, call stock API
         mock_prices = {
-            'HDFCBANK': 1500.0,
-            'ICICIBANK': 900.0,
-            'RELIANCE': 2800.0,
-            'TCS': 3500.0,
-            'INFY': 1600.0,
+            'HDFCBANK': 1585.75,
+            'ICICIBANK': 987.65,
+            'RELIANCE': 2845.30,
+            'TCS': 3689.45,
+            'INFY': 1456.80,
+            'WIPRO': 445.80,
             'SBIN': 600.0,
             'TATAMOTORS': 400.0
         }

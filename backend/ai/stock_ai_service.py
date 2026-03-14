@@ -463,9 +463,63 @@ Provide an educational comparison that helps the user understand the differences
         )
         
         # Generate AI response
-        response = await self.gemini_client.generate_ai_response(full_prompt)
+        try:
+            response = self.gemini_client.generate_response(full_prompt)
+            if response and "couldn't process" not in response.lower():
+                return response
+        except Exception as e:
+            print(f"AI generation failed: {e}")
         
-        return response
+        # Fallback to basic analysis
+        return self._generate_basic_analysis(stock_data)
+    
+    def _generate_basic_analysis(self, stock_data: Dict[str, Any]) -> str:
+        """
+        Generate basic analysis when AI fails
+        
+        Args:
+            stock_data: Stock data dictionary
+            
+        Returns:
+            Basic analysis string
+        """
+        try:
+            symbol = stock_data.get('symbol', 'Unknown')
+            price = stock_data.get('price', 0)
+            change = stock_data.get('change', 0)
+            change_percent = stock_data.get('change_percent', 0)
+            company_name = stock_data.get('company_name', 'Unknown Company')
+            sector = stock_data.get('sector', 'Unknown')
+            pe_ratio = stock_data.get('pe_ratio', 0)
+            
+            analysis = f"""
+**{company_name} ({symbol}) - Educational Analysis**
+
+**Current Market Data:**
+- Current Price: ₹{price:.2f}
+- Daily Change: ₹{change:.2f} ({change_percent:.2f}%)
+- Sector: {sector}
+
+**Key Financial Metrics:**
+- P/E Ratio: {pe_ratio:.2f}
+- This indicates how much investors are willing to pay for each rupee of earnings.
+
+**Educational Insights:**
+- {'The stock is trading higher today, indicating positive market sentiment.' if change > 0 else 'The stock is trading lower today, indicating negative market sentiment.'}
+- {'The P/E ratio is above 20, suggesting the stock may be relatively expensive compared to earnings.' if pe_ratio > 20 else 'The P/E ratio is below 20, suggesting the stock may be reasonably valued compared to earnings.'}
+
+**Important Notes:**
+- This analysis is for educational purposes only and should not be considered as financial advice.
+- Stock prices are subject to market risks and volatility.
+- Always conduct thorough research before making any investment decisions.
+- Consider consulting with a qualified financial advisor for personalized advice.
+
+**Data Source:** {stock_data.get('data_source', 'Unknown')}
+"""
+            return analysis.strip()
+            
+        except Exception as e:
+            return f"Unable to generate analysis for {stock_data.get('symbol', 'Unknown')}. Please try again later."
     
     async def _generate_search_analysis(self, user_message: str, search_results: List[Dict[str, Any]]) -> str:
         """
@@ -488,7 +542,7 @@ Provide an educational comparison that helps the user understand the differences
         )
         
         # Generate AI response
-        response = await self.gemini_client.generate_ai_response(full_prompt)
+        response = self.gemini_client.generate_response(full_prompt)
         
         return response
     
@@ -620,6 +674,34 @@ Provide an educational comparison that helps the user understand the differences
             "Search for technology companies",
             "Find automotive stocks"
         ]
+    
+    def generate_stock_analysis_sync(self, user_message: str) -> Dict[str, Any]:
+        """
+        Synchronous wrapper for generate_stock_analysis
+        
+        Args:
+            user_message: User message about stock analysis
+            
+        Returns:
+            Dictionary with stock analysis results
+        """
+        try:
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            result = loop.run_until_complete(self.generate_stock_analysis(user_message))
+            loop.close()
+            return result
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Error in stock analysis: {str(e)}",
+                "suggestions": [
+                    "Please try again with a different query",
+                    "Check if the company name is correct",
+                    "Try using the exact stock symbol"
+                ]
+            }
 
 # Singleton instance for reuse
 stock_ai_service = StockAIService()

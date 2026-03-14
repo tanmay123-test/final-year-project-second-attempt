@@ -29,10 +29,10 @@ class HousekeepingDatabase:
         cursor.execute("SELECT count(*) FROM services")
         if cursor.fetchone()[0] == 0:
             default_services = [
-                ("General Cleaning", 50.0, "Standard home cleaning service"),
-                ("Deep Cleaning", 100.0, "Thorough deep cleaning service"),
-                ("Bathroom Cleaning", 40.0, "Specialized bathroom cleaning"),
-                ("Kitchen Cleaning", 60.0, "Intensive kitchen cleaning")
+                ("General Cleaning", 500.0, "Standard home cleaning service"),
+                ("Deep Cleaning", 1000.0, "Thorough deep cleaning service"),
+                ("Bathroom Cleaning", 400.0, "Specialized bathroom cleaning"),
+                ("Kitchen Cleaning", 600.0, "Intensive kitchen cleaning")
             ]
             cursor.executemany("INSERT INTO services (name, base_price, description) VALUES (?, ?, ?)", default_services)
 
