@@ -5,6 +5,7 @@ import sqlite3
 import bcrypt
 import re
 from config import WORKER_DB, DATA_DIR
+from pricing_config import get_worker_default_rate
 import os
 
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -126,6 +127,10 @@ class WorkerDB:
                 return None
 
         hashed_pw = None
+        # Use default hourly rate if not provided
+        if hourly_rate is None:
+            hourly_rate = get_worker_default_rate(service)
+        
         if password:
             hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode('utf-8')
             

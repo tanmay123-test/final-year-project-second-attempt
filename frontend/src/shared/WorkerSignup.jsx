@@ -12,6 +12,14 @@ const SERVICE_CONFIG = {
   money: { label: 'Money Management', icon: Wallet, color: '#2ECC71' }
 };
 
+const SERVICE_DEFAULT_RATES = {
+  healthcare: '200',
+  housekeeping: '50', 
+  freelance: '300',
+  car: '150',
+  money: '100'
+};
+
 const WorkerSignup = ({ serviceType = 'healthcare' }) => {
   const config = SERVICE_CONFIG[serviceType] || SERVICE_CONFIG.healthcare;
   const ServiceIcon = config.icon;
@@ -245,7 +253,7 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
                   <label htmlFor="hourly_rate">Hourly Rate (₹)</label>
                   <div className="input-wrapper">
                     <CreditCard className="input-icon" size={20} />
-                    <input id="hourly_rate" type="number" name="hourly_rate" value={formData.hourly_rate} onChange={handleChange} required placeholder="1500" />
+                    <input id="hourly_rate" type="number" name="hourly_rate" value={formData.hourly_rate} onChange={handleChange} required placeholder={SERVICE_DEFAULT_RATES[serviceType] || '50'} />
                   </div>
                 </div>
 

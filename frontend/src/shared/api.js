@@ -134,6 +134,8 @@ export const housekeepingService = {
   getWorkerServices: () => api.get('/api/housekeeping/worker/services'),
   saveWorkerServices: (services) => api.post('/api/housekeeping/worker/services', { services }),
   cancelBooking: (bookingId) => api.post('/api/housekeeping/cancel-booking', { booking_id: bookingId }),
+  startJob: (bookingId) => api.post('/api/housekeeping/worker/start-job', { booking_id: bookingId }),
+  completeJob: (bookingId, otp) => api.post('/api/housekeeping/worker/complete-job', { booking_id: bookingId, otp }),
 };
 
 export const moneyService = {

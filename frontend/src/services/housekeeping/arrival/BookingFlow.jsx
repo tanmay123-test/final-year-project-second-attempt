@@ -301,7 +301,7 @@ const BookingFlow = () => {
                 <h3>{service.name}</h3>
                 <p>{service.description}</p>
                 <div className="card-footer">
-                  <span className="price-tag">${service.price}</span>
+                  <span className="price-tag">₹{service.price}</span>
                   {service.available_count !== undefined && (
                      <span className={`status-text ${service.available_count > 0 ? 'available' : 'busy'}`}>
                        {service.available_count > 0 ? `${service.available_count} Online` : 'Busy'}
@@ -346,14 +346,14 @@ const BookingFlow = () => {
                     {addOns.includes(addon.id) ? <Check size={16} /> : <div className="unchecked" />}
                   </div>
                   <span>{addon.label}</span>
-                  <span className="price">+${addon.price}</span>
+                  <span className="price">+₹{addon.price}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="form-section">
-            <label>Extra Hours (${EXTRA_HOUR_PRICE}/hr)</label>
+            <label>Extra Hours (₹{EXTRA_HOUR_PRICE}/hr)</label>
             <div className="counter-control">
               <button onClick={() => setExtraHours(Math.max(0, extraHours - 1))}><Minus size={16}/></button>
               <span>{extraHours}</span>
@@ -430,13 +430,13 @@ const BookingFlow = () => {
               
               <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#666'}}>
                   <span>Base Price</span>
-                  <span>${selectedService?.price}</span>
+                  <span>₹{selectedService?.price}</span>
               </div>
               
               {(addOns.length > 0 || extraHours > 0) && (
                   <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#666'}}>
                       <span>Add-ons</span>
-                      <span>${
+                      <span>₹{
                           addOns.reduce((sum, id) => sum + (ADD_ONS.find(a => a.id === id)?.price || 0), 0) + 
                           (extraHours * EXTRA_HOUR_PRICE)
                       }</span>
@@ -445,7 +445,7 @@ const BookingFlow = () => {
               
               <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '16px', color: '#666'}}>
                   <span>Tax (18%)</span>
-                  <span>${calculateTotal().tax.toFixed(2)}</span>
+                  <span>₹{calculateTotal().tax.toFixed(2)}</span>
               </div>
               
               <div style={{
@@ -458,7 +458,7 @@ const BookingFlow = () => {
                   color: '#2C3E50'
               }}>
                   <span>Total</span>
-                  <span style={{color: '#2ECC71'}}>${calculateTotal().total.toFixed(2)}</span>
+                  <span style={{color: '#2ECC71'}}>₹{calculateTotal().total.toFixed(2)}</span>
               </div>
           </div>
 
@@ -651,7 +651,7 @@ const BookingFlow = () => {
             
             <div className="summary-row total" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>Total Amount</span>
-              <strong style={{ color: '#8E44AD', fontSize: '1.5rem' }}>${estimate.total.toFixed(2)}</strong>
+              <strong style={{ color: '#8E44AD', fontSize: '1.5rem' }}>₹{estimate.total.toFixed(2)}</strong>
             </div>
 
             <button 

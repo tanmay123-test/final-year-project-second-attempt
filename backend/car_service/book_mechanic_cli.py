@@ -94,7 +94,7 @@ def _prebook_flow(user_id, mechanic):
         mechanic_id=mechanic['id'],
         car_id=default_car['id'],
         issue=issue,
-        estimated_cost=500  # Default estimated cost
+        estimated_cost=5000  # Default estimated cost in INR
     )
     
     print("\n✅ Mechanic booked successfully (PREBOOK).")
@@ -115,7 +115,7 @@ def _instant_flow(user_id, mechanic):
         mechanic_id=mechanic['id'],
         car_id=default_car['id'],
         issue=issue,
-        estimated_cost=500  # Default estimated cost
+        estimated_cost=5000  # Default estimated cost in INR
     )
     print("\n✅ Mechanic booked successfully (INSTANT).")
     print("Mechanic will contact you shortly.")

@@ -100,8 +100,8 @@ const BrowseProjects = () => {
               onChange={(e) => setFilters({...filters, budgetRange: parseInt(e.target.value)})}
             />
             <div className="range-labels">
-              <span>$0</span>
-              <span>${filters.budgetRange}</span>
+              <span>₹0</span>
+              <span>₹{filters.budgetRange}</span>
             </div>
           </div>
 
