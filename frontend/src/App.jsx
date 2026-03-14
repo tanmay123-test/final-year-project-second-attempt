@@ -28,8 +28,6 @@ import VideoJoin from './pages/VideoJoin';
 
 import UserLayout from './components/UserLayout';
 
-<<<<<<< HEAD
-=======
 // Freelance Marketplace
 import FreelanceHome from './services/freelance/pages/FreelanceHome';
 import FreelancerDashboard from './services/freelance/pages/FreelancerDashboard';
@@ -42,8 +40,6 @@ import AnalyticsPage from './services/finny/pages/AnalyticsPage';
 import ChatModePage from './services/finny/pages/ChatModePage';
 import ChatFinancialAssistantPage from './services/finny/pages/ChatFinancialAssistantPage';
 import AnalyticsDashboardPage from './services/finny/pages/AnalyticsDashboardPage';
-
->>>>>>> 4eec942db43701c5f3b31ef6e6eee1f0c0988304
 const ProtectedWorkerRoute = ({ children }) => {
   const { worker, loading } = useAuth();
   const location = useLocation();
@@ -71,12 +67,9 @@ const App = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/doctors" element={<DoctorSearch />} />
             <Route path="/book/:doctorId" element={<Booking />} />
-<<<<<<< HEAD
-            <Route path="/profile" element={<Profile />} />
+<Route path="/profile" element={<Profile />} />
             <Route path="/appointments/join/:appointmentId" element={<VideoJoin />} />
             <Route path="/ai-care" element={<AICare />} />
-=======
-            <Route path="/profile" element={<div style={{padding: '2rem'}}><h2>Profile Page</h2><p>Coming Soon</p></div>} />
             
             {/* Finny Smart Transaction Tracker Routes */}
             <Route path="/finny" element={<ProtectedRoute><FinnyHomeScreen /></ProtectedRoute>} />
@@ -84,7 +77,6 @@ const App = () => {
             <Route path="/finny/summary" element={<ProtectedRoute><SummaryPage /></ProtectedRoute>} />
             <Route path="/finny/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
             <Route path="/finny/chat" element={<ProtectedRoute><ChatModePage /></ProtectedRoute>} />
->>>>>>> 4eec942db43701c5f3b31ef6e6eee1f0c0988304
           </Route>
 
           {/* Service Selection (No Bottom Nav) */}

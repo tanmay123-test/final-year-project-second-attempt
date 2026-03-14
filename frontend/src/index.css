@@ -17,7 +17,6 @@
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
 }
 
-<<<<<<< HEAD
 .dark {
   --background-light: #0F172A;
   --text-primary: #E5E7EB;
@@ -26,7 +25,8 @@
   --shadow-sm: 0 2px 4px rgba(0,0,0,0.4);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.6);
-=======
+}
+
 /* Multi-select Skill Selector */
 .multi-select-container {
   position: relative;
@@ -106,7 +106,48 @@
   color: #9ca3af;
   font-size: 14px;
   text-align: center;
->>>>>>> 4eec942db43701c5f3b31ef6e6eee1f0c0988304
+}
+
+.skills-dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skills-dropdown-item:hover {
+  background: #f9fafb;
+}
+
+.skills-dropdown-item.selected {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.skill-checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: white;
+}
+
+.skills-dropdown-item.selected .skill-checkbox {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.no-skills-message {
+  padding: 10px;
+  color: #9ca3af;
+  font-size: 14px;
+  text-align: center;
 }
 
 * {
