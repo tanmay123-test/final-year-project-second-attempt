@@ -33,6 +33,7 @@ class MechanicDB:
                 password_hash TEXT NOT NULL,
                 age INTEGER NOT NULL,
                 city TEXT NOT NULL,
+                address TEXT,
                 experience INTEGER NOT NULL,
                 skills TEXT NOT NULL,
                 aadhaar_path TEXT,
@@ -67,12 +68,27 @@ class MechanicDB:
             pass
         
         try:
+            cursor.execute("ALTER TABLE mechanics ADD COLUMN role TEXT DEFAULT 'Mechanic'")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
+            cursor.execute("ALTER TABLE mechanics ADD COLUMN updated_at TIMESTAMP")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
             cursor.execute("ALTER TABLE mechanics ADD COLUMN last_status_update TEXT")
         except sqlite3.OperationalError:
             pass
         
         try:
             cursor.execute("ALTER TABLE mechanics ADD COLUMN cooldown_until TEXT")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
+            cursor.execute("ALTER TABLE mechanics ADD COLUMN address TEXT")
         except sqlite3.OperationalError:
             pass
         
@@ -87,7 +103,7 @@ class MechanicDB:
         return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
     
     def create_mechanic(self, name: str, email: str, phone: str, password: str,
-                       age: int, city: str, experience: int, skills: str,
+                       age: int, city: str, address: str, experience: int, skills: str,
                        aadhaar_path: str = None, license_path: str = None,
                        certificate_path: str = None, profile_photo_path: str = None) -> int:
         """Create a new mechanic"""
@@ -102,11 +118,11 @@ class MechanicDB:
         
         cursor.execute("""
             INSERT INTO mechanics 
-            (name, email, phone, password_hash, age, city, experience, skills,
-             aadhaar_path, license_path, certificate_path, profile_photo_path)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (name, email, phone, password_hash, age, city, experience, skills,
-              aadhaar_path, license_path, certificate_path, profile_photo_path))
+            (name, email, phone, password_hash, age, city, address, experience, skills,
+             aadhaar_path, license_path, certificate_path, profile_photo_path, status, role)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (name, email, phone, password_hash, age, city, address, experience, skills,
+              aadhaar_path, license_path, certificate_path, profile_photo_path, 'PENDING', 'Mechanic'))
         
         self.conn.commit()
         return cursor.lastrowid

@@ -647,11 +647,44 @@ class FuelDeliveryService:
             return None
     
     def get_delivery_history(self, agent_id):
-        """Get delivery history for an agent"""
+        """Get delivery history for an agent with address from request (for History & Earnings screen)"""
         try:
-            # This would typically query a delivery history table
-            # For now, return empty list
-            return []
+            cursor = self.db.conn.cursor()
+            cursor.execute('''
+                SELECT h.delivery_id, h.agent_id, h.user_id, h.fuel_type, h.quantity, h.earnings, h.status, h.completed_at, h.request_id,
+                       r.address, r.user_name
+                FROM fuel_delivery_history h
+                LEFT JOIN fuel_delivery_requests r ON r.id = h.request_id
+                WHERE h.agent_id = ?
+                ORDER BY h.completed_at DESC
+            ''', (agent_id,))
+            rows = cursor.fetchall()
+            self.db.conn.commit()
+            cursor.close()
+            result = []
+            for row in rows:
+                r = dict(row) if hasattr(row, 'keys') else None
+                if not r:
+                    col = ['delivery_id', 'agent_id', 'user_id', 'fuel_type', 'quantity', 'earnings', 'status', 'completed_at', 'request_id', 'address', 'user_name']
+                    r = dict(zip(col, row)) if len(row) >= len(col) else {}
+                status = (r.get('status') or '').lower()
+                result.append({
+                    'id': r.get('delivery_id'),
+                    'delivery_id': r.get('delivery_id'),
+                    'request_id': r.get('request_id'),
+                    'fuel_type': r.get('fuel_type') or 'Petrol',
+                    'quantity_liters': r.get('quantity') or 0,
+                    'earnings': float(r.get('earnings') or 0),
+                    'estimated_earnings': float(r.get('earnings') or 0),
+                    'status': 'completed' if status == 'completed' else 'cancelled' if status == 'cancelled' else status,
+                    'completed_at': r.get('completed_at'),
+                    'created_at': r.get('completed_at'),
+                    'delivery_address': r.get('address') or '',
+                    'address': r.get('address') or '',
+                    'user_name': r.get('user_name') or '',
+                    'station_name': r.get('address') or f"Delivery #{r.get('delivery_id') or ''}",
+                })
+            return result
         except Exception as e:
             return []
     
@@ -893,54 +926,179 @@ class FuelDeliveryService:
         return capacities.get(vehicle_type, 10)
     
     def get_agent_performance(self, agent_id):
-        """Get agent performance metrics"""
+        """Get agent performance metrics and reputation (for Performance & Safety screen)."""
         try:
-            agent = self.db.get_agent_details(agent_id)
-            if agent:
-                total_deliveries = agent.get('total_deliveries', 0)
-                rating = agent.get('rating', 0.0)
-                
-                # Calculate performance level
-                if total_deliveries >= 500:
-                    performance_level = 'Platinum'
-                elif total_deliveries >= 200:
-                    performance_level = 'Gold'
-                elif total_deliveries >= 50:
-                    performance_level = 'Silver'
-                else:
-                    performance_level = 'Bronze'
-                
-                return {
-                    'performance_level': performance_level,
-                    'rating': rating,
-                    'total_deliveries': total_deliveries,
-                    'completion_rate': 95.0,  # Placeholder
-                    'recent_deliveries': 0,  # Placeholder
-                    'badges': [],  # Placeholder
-                    'is_verified': agent.get('is_verified', False),
-                    'approval_status': agent.get('approval_status', 'PENDING')
-                }
+            perf = self.db.get_agent_performance(agent_id)
+            badges = self.db.get_agent_badges(agent_id)
+            reviews = self.db.get_agent_reviews(agent_id, limit=20)
+            total_deliveries = perf.get('total_deliveries') or 0
+            rating = perf.get('rating') or 0.0
+            if total_deliveries >= 500:
+                performance_level = 'Platinum'
+            elif total_deliveries >= 200:
+                performance_level = 'Gold'
+            elif total_deliveries >= 50:
+                performance_level = 'Silver'
+            else:
+                performance_level = 'Bronze'
+            completion_rate = perf.get('completion_rate', 0)
+            recent = perf.get('recent_deliveries', 0)
+            avg_mins = perf.get('avg_delivery_time_minutes', 28)
+            achievements = []
+            if total_deliveries >= 50 and rating >= 4.5:
+                achievements.append({'id': 'top_performer', 'title': 'Top Performer', 'subtitle': 'Top 5% this month', 'icon': 'trophy', 'highlight': True})
+            if total_deliveries >= 100 and avg_mins <= 25:
+                achievements.append({'id': 'speed_demon', 'title': 'Speed Demon', 'subtitle': f'{total_deliveries} deliveries under 20 min', 'icon': 'zap', 'highlight': True})
+            if completion_rate >= 99.9 and recent >= 1:
+                achievements.append({'id': 'perfect_score', 'title': 'Perfect Score', 'subtitle': '30-day 100% completion', 'icon': 'target', 'highlight': True})
+            if perf.get('safety_score', 98) >= 98:
+                achievements.append({'id': 'safety_first', 'title': 'Safety First', 'subtitle': '1 year zero incidents', 'icon': 'shield', 'highlight': True})
+            if len(achievements) < 4:
+                for bid in ['top_performer', 'speed_demon', 'perfect_score', 'safety_first']:
+                    if not any(a['id'] == bid for a in achievements):
+                        defaults = {'top_performer': ('Top Performer', 'Top 5% this month', 'trophy'), 'speed_demon': ('Speed Demon', '100 deliveries under 20 min', 'zap'), 'perfect_score': ('Perfect Score', '30-day 100% completion', 'target'), 'safety_first': ('Safety First', '1 year zero incidents', 'shield')}
+                        t, s, i = defaults.get(bid, ('Achievement', '', 'medal'))
+                        achievements.append({'id': bid, 'title': t, 'subtitle': s, 'icon': i, 'highlight': False})
+                achievements = achievements[:4]
             return {
-                'performance_level': 'Bronze',
-                'rating': 0.0,
-                'total_deliveries': 0,
-                'completion_rate': 0.0,
-                'recent_deliveries': 0,
-                'badges': [],
-                'is_verified': False,
-                'approval_status': 'PENDING'
+                'performance_level': performance_level,
+                'rating': rating,
+                'total_deliveries': total_deliveries,
+                'completion_rate': completion_rate,
+                'recent_deliveries': recent,
+                'review_count': perf.get('review_count', 0),
+                'avg_delivery_time_minutes': avg_mins,
+                'on_time_rate': perf.get('on_time_rate', 94),
+                'safety_score': perf.get('safety_score', 98),
+                'badges': badges,
+                'achievements': achievements,
+                'reviews': reviews,
+                'is_verified': perf.get('is_verified', False),
+                'approval_status': perf.get('approval_status', 'PENDING'),
             }
         except Exception as e:
+            defaults_ach = [{'id': 'top_performer', 'title': 'Top Performer', 'subtitle': 'Top 5% this month', 'icon': 'trophy', 'highlight': False}, {'id': 'speed_demon', 'title': 'Speed Demon', 'subtitle': '100 deliveries under 20 min', 'icon': 'zap', 'highlight': False}, {'id': 'perfect_score', 'title': 'Perfect Score', 'subtitle': '30-day 100% completion', 'icon': 'target', 'highlight': False}, {'id': 'safety_first', 'title': 'Safety First', 'subtitle': '1 year zero incidents', 'icon': 'shield', 'highlight': False}]
             return {
                 'performance_level': 'Bronze',
                 'rating': 0.0,
                 'total_deliveries': 0,
                 'completion_rate': 0.0,
                 'recent_deliveries': 0,
+                'review_count': 0,
+                'avg_delivery_time_minutes': 28,
+                'on_time_rate': 94.0,
+                'safety_score': 98.0,
                 'badges': [],
+                'achievements': defaults_ach,
+                'reviews': [],
                 'is_verified': False,
-                'approval_status': 'PENDING'
+                'approval_status': 'PENDING',
             }
+    
+    def get_active_delivery(self, agent_id):
+        """Get active delivery for agent"""
+        try:
+            cursor = self.db.conn.cursor()
+            cursor.execute('''
+                SELECT * FROM fuel_delivery_requests 
+                WHERE agent_id = ? 
+                AND status IN ('ASSIGNED', 'IN_PROGRESS')
+                LIMIT 1
+            ''', (agent_id,))
+            
+            result = cursor.fetchone()
+            cursor.close()
+            
+            if result:
+                return dict(result)
+            return None
+        except Exception as e:
+            return None
+    
+    def get_agent_earnings(self, agent_id):
+        """Get total earnings for agent"""
+        try:
+            cursor = self.db.conn.cursor()
+            cursor.execute('''
+                SELECT COALESCE(SUM(earnings), 0) as total_earnings
+                FROM fuel_delivery_history 
+                WHERE agent_id = ? AND status = 'COMPLETED'
+            ''', (agent_id,))
+            
+            result = cursor.fetchone()
+            cursor.close()
+            
+            return {
+                'total_earnings': result['total_earnings'] if result else 0
+            }
+        except Exception as e:
+            return {'total_earnings': 0}
+    
+    def accept_delivery_request(self, request_id, agent_id):
+        """Accept a fuel delivery request"""
+        try:
+            cursor = self.db.conn.cursor()
+            
+            # Check if request exists and is available (using id instead of request_id)
+            cursor.execute('''
+                SELECT * FROM fuel_delivery_requests 
+                WHERE id = ? AND status = 'PENDING'
+            ''', (request_id,))
+            
+            request = cursor.fetchone()
+            if not request:
+                return {'success': False, 'error': 'Request not found or already taken'}
+            
+            # Check if agent already has an active delivery
+            cursor.execute('''
+                SELECT * FROM fuel_delivery_requests 
+                WHERE agent_id = ? AND status IN ('ASSIGNED', 'IN_PROGRESS')
+            ''', (agent_id,))
+            
+            active_delivery = cursor.fetchone()
+            if active_delivery:
+                return {'success': False, 'error': 'Agent already has an active delivery'}
+            
+            # Update request status and assign agent
+            cursor.execute('''
+                UPDATE fuel_delivery_requests 
+                SET agent_id = ?, status = 'ASSIGNED', assigned_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (agent_id, request_id))
+            
+            # Update agent status to busy
+            cursor.execute('''
+                UPDATE fuel_delivery_agents 
+                SET online_status = 'BUSY'
+                WHERE id = ?
+            ''', (agent_id,))
+            
+            self.db.conn.commit()
+            cursor.close()
+            
+            return {
+                'success': True,
+                'message': 'Request accepted successfully',
+                'request_id': request_id
+            }
+            
+        except Exception as e:
+            self.db.conn.rollback()
+            return {'success': False, 'error': str(e)}
+    
+    def reject_delivery_request(self, request_id, agent_id):
+        """Reject a fuel delivery request (for frontend - just remove from list)"""
+        try:
+            # For now, just return success - the request remains available for other agents
+            # In a real system, you might track rejection reasons or timeouts
+            return {
+                'success': True,
+                'message': 'Request rejected',
+                'request_id': request_id
+            }
+            
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
 # Create service instance
 fuel_delivery_service = FuelDeliveryService()
