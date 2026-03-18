@@ -57,7 +57,7 @@ class ActiveDeliveryService:
             cursor.execute('''
                 UPDATE fuel_delivery_requests
                 SET status = 'ARRIVING', updated_at = ?
-                WHERE request_id = ? AND agent_id = ?
+                WHERE id = ? AND agent_id = ?
             ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), request_id, agent_id))
             
             self.db.conn.commit()
@@ -80,7 +80,7 @@ class ActiveDeliveryService:
             cursor.execute('''
                 UPDATE fuel_delivery_requests
                 SET status = 'DELIVERING', delivery_started_at = ?
-                WHERE request_id = ? AND agent_id = ?
+                WHERE id = ? AND agent_id = ?
             ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), request_id, agent_id))
             
             self.db.conn.commit()
@@ -101,18 +101,24 @@ class ActiveDeliveryService:
         try:
             cursor = self.db.conn.cursor()
             
-            # Get delivery details
+            # Get delivery details (id is primary key of fuel_delivery_requests)
             cursor.execute('''
                 SELECT * FROM fuel_delivery_requests
-                WHERE request_id = ? AND agent_id = ?
+                WHERE id = ? AND agent_id = ?
             ''', (request_id, agent_id))
             
             delivery = cursor.fetchone()
             if not delivery:
                 return {'success': False, 'error': 'Delivery not found'}
             
+            # delivery columns: id, user_id, agent_id, user_name, user_phone, fuel_type, quantity, latitude, longitude, address, status, ...
+            request_pk = delivery[0]
+            user_id = delivery[1]
+            fuel_type = delivery[5]
+            quantity = delivery[6]
+            
             # Calculate earnings
-            fuel_cost = delivery[4] * 100  # ₹100 per liter
+            fuel_cost = quantity * 100  # ₹100 per liter
             base_fee = 50  # ₹50 base fee
             emergency_fee = 0  # No emergency fee for normal delivery
             total_bill = fuel_cost + base_fee + emergency_fee
@@ -123,15 +129,15 @@ class ActiveDeliveryService:
             cursor.execute('''
                 UPDATE fuel_delivery_requests
                 SET status = 'COMPLETED', completed_at = ?
-                WHERE request_id = ? AND agent_id = ?
+                WHERE id = ? AND agent_id = ?
             ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), request_id, agent_id))
             
-            # Add to delivery history
+            # Add to delivery history (with request_id for join to get address later)
             cursor.execute('''
                 INSERT INTO fuel_delivery_history
-                (agent_id, user_id, fuel_type, quantity, earnings, status, completed_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (agent_id, delivery[1], delivery[3], delivery[4], agent_earning, 'COMPLETED', datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                (agent_id, user_id, fuel_type, quantity, earnings, status, completed_at, request_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (agent_id, user_id, fuel_type, quantity, agent_earning, 'COMPLETED', datetime.now().strftime('%Y-%m-%d %H:%M:%S'), request_pk))
             
             # Update agent status to ONLINE_AVAILABLE
             cursor.execute('''

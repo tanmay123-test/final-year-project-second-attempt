@@ -13,133 +13,342 @@ from car_service.mechanic_db import mechanic_db
 
 mechanic_bp = Blueprint("mechanic", __name__)
 
-@mechanic_bp.route("/api/car/mechanic/signup", methods=["POST"])
+@mechanic_bp.route("/api/auth/car/mechanic/signup", methods=["POST"])
 def mechanic_signup():
     """Mechanic signup endpoint"""
     try:
-        # Get form data
-        name = request.form.get("name", "").strip()
-        email = request.form.get("email", "").strip()
-        phone = request.form.get("phone", "").strip()
-        password = request.form.get("password", "").strip()
-        age = request.form.get("age", "").strip()
-        city = request.form.get("city", "").strip()
-        experience = request.form.get("experience", "").strip()
-        skills = request.form.get("skills", "").strip()
-        
-        # Document paths
-        aadhaar_path = request.form.get("aadhaar_path", "").strip() or None
-        license_path = request.form.get("license_path", "").strip() or None
-        certificate_path = request.form.get("certificate_path", "").strip() or None
-        profile_photo_path = request.form.get("profile_photo_path", "").strip() or None
+        # Handle both JSON and form data
+        if request.is_json:
+            data = request.get_json()
+            name = data.get("full_name", "").strip()
+            email = data.get("email", "").strip()
+            phone = data.get("phone", "").strip()
+            password = data.get("password", "").strip()
+            age = data.get("age", "").strip()
+            city = data.get("city", "").strip()
+            address = data.get("address", "").strip()
+            experience = data.get("experience", "").strip()
+            skills = data.get("skills", "").strip()
+            
+            # For JSON requests, files will be uploaded separately
+            aadhaar_path = None
+            license_path = None
+            certificate_path = None
+            profile_photo_path = None
+        else:
+            # Handle form data with file uploads
+            name = request.form.get("full_name", "").strip()
+            email = request.form.get("email", "").strip()
+            phone = request.form.get("phone", "").strip()
+            password = request.form.get("password", "").strip()
+            age = request.form.get("age", "").strip()
+            city = request.form.get("city", "").strip()
+            address = request.form.get("address", "").strip()
+            experience = request.form.get("experience", "").strip()
+            skills = request.form.get("skills", "").strip()
+            
+            # Handle file uploads
+            aadhaar_path = None
+            license_path = None
+            certificate_path = None
+            profile_photo_path = None
+            
+            # Save uploaded files
+            if 'aadhaar_file' in request.files:
+                aadhaar_file = request.files['aadhaar_file']
+                if aadhaar_file:
+                    import os
+                    from werkzeug.utils import secure_filename
+                    filename = secure_filename(aadhaar_file.filename)
+                    upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')
+                    os.makedirs(upload_folder, exist_ok=True)
+                    aadhaar_path = os.path.join(upload_folder, f"aadhaar_{filename}")
+                    aadhaar_file.save(aadhaar_path)
+            
+            if 'license_file' in request.files:
+                license_file = request.files['license_file']
+                if license_file:
+                    import os
+                    from werkzeug.utils import secure_filename
+                    filename = secure_filename(license_file.filename)
+                    upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')
+                    os.makedirs(upload_folder, exist_ok=True)
+                    license_path = os.path.join(upload_folder, f"license_{filename}")
+                    license_file.save(license_path)
+            
+            if 'certificate_file' in request.files:
+                cert_file = request.files['certificate_file']
+                if cert_file:
+                    import os
+                    from werkzeug.utils import secure_filename
+                    filename = secure_filename(cert_file.filename)
+                    upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')
+                    os.makedirs(upload_folder, exist_ok=True)
+                    certificate_path = os.path.join(upload_folder, f"cert_{filename}")
+                    cert_file.save(certificate_path)
+            
+            if 'profile_photo_file' in request.files:
+                photo_file = request.files['profile_photo_file']
+                if photo_file:
+                    import os
+                    from werkzeug.utils import secure_filename
+                    filename = secure_filename(photo_file.filename)
+                    upload_folder = os.path.join(os.path.dirname(__file__), 'uploads')
+                    os.makedirs(upload_folder, exist_ok=True)
+                    profile_photo_path = os.path.join(upload_folder, f"photo_{filename}")
+                    photo_file.save(profile_photo_path)
         
         # Validation
         if not all([name, email, phone, password, age, city, experience, skills]):
             return jsonify({"error": "All required fields must be filled"}), 400
         
-        # Validate file paths exist
-        for path, field_name in [(aadhaar_path, "Aadhaar"), (license_path, "License"), 
-                                 (certificate_path, "Certificate"), (profile_photo_path, "Profile photo")]:
-            if path and not os.path.exists(path):
-                return jsonify({"error": f"{field_name} file not found: {path}"}), 400
-        
         # Create mechanic
         try:
             mechanic_id = mechanic_db.create_mechanic(
                 name=name, email=email, phone=phone, password=password,
-                age=int(age), city=city, experience=int(experience), skills=skills,
+                age=int(age), city=city, address=address, experience=int(experience), skills=skills,
                 aadhaar_path=aadhaar_path, license_path=license_path,
                 certificate_path=certificate_path, profile_photo_path=profile_photo_path
             )
+            return jsonify({
+                "message": "Mechanic registered successfully",
+                "mechanic_id": mechanic_id,
+                "worker_id": mechanic_id
+            }), 201
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
+        except Exception as e:
+            return jsonify({"error": f"Registration failed: {str(e)}"}), 500
+            
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+@mechanic_bp.route("/api/car/service/workers/pending", methods=["GET"])
+def get_pending_workers():
+    """Get all pending workers for admin approval"""
+    try:
+        cursor = mechanic_db.conn.cursor()
+        cursor.execute("""
+            SELECT id, name, email, phone, age, city, address, experience, skills,
+                   profile_photo_path, aadhaar_path, license_path, certificate_path,
+                   created_at, role
+            FROM mechanics 
+            WHERE status = 'PENDING'
+            ORDER BY created_at DESC
+        """)
+        
+        workers = []
+        for row in cursor.fetchall():
+            workers.append({
+                'id': row[0],
+                'name': row[1],
+                'email': row[2],
+                'phone': row[3],
+                'age': row[4],
+                'city': row[5],
+                'address': row[6],
+                'experience': row[7],
+                'skills': row[8],
+                'profile_photo': row[9],
+                'aadhaar_path': row[10],
+                'license_path': row[11],
+                'certificate_path': row[12],
+                'created_at': row[13],
+                'role': row[14],
+                'worker_type': 'Regular Worker'
+            })
+        
+        return jsonify({"workers": workers}), 200
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+@mechanic_bp.route("/api/car/service/workers/approved", methods=["GET"])
+def get_approved_workers():
+    """Get all approved workers"""
+    try:
+        cursor = mechanic_db.conn.cursor()
+        cursor.execute("""
+            SELECT id, name, email, phone, age, city, address, experience, skills,
+                   profile_photo_path, aadhaar_path, license_path, certificate_path,
+                   created_at, role
+            FROM mechanics 
+            WHERE status = 'APPROVED'
+            ORDER BY created_at DESC
+        """)
+        
+        workers = []
+        for row in cursor.fetchall():
+            workers.append({
+                'id': row[0],
+                'name': row[1],
+                'email': row[2],
+                'phone': row[3],
+                'age': row[4],
+                'city': row[5],
+                'address': row[6],
+                'experience': row[7],
+                'skills': row[8],
+                'profile_photo': row[9],
+                'aadhaar_path': row[10],
+                'license_path': row[11],
+                'certificate_path': row[12],
+                'created_at': row[13],
+                'role': row[14],
+                'worker_type': 'Regular Worker'
+            })
+        
+        return jsonify({"workers": workers}), 200
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+@mechanic_bp.route("/api/car/service/worker/status", methods=["PUT"])
+def update_worker_status():
+    """Update worker status (approve/reject)"""
+    try:
+        data = request.get_json()
+        worker_id = data.get('worker_id')
+        status = data.get('status')  # APPROVED or REJECTED
+        
+        if not worker_id or not status:
+            return jsonify({"error": "worker_id and status are required"}), 400
+        
+        if status not in ['APPROVED', 'REJECTED']:
+            return jsonify({"error": "Invalid status. Must be APPROVED or REJECTED"}), 400
+        
+        # Update worker status
+        cursor = mechanic_db.conn.cursor()
+        cursor.execute("""
+            UPDATE mechanics 
+            SET status = ?, updated_at = datetime('now')
+            WHERE id = ?
+        """, (status, worker_id))
+        
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Worker not found"}), 404
+        
+        mechanic_db.conn.commit()
         
         return jsonify({
-            "success": True,
-            "message": "Signup successful. You can now login.",
-            "mechanic_id": mechanic_id
-        }), 201
+            "message": f"Worker status updated to {status}",
+            "worker_id": worker_id,
+            "status": status
+        }), 200
         
     except Exception as e:
-        print(f"❌ Mechanic signup error: {e}")
-        return jsonify({"error": "Failed to create mechanic account"}), 500
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
-@mechanic_bp.route("/api/car/mechanic/login", methods=["POST"])
+@mechanic_bp.route("/api/car/service/worker/stats", methods=["GET"])
+def get_worker_stats():
+    """Get worker statistics"""
+    try:
+        # Get mechanic from token
+        auth = request.headers.get("Authorization")
+        if not auth or not auth.startswith("Bearer "):
+            return jsonify({"error": "Unauthorized"}), 401
+        
+        token = auth.split(" ")[1]
+        # For now, we'll return mock data
+        # In production, you'd decode the token and get real stats
+        
+        return jsonify({
+            "totalJobs": 45,
+            "completedJobs": 38,
+            "pendingJobs": 7,
+            "earnings": 12500
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+@mechanic_bp.route("/api/auth/car/mechanic/login", methods=["POST"])
 def mechanic_login():
     """Mechanic login endpoint"""
     try:
-        email = request.json.get("email", "").strip()
-        password = request.json.get("password", "").strip()
+        # Get data from JSON or form
+        if request.is_json:
+            data = request.get_json()
+            email = data.get("email", "").strip()
+            password = data.get("password", "").strip()
+        else:
+            email = request.form.get("email", "").strip()
+            password = request.form.get("password", "").strip()
         
+        # Validate input
         if not email or not password:
             return jsonify({"error": "Email and password are required"}), 400
         
-        # First try mechanic database
+        # Authenticate mechanic
         mechanic = mechanic_db.verify_mechanic(email, password)
+        
+        print(f"🔍 Login attempt for email: {email}")
+        print(f"🔍 Mechanic found: {mechanic is not None}")
         if mechanic:
-            # Check if approved
-            if mechanic.get("status") != "APPROVED":
-                return jsonify({
-                    "error": "Your account is not approved",
-                    "status": mechanic.get("status")
-                }), 403
-            
-            # Generate token
-            from auth_utils import generate_token
-            token = generate_token(email)
-            
-            # Remove sensitive data
-            mechanic_data = {
-                "id": mechanic["id"],
-                "name": mechanic["name"],
-                "email": mechanic["email"],
-                "phone": mechanic["phone"],
-                "city": mechanic["city"],
-                "experience": mechanic["experience"],
-                "skills": mechanic["skills"],
-                "is_online": mechanic["is_online"]
-            }
-            
-            return jsonify({
-                "success": True,
-                "token": token,
-                "mechanic": mechanic_data
-            }), 200
+            print(f"🔍 Mechanic status: {mechanic.get('status')}")
+            print(f"🔍 Mechanic data: {mechanic}")
         
         # If not found in mechanic DB, try worker DB for mechanics
-        from car_service.worker_db import worker_db
-        worker = worker_db.verify_worker_by_email(email, password)
-        if worker and worker.get("role") == "Mechanic":
-            # Check if approved
-            if worker.get("status") != "APPROVED":
-                return jsonify({
-                    "error": "Your account is not approved",
-                    "status": worker.get("status")
-                }), 403
-            
-            # Generate token
-            from auth_utils import generate_token
-            token = generate_token(email)
-            
-            # Convert worker data to mechanic format
-            mechanic_data = {
-                "id": worker["id"],
-                "name": worker["name"],
-                "email": worker["email"],
-                "phone": worker["phone"],
-                "city": worker["city"],
-                "experience": worker["experience"],
-                "skills": worker["skills"],
-                "is_online": 0  # Workers don't have online status
-            }
-            
-            return jsonify({
-                "success": True,
-                "token": token,
-                "mechanic": mechanic_data
-            }), 200
+        if not mechanic:
+            print(f"🔍 Trying worker database...")
+            from car_service.worker_db import worker_db
+            worker = worker_db.verify_worker_by_email(email, password)
+            print(f"🔍 Worker found: {worker is not None}")
+            if worker:
+                print(f"🔍 Worker status: {worker.get('status')}")
+                print(f"🔍 Worker data: {worker}")
+                if worker.get("role") == "Mechanic":
+                    print(f"🔍 Found mechanic in worker DB")
+                    # Check if approved
+                    if worker.get("status") != "APPROVED":
+                        print(f"🔍 Blocking login - worker status not approved: {worker.get('status')}")
+                        return jsonify({
+                            "error": "Your account is pending admin approval. Please wait for approval before logging in.",
+                            "status": worker.get("status"),
+                            "requires_approval": True
+                        }), 403
+                    else:
+                        print(f"🔍 Worker approved - allowing login")
+                        # Convert worker to mechanic format
+                        mechanic = {
+                            'id': worker["id"],
+                            'name': worker["name"],
+                            'email': worker["email"],
+                            'status': worker["status"],
+                            'role': worker.get("role", "Mechanic")
+                        }
         
-        return jsonify({"error": "Invalid email or password"}), 401
+        if not mechanic:
+            return jsonify({"error": "Invalid email or password"}), 401
+        
+        # Check if mechanic is approved
+        if mechanic.get('status') != 'APPROVED':
+            print(f"🔍 Blocking login - status not approved: {mechanic.get('status')}")
+            return jsonify({
+                "error": "Your account is pending admin approval. Please wait for approval before logging in.",
+                "status": mechanic.get('status'),
+                "requires_approval": True
+            }), 403
+        
+        # Generate JWT token
+        import jwt
+        from datetime import datetime, timedelta
+        
+        token_payload = {
+            'mechanic_id': mechanic['id'],
+            'email': mechanic['email'],
+            'role': mechanic.get('role', 'Mechanic'),
+            'exp': datetime.utcnow() + timedelta(hours=24)
+        }
+        
+        token = jwt.encode(token_payload, 'your-secret-key', algorithm='HS256')
+        
+        # Remove password hash from response
+        mechanic_data = {k: v for k, v in mechanic.items() if k != 'password_hash'}
+        
+        return jsonify({
+            "message": "Login successful",
+            "token": token,
+            "mechanic": mechanic_data
+        }), 200
         
     except Exception as e:
         print(f"❌ Mechanic login error: {e}")

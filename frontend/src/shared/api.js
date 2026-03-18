@@ -150,4 +150,41 @@ export const moneyService = {
   chatWithAI: (message) => api.post('/api/money/chat', { message }),
 };
 
+export const carService = {
+  // Worker Stats and Dashboard
+  getWorkerStats: (workerId) => api.get(`/api/car/service/worker/${workerId}/stats`),
+  getWorkerEarnings: (workerId) => api.get(`/api/car/service/worker/${workerId}/earnings`),
+  getWorkerJobs: (workerId) => api.get(`/api/car/service/worker/${workerId}/jobs`),
+  getWorkerRating: (workerId) => api.get(`/api/car/service/worker/${workerId}/rating`),
+  getWorkerPerformance: (workerId) => api.get(`/api/car/service/worker/${workerId}/performance`),
+  getWorkerRecentActivity: (workerId) => api.get(`/api/car/service/worker/${workerId}/recent-activity`),
+  
+  // Job Management
+  getAvailableJobs: (serviceType) => api.get(`/api/car/jobs/available`, { params: { service_type: serviceType } }),
+  acceptJob: (jobId) => api.post(`/api/car/jobs/${jobId}/accept`),
+  rejectJob: (jobId) => api.post(`/api/car/jobs/${jobId}/reject`),
+  completeJob: (jobId, data) => api.post(`/api/car/jobs/${jobId}/complete`, data),
+  
+  // Service Types
+  getServiceTypes: () => api.get('/api/car/service-types'),
+  
+  // Worker Profile
+  updateWorkerProfile: (workerId, data) => api.put(`/api/car/worker/${workerId}/profile`, data),
+  getWorkerProfile: (workerId) => api.get(`/api/car/worker/${workerId}/profile`),
+  
+  // Fuel Delivery Specific APIs
+  getFuelDeliveryStats: (workerId) => api.get(`/api/fuel-delivery/worker/${workerId}/stats`),
+  getFuelDeliveryRating: (workerId) => api.get(`/api/fuel-delivery/worker/${workerId}/rating`),
+  getFuelDeliveryRecentActivity: (workerId) => api.get(`/api/fuel-delivery/worker/${workerId}/recent-activity`),
+  getFuelDeliveryPerformance: (workerId, params = {}) => api.get(`/api/fuel-delivery/worker/${workerId}/performance`, { params }),
+  getFuelDeliveryActive: (workerId) => api.get(`/api/fuel-delivery/worker/${workerId}/active`),
+  getFuelDeliveryHistory: (workerId, params = {}) => api.get(`/api/fuel-delivery/worker/${workerId}/history`, { params }),
+  getFuelDeliveryProfile: (workerId) => api.get(`/api/fuel-delivery/worker/${workerId}/profile`),
+  updateFuelDeliveryStatus: (workerId, status) => api.post(`/api/fuel-delivery/worker/${workerId}/status`, { status }),
+  getFuelDeliveryRequests: () => api.get('/api/fuel-delivery/requests'),
+  acceptFuelDeliveryRequest: (data) => api.post('/api/fuel-delivery/assign', data),
+  completeFuelDelivery: (data) => api.post('/api/fuel-delivery/complete', data),
+  cancelFuelDelivery: (data) => api.post('/api/fuel-delivery/cancel', data),
+};
+
 export default api;

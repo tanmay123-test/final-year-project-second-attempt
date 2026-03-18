@@ -668,3 +668,71 @@ def get_request_status(request_id):
         return jsonify({'success': True, 'request': request_data}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@fuel_delivery_bp.route('/agent/<int:agent_id>/active-jobs', methods=['GET'])
+def get_agent_active_jobs(agent_id):
+    """Get agent's active jobs count and earnings"""
+    try:
+        from .fuel_delivery_service import fuel_delivery_service
+        
+        # Get active jobs count
+        active_delivery = fuel_delivery_service.get_active_delivery(agent_id)
+        jobs_count = 1 if active_delivery else 0
+        
+        # Get total earnings from history
+        earnings_data = fuel_delivery_service.get_agent_earnings(agent_id)
+        total_earnings = earnings_data.get('total_earnings', 0)
+        
+        return jsonify({
+            'success': True,
+            'jobsAccepted': jobs_count,
+            'earnings': total_earnings
+        }), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@fuel_delivery_bp.route('/accept-request', methods=['POST'])
+def accept_fuel_delivery_request():
+    """Accept a fuel delivery request"""
+    try:
+        from .fuel_delivery_service import fuel_delivery_service
+        
+        data = request.get_json()
+        request_id = data.get('request_id')
+        agent_id = data.get('agent_id')
+        
+        if not request_id or not agent_id:
+            return jsonify({'success': False, 'error': 'Missing request_id or agent_id'}), 400
+        
+        result = fuel_delivery_service.accept_delivery_request(request_id, agent_id)
+        
+        if result['success']:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@fuel_delivery_bp.route('/reject-request', methods=['POST'])
+def reject_fuel_delivery_request():
+    """Reject a fuel delivery request"""
+    try:
+        from .fuel_delivery_service import fuel_delivery_service
+        
+        data = request.get_json()
+        request_id = data.get('request_id')
+        agent_id = data.get('agent_id')
+        
+        if not request_id or not agent_id:
+            return jsonify({'success': False, 'error': 'Missing request_id or agent_id'}), 400
+        
+        result = fuel_delivery_service.reject_delivery_request(request_id, agent_id)
+        
+        if result['success']:
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

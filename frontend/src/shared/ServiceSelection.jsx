@@ -8,7 +8,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
   const navigate = useNavigate();
   
   const defaultServices = [
-    { id: 'healthcare', label: 'Healthcare', path: '/doctors' },
+    { id: 'healthcare', label: 'Healthcare', path: '/services/healthcare' },
     { id: 'housekeeping', label: 'Housekeeping', path: '/housekeeping/home' },
     { id: 'freelance', label: 'Freelance Marketplace', path: '/freelance/home' },
     { id: 'car', label: 'Car Services', path: '/worker/car/login' },
@@ -83,8 +83,8 @@ const ServiceSelection = ({ mode = 'user' }) => {
                       navigate('/worker/housekeeping/login');
                       return;
                     }
-                    if (service.id === 'freelance') {
-                      navigate('/worker/freelance/login');
+                    if (service.id === 'car') {
+                      navigate('/worker/car/services');
                       return;
                     }
                     if (service.id === 'money') {

@@ -117,7 +117,7 @@ def tow_truck_operator_signup():
         }
         
         # Call API
-        response = requests.post(f"{API}/api/car/tow-truck/signup", data=data)
+        response = requests.post(f"{API}/api/tow-truck/signup", data=data)
         
         if response.status_code == 201:
             result = response.json()
@@ -146,7 +146,7 @@ def tow_truck_operator_login():
             return
         
         # Call API
-        response = requests.post(f"{API}/api/car/tow-truck/login", json={
+        response = requests.post(f"{API}/api/tow-truck/login", json={
             "email": email,
             "password": password
         })
@@ -233,8 +233,11 @@ def toggle_online_status(operator, token):
         new_status = 1 if current_status == 0 else 0
         
         response = requests.put(
-            f"{API}/api/car/tow-truck/status",
-            json={"is_online": bool(new_status)},
+            f"{API}/api/tow-truck/status",
+            json={
+                "operator_id": operator.get('id'),
+                "is_online": bool(new_status)
+            },
             headers={"Authorization": f"Bearer {token}"}
         )
         

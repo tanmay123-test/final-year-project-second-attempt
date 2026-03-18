@@ -48,6 +48,31 @@ class WorkerSlotsDB:
         except sqlite3.IntegrityError:
             return False
     
+    def get_worker_slots(self, worker_id: int) -> List[Dict]:
+        """Get all slots for a worker"""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT * FROM worker_slots 
+            WHERE worker_id = ?
+            ORDER BY slot_date, start_time
+        """, (worker_id,))
+        
+        return [dict(row) for row in cursor.fetchall()]
+    
+    def create_slot(self, worker_id: int, date: str, start_time: str, end_time: str, 
+                   max_jobs: int = 1, status: str = 'AVAILABLE') -> int:
+        """Create a new slot and return its ID"""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("""
+                INSERT INTO worker_slots (worker_id, slot_date, start_time, end_time, status)
+                VALUES (?, ?, ?, ?, ?)
+            """, (worker_id, date, start_time, end_time, status))
+            self.conn.commit()
+            return cursor.lastrowid
+        except sqlite3.IntegrityError:
+            return None
+    
     def get_available_slots(self, worker_id: int, date: str = None) -> List[Dict]:
         """Get available slots for a worker"""
         cursor = self.conn.cursor()

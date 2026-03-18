@@ -48,21 +48,22 @@ def automobile_expert_signup():
             else:
                 print("❌ Invalid choice. Please select 1-4.")
         
-        # Document paths
+        # Document paths (optional for CLI)
         print("\n📄 Document Uploads")
-        print("Enter file paths for required documents:")
+        print("Enter file paths for required documents (optional - can upload later):")
         
-        certificate_path = input("Enter Certificate file path: ").strip()
+        certificate_path = input("Enter Certificate file path (press Enter to skip): ").strip()
         
         # Validation
         if not all([name, email, phone, password, experience, area_of_expertise]):
             print("❌ All required fields must be filled")
             return
         
-        # Validate file paths exist
+        # Validate file paths exist (only if provided)
         if certificate_path and not os.path.exists(certificate_path):
-            print(f"❌ Certificate file not found: {certificate_path}")
-            return
+            print(f"⚠️ Certificate file not found: {certificate_path}")
+            print("📝 Continuing without certificate file. You can upload it later.")
+            certificate_path = None  # Clear the invalid path
         
         # Prepare data
         data = {

@@ -21,14 +21,35 @@ def allowed_file(filename):
 def signup():
     """Automobile expert signup"""
     try:
-        # Get form data
-        name = request.form.get('name', '').strip()
-        email = request.form.get('email', '').strip()
-        phone = request.form.get('phone', '').strip()
-        password = request.form.get('password', '').strip()
-        experience_years = request.form.get('experience_years', '').strip()
-        area_of_expertise = request.form.get('area_of_expertise', '').strip()
-        worker_type = request.form.get('worker_type', '').strip()
+        # Check if JSON data or form data
+        if request.is_json:
+            # JSON data from frontend
+            data = request.get_json()
+            name = data.get('name', '').strip()
+            email = data.get('email', '').strip()
+            phone = data.get('phone', '').strip()
+            password = data.get('password', '').strip()
+            experience_years = data.get('experience_years', '').strip()
+            area_of_expertise = data.get('area_of_expertise', '').strip()
+            worker_type = data.get('worker_type', '').strip()
+            certificate_path = data.get('certificate_path', '')
+        else:
+            # Form data from CLI
+            name = request.form.get('name', '').strip()
+            email = request.form.get('email', '').strip()
+            phone = request.form.get('phone', '').strip()
+            password = request.form.get('password', '').strip()
+            experience_years = request.form.get('experience_years', '').strip()
+            area_of_expertise = request.form.get('area_of_expertise', '').strip()
+            worker_type = request.form.get('worker_type', '').strip()
+            
+            # Handle file uploads for form data
+            certificate_path = None
+            if 'certificate' in request.files:
+                certificate = request.files['certificate']
+                if certificate and certificate.filename and allowed_file(certificate.filename):
+                    certificate_path = secure_filename(certificate.filename)
+                    certificate.save(certificate_path)
         
         # Validation
         if not all([name, email, phone, password, experience_years, area_of_expertise]):
@@ -41,21 +62,6 @@ def signup():
         if automobile_expert_db.get_expert_by_email(email):
             return jsonify({'error': 'Email already registered'}), 400
         
-        # Handle file uploads
-        certificate_path = None
-        profile_photo_path = None
-        
-        if 'certificate' in request.files:
-            certificate = request.files['certificate']
-            if certificate and certificate.filename and allowed_file(certificate.filename):
-                filename = secure_filename(certificate.filename)
-                upload_dir = os.path.join(os.path.dirname(__file__), '..', 'uploads', 'automobile_experts')
-                os.makedirs(upload_dir, exist_ok=True)
-                
-                certificate_path = os.path.join(upload_dir, f"cert_{email}_{filename}")
-                certificate.save(certificate_path)
-                certificate_path = os.path.join('uploads', 'automobile_experts', f"cert_{email}_{filename}")
-        
         if 'profile_photo' in request.files:
             profile_photo = request.files['profile_photo']
             if profile_photo and profile_photo.filename and allowed_file(profile_photo.filename):
@@ -65,7 +71,6 @@ def signup():
                 
                 profile_photo_path = os.path.join(upload_dir, f"photo_{email}_{filename}")
                 profile_photo.save(profile_photo_path)
-                profile_photo_path = os.path.join('uploads', 'automobile_experts', f"photo_{email}_{filename}")
         
         # Create expert
         try:
@@ -78,7 +83,7 @@ def signup():
                 area_of_expertise=area_of_expertise,
                 experience_years=experience_years_int,
                 certificate_path=certificate_path,
-                profile_photo_path=profile_photo_path
+                profile_photo_path=profile_photo_path if 'profile_photo_path' in locals() else None
             )
             
             return jsonify({
@@ -188,28 +193,32 @@ def update_profile():
                 else:
                     update_data[field] = value.strip()
         
-        # Handle file updates
-        if 'certificate' in request.files:
-            certificate = request.files['certificate']
-            if certificate and certificate.filename and allowed_file(certificate.filename):
-                filename = secure_filename(certificate.filename)
-                upload_dir = os.path.join(os.path.dirname(__file__), '..', 'uploads', 'automobile_experts')
-                os.makedirs(upload_dir, exist_ok=True)
-                
-                certificate_path = os.path.join(upload_dir, f"cert_{expert['email']}_{filename}")
-                certificate.save(certificate_path)
-                update_data['certificate_path'] = os.path.join('uploads', 'automobile_experts', f"cert_{expert['email']}_{filename}")
-        
-        if 'profile_photo' in request.files:
-            profile_photo = request.files['profile_photo']
-            if profile_photo and profile_photo.filename and allowed_file(profile_photo.filename):
-                filename = secure_filename(profile_photo.filename)
-                upload_dir = os.path.join(os.path.dirname(__file__), '..', 'uploads', 'automobile_experts')
-                os.makedirs(upload_dir, exist_ok=True)
-                
-                profile_photo_path = os.path.join(upload_dir, f"photo_{expert['email']}_{filename}")
-                profile_photo.save(profile_photo_path)
-                update_data['profile_photo_path'] = os.path.join('uploads', 'automobile_experts', f"photo_{expert['email']}_{filename}")
+        # Handle file uploads for form data only (CLI)
+        if not request.is_json:
+            certificate_path = None
+            profile_photo_path = None
+            
+            if 'certificate' in request.files:
+                certificate = request.files['certificate']
+                if certificate and certificate.filename and allowed_file(certificate.filename):
+                    filename = secure_filename(certificate.filename)
+                    upload_dir = os.path.join(os.path.dirname(__file__), '..', 'uploads', 'automobile_experts')
+                    os.makedirs(upload_dir, exist_ok=True)
+                    
+                    certificate_path = os.path.join(upload_dir, f"cert_{expert['email']}_{filename}")
+                    certificate.save(certificate_path)
+                    certificate_path = os.path.join('uploads', 'automobile_experts', f"cert_{expert['email']}_{filename}")
+            
+            if 'profile_photo' in request.files:
+                profile_photo = request.files['profile_photo']
+                if profile_photo and profile_photo.filename and allowed_file(profile_photo.filename):
+                    filename = secure_filename(profile_photo.filename)
+                    upload_dir = os.path.join(os.path.dirname(__file__), '..', 'uploads', 'automobile_experts')
+                    os.makedirs(upload_dir, exist_ok=True)
+                    
+                    profile_photo_path = os.path.join(upload_dir, f"photo_{expert['email']}_{filename}")
+                    profile_photo.save(profile_photo_path)
+                    profile_photo_path = os.path.join('uploads', 'automobile_experts', f"photo_{expert['email']}_{filename}")
         
         success = automobile_expert_db.update_expert_profile(int(expert_id), **update_data)
         

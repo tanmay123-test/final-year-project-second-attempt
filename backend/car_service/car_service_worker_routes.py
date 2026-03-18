@@ -354,3 +354,83 @@ def update_worker_availability():
     except Exception as e:
         print(f"❌ Update worker availability error: {e}")
         return jsonify({"error": "Failed to update availability"}), 500
+
+# ===== WORKER SLOTS MANAGEMENT =====
+
+@car_service_worker_bp.route("/api/car/service/worker/<int:worker_id>/slots", methods=["GET"])
+def get_worker_slots(worker_id):
+    """Get all slots for a worker"""
+    try:
+        # Import worker_slots_db
+        from car_service.worker_slots_db import worker_slots_db
+        
+        slots = worker_slots_db.get_worker_slots(worker_id)
+        
+        return jsonify({
+            "success": True,
+            "slots": slots,
+            "count": len(slots),
+            "message": "Slots retrieved successfully"
+        }), 200
+            
+    except Exception as e:
+        print(f"❌ Get worker slots error: {e}")
+        return jsonify({"error": "Failed to get worker slots"}), 500
+
+@car_service_worker_bp.route("/api/car/service/worker/<int:worker_id>/slots", methods=["POST"])
+def add_worker_slot(worker_id):
+    """Add a new slot for a worker"""
+    try:
+        # Import worker_slots_db
+        from car_service.worker_slots_db import worker_slots_db
+        
+        data = request.json
+        if not data:
+            return jsonify({"error": "Slot data is required"}), 400
+        
+        # Validate required fields
+        required_fields = ['date', 'startTime', 'endTime']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({"error": f"{field} is required"}), 400
+        
+        # Create slot
+        slot_id = worker_slots_db.create_slot(
+            worker_id=worker_id,
+            date=data['date'],
+            start_time=data['startTime'],
+            end_time=data['endTime'],
+            max_jobs=data.get('maxJobs', 1),
+            status=data.get('status', 'available')
+        )
+        
+        return jsonify({
+            "success": True,
+            "slot_id": slot_id,
+            "message": "Slot created successfully"
+        }), 200
+            
+    except Exception as e:
+        print(f"❌ Add worker slot error: {e}")
+        return jsonify({"error": "Failed to add worker slot"}), 500
+
+@car_service_worker_bp.route("/api/car/service/worker/<int:worker_id>/slots/<int:slot_id>", methods=["DELETE"])
+def delete_worker_slot(worker_id, slot_id):
+    """Delete a slot for a worker"""
+    try:
+        # Import worker_slots_db
+        from car_service.worker_slots_db import worker_slots_db
+        
+        success = worker_slots_db.delete_slot(slot_id, worker_id)
+        
+        if success:
+            return jsonify({
+                "success": True,
+                "message": "Slot deleted successfully"
+            }), 200
+        else:
+            return jsonify({"error": "Failed to delete slot"}), 500
+            
+    except Exception as e:
+        print(f"❌ Delete worker slot error: {e}")
+        return jsonify({"error": "Failed to delete worker slot"}), 500
