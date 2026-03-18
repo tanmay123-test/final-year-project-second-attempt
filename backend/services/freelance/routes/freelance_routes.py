@@ -1,33 +1,46 @@
 from flask import Blueprint, request, jsonify
 from ..services.freelance_service import freelance_service
-from auth_utils import verify_token
+from ..controllers.freelance_controller import freelance_controller
+from ..controllers.ai_controller import ai_controller
+from ..controllers.profile_controller import profile_controller
+from auth_utils import verify_token, get_current_user_id
 from user_db import UserDB
 from worker_db import WorkerDB
 
 freelance_bp = Blueprint('freelance', __name__)
 
-def get_current_user_id():
-    auth_header = request.headers.get('Authorization')
-    if not auth_header or not auth_header.startswith('Bearer '):
-        return None
-    token = auth_header.split(' ')[1]
-    username_or_email = verify_token(token)
-    if not username_or_email:
-        return None
-    
-    # 1. Check UserDB (for clients)
-    user_db = UserDB()
-    user_id = user_db.get_user_by_username(username_or_email)
-    if user_id:
-        return user_id
-        
-    # 2. Check WorkerDB (for freelancers)
-    worker_db = WorkerDB()
-    worker = worker_db.get_worker_by_email(username_or_email)
-    if worker:
-        return worker['id']
-        
-    return None
+# Profile Routes
+@freelance_bp.route('/api/freelancer/profile/me', methods=['GET'])
+def get_my_profile():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    return profile_controller.get_profile(user_id)
+
+@freelance_bp.route('/api/freelancer/profile/update', methods=['PUT'])
+def update_my_profile():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    return profile_controller.update_profile(user_id)
+
+@freelance_bp.route('/api/freelancer/profile/change-password', methods=['PUT'])
+def change_my_password():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    return profile_controller.change_password(user_id)
+
+@freelance_bp.route('/api/freelancer/auth/logout', methods=['POST'])
+def freelancer_logout():
+    return profile_controller.logout()
+
+@freelance_bp.route('/api/freelancer/projects/create', methods=['POST'])
+def create_project_v2():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    return freelance_controller.create_project(user_id)
 
 @freelance_bp.route('/api/freelance/projects', methods=['POST'])
 def create_project():
@@ -86,6 +99,27 @@ def submit_proposal():
         print(f"Error in submit_proposal: {str(e)}")
         return jsonify({"error": str(e)}), 400
 
+@freelance_bp.route('/api/freelancer/projects/my-projects', methods=['GET'])
+def list_my_projects_v2():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    status = request.args.get('status')
+    # Use existing service method
+    projects = freelance_service.get_projects_by_client(client_id=user_id, status=status)
+    return jsonify({"success": True, "projects": projects}), 200
+
+@freelance_bp.route('/api/freelancer/bookings/my-bookings', methods=['GET'])
+def list_my_bookings_v2():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    # Client side bookings
+    bookings = freelance_service.get_bookings_by_client(user_id)
+    return jsonify({"success": True, "bookings": bookings}), 200
+
 @freelance_bp.route('/api/freelance/my-projects', methods=['GET'])
 def list_my_projects():
     user_id = get_current_user_id()
@@ -143,21 +177,83 @@ def get_stats():
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
     
-    stats = freelance_service.get_freelancer_stats(freelancer_id=user_id)
-    notifications = freelance_service.get_notifications(user_id=user_id)
+    stats = freelance_service.get_freelancer_stats(user_id)
+    notifications = freelance_service.get_notifications(user_id)
     return jsonify({"stats": stats, "notifications": notifications}), 200
 
-@freelance_bp.route('/api/freelance/milestones/submit', methods=['POST'])
-def submit_milestone():
+@freelance_bp.route('/api/freelancer/dashboard', methods=['GET'])
+def get_freelancer_dashboard():
     user_id = get_current_user_id()
     if not user_id:
-        return jsonify({"error": "Unauthorized"}), 401
-    
-    data = request.json
-    milestone_id = data.get('milestone_id')
-    if freelance_service.submit_milestone(milestone_id):
-        return jsonify({"success": True}), 200
-    return jsonify({"error": "Failed to submit milestone"}), 400
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    return freelance_controller.get_dashboard(user_id)
+
+@freelance_bp.route('/api/freelancer/proposals/my-proposals', methods=['GET'])
+def get_my_proposals():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    status = request.args.get('status', 'all')
+    proposals = freelance_service.get_proposals_by_freelancer(user_id, status)
+    return jsonify({"success": True, "proposals": proposals}), 200
+
+@freelance_bp.route('/api/freelancer/proposals/<int:proposal_id>', methods=['DELETE'])
+def delete_proposal(proposal_id):
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    success, message = freelance_service.withdraw_proposal(proposal_id, user_id)
+    return jsonify({"success": success, "message": message}), 200 if success else 400
+
+@freelance_bp.route('/api/freelancer/bookings/direct', methods=['GET'])
+def get_direct_bookings():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    bookings = freelance_service.get_direct_bookings_by_freelancer(user_id)
+    return jsonify({"success": True, "bookings": bookings}), 200
+
+@freelance_bp.route('/api/freelancer/bookings/<int:booking_id>/accept', methods=['PUT'])
+def accept_booking(booking_id):
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    success, message = freelance_service.update_booking_status(booking_id, user_id, 'ACCEPTED')
+    return jsonify({"success": success, "message": message}), 200 if success else 400
+
+@freelance_bp.route('/api/freelancer/work/my-work', methods=['GET'])
+def get_my_work():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    work = freelance_service.get_freelancer_active_work(user_id)
+    return jsonify({"success": True, "work": work}), 200
+
+@freelance_bp.route('/api/freelancer/work/<int:project_id>/submit-milestone', methods=['POST'])
+def freelancer_submit_milestone(project_id):
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    milestone_id = request.json.get('milestoneId')
+    success, message = freelance_service.submit_milestone(project_id, milestone_id, user_id)
+    return jsonify({"success": success, "message": message}), 200 if success else 400
+
+@freelance_bp.route('/api/freelancer/work/<int:project_id>/messages', methods=['GET'])
+def get_messages(project_id):
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    messages = freelance_service.get_project_messages(project_id)
+    return jsonify({"success": True, "messages": messages}), 200
+
+@freelance_bp.route('/api/freelancer/work/<int:project_id>/messages', methods=['POST'])
+def freelancer_send_message(project_id):
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    message_text = request.json.get('message')
+    success, message = freelance_service.send_project_message(project_id, user_id, message_text)
+    return jsonify({"success": success, "message": message}), 200 if success else 400
 
 @freelance_bp.route('/api/freelance/messages', methods=['POST'])
 def send_message():
@@ -204,6 +300,43 @@ def list_my_bookings():
     status = request.args.get('status', 'PENDING')
     bookings = freelance_service.get_booking_requests_by_freelancer(freelancer_id=user_id, status=status)
     return jsonify({"bookings": bookings}), 200
+
+@freelance_bp.route('/api/freelancer/ai/generate-description', methods=['POST'])
+def ai_generate_description():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    return ai_controller.generate_description()
+
+@freelance_bp.route('/api/freelancer/ai/suggest-budget', methods=['POST'])
+def ai_suggest_budget():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    return ai_controller.suggest_budget()
+
+@freelance_bp.route('/api/freelancer/ai/suggest-milestones', methods=['POST'])
+def ai_suggest_milestones():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    return ai_controller.suggest_milestones()
+
+@freelance_bp.route('/api/freelancer/ai/recommend-freelancers', methods=['POST'])
+def ai_recommend_freelancers():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    return ai_controller.recommend_freelancers()
+
+@freelance_bp.route('/api/home/featured-freelancers', methods=['GET'])
+def get_featured_freelancers():
+    try:
+        limit = request.args.get('limit', default=3, type=int)
+        freelancers = freelance_service.get_featured_freelancers(limit=limit)
+        return jsonify({"freelancers": freelancers}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @freelance_bp.route('/api/freelance/skills', methods=['GET'])
 def get_skills():

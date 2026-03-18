@@ -35,8 +35,12 @@ import ProviderPricing from './services/housekeeping/provider/ProviderPricing';
 import UserLayout from './components/UserLayout';
 
 // Freelance Marketplace
-import FreelanceHome from './services/freelance/pages/FreelanceHome';
-import FreelancerDashboard from './services/freelance/pages/FreelancerDashboard';
+import FreelanceHome from './services/freelance/client/FreelanceHome';
+import FreelancerDashboard from './services/freelance/worker/FreelancerDashboard';
+import BrowseProjects from './services/freelance/worker/BrowseProjects';
+import FreelancerProposals from './services/freelance/worker/FreelancerProposals';
+import FreelancerWork from './services/freelance/worker/FreelancerWork';
+import FreelanceWalletPage from './services/freelance/worker/FreelanceWalletPage';
 
 // Finny Smart Transaction Tracker
 import FinnyHomeScreen from './services/finny/pages/FinnyHomeScreen';
@@ -95,6 +99,13 @@ const ProtectedWorkerRoute = ({ children }) => {
     if (location.pathname.startsWith('/worker/car/automobile-expert')) {
       token = localStorage.getItem('automobileExpertToken');
       workerData = localStorage.getItem('automobileExpertData');
+    } else if (location.pathname.startsWith('/freelancer/') || location.pathname.startsWith('/doctor/') || location.pathname.startsWith('/worker/housekeeping/')) {
+      token = localStorage.getItem('token');
+      // For these types, worker data might be in worker_id or user info
+      const workerId = localStorage.getItem('worker_id');
+      if (token && workerId) {
+        workerData = JSON.stringify({ id: workerId, email: localStorage.getItem('worker_email') });
+      }
     } else {
       token = localStorage.getItem('workerToken');
       workerData = localStorage.getItem('workerData');
@@ -228,6 +239,38 @@ const App = () => {
             element={
               <ProtectedWorkerRoute>
                 <FreelancerDashboard />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/freelancer/browse" 
+            element={
+              <ProtectedWorkerRoute>
+                <BrowseProjects />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/freelancer/proposals" 
+            element={
+              <ProtectedWorkerRoute>
+                <FreelancerProposals />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/freelancer/work" 
+            element={
+              <ProtectedWorkerRoute>
+                <FreelancerWork />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/freelancer/wallet" 
+            element={
+              <ProtectedWorkerRoute>
+                <FreelanceWalletPage />
               </ProtectedWorkerRoute>
             } 
           />

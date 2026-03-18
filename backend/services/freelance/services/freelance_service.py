@@ -208,6 +208,92 @@ class FreelanceService:
         finally:
             conn.close()
 
+    def get_freelancer_dashboard_data(self, freelancer_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            from config import WORKER_DB, USER_DB
+            cursor.execute(f"ATTACH DATABASE '{WORKER_DB}' AS worker_db")
+            cursor.execute(f"ATTACH DATABASE '{USER_DB}' AS user_db")
+            
+            # 1. Basic Info
+            cursor.execute("SELECT full_name, specialization, skills, bio, rating, photo_url FROM worker_db.workers WHERE id = ?", (freelancer_id,))
+            worker_row = cursor.fetchone()
+            if not worker_row:
+                return None
+            
+            worker = freelance_db._row_to_dict(worker_row, cursor)
+            name = worker['full_name']
+            role = worker['specialization'] or "Freelancer"
+            skills = worker['skills'] or ""
+            
+            # Avatar initials
+            name_parts = name.split()
+            initials = "".join([p[0].upper() for p in name_parts[:2]]) if name_parts else "F"
+            
+            # 2. Stats
+            stats = self.get_freelancer_stats(freelancer_id)
+            
+            # 3. Profile Completion
+            completion_score = 0
+            if worker['full_name']: completion_score += 20
+            if worker['specialization']: completion_score += 20
+            if worker['skills']: completion_score += 20
+            if worker['bio']: completion_score += 20
+            if worker['photo_url']: completion_score += 20
+            
+            # 4. Active Projects
+            cursor.execute("""
+                SELECT c.*, p.title as project_title, u.name as client_name, p.deadline
+                FROM freelance_contracts c
+                JOIN freelance_projects p ON c.project_id = p.id
+                LEFT JOIN user_db.users u ON c.client_id = u.id
+                WHERE c.freelancer_id = ? AND c.status = 'ACTIVE'
+                ORDER BY c.start_date DESC
+            """, (freelancer_id,))
+            active_projects = [freelance_db._row_to_dict(row, cursor) for row in cursor.fetchall()]
+            
+            # 5. Recent Proposals
+            cursor.execute("""
+                SELECT p.*, pr.title as project_title, pr.budget_amount as budget, pr.deadline
+                FROM freelance_proposals p
+                JOIN freelance_projects pr ON p.project_id = pr.id
+                WHERE p.freelancer_id = ?
+                ORDER BY p.created_at DESC LIMIT 5
+            """, (freelancer_id,))
+            recent_proposals = [freelance_db._row_to_dict(row, cursor) for row in cursor.fetchall()]
+            
+            # 6. Recommended Projects (Matching Skills)
+            # Simple matching: projects with at least one matching skill
+            recommended_projects = []
+            if skills:
+                skill_list = [s.strip().lower() for s in skills.split(',')]
+                # Get all open projects
+                all_open_projects = self.get_projects(status='OPEN')
+                for p in all_open_projects:
+                    proj_skills = (p.get('required_skills') or "").lower()
+                    if any(s in proj_skills for s in skill_list):
+                        recommended_projects.append(p)
+            
+            # If no recommendations, just show latest open projects
+            if not recommended_projects:
+                recommended_projects = self.get_projects(status='OPEN')[:3]
+            else:
+                recommended_projects = recommended_projects[:3]
+
+            return {
+                "name": name,
+                "role": role,
+                "avatarInitials": initials,
+                "stats": stats,
+                "profileCompletion": completion_score,
+                "activeProjects": active_projects,
+                "recentProposals": recent_proposals,
+                "recommendedProjects": recommended_projects
+            }
+        finally:
+            conn.close()
+
     def get_notifications(self, user_id, limit=5):
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
@@ -296,6 +382,127 @@ class FreelanceService:
             conn.rollback()
             print(f"Exception in accept_proposal: {str(e)}")
             return False, str(e)
+        finally:
+            conn.close()
+
+    def get_project_count_by_user(self, user_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT COUNT(*) FROM freelance_projects WHERE client_id = ?", (user_id,))
+            return cursor.fetchone()[0]
+        finally:
+            conn.close()
+
+    def get_proposals_by_freelancer(self, freelancer_id, status=None):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            query = """
+                SELECT p.*, pr.title as project_title, pr.budget_amount as budget, pr.deadline
+                FROM freelance_proposals p
+                JOIN freelance_projects pr ON p.project_id = pr.id
+                WHERE p.freelancer_id = ?
+            """
+            params = [freelancer_id]
+            if status and status.lower() != 'all':
+                query += " AND p.status = ?"
+                params.append(status.upper())
+            
+            query += " ORDER BY p.created_at DESC"
+            cursor.execute(query, tuple(params))
+            return [freelance_db._row_to_dict(row, cursor) for row in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def withdraw_proposal(self, proposal_id, freelancer_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            # Only allow withdrawing if pending
+            cursor.execute("SELECT status FROM freelance_proposals WHERE id = ? AND freelancer_id = ?", (proposal_id, freelancer_id))
+            row = cursor.fetchone()
+            if not row:
+                return False, "Proposal not found"
+            if row[0] != 'PENDING':
+                return False, "Only pending proposals can be withdrawn"
+            
+            cursor.execute("DELETE FROM freelance_proposals WHERE id = ?", (proposal_id,))
+            conn.commit()
+            return True, "Withdrawn"
+        finally:
+            conn.close()
+
+    def get_direct_bookings_by_freelancer(self, freelancer_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            from config import USER_DB
+            cursor.execute(f"ATTACH DATABASE '{USER_DB}' AS user_db")
+            
+            cursor.execute("""
+                SELECT b.*, p.title as project_title, p.budget_amount as budget, p.deadline, u.name as client_name
+                FROM freelance_bookings b
+                JOIN freelance_projects p ON b.project_id = p.id
+                LEFT JOIN user_db.users u ON b.client_id = u.id
+                WHERE b.freelancer_id = ?
+                ORDER BY b.created_at DESC
+            """, (freelancer_id,))
+            return [freelance_db._row_to_dict(row, cursor) for row in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def get_freelancer_active_work(self, freelancer_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            from config import USER_DB
+            cursor.execute(f"ATTACH DATABASE '{USER_DB}' AS user_db")
+            
+            cursor.execute("""
+                SELECT c.*, p.title, p.description, u.name as client_name
+                FROM freelance_contracts c
+                JOIN freelance_projects p ON c.project_id = p.id
+                LEFT JOIN user_db.users u ON c.client_id = u.id
+                WHERE c.freelancer_id = ? AND c.status = 'ACTIVE'
+                ORDER BY c.start_date DESC
+            """, (freelancer_id,))
+            contracts = [freelance_db._row_to_dict(row, cursor) for row in cursor.fetchall()]
+            
+            for contract in contracts:
+                cursor.execute("SELECT * FROM freelance_milestones WHERE project_id = ? ORDER BY id ASC", (contract['project_id'],))
+                contract['milestones'] = [freelance_db._row_to_dict(row, cursor) for row in cursor.fetchall()]
+            
+            return contracts
+        finally:
+            conn.close()
+
+    def submit_milestone(self, project_id, milestone_id, freelancer_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE freelance_milestones SET status = 'SUBMITTED' WHERE id = ? AND project_id = ?", (milestone_id, project_id))
+            conn.commit()
+            return True, "Milestone submitted"
+        finally:
+            conn.close()
+
+    def get_project_messages(self, project_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT * FROM freelance_messages WHERE project_id = ? ORDER BY created_at ASC", (project_id,))
+            return [freelance_db._row_to_dict(row, cursor) for row in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def send_project_message(self, project_id, sender_id, message):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("INSERT INTO freelance_messages (project_id, sender_id, message) VALUES (?, ?, ?)", (project_id, sender_id, message))
+            conn.commit()
+            return True, "Message sent"
         finally:
             conn.close()
 
@@ -449,6 +656,28 @@ class FreelanceService:
             
             conn.commit()
             return True
+        finally:
+            conn.close()
+
+    def get_featured_freelancers(self, limit=3):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            from config import WORKER_DB
+            cursor.execute(f"ATTACH DATABASE '{WORKER_DB}' AS worker_db")
+            
+            # Fetch workers with 'freelance' in their services
+            # Assuming 'service' column contains comma-separated values like 'healthcare,freelance'
+            cursor.execute("""
+                SELECT id, full_name, specialization, rating, hourly_rate, skills, status, created_at
+                FROM worker_db.workers
+                WHERE (',' || service || ',') LIKE '%,freelance,%'
+                AND status = 'approved'
+                ORDER BY rating DESC, created_at DESC
+                LIMIT ?
+            """, (limit,))
+            rows = cursor.fetchall()
+            return [freelance_db._row_to_dict(row, cursor) for row in rows]
         finally:
             conn.close()
 
