@@ -36,26 +36,40 @@ def fetch_requests():
     conn = get_connection() 
     cursor = conn.cursor() 
  
-    cursor.execute(""" 
-        SELECT id, pickup_location, drop_location, vehicle_type, distance, estimated_earning 
-        FROM tow_requests 
-        WHERE status = 'SEARCHING' 
-    """) 
- 
-    rows = cursor.fetchall() 
-    conn.close() 
- 
-    return [ 
-         { 
-             "id": r[0], 
-             "pickup": r[1], 
-             "drop": r[2], 
-             "vehicle": r[3], 
-             "distance": r[4], 
-             "earning": r[5] 
-         } 
-         for r in rows 
-     ] 
+    try:
+        # Check if column names match the database schema
+        cursor.execute("PRAGMA table_info(tow_requests)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        # Determine correct column names (handle potential schema mismatch)
+        pickup_col = "pickup_location" if "pickup_location" in columns else "customer_address"
+        drop_col = "drop_location" if "drop_location" in columns else "customer_address"
+        earning_col = "estimated_earning" if "estimated_earning" in columns else "amount"
+        
+        query = f""" 
+            SELECT id, {pickup_col}, {drop_col}, vehicle_type, distance, {earning_col} 
+            FROM tow_requests 
+            WHERE status IN ('SEARCHING', 'pending')
+        """
+        cursor.execute(query) 
+        rows = cursor.fetchall() 
+        
+        return [ 
+             { 
+                 "id": r[0], 
+                 "pickup": r[1], 
+                 "drop": r[2], 
+                 "vehicle": r[3], 
+                 "distance": r[4] if r[4] is not None else 0, 
+                 "earning": r[5] if r[5] is not None else 0
+             } 
+             for r in rows 
+         ] 
+    except Exception as e:
+        print(f"Error fetching requests: {e}")
+        return []
+    finally:
+        conn.close() 
 
 def fetch_active_jobs(worker_id):
     from .db import get_connection
@@ -110,11 +124,19 @@ def accept_job(worker_id, request_id):
     cursor = conn.cursor()
     
     try:
+        # Check if column names match the database schema
+        cursor.execute("PRAGMA table_info(tow_requests)")
+        columns = [col[1] for col in cursor.fetchall()]
+        
+        assigned_op_col = "assigned_operator_id" if "assigned_operator_id" in columns else "operator_id"
+        pickup_col = "pickup_location" if "pickup_location" in columns else "customer_address"
+        drop_col = "drop_location" if "drop_location" in columns else "customer_address"
+        
         # Update request status
-        cursor.execute("UPDATE tow_requests SET status = 'ASSIGNED', assigned_operator_id = ? WHERE id = ?", (worker_id, request_id))
+        cursor.execute(f"UPDATE tow_requests SET status = 'ASSIGNED', {assigned_op_col} = ? WHERE id = ?", (worker_id, request_id))
         
         # Get user details from request
-        cursor.execute("SELECT user_id, pickup_location, drop_location FROM tow_requests WHERE id = ?", (request_id,))
+        cursor.execute(f"SELECT user_id, {pickup_col}, {drop_col} FROM tow_requests WHERE id = ?", (request_id,))
         req = cursor.fetchone()
         
         if req:
@@ -131,6 +153,23 @@ def accept_job(worker_id, request_id):
             conn.commit()
             return {"success": True, "otp": otp}
         return {"success": False, "error": "Request not found"}
+    except Exception as e:
+        print(f"Error accepting job: {e}")
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def reject_job(worker_id, request_id):
+    from .db import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Simply update the request status back to SEARCHING or similar if rejected by one operator
+        # In a more complex system, we'd black-list this operator for this request
+        cursor.execute("UPDATE tow_requests SET status = 'SEARCHING' WHERE id = ?", (request_id,))
+        conn.commit()
+        return {"success": True}
     except Exception as e:
         return {"success": False, "error": str(e)}
     finally:
@@ -196,6 +235,25 @@ def get_job_status(request_id):
         return {"status": "SEARCHING"}
     except Exception:
         return {"status": "UNKNOWN"}
+    finally:
+        conn.close()
+
+def fetch_performance(worker_id):
+    from .db import get_connection
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("SELECT rating FROM tow_operator_profiles WHERE worker_id = ?", (worker_id,))
+        rating = cursor.fetchone()
+        rating = rating[0] if rating else 5.0
+        
+        cursor.execute("SELECT COUNT(*) FROM tow_active_jobs WHERE operator_id = ? AND status = 'COMPLETED'", (worker_id,))
+        completed = cursor.fetchone()[0]
+        
+        return {"rating": rating, "completed_jobs": completed}
+    except Exception:
+        return {"rating": 5.0, "completed_jobs": 0}
     finally:
         conn.close()
 

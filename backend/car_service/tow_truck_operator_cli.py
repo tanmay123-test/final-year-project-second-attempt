@@ -252,7 +252,11 @@ def tow_truck_operator_dashboard(operator, token):
                             "request_id": int(choice_req)
                         })
                         if res.status_code == 200:
-                            print("✅ Job accepted! Navigate to pickup location.")
+                            res_data = res.json()
+                            if res_data.get('success'):
+                                print("✅ Job accepted! Navigate to pickup location.")
+                            else:
+                                print(f"❌ Error: {res_data.get('error', 'Unknown error')}")
                         else:
                             print(f"❌ Error: {res.text}")
             else:
@@ -337,7 +341,12 @@ def tow_truck_operator_dashboard(operator, token):
                 print(f"Completed Jobs: {data.get('completed_jobs', 0)}")
                 print(f"Completion Rate: 100%")
             else:
-                print(f"❌ Error: {response.text}")
+                try:
+                    # Try to handle HTML error response gracefully
+                    error_msg = response.text[:100] if response.text else "Unknown error"
+                    print(f"❌ Error fetching performance: {error_msg}")
+                except:
+                    print(f"❌ Error: Status code {response.status_code}")
             input("\nPress Enter to continue...")
 
         elif choice == "6":

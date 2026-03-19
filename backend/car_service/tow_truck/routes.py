@@ -51,6 +51,24 @@ def earnings():
     data = fetch_earnings(worker_id)
     return jsonify(data)
 
+@tow_bp.route("/api/car/tow/performance", methods=["GET"])
+def performance():
+    worker_id = request.args.get("worker_id")
+    if not worker_id:
+        return jsonify({"error": "worker_id is required"}), 400
+    from .services import fetch_performance
+    data = fetch_performance(worker_id)
+    return jsonify(data)
+
+@tow_bp.route("/api/car/tow/reject", methods=["POST"])
+def reject_tow_job():
+    data = request.json
+    worker_id = data.get("worker_id")
+    request_id = data.get("request_id")
+    from .services import reject_job
+    res = reject_job(worker_id, request_id)
+    return jsonify(res)
+
 @tow_bp.route("/api/car/tow/accept", methods=["POST"])
 def accept_tow_job():
     data = request.json
