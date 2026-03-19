@@ -24,7 +24,8 @@ def show_car_home(user_id):
     choice = input("\nSelect emergency option or press Enter to skip: ").strip()
     if choice == "1":
         print("\n🚛 Tow Truck service selected...")
-        print("(This will use Smart Dispatch Engine later)")
+        from .tow_truck_user_cli import tow_truck_user_interface
+        tow_truck_user_interface({'id': user_id})
     elif choice == "2":
         print("\n⛽ Fuel Delivery service selected...")
         from .fuel_delivery_user_cli import fuel_delivery_user_interface

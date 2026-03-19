@@ -127,13 +127,16 @@ class TowTruckDB:
         cursor.execute('''
             SELECT id, name, email, phone, password_hash, approval_status
             FROM tow_truck_operators 
-            WHERE email = ? AND approval_status = 'APPROVED'
+            WHERE email = ?
         ''', (email,))
         
         operator = cursor.fetchone()
         conn.close()
         
         if operator and check_password_hash(operator[4], password):
+            if operator[5] != 'APPROVED':
+                return {'success': False, 'error': 'Account pending approval', 'status': operator[5]}
+            
             return {
                 'success': True,
                 'operator': {
@@ -155,7 +158,8 @@ class TowTruckDB:
         cursor.execute('''
             SELECT id, name, email, phone, city, experience, truck_type,
                    truck_registration, truck_model, truck_capacity, 
-                   approval_status, created_at
+                   approval_status, created_at, license_path, insurance_path,
+                   fitness_cert_path, pollution_cert_path
             FROM tow_truck_operators 
             WHERE approval_status = 'PENDING'
             ORDER BY created_at DESC
@@ -170,7 +174,8 @@ class TowTruckDB:
                 'city': op[4], 'experience': op[5], 'truck_type': op[6],
                 'truck_registration': op[7], 'truck_model': op[8], 
                 'truck_capacity': op[9], 'approval_status': op[10],
-                'created_at': op[11]
+                'created_at': op[11], 'license_path': op[12], 'insurance_path': op[13],
+                'fitness_cert_path': op[14], 'pollution_cert_path': op[15]
             }
             for op in operators
         ]
@@ -220,6 +225,23 @@ class TowTruckDB:
         
         return changes > 0
 
+    def get_operator_by_id(self, operator_id):
+        """Get operator details by ID"""
+        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT * FROM tow_truck_operators WHERE id = ?
+        ''', (operator_id,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            columns = [column[0] for column in cursor.description]
+            return dict(zip(columns, row))
+        return None
+
 # Initialize database
 tow_truck_db = TowTruckDB()
 
@@ -251,47 +273,31 @@ def register_tow_truck_operator():
         
         if result['success']:
             # Also create a corresponding unified car service worker entry for admin approval
-            car_worker_id = None
             try:
                 car_service_db = CarServiceWorkerDB()
-                car_worker_id = car_service_db.create_worker(
+                car_service_db.create_worker(
                     name=data['name'],
                     email=data['email'],
                     phone=data['phone'],
-                    password=data['password_hash'],  # Use the same hash
+                    password=data['password_hash'],
                     role="Tow Truck Operator",
-                    age=25,  # default age if not provided
+                    age=25,
                     city=data['city'],
                     address="Not provided",
-                    experience=int(data['experience']) if data['experience'].isdigit() else 0,
-                    skills="Towing, Vehicle Recovery, Roadside Assistance",
+                    experience=int(data['experience']) if str(data['experience']).isdigit() else 0,
+                    skills="Towing, Vehicle Recovery",
                     vehicle_number=data['truck_registration'],
                     vehicle_model=data['truck_model'],
                     loading_capacity=data['truck_capacity'],
-                    profile_photo=None,
-                    aadhaar_path=None,
-                    license_path=data.get('license_path'),
-                    certificate_path=None,
-                    vehicle_rc_path=None,
-                    truck_photo_path=None,
-                    security_declaration=True
+                    license_path=data.get('license_path')
                 )
             except Exception as e:
-                print(f"⚠️ Could not create unified car service worker record: {e}")
-                # Try to get existing worker
-                try:
-                    car_service_db = CarServiceWorkerDB()
-                    existing = car_service_db.get_worker_by_email(data['email'])
-                    if existing:
-                        car_worker_id = existing.get('id')
-                except Exception:
-                    pass
+                print(f"⚠️ Unified worker record note: {e}")
             
             return jsonify({
                 'success': True,
                 'message': 'Registration successful! Please wait for admin approval.',
-                'operator_id': result['operator_id'],
-                'car_worker_id': car_worker_id
+                'operator_id': result['operator_id']
             }), 200
         else:
             return jsonify(result), 400
@@ -299,108 +305,11 @@ def register_tow_truck_operator():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@tow_truck_bp.route('/status', methods=['PUT'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['PUT'])
-def update_operator_status():
-    """Update tow truck operator online/offline status"""
-    try:
-        data = request.get_json()
-        operator_id = data.get('operator_id')
-        is_online = data.get('is_online')
-        
-        if not operator_id or is_online is None:
-            return jsonify({'success': False, 'error': 'Operator ID and status required'}), 400
-        
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE tow_truck_operators 
-            SET is_online = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ''', (1 if is_online else 0, operator_id))
-        
-        conn.commit()
-        changes = cursor.rowcount
-        conn.close()
-        
-        if changes > 0:
-            message = 'Status updated successfully'
-            note = 'Your status has been updated. You are now ' + ('online' if is_online else 'offline')
-            return jsonify({'success': True, 'message': message, 'note': note}), 200
-        else:
-            return jsonify({'success': False, 'error': 'Operator not found'}), 404
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@tow_truck_bp.route('/active-jobs/<int:operator_id>', methods=['GET', 'OPTIONS'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['GET', 'OPTIONS'])
-def get_operator_active_jobs(operator_id):
-    if request.method == 'OPTIONS':
-        return '', 200
-    """Get operator's active jobs count and earnings"""
-    try:
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        # Get active jobs count
-        cursor.execute('''
-            SELECT COUNT(*) as active_jobs
-            FROM tow_requests 
-            WHERE operator_id = ? AND status IN ('pending', 'accepted', 'in_progress')
-        ''', (operator_id,))
-        
-        active_jobs_result = cursor.fetchone()
-        active_jobs = active_jobs_result[0] if active_jobs_result else 0
-        
-        # Get total earnings from completed jobs
-        cursor.execute('''
-            SELECT COALESCE(SUM(amount), 0) as total_earnings
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed'
-        ''', (operator_id,))
-        
-        earnings_result = cursor.fetchone()
-        total_earnings = earnings_result[0] if earnings_result else 0
-        
-        # Get completed today jobs
-        cursor.execute('''
-            SELECT COUNT(*) as completed_today
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed' AND DATE(created_at) = DATE('now')
-        ''', (operator_id,))
-        
-        today_result = cursor.fetchone()
-        completed_today = today_result[0] if today_result else 0
-        
-        conn.close()
-        
-        return jsonify({
-            'success': True,
-            'activeJobs': active_jobs,
-            'totalEarnings': total_earnings,
-            'completedToday': completed_today
-        }), 200
-            
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-@tow_truck_bp.route('/login', methods=['POST', 'OPTIONS'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['POST', 'OPTIONS'])
+@tow_truck_bp.route('/login', methods=['POST'])
 def login_tow_truck_operator():
-    if request.method == 'OPTIONS':
-        return '', 200
     """Login tow truck operator"""
     try:
         data = request.get_json()
-        
-        if not data:
-            return jsonify({'success': False, 'error': 'No data provided'}), 400
-        
         email = data.get('email')
         password = data.get('password')
         
@@ -410,110 +319,44 @@ def login_tow_truck_operator():
         result = tow_truck_db.authenticate_operator(email, password)
         
         if result['success']:
-            # Generate token (you might want to use JWT here)
-            token = f"tow_truck_token_{result['operator']['id']}"
+            operator_data = result['operator']
+            # Ensure operator profile exists in specialized tow truck database
+            try:
+                from .tow_truck.db import TowTruckDB
+                spec_db = TowTruckDB()
+                # Get more details from the main tow_truck_operators table
+                full_op = tow_truck_db.get_operator_by_id(operator_data['id'])
+                if full_op:
+                    spec_db.create_operator_profile(
+                        worker_id=full_op['id'],
+                        name=full_op['name'],
+                        truck_model=full_op['truck_model'],
+                        vehicle_number=full_op['truck_registration'],
+                        capacity=full_op['truck_capacity'],
+                        city=full_op['city']
+                    )
+            except Exception as e:
+                print(f"⚠️ Specialized profile note: {e}")
+                
+            token = f"tow_truck_token_{operator_data['id']}"
             
+            # Use full_op for response if available
+            response_operator = full_op if full_op else operator_data
+            # Remove password hash for security
+            if 'password_hash' in response_operator:
+                del response_operator['password_hash']
+                
             return jsonify({
                 'success': True,
                 'message': 'Login successful',
                 'token': token,
-                'operator': result['operator']
+                'operator': response_operator
             }), 200
         else:
             return jsonify(result), 401
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-
-@tow_truck_bp.route('/status', methods=['PUT'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['PUT'])
-def update_operator_status():
-    """Update tow truck operator online/offline status"""
-    try:
-        data = request.get_json()
-        operator_id = data.get('operator_id')
-        is_online = data.get('is_online')
-        
-        if not operator_id or is_online is None:
-            return jsonify({'success': False, 'error': 'Operator ID and status required'}), 400
-        
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE tow_truck_operators 
-            SET is_online = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ''', (1 if is_online else 0, operator_id))
-        
-        conn.commit()
-        changes = cursor.rowcount
-        conn.close()
-        
-        if changes > 0:
-            message = 'Status updated successfully'
-            note = 'Your status has been updated. You are now ' + ('online' if is_online else 'offline')
-            return jsonify({'success': True, 'message': message, 'note': note}), 200
-        else:
-            return jsonify({'success': False, 'error': 'Operator not found'}), 404
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@tow_truck_bp.route('/active-jobs/<int:operator_id>', methods=['GET', 'OPTIONS'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['GET', 'OPTIONS'])
-def get_operator_active_jobs(operator_id):
-    if request.method == 'OPTIONS':
-        return '', 200
-    """Get operator's active jobs count and earnings"""
-    try:
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        # Get active jobs count
-        cursor.execute('''
-            SELECT COUNT(*) as active_jobs
-            FROM tow_requests 
-            WHERE operator_id = ? AND status IN ('pending', 'accepted', 'in_progress')
-        ''', (operator_id,))
-        
-        active_jobs_result = cursor.fetchone()
-        active_jobs = active_jobs_result[0] if active_jobs_result else 0
-        
-        # Get total earnings from completed jobs
-        cursor.execute('''
-            SELECT COALESCE(SUM(amount), 0) as total_earnings
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed'
-        ''', (operator_id,))
-        
-        earnings_result = cursor.fetchone()
-        total_earnings = earnings_result[0] if earnings_result else 0
-        
-        # Get completed today jobs
-        cursor.execute('''
-            SELECT COUNT(*) as completed_today
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed' AND DATE(created_at) = DATE('now')
-        ''', (operator_id,))
-        
-        today_result = cursor.fetchone()
-        completed_today = today_result[0] if today_result else 0
-        
-        conn.close()
-        
-        return jsonify({
-            'success': True,
-            'activeJobs': active_jobs,
-            'totalEarnings': total_earnings,
-            'completedToday': completed_today
-        }), 200
-            
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
 
 @tow_truck_bp.route('/admin/pending', methods=['GET'])
 def get_pending_tow_truck_operators():
@@ -524,96 +367,6 @@ def get_pending_tow_truck_operators():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@tow_truck_bp.route('/status', methods=['PUT'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['PUT'])
-def update_operator_status():
-    """Update tow truck operator online/offline status"""
-    try:
-        data = request.get_json()
-        operator_id = data.get('operator_id')
-        is_online = data.get('is_online')
-        
-        if not operator_id or is_online is None:
-            return jsonify({'success': False, 'error': 'Operator ID and status required'}), 400
-        
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE tow_truck_operators 
-            SET is_online = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ''', (1 if is_online else 0, operator_id))
-        
-        conn.commit()
-        changes = cursor.rowcount
-        conn.close()
-        
-        if changes > 0:
-            message = 'Status updated successfully'
-            note = 'Your status has been updated. You are now ' + ('online' if is_online else 'offline')
-            return jsonify({'success': True, 'message': message, 'note': note}), 200
-        else:
-            return jsonify({'success': False, 'error': 'Operator not found'}), 404
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@tow_truck_bp.route('/active-jobs/<int:operator_id>', methods=['GET', 'OPTIONS'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['GET', 'OPTIONS'])
-def get_operator_active_jobs(operator_id):
-    if request.method == 'OPTIONS':
-        return '', 200
-    """Get operator's active jobs count and earnings"""
-    try:
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        # Get active jobs count
-        cursor.execute('''
-            SELECT COUNT(*) as active_jobs
-            FROM tow_requests 
-            WHERE operator_id = ? AND status IN ('pending', 'accepted', 'in_progress')
-        ''', (operator_id,))
-        
-        active_jobs_result = cursor.fetchone()
-        active_jobs = active_jobs_result[0] if active_jobs_result else 0
-        
-        # Get total earnings from completed jobs
-        cursor.execute('''
-            SELECT COALESCE(SUM(amount), 0) as total_earnings
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed'
-        ''', (operator_id,))
-        
-        earnings_result = cursor.fetchone()
-        total_earnings = earnings_result[0] if earnings_result else 0
-        
-        # Get completed today jobs
-        cursor.execute('''
-            SELECT COUNT(*) as completed_today
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed' AND DATE(created_at) = DATE('now')
-        ''', (operator_id,))
-        
-        today_result = cursor.fetchone()
-        completed_today = today_result[0] if today_result else 0
-        
-        conn.close()
-        
-        return jsonify({
-            'success': True,
-            'activeJobs': active_jobs,
-            'totalEarnings': total_earnings,
-            'completedToday': completed_today
-        }), 200
-            
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
 @tow_truck_bp.route('/admin/approved', methods=['GET'])
 def get_approved_tow_truck_operators():
     """Get all approved tow truck operators for admin"""
@@ -623,95 +376,16 @@ def get_approved_tow_truck_operators():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@tow_truck_bp.route('/status', methods=['PUT'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['PUT'])
-def update_operator_status():
-    """Update tow truck operator online/offline status"""
+@tow_truck_bp.route('/admin/operator/<int:operator_id>', methods=['GET'])
+def get_operator_details(operator_id):
+    """Get operator details for admin"""
     try:
-        data = request.get_json()
-        operator_id = data.get('operator_id')
-        is_online = data.get('is_online')
-        
-        if not operator_id or is_online is None:
-            return jsonify({'success': False, 'error': 'Operator ID and status required'}), 400
-        
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE tow_truck_operators 
-            SET is_online = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ''', (1 if is_online else 0, operator_id))
-        
-        conn.commit()
-        changes = cursor.rowcount
-        conn.close()
-        
-        if changes > 0:
-            message = 'Status updated successfully'
-            note = 'Your status has been updated. You are now ' + ('online' if is_online else 'offline')
-            return jsonify({'success': True, 'message': message, 'note': note}), 200
-        else:
-            return jsonify({'success': False, 'error': 'Operator not found'}), 404
-            
+        operator = tow_truck_db.get_operator_by_id(operator_id)
+        if operator:
+            return jsonify(operator), 200
+        return jsonify({'error': 'Operator not found'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-
-@tow_truck_bp.route('/active-jobs/<int:operator_id>', methods=['GET', 'OPTIONS'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['GET', 'OPTIONS'])
-def get_operator_active_jobs(operator_id):
-    if request.method == 'OPTIONS':
-        return '', 200
-    """Get operator's active jobs count and earnings"""
-    try:
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        # Get active jobs count
-        cursor.execute('''
-            SELECT COUNT(*) as active_jobs
-            FROM tow_requests 
-            WHERE operator_id = ? AND status IN ('pending', 'accepted', 'in_progress')
-        ''', (operator_id,))
-        
-        active_jobs_result = cursor.fetchone()
-        active_jobs = active_jobs_result[0] if active_jobs_result else 0
-        
-        # Get total earnings from completed jobs
-        cursor.execute('''
-            SELECT COALESCE(SUM(amount), 0) as total_earnings
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed'
-        ''', (operator_id,))
-        
-        earnings_result = cursor.fetchone()
-        total_earnings = earnings_result[0] if earnings_result else 0
-        
-        # Get completed today jobs
-        cursor.execute('''
-            SELECT COUNT(*) as completed_today
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed' AND DATE(created_at) = DATE('now')
-        ''', (operator_id,))
-        
-        today_result = cursor.fetchone()
-        completed_today = today_result[0] if today_result else 0
-        
-        conn.close()
-        
-        return jsonify({
-            'success': True,
-            'activeJobs': active_jobs,
-            'totalEarnings': total_earnings,
-            'completedToday': completed_today
-        }), 200
-            
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
 
 @tow_truck_bp.route('/admin/approve', methods=['POST'])
 def approve_tow_truck_operator():
@@ -723,103 +397,27 @@ def approve_tow_truck_operator():
         if not operator_id:
             return jsonify({'success': False, 'error': 'Operator ID required'}), 400
         
+        # Get operator details first to get email for unified worker update
+        operator = tow_truck_db.get_operator_by_id(operator_id)
+        
         if tow_truck_db.approve_operator(operator_id):
+            # Also approve in unified worker table if exists
+            if operator and operator.get('email'):
+                try:
+                    from .car_service_worker_db import CarServiceWorkerDB
+                    cs_db = CarServiceWorkerDB()
+                    worker = cs_db.get_worker_by_email(operator['email'])
+                    if worker:
+                        cs_db.update_worker_status(worker['id'], 'APPROVED')
+                except Exception as e:
+                    print(f"⚠️ Unified worker approval note: {e}")
+            
             return jsonify({'success': True, 'message': 'Operator approved successfully'}), 200
         else:
             return jsonify({'success': False, 'error': 'Operator not found'}), 404
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-
-@tow_truck_bp.route('/status', methods=['PUT'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['PUT'])
-def update_operator_status():
-    """Update tow truck operator online/offline status"""
-    try:
-        data = request.get_json()
-        operator_id = data.get('operator_id')
-        is_online = data.get('is_online')
-        
-        if not operator_id or is_online is None:
-            return jsonify({'success': False, 'error': 'Operator ID and status required'}), 400
-        
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE tow_truck_operators 
-            SET is_online = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ''', (1 if is_online else 0, operator_id))
-        
-        conn.commit()
-        changes = cursor.rowcount
-        conn.close()
-        
-        if changes > 0:
-            message = 'Status updated successfully'
-            note = 'Your status has been updated. You are now ' + ('online' if is_online else 'offline')
-            return jsonify({'success': True, 'message': message, 'note': note}), 200
-        else:
-            return jsonify({'success': False, 'error': 'Operator not found'}), 404
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@tow_truck_bp.route('/active-jobs/<int:operator_id>', methods=['GET', 'OPTIONS'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['GET', 'OPTIONS'])
-def get_operator_active_jobs(operator_id):
-    if request.method == 'OPTIONS':
-        return '', 200
-    """Get operator's active jobs count and earnings"""
-    try:
-        conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
-        cursor = conn.cursor()
-        
-        # Get active jobs count
-        cursor.execute('''
-            SELECT COUNT(*) as active_jobs
-            FROM tow_requests 
-            WHERE operator_id = ? AND status IN ('pending', 'accepted', 'in_progress')
-        ''', (operator_id,))
-        
-        active_jobs_result = cursor.fetchone()
-        active_jobs = active_jobs_result[0] if active_jobs_result else 0
-        
-        # Get total earnings from completed jobs
-        cursor.execute('''
-            SELECT COALESCE(SUM(amount), 0) as total_earnings
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed'
-        ''', (operator_id,))
-        
-        earnings_result = cursor.fetchone()
-        total_earnings = earnings_result[0] if earnings_result else 0
-        
-        # Get completed today jobs
-        cursor.execute('''
-            SELECT COUNT(*) as completed_today
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed' AND DATE(created_at) = DATE('now')
-        ''', (operator_id,))
-        
-        today_result = cursor.fetchone()
-        completed_today = today_result[0] if today_result else 0
-        
-        conn.close()
-        
-        return jsonify({
-            'success': True,
-            'activeJobs': active_jobs,
-            'totalEarnings': total_earnings,
-            'completedToday': completed_today
-        }), 200
-            
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
 
 @tow_truck_bp.route('/admin/reject', methods=['POST'])
 def reject_tow_truck_operator():
@@ -831,25 +429,21 @@ def reject_tow_truck_operator():
         if not operator_id:
             return jsonify({'success': False, 'error': 'Operator ID required'}), 400
         
-        # For now, just delete operator (you could implement a soft delete)
         conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
         cursor = conn.cursor()
-        
-        cursor.execute('DELETE FROM tow_truck_operators WHERE id = ?', (operator_id,))
+        cursor.execute('UPDATE tow_truck_operators SET approval_status = "REJECTED" WHERE id = ?', (operator_id,))
         conn.commit()
         changes = cursor.rowcount
         conn.close()
         
         if changes > 0:
             return jsonify({'success': True, 'message': 'Operator rejected successfully'}), 200
-        else:
-            return jsonify({'success': False, 'error': 'Operator not found'}), 404
-            
+        return jsonify({'success': False, 'error': 'Operator not found'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @tow_truck_bp.route('/status', methods=['PUT'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['PUT'])
+@cross_origin()
 def update_operator_status():
     """Update tow truck operator online/offline status"""
     try:
@@ -862,78 +456,36 @@ def update_operator_status():
         
         conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
         cursor = conn.cursor()
-        
-        cursor.execute('''
-            UPDATE tow_truck_operators 
-            SET is_online = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        ''', (1 if is_online else 0, operator_id))
-        
+        cursor.execute('UPDATE tow_truck_operators SET is_online = ? WHERE id = ?', (1 if is_online else 0, operator_id))
         conn.commit()
         changes = cursor.rowcount
         conn.close()
         
         if changes > 0:
-            message = 'Status updated successfully'
-            note = 'Your status has been updated. You are now ' + ('online' if is_online else 'offline')
-            return jsonify({'success': True, 'message': message, 'note': note}), 200
-        else:
-            return jsonify({'success': False, 'error': 'Operator not found'}), 404
-            
+            return jsonify({'success': True, 'message': 'Status updated'}), 200
+        return jsonify({'success': False, 'error': 'Operator not found'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@tow_truck_bp.route('/active-jobs/<int:operator_id>', methods=['GET', 'OPTIONS'])
-@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['GET', 'OPTIONS'])
+@tow_truck_bp.route('/active-jobs/<int:operator_id>', methods=['GET'])
+@cross_origin()
 def get_operator_active_jobs(operator_id):
-    if request.method == 'OPTIONS':
-        return '', 200
-    """Get operator's active jobs count and earnings"""
+    """Get operator's active jobs summary"""
     try:
         conn = sqlite3.connect(TOW_TRUCK_DB_PATH)
         cursor = conn.cursor()
         
-        # Get active jobs count
-        cursor.execute('''
-            SELECT COUNT(*) as active_jobs
-            FROM tow_requests 
-            WHERE operator_id = ? AND status IN ('pending', 'accepted', 'in_progress')
-        ''', (operator_id,))
+        cursor.execute('SELECT COUNT(*) FROM tow_requests WHERE operator_id = ? AND status != "completed"', (operator_id,))
+        active_jobs = cursor.fetchone()[0]
         
-        active_jobs_result = cursor.fetchone()
-        active_jobs = active_jobs_result[0] if active_jobs_result else 0
-        
-        # Get total earnings from completed jobs
-        cursor.execute('''
-            SELECT COALESCE(SUM(amount), 0) as total_earnings
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed'
-        ''', (operator_id,))
-        
-        earnings_result = cursor.fetchone()
-        total_earnings = earnings_result[0] if earnings_result else 0
-        
-        # Get completed today jobs
-        cursor.execute('''
-            SELECT COUNT(*) as completed_today
-            FROM tow_requests 
-            WHERE operator_id = ? AND status = 'completed' AND DATE(created_at) = DATE('now')
-        ''', (operator_id,))
-        
-        today_result = cursor.fetchone()
-        completed_today = today_result[0] if today_result else 0
+        cursor.execute('SELECT SUM(amount) FROM tow_requests WHERE operator_id = ? AND status = "completed"', (operator_id,))
+        total_earnings = cursor.fetchone()[0] or 0
         
         conn.close()
-        
         return jsonify({
             'success': True,
             'activeJobs': active_jobs,
-            'totalEarnings': total_earnings,
-            'completedToday': completed_today
+            'totalEarnings': total_earnings
         }), 200
-            
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500

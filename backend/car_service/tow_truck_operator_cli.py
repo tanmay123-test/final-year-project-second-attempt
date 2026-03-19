@@ -117,15 +117,18 @@ def tow_truck_operator_signup():
         }
         
         # Call API
-        response = requests.post(f"{API}/api/tow-truck/signup", data=data)
+        response = requests.post(f"{API}/api/tow-truck/register", json=data)
         
-        if response.status_code == 201:
+        if response.status_code == 200:
             result = response.json()
             print(f"\n✅ {result.get('message', 'Signup successful!')}")
             print(f"📋 Tow Truck Operator ID: {result.get('operator_id')}")
             print("🎉 You can now login to your tow truck dashboard")
         else:
-            error = response.json().get("error", "Signup failed")
+            try:
+                error = response.json().get("error", "Signup failed")
+            except:
+                error = f"Signup failed with status {response.status_code}"
             print(f"❌ {error}")
         
     except Exception as e:
@@ -206,20 +209,137 @@ def tow_truck_operator_dashboard(operator, token):
         
         choice = input("\nSelect option: ").strip()
         
+        worker_id = operator.get('id')
+
         if choice == "1":
-            toggle_online_status(operator, token)
+            print("\n1. 🟢 Go Online")
+            print("2. 🔴 Go Offline")
+            sub = input("Select: ").strip()
+            
+            if sub == "1":
+                response = requests.post(f"{API}/api/car/tow/go-online", json={"worker_id": worker_id})
+            else:
+                response = requests.post(f"{API}/api/car/tow/go-offline", json={"worker_id": worker_id})
+            
+            if response.status_code == 200:
+                result = response.json()
+                print(f"✅ {result.get('message', 'Status updated successfully')}")
+                # Update local state for display
+                operator['is_online'] = 1 if sub == "1" else 0
+            else:
+                print(f"❌ Error: {response.text}")
+            input("\nPress Enter to continue...")
+
         elif choice == "2":
-            print("🚧 Tow Requests coming soon!")
+            response = requests.get(f"{API}/api/car/tow/requests")
+            if response.status_code == 200:
+                data = response.json()
+                if not data:
+                    print("🚫 No requests available")
+                else:
+                    for r in data:
+                        print(f"\n🚛 Request ID: {r['id']}")
+                        print(f"📍 Pickup: {r['pickup']}")
+                        print(f"🏁 Drop: {r['drop']}")
+                        print(f"🚗 Vehicle: {r['vehicle']}")
+                        print(f"📏 Distance: {r['distance']} km")
+                        print(f"💰 ₹{r['earning']}")
+                    
+                    choice_req = input("\nEnter Request ID to accept (0 to skip): ").strip()
+                    if choice_req != "0":
+                        res = requests.post(f"{API}/api/car/tow/accept", json={
+                            "worker_id": worker_id,
+                            "request_id": int(choice_req)
+                        })
+                        if res.status_code == 200:
+                            print("✅ Job accepted! Navigate to pickup location.")
+                        else:
+                            print(f"❌ Error: {res.text}")
+            else:
+                print(f"❌ Error: {response.text}")
             input("\nPress Enter to continue...")
+
         elif choice == "3":
-            print("🚧 Active Jobs coming soon!")
+            response = requests.get(f"{API}/api/car/tow/active-jobs?worker_id={worker_id}")
+            if response.status_code == 200:
+                data = response.json()
+                print("\n🔧 ACTIVE JOBS")
+                print("-" * 20)
+                if not data:
+                    print("📭 No active jobs at the moment")
+                else:
+                    for job in data:
+                        print(f"🆔 Job ID: {job['id']}")
+                        print(f"👤 User: {job['user']}")
+                        print(f"📍 Pickup: {job['pickup']}")
+                        print(f"🏁 Drop: {job['drop']}")
+                        print(f"📊 Status: {job['status']}")
+                        
+                        if job['status'] == 'ACCEPTED':
+                            print("\nOptions for this job:")
+                            print("1. 🔑 Enter OTP from user to START")
+                            print("2. ⬅️ Back")
+                            sub_choice = input("Select: ").strip()
+                            if sub_choice == "1":
+                                otp = input("🔐 Enter 4-digit OTP: ").strip()
+                                res = requests.post(f"{API}/api/car/tow/start", json={
+                                    "worker_id": worker_id,
+                                    "job_id": job['id'],
+                                    "otp": otp
+                                })
+                                if res.status_code == 200:
+                                    res_data = res.json()
+                                    if res_data.get('success'):
+                                        print("✅ OTP Verified! Job started.")
+                                    else:
+                                        print(f"❌ {res_data.get('error', 'Invalid OTP')}")
+                                else:
+                                    print("❌ Error starting job")
+                        
+                        elif job['status'] == 'IN_PROGRESS':
+                            print("\nOptions for this job:")
+                            print("1. ✅ Mark as COMPLETED")
+                            print("2. ⬅️ Back")
+                            sub_choice = input("Select: ").strip()
+                            if sub_choice == "1":
+                                res = requests.post(f"{API}/api/car/tow/complete", json={
+                                    "worker_id": worker_id,
+                                    "job_id": job['id']
+                                })
+                                if res.status_code == 200:
+                                    print("✅ Job completed! Earnings updated.")
+                                else:
+                                    print("❌ Error completing job")
+                        print("-" * 10)
+            else:
+                print(f"❌ Error: {response.text}")
             input("\nPress Enter to continue...")
+
         elif choice == "4":
-            print("🚧 Earnings coming soon!")
+            response = requests.get(f"{API}/api/car/tow/earnings?worker_id={worker_id}")
+            if response.status_code == 200:
+                data = response.json()
+                print("\n💰 EARNINGS SUMMARY")
+                print("-" * 20)
+                print(f"Today: ₹{data.get('today', 0):.2f}")
+                print(f"Total: ₹{data.get('total', 0):.2f}")
+            else:
+                print(f"❌ Error: {response.text}")
             input("\nPress Enter to continue...")
+
         elif choice == "5":
-            print("🚧 Performance coming soon!")
+            response = requests.get(f"{API}/api/car/tow/performance?worker_id={worker_id}")
+            if response.status_code == 200:
+                data = response.json()
+                print("\n📊 PERFORMANCE METRICS")
+                print("-" * 20)
+                print(f"Rating: ⭐ {data.get('rating', 5.0)}")
+                print(f"Completed Jobs: {data.get('completed_jobs', 0)}")
+                print(f"Completion Rate: 100%")
+            else:
+                print(f"❌ Error: {response.text}")
             input("\nPress Enter to continue...")
+
         elif choice == "6":
             print("👋 Logged out successfully")
             return

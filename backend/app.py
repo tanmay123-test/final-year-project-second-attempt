@@ -235,6 +235,11 @@ except Exception as e:
 try:
     from car_service.tow_truck_routes import tow_truck_bp
     app.register_blueprint(tow_truck_bp, url_prefix='/api/tow-truck')
+    
+    # NEW TOW TRUCK BLUEPRINT
+    from car_service.tow_truck.routes import tow_bp
+    app.register_blueprint(tow_bp)
+    
     # Add specific CORS for tow truck blueprint
     CORS(tow_truck_bp, origins=["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"])
     print("✅ Tow Truck blueprint registered")

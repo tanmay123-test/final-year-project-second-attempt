@@ -184,6 +184,49 @@ def fuel_delivery_agent_dashboard(agent_info):
             print("❌ Invalid choice")
             time.sleep(1)
 
+def view_active_delivery(agent_info):
+    """View active delivery for agent"""
+    print("\n" + "="*60)
+    print("🚚 ACTIVE DELIVERY DASHBOARD")
+    print("="*60)
+    
+    try:
+        # Get agent's busy status or current requests
+        # In a real app, this would fetch from an API like /api/fuel-delivery/agents/active-job
+        # For this CLI simulation, we'll try to find any request assigned to this agent
+        response = requests.get(f"{API}/api/fuel-delivery/requests")
+        if response.status_code == 200:
+            result = response.json()
+            requests_queue = result.get('requests', [])
+            
+            # Since the /requests endpoint usually only shows WAITING_QUEUE, 
+            # we need a way to find the current ASSIGNED/IN_PROGRESS job.
+            # Let's assume there's an endpoint for this or we'll search locally if possible.
+            # For now, we'll try to fetch status by looking at the last known request.
+            print("🔍 Searching for active jobs...")
+            # Ideally: response = requests.get(f"{API}/api/fuel-delivery/agents/active-job/{agent_info['id']}")
+            
+            # Let's check if the agent is actually BUSY
+            if agent_info.get('online_status') != 'BUSY':
+                print("📭 You don't have any active delivery at the moment")
+                input("\nPress Enter to continue...")
+                return
+
+            print("📦 You have an active delivery!")
+            print("⚠️ NOTE: You must enter the OTP from the user to START the job.")
+            print("⚠️ Once delivered, mark it as COMPLETED to receive earnings.")
+            
+            # Since we don't have a direct "get active job" endpoint yet, 
+            # we'll ask the user to select the job from history or just track it.
+            # In a real scenario, the 'request' object would be passed from 'accept_fuel_request'.
+            print("\n🔄 Use option 2 (Queue) to accept a job first.")
+            print("🔄 Once accepted, the job interface will start automatically.")
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    
+    input("\nPress Enter to continue...")
+
 def toggle_online_status(agent_info):
     """Toggle agent online status"""
     try:
@@ -247,8 +290,8 @@ def view_fuel_requests_queue(agent_info):
                 fuel_emoji = "⛽" if request.get('fuel_type') == 'Petrol' else "🛢️"
                 
                 print(f"{i}. {fuel_emoji} {request.get('fuel_type', 'N/A')}")
-                print(f"   📦 Quantity: {request.get('quantity_liters', 0)} liters")
-                print(f"   📍 Location: {request.get('delivery_address', 'N/A')}")
+                print(f"   📦 Quantity: {request.get('quantity', 0)} liters")
+                print(f"   📍 Location: {request.get('address', 'N/A')}")
                 print(f"   📊 Priority: {priority_emoji} Level {request.get('priority_level', 1)}")
                 print(f"   👤 User: {request.get('user_name', 'N/A')}")
                 print(f"   📞 Contact: {request.get('user_phone', 'N/A')}")
@@ -261,15 +304,9 @@ def view_fuel_requests_queue(agent_info):
                 if choice == "0":
                     return
                 
-                request_id = int(choice)
-                selected_request = None
-                
-                for request in requests:
-                    if request['request_id'] == request_id:
-                        selected_request = request
-                        break
-                
-                if selected_request:
+                selected_idx = int(choice) - 1
+                if 0 <= selected_idx < len(requests):
+                    selected_request = requests[selected_idx]
                     accept_fuel_request(agent_info, selected_request)
                 else:
                     print("❌ Invalid request number")
@@ -290,15 +327,15 @@ def accept_fuel_request(agent_info, request):
     try:
         print(f"\n🔄 Accepting fuel request...")
         print(f"⛽ Fuel Type: {request.get('fuel_type', 'N/A')}")
-        print(f"📦 Quantity: {request.get('quantity_liters', 0)} liters")
-        print(f"📍 Delivery: {request.get('delivery_address', 'N/A')}")
+        print(f"📦 Quantity: {request.get('quantity', 0)} liters")
+        print(f"📍 Delivery: {request.get('address', 'N/A')}")
         
         confirm = input("Accept this request? (y/N): ").strip().lower()
         if confirm != 'y':
             return
         
-        response = requests.post(f"{API}/api/fuel-delivery/assign", json={
-            'request_id': request['request_id'],
+        response = requests.post(f"{API}/api/fuel-delivery/requests/accept", json={
+            'request_id': request['id'],
             'agent_id': agent_info['id']
         })
         
@@ -323,14 +360,40 @@ def accept_fuel_request(agent_info, request):
     input("\nPress Enter to continue...")
 
 def start_fuel_delivery(agent_info, request):
-    """Start active fuel delivery interface"""
+    """Start active fuel delivery interface with OTP verification"""
     print("\n" + "="*60)
     print("🚚 ACTIVE FUEL DELIVERY")
     print("="*60)
-    print(f"⛽ Fuel: {request.get('fuel_type', 'N/A')} - {request.get('quantity_liters', 0)} liters")
-    print(f"📍 Location: {request.get('delivery_address', 'N/A')}")
+    print(f"⛽ Fuel: {request.get('fuel_type', 'N/A')} - {request.get('quantity', 0)} liters")
+    print(f"📍 Location: {request.get('address', 'N/A')}")
     print(f"👤 User: {request.get('user_name', 'N/A')}")
     print(f"📞 Phone: {request.get('user_phone', 'N/A')}")
+    
+    # Require OTP before starting the job
+    while True:
+        otp = input("\n🔐 Enter 4-digit OTP from user to START delivery: ").strip()
+        if not otp:
+            print("❌ OTP is required to start the job")
+            continue
+            
+        response = requests.post(f"{API}/api/fuel-delivery/requests/start", json={
+            'request_id': request['id'],
+            'agent_id': agent_info['id'],
+            'otp': otp
+        })
+        
+        if response.status_code == 200:
+            print("✅ OTP Verified! Delivery started.")
+            break
+        else:
+            try:
+                error = response.json().get('error', 'Invalid OTP')
+            except:
+                error = "Invalid OTP"
+            print(f"❌ {error}. Please try again.")
+            retry = input("Try again? (y/N): ").strip().lower()
+            if retry != 'y':
+                return
     
     delivery_start_time = time.time()
     
@@ -375,9 +438,9 @@ def call_user_for_delivery(request):
 def show_delivery_location(request):
     """Show delivery location"""
     print(f"\n📍 DELIVERY LOCATION:")
-    print(f"🏠 Address: {request.get('delivery_address', 'N/A')}")
-    if request.get('delivery_latitude') and request.get('delivery_longitude'):
-        print(f"🗺️ GPS: {request.get('delivery_latitude')}, {request.get('delivery_longitude')}")
+    print(f"🏠 Address: {request.get('address', 'N/A')}")
+    if request.get('latitude') and request.get('longitude'):
+        print(f"🗺️ GPS: {request.get('latitude')}, {request.get('longitude')}")
     input("\nPress Enter to continue...")
 
 def add_delivery_note(request):
@@ -392,15 +455,14 @@ def complete_fuel_delivery_interface(agent_info, request):
     """Complete fuel delivery interface"""
     try:
         print(f"\n✅ Completing delivery...")
-        print(f"⛽ Delivered: {request.get('fuel_type', 'N/A')} - {request.get('quantity_liters', 0)} liters")
+        print(f"⛽ Delivered: {request.get('fuel_type', 'N/A')} - {request.get('quantity', 0)} liters")
         
         confirm = input("Confirm delivery completion? (y/N): ").strip().lower()
         if confirm != 'y':
             return False
         
-        response = requests.post(f"{API}/api/fuel-delivery/complete", json={
-            'request_id': request['request_id'],
-            'agent_id': agent_info['id']
+        response = requests.post(f"{API}/api/fuel-delivery/requests/complete", json={
+            'request_id': request['id']
         })
         
         if response.status_code == 200:
@@ -432,6 +494,7 @@ def complete_fuel_delivery_interface(agent_info, request):
     except Exception as e:
         print(f"❌ Error: {e}")
         return False
+
 
 def cancel_fuel_delivery_interface(agent_info, request):
     """Cancel fuel delivery interface"""

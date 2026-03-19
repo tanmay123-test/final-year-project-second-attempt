@@ -86,12 +86,20 @@ class FuelDeliveryDB:
                 address TEXT NOT NULL,
                 status TEXT DEFAULT 'WAITING_QUEUE' CHECK (status IN ('WAITING_QUEUE', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
                 priority_level INTEGER DEFAULT 3 CHECK (priority_level BETWEEN 1 AND 5),
+                otp TEXT,
                 assigned_at TIMESTAMP NULL,
                 completed_at TIMESTAMP NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        try:
+            cursor.execute("PRAGMA table_info(fuel_delivery_requests)")
+            req_cols = {row[1] for row in cursor.fetchall()}
+            if 'otp' not in req_cols:
+                cursor.execute("ALTER TABLE fuel_delivery_requests ADD COLUMN otp TEXT")
+        except Exception:
+            pass
         
         # Fuel Agent Activity Logs Table
         cursor.execute('''
@@ -379,27 +387,50 @@ class FuelDeliveryDB:
     
     def create_fuel_request(self, request_data):
         """Create new fuel delivery request"""
+        import random
+        otp = str(random.randint(1000, 9999))
+        
         cursor = self.conn.cursor()
-        cursor.execute('''
-            INSERT INTO fuel_delivery_requests 
-            (user_id, fuel_type, quantity_liters, delivery_latitude, 
-             delivery_longitude, delivery_address, priority_level)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            request_data['user_id'],
-            request_data['fuel_type'],
-            request_data['quantity_liters'],
-            request_data.get('delivery_latitude'),
-            request_data.get('delivery_longitude'),
-            request_data.get('delivery_address'),
-            request_data.get('priority_level', 1)
-        ))
         
-        request_id = cursor.lastrowid
-        self.conn.commit()
-        cursor.close()
+        # Get user details from users table if not provided
+        user_name = request_data.get('user_name', 'User')
+        user_phone = request_data.get('user_phone', 'N/A')
         
-        return {'success': True, 'request_id': request_id}
+        try:
+            cursor.execute('''
+                INSERT INTO fuel_delivery_requests 
+                (user_id, user_name, user_phone, fuel_type, quantity, latitude, 
+                 longitude, address, priority_level, otp, agent_id, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                request_data['user_id'],
+                user_name,
+                user_phone,
+                request_data['fuel_type'],
+                request_data['quantity_liters'],
+                request_data.get('latitude', 0.0),
+                request_data.get('longitude', 0.0),
+                request_data.get('address', 'Mumbai'),
+                request_data.get('priority_level', 3),
+                otp,
+                request_data.get('agent_id'),
+                'ASSIGNED' if request_data.get('agent_id') else 'WAITING_QUEUE'
+            ))
+            
+            request_id = cursor.lastrowid
+            self.conn.commit()
+            
+            if request_data.get('agent_id'):
+                # Update agent status to busy if auto-assigned
+                cursor.execute('UPDATE fuel_delivery_agents SET online_status = "BUSY" WHERE id = ?', (request_data['agent_id'],))
+                self.conn.commit()
+            
+            return {'success': True, 'request_id': request_id, 'otp': otp}
+        except Exception as e:
+            print(f"Error creating fuel request: {e}")
+            return {'success': False, 'error': str(e)}
+        finally:
+            cursor.close()
     
     def get_fuel_requests_queue(self, agent_lat=None, agent_lon=None):
         """Get fuel delivery requests queue"""
@@ -449,59 +480,48 @@ class FuelDeliveryDB:
             cursor.close()
             return False
     
-    def complete_fuel_delivery(self, request_id, agent_id):
-        """Complete fuel delivery"""
+    def verify_otp(self, request_id, otp):
+        """Verify OTP for fuel delivery request"""
         cursor = self.conn.cursor()
-        try:
-            # Get request details
-            cursor.execute('''
-                SELECT fuel_type, quantity_liters, user_id
-                FROM fuel_delivery_requests
-                WHERE request_id = ? AND agent_id = ?
-            ''', (request_id, agent_id))
+        cursor.execute('SELECT otp FROM fuel_delivery_requests WHERE id = ?', (request_id,))
+        result = cursor.fetchone()
+        cursor.close()
+        
+        if result and result[0] == otp:
+            return True
+        return False
+
+    def start_fuel_delivery(self, request_id, agent_id):
+        """Start fuel delivery process"""
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            UPDATE fuel_delivery_requests 
+            SET status = 'IN_PROGRESS', agent_id = ?, assigned_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (agent_id, request_id))
+        self.conn.commit()
+        cursor.close()
+        return True
+
+    def complete_fuel_delivery(self, request_id):
+        """Complete fuel delivery process"""
+        cursor = self.conn.cursor()
+        # Get agent_id first to set them back to ONLINE_AVAILABLE
+        cursor.execute('SELECT agent_id FROM fuel_delivery_requests WHERE id = ?', (request_id,))
+        agent_id = cursor.fetchone()
+        
+        cursor.execute('''
+            UPDATE fuel_delivery_requests 
+            SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (request_id,))
+        
+        if agent_id and agent_id[0]:
+            cursor.execute('UPDATE fuel_delivery_agents SET online_status = "ONLINE_AVAILABLE" WHERE id = ?', (agent_id[0],))
             
-            request = cursor.fetchone()
-            if not request:
-                cursor.close()
-                return False
-            
-            # Calculate earnings (example: 10% of fuel cost)
-            fuel_price = 100  # Base price per liter
-            earnings = request['quantity_liters'] * fuel_price * 0.1
-            
-            # Update request status
-            cursor.execute('''
-                UPDATE fuel_delivery_requests 
-                SET status = 'COMPLETED', completed_at = CURRENT_TIMESTAMP
-                WHERE request_id = ? AND agent_id = ?
-            ''', (request_id, agent_id))
-            
-            # Add to history
-            cursor.execute('''
-                INSERT INTO fuel_delivery_history 
-                (agent_id, user_id, fuel_type, quantity, earnings, status)
-                VALUES (?, ?, ?, ?, ?, 'COMPLETED')
-            ''', (agent_id, request['user_id'], request['fuel_type'], 
-                   request['quantity_liters'], earnings))
-            
-            # Update agent stats
-            cursor.execute('''
-                UPDATE fuel_delivery_agents 
-                SET total_deliveries = total_deliveries + 1,
-                    online_status = 'ONLINE_AVAILABLE',
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            ''', (agent_id,))
-            
-            self.conn.commit()
-            cursor.close()
-            
-            self._log_activity(agent_id, 'DELIVERY_COMPLETED', f'Completed delivery {request_id}')
-            return {'success': True, 'earnings': earnings}
-            
-        except Exception as e:
-            cursor.close()
-            return False
+        self.conn.commit()
+        cursor.close()
+        return True
     
     def add_agent_review(self, agent_id, user_id, rating, review_text=None):
         """Add review for fuel agent"""

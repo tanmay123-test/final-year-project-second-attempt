@@ -71,7 +71,7 @@ class BookingDB:
             
             # Hybrid model: Get real mechanic data from worker database
             try:
-                from services.car_service_worker_db import car_service_worker_db
+                from services.car_service.car_service_worker_db import car_service_worker_db
                 mechanic = car_service_worker_db.get_worker_by_id(job['mechanic_id'])
                 if mechanic:
                     job['mechanic_name'] = mechanic.get('name', f"Mechanic {job['mechanic_id']}")
@@ -82,7 +82,7 @@ class BookingDB:
             
             # Hybrid model: Get real car data from car profile database
             try:
-                from car_profile_db import car_profile_db
+                from services.car_service.car_profile_db import car_profile_db
                 car_info = car_profile_db.get_car_by_id(job['car_id'])
                 if car_info:
                     job['brand'] = car_info.get('brand', 'Unknown')
@@ -120,7 +120,7 @@ class BookingDB:
             
             # Hybrid model: Get real mechanic data from worker database
             try:
-                from services.car_service_worker_db import car_service_worker_db
+                from services.car_service.car_service_worker_db import car_service_worker_db
                 mechanic = car_service_worker_db.get_worker_by_id(job['mechanic_id'])
                 if mechanic:
                     job['mechanic_name'] = mechanic.get('name', f"Mechanic {job['mechanic_id']}")
@@ -131,7 +131,7 @@ class BookingDB:
             
             # Hybrid model: Get real car data from car profile database
             try:
-                from car_profile_db import car_profile_db
+                from services.car_service.car_profile_db import car_profile_db
                 car_info = car_profile_db.get_car_by_id(job['car_id'])
                 if car_info:
                     job['brand'] = car_info.get('brand', 'Unknown')

@@ -151,12 +151,58 @@ def create_fuel_request_manual(user_info, fuel_type, fuel_quantity, location_nam
     )
     
     if result.get('success'):
-        print("✅ Fuel delivery request created successfully!")
-        print(f"📱 Request ID: {result.get('request_id', 'N/A')}")
-        print(f"🚕 Agent: {selected_agent['name']} will contact you soon")
-        print(f"⏱️ Estimated arrival: {selected_agent['eta_minutes']} minutes")
+        request_id = result.get('request_id')
+        otp = result.get('otp', 'N/A')
+        print(f"\n✅ Request sent successfully!")
+        print(f"🆔 Request ID: {request_id}")
+        print(f"🔒 YOUR OTP: {otp}")
+        print("⚠️ PLEASE GIVE THIS OTP TO THE AGENT ONLY WHEN THEY ARRIVE")
+        
+        # Track status
+        track_request_status(request_id)
     else:
         print(f"❌ Failed to create request: {result.get('error', 'Unknown error')}")
+
+def track_request_status(request_id):
+    """Track the status of a fuel request until completion"""
+    print("\n⏳ Tracking your request status...")
+    last_status = None
+    
+    while True:
+        try:
+            # In a real app, this would call the service/API
+            # For this CLI simulation, we'll check status via the service
+            status_info = fuel_delivery_user_service.get_request_status(request_id)
+            status = status_info.get('status')
+            
+            if status != last_status:
+                print(f"\n🔔 Status Update: {status}")
+                last_status = status
+                
+            if status == 'COMPLETED':
+                print("\n✅ Your fuel has been delivered!")
+                print("💰 PAYMENT REQUIRED")
+                print("1. 💳 Pay Now")
+                print("2. ⬅️ Back to Menu")
+                
+                choice = input("\nSelect option: ").strip()
+                if choice == "1":
+                    print("\nRedirecting to payment gateway...")
+                    time.sleep(2)
+                    print("✅ Payment successful! Thank you for using ExpertEase.")
+                return
+            
+            elif status == 'CANCELLED':
+                print("\n❌ Your request was cancelled.")
+                return
+            
+            time.sleep(5) # Check every 5 seconds
+        except KeyboardInterrupt:
+            print("\n🛑 Stopped tracking status. You can check it later from history.")
+            return
+        except Exception as e:
+            print(f"\n❌ Error tracking status: {e}")
+            return
 
 def create_fuel_request_auto(user_info, fuel_type, fuel_quantity, location_name, user_lat, user_lon):
     """Create fuel request with auto-dispatch"""

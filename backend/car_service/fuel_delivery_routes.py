@@ -104,53 +104,86 @@ def get_fuel_requests():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@fuel_delivery_bp.route('/assign', methods=['POST'])
-def assign_fuel_request():
-    """Assign fuel request to agent"""
+@fuel_delivery_bp.route('/requests/accept', methods=['POST'])
+def accept_fuel_request():
+    """Accept a fuel delivery request"""
     try:
         data = request.get_json()
-        
-        if not data:
-            return jsonify({'success': False, 'error': 'No data provided'}), 400
-        
         request_id = data.get('request_id')
         agent_id = data.get('agent_id')
         
         if not request_id or not agent_id:
-            return jsonify({'success': False, 'error': 'Request ID and agent ID required'}), 400
-        
-        result = fuel_delivery_service.assign_fuel_request(request_id, agent_id)
-        
-        if result['success']:
-            return jsonify(result), 200
-        else:
-            return jsonify(result), 400
+            return jsonify({'success': False, 'error': 'request_id and agent_id are required'}), 400
             
+        db = FuelDeliveryDB()
+        result = db.assign_fuel_request(request_id, agent_id)
+        
+        if result:
+            return jsonify({'success': True, 'message': 'Request accepted successfully'}), 200
+        return jsonify({'success': False, 'error': 'Could not accept request'}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@fuel_delivery_bp.route('/complete', methods=['POST'])
-def complete_fuel_delivery():
-    """Complete fuel delivery"""
+@fuel_delivery_bp.route('/requests/start', methods=['POST'])
+def start_fuel_delivery():
+    """Start the fuel delivery (requires OTP)"""
     try:
         data = request.get_json()
-        
-        if not data:
-            return jsonify({'success': False, 'error': 'No data provided'}), 400
-        
         request_id = data.get('request_id')
         agent_id = data.get('agent_id')
+        otp = data.get('otp')
         
-        if not request_id or not agent_id:
-            return jsonify({'success': False, 'error': 'Request ID and agent ID required'}), 400
-        
-        result = fuel_delivery_service.complete_fuel_delivery(request_id, agent_id)
-        
-        if result['success']:
-            return jsonify(result), 200
-        else:
-            return jsonify(result), 400
+        if not all([request_id, agent_id, otp]):
+            return jsonify({'success': False, 'error': 'request_id, agent_id and otp are required'}), 400
             
+        db = FuelDeliveryDB()
+        if db.verify_otp(request_id, otp):
+            if db.start_fuel_delivery(request_id, agent_id):
+                return jsonify({'success': True, 'message': 'Delivery started successfully'}), 200
+        else:
+            return jsonify({'success': False, 'error': 'Invalid OTP'}), 401
+            
+        return jsonify({'success': False, 'error': 'Could not start delivery'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@fuel_delivery_bp.route('/requests/complete', methods=['POST'])
+def complete_fuel_delivery():
+    """Mark the fuel delivery as completed"""
+    try:
+        data = request.get_json()
+        request_id = data.get('request_id')
+        
+        if not request_id:
+            return jsonify({'success': False, 'error': 'request_id is required'}), 400
+            
+        db = FuelDeliveryDB()
+        if db.complete_fuel_delivery(request_id):
+            return jsonify({'success': True, 'message': 'Delivery completed successfully'}), 200
+        return jsonify({'success': False, 'error': 'Could not complete delivery'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@fuel_delivery_bp.route('/requests/status/<int:request_id>', methods=['GET'])
+def get_request_status(request_id):
+    """Get status of a specific fuel delivery request"""
+    try:
+        db = FuelDeliveryDB()
+        cursor = db.conn.cursor()
+        cursor.execute('''
+            SELECT status, otp, agent_id FROM fuel_delivery_requests WHERE id = ?
+        ''', (request_id,))
+        result = cursor.fetchone()
+        cursor.close()
+        
+        if result:
+            return jsonify({
+                'success': True, 
+                'status': result[0], 
+                'otp': result[1],
+                'agent_id': result[2]
+            }), 200
+        return jsonify({'success': False, 'error': 'Request not found'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

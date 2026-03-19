@@ -176,5 +176,15 @@ class FuelDeliveryUserService:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
+    def get_request_status(self, request_id):
+        """Get current status of a fuel request"""
+        try:
+            response = requests.get(f"{API}/api/fuel-delivery/requests/status/{request_id}")
+            if response.status_code == 200:
+                return response.json()
+            return {'status': 'UNKNOWN'}
+        except Exception:
+            return {'status': 'UNKNOWN'}
+
 # Create service instance
 fuel_delivery_user_service = FuelDeliveryUserService()
