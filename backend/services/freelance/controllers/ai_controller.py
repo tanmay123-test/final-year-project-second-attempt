@@ -1,11 +1,10 @@
-import json
 from flask import request, jsonify
-from ai.gemini_client import gemini_client
+from ..services.ai_gemini_client import freelance_ai_client
 from ..services.freelance_service import freelance_service
 
 class AIController:
     def __init__(self):
-        self.gemini_client = gemini_client
+        self.gemini_client = freelance_ai_client
 
     def generate_description(self):
         try:
@@ -14,20 +13,11 @@ class AIController:
             if not idea:
                 return jsonify({"error": "Idea is required"}), 400
 
-            prompt = f"""You are a professional freelance project consultant.
-Generate a detailed, professional project description for the following idea:
-'{idea}'
-
-The description should include:
-1. Overview of the project
-2. Key features or requirements
-3. Technical stack suggestions (if applicable)
-4. Deliverables expected
-
-Keep the tone professional and clear."""
+            system_prompt = "You are a professional freelance project consultant."
+            user_message = f"Generate a detailed, professional project description for the following idea: '{idea}'\n\nThe description should include:\n1. Overview of the project\n2. Key features or requirements\n3. Technical stack suggestions (if applicable)\n4. Deliverables expected\n\nKeep the tone professional and clear."
             
             # Using the synchronous generate_response method
-            response = self.gemini_client.generate_response(prompt)
+            response = self.gemini_client.generate_response(user_message, system_prompt=system_prompt)
             return jsonify({"description": response}), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
@@ -42,14 +32,10 @@ Keep the tone professional and clear."""
             if not all([category, experience_level, description]):
                 return jsonify({"error": "Category, experienceLevel, and description are required"}), 400
 
-            prompt = f"""As a freelance market expert, suggest a budget range in INR (₹) for the following project:
-Category: {category}
-Experience Level: {experience_level}
-Description: {description}
-
-Provide the response in JSON format with 'minBudget', 'maxBudget', and 'currency' (INR)."""
+            system_prompt = "As a freelance market expert, suggest a budget range in INR (₹) for projects."
+            user_message = f"Suggest a budget range in INR (₹) for the following project:\nCategory: {category}\nExperience Level: {experience_level}\nDescription: {description}\n\nProvide the response in JSON format with 'minBudget', 'maxBudget', and 'currency' (INR)."
             
-            response = self.gemini_client.generate_response(prompt)
+            response = self.gemini_client.generate_response(user_message, system_prompt=system_prompt)
             
             # Extract JSON from response
             try:
@@ -78,15 +64,10 @@ Provide the response in JSON format with 'minBudget', 'maxBudget', and 'currency
             if not all([title, description, budget]):
                 return jsonify({"error": "Title, description, and budget are required"}), 400
 
-            prompt = f"""As a project manager, suggest 3-5 milestones for the following project:
-Title: {title}
-Description: {description}
-Total Budget: ₹{budget}
-
-Provide the response in JSON format as a list of objects with 'name' and 'amount' (sharing the total budget).
-Example: {{"milestones": [{{"name": "Initial Design", "amount": 5000}}, ...]}}"""
+            system_prompt = "As a project manager, suggest 3-5 milestones for projects."
+            user_message = f"Suggest 3-5 milestones for the following project:\nTitle: {title}\nDescription: {description}\nTotal Budget: ₹{budget}\n\nProvide the response in JSON format as a list of objects with 'name' and 'amount' (sharing the total budget).\nExample: {{\"milestones\": [{{\"name\": \"Initial Design\", \"amount\": 5000}}, ...]}}"
             
-            response = self.gemini_client.generate_response(prompt)
+            response = self.gemini_client.generate_response(user_message, system_prompt=system_prompt)
             
             try:
                 json_start = response.find('{')

@@ -133,4 +133,33 @@ class FreelanceController:
             print(f"Error in get_dashboard: {str(e)}")
             return jsonify({"success": False, "message": str(e)}), 500
 
+    def upload_deliverable(self, user_id, project_id):
+        try:
+            if 'file' not in request.files:
+                return jsonify({"success": False, "message": "No file part"}), 400
+            
+            file = request.files['file']
+            if file.filename == '':
+                return jsonify({"success": False, "message": "No selected file"}), 400
+            
+            if file and allowed_file(file.filename):
+                filename = secure_filename(f"deliverable_{project_id}_{user_id}_{datetime.now().timestamp()}_{file.filename}")
+                upload_path = os.path.join(UPLOAD_FOLDER, 'deliverables')
+                os.makedirs(upload_path, exist_ok=True)
+                file_path = os.path.join(upload_path, filename)
+                file.save(file_path)
+                
+                deliverable_id = freelance_service.save_deliverable(project_id, user_id, file_path, file.filename)
+                
+                return jsonify({
+                    "success": True,
+                    "message": "Deliverable uploaded successfully",
+                    "deliverable_id": deliverable_id
+                }), 201
+            
+            return jsonify({"success": False, "message": "File type not allowed"}), 400
+        except Exception as e:
+            print(f"Error in upload_deliverable: {str(e)}")
+            return jsonify({"success": False, "message": str(e)}), 500
+
 freelance_controller = FreelanceController()

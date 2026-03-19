@@ -36,6 +36,7 @@ import UserLayout from './components/UserLayout';
 
 // Freelance Marketplace
 import FreelanceHome from './services/freelance/client/FreelanceHome';
+import ProjectDetailPage from './services/freelance/client/ProjectDetailPage';
 import FreelancerDashboard from './services/freelance/worker/FreelancerDashboard';
 import BrowseProjects from './services/freelance/worker/BrowseProjects';
 import FreelancerProposals from './services/freelance/worker/FreelancerProposals';
@@ -223,6 +224,7 @@ const App = () => {
           
           {/* Freelance Marketplace Routes */}
           <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />
+          <Route path="/freelance/project/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
 
           {/* Worker Routes - Service Specific */}
           <Route path="/provide-service" element={<ServiceSelection mode="worker" />} />

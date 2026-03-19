@@ -25,7 +25,8 @@ const FreelanceHome = () => {
   const [bookingData, setBookingData] = useState({
     title: '',
     description: '',
-    amount: ''
+    amount: '',
+    deadline: ''
   });
   const [bookingLoading, setBookingLoading] = useState(false);
 
@@ -69,7 +70,8 @@ const FreelanceHome = () => {
     setBookingData({
       title: `Direct Booking — ${worker.full_name}`,
       description: '',
-      amount: worker.hourly_rate?.toString() || '1000'
+      amount: worker.hourly_rate?.toString() || '1000',
+      deadline: ''
     });
     setShowBookingModal(true);
   };
@@ -87,6 +89,8 @@ const FreelanceHome = () => {
       });
       alert('Direct booking request sent! You can track it in the Projects tab.');
       setShowBookingModal(false);
+      // Redirect to projects tab with direct sub-tab selected
+      setSearchParams({ tab: 'projects', sub: 'direct' });
       setActiveTab('projects');
     } catch (error) {
       console.error('Error creating direct booking:', error);
@@ -226,8 +230,8 @@ const FreelanceHome = () => {
                     </div>
                   ) : featuredFreelancers.length > 0 ? (
                     featuredFreelancers.map(free => (
-                      <div key={free.id} className="freelancer-card-v2" onClick={() => navigate(`/freelance/freelancer/${free.id}`)}>
-                        <div className="card-header-v2">
+                      <div key={free.id} className="freelancer-card-v2">
+                        <div className="card-header-v2" onClick={() => navigate(`/freelance/freelancer/${free.id}`)}>
                           <div className="avatar-circle">
                             {free.full_name?.split(' ').map(n => n[0]).join('')}
                             <span className={`status-indicator ${free.status === 'approved' ? 'online' : 'offline'}`}></span>
@@ -251,6 +255,16 @@ const FreelanceHome = () => {
                             <span key={idx} className="skill-tag-v2">{skill.trim()}</span>
                           ))}
                         </div>
+                        <button 
+                          className="btn-primary-v3" 
+                          style={{width: '100%', marginTop: '1.2rem', padding: '0.6rem'}}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBookNow(free);
+                          }}
+                        >
+                          Book Now
+                        </button>
                       </div>
                     ))
                   ) : (
@@ -298,48 +312,89 @@ const FreelanceHome = () => {
       {/* Direct Booking Modal */}
       {showBookingModal && selectedWorker && (
         <div className="modal-overlay-new">
-          <div className="modal-content-new booking-modal">
-            <div className="modal-header-new">
-              <h2>Book {selectedWorker.full_name}</h2>
-              <button className="close-btn-new" onClick={() => setShowBookingModal(false)}>
-                <X size={20} />
-              </button>
+          <div className="modal-content-new booking-modal-v2">
+            <div className="modal-header-v2">
+              <div className="freelancer-info-header">
+                <div className="avatar-circle-v3">
+                  {selectedWorker.full_name?.split(' ').map(n => n[0]).join('')}
+                </div>
+                <div className="header-details">
+                  <div className="name-row">
+                    <h2>{selectedWorker.full_name}</h2>
+                    <div className="price-tag-badge">
+                      ₹{selectedWorker.hourly_rate || '200'}/hr
+                    </div>
+                  </div>
+                  <div className="spec-rating-row">
+                    <span>{selectedWorker.specialization || 'Freelancer'}</span>
+                    <div className="stars-row">
+                      <Star size={14} fill="#FFB800" color="#FFB800" />
+                      <Star size={14} fill="#FFB800" color="#FFB800" />
+                      <Star size={14} fill="#FFB800" color="#FFB800" />
+                      <Star size={14} fill="#FFB800" color="#FFB800" />
+                      <Star size={14} fill="#FFB800" color="#FFB800" />
+                      <span>5 (87)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <form onSubmit={handleDirectBookingSubmit} className="direct-booking-form">
-              <div className="form-group-v2">
-                <label>Project Title</label>
+
+            <form onSubmit={handleDirectBookingSubmit} className="direct-booking-form-v2">
+              <div className="form-group-v3">
+                <label>PROJECT TITLE</label>
                 <input 
                   type="text" 
+                  placeholder="e.g. Blog post for my SaaS product"
                   value={bookingData.title}
                   onChange={(e) => setBookingData({...bookingData, title: e.target.value})}
                   required
                 />
               </div>
-              <div className="form-group-v2">
-                <label>Description of work</label>
+
+              <div className="form-group-v3">
+                <label>WHAT DO YOU NEED HELP WITH?</label>
                 <textarea 
                   rows="4"
-                  placeholder="What do you need help with?"
+                  placeholder="Describe your requirements clearly..."
                   value={bookingData.description}
                   onChange={(e) => setBookingData({...bookingData, description: e.target.value})}
                   required
                 />
               </div>
-              <div className="form-group-v2">
-                <label>Budget (₹)</label>
-                <input 
-                  type="number" 
-                  value={bookingData.amount}
-                  onChange={(e) => setBookingData({...bookingData, amount: e.target.value})}
-                  required
-                />
+
+              <div className="form-row-v2">
+                <div className="form-group-v3 half">
+                  <label>YOUR BUDGET</label>
+                  <div className="input-with-currency">
+                    <span>₹</span>
+                    <input 
+                      type="number" 
+                      placeholder="0"
+                      value={bookingData.amount}
+                      onChange={(e) => setBookingData({...bookingData, amount: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group-v3 half">
+                  <label>DEADLINE</label>
+                  <input 
+                    type="date" 
+                    value={bookingData.deadline}
+                    onChange={(e) => setBookingData({...bookingData, deadline: e.target.value})}
+                    required
+                  />
+                </div>
               </div>
-              <div className="modal-actions-v2">
-                <button type="button" className="cancel-btn-v2" onClick={() => setShowBookingModal(false)}>
-                  Cancel
+
+              <div className="modal-actions-v3">
+                <button type="submit" className="submit-btn-v3" disabled={bookingLoading}>
+                  {bookingLoading ? 'Sending...' : 'Send Booking Request →'}
                 </button>
-                <button type="submit" className="submit-btn-v2" disabled={bookingLoading}>
-                  {bookingLoading ? 'Sending...' : 'Send Booking Request'}
+                <button type="button" className="cancel-link-v3" onClick={() => setShowBookingModal(false)}>
+                  Cancel
                 </button>
               </div>
             </form>

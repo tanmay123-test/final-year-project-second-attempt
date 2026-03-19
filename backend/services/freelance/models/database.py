@@ -135,14 +135,22 @@ class FreelanceDatabase:
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS freelance_messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            contract_id INTEGER NOT NULL,
+            project_id INTEGER NOT NULL,
+            contract_id INTEGER,
             sender_id INTEGER NOT NULL,
             message TEXT NOT NULL,
             file_attachment TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES freelance_projects (id),
             FOREIGN KEY (contract_id) REFERENCES freelance_contracts (id)
         )
         """)
+
+        # Migration: Add project_id column if missing
+        try:
+            cursor.execute("ALTER TABLE freelance_messages ADD COLUMN project_id INTEGER")
+        except:
+            pass # Column already exists
 
         # Notifications Table
         cursor.execute("""
@@ -203,6 +211,22 @@ class FreelanceDatabase:
         )
         """)
 
+        # Deliverables Table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS freelance_deliverables (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            contract_id INTEGER,
+            freelancer_id INTEGER NOT NULL,
+            file_path TEXT NOT NULL,
+            filename TEXT NOT NULL,
+            status TEXT DEFAULT 'SUBMITTED', -- 'SUBMITTED', 'APPROVED', 'REJECTED'
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES freelance_projects (id),
+            FOREIGN KEY (contract_id) REFERENCES freelance_contracts (id)
+        )
+        """)
+
         # Direct Bookings Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS freelance_bookings (
@@ -212,10 +236,18 @@ class FreelanceDatabase:
             project_title TEXT NOT NULL,
             project_description TEXT,
             amount REAL NOT NULL,
-            status TEXT DEFAULT 'PENDING', -- 'PENDING', 'ACCEPTED', 'DECLINED', 'CANCELLED'
+            deadline TEXT,
+            status TEXT DEFAULT 'AWAITING', -- 'AWAITING', 'ACCEPTED', 'DECLINED', 'CANCELLED'
+            project_id INTEGER, -- Link to freelance_projects once accepted
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # Migration: Add project_id column if missing
+        try:
+            cursor.execute("ALTER TABLE freelance_bookings ADD COLUMN project_id INTEGER")
+        except:
+            pass # Column already exists
 
         # Seed initial skills if table is empty
         cursor.execute("SELECT COUNT(*) FROM freelance_skills")

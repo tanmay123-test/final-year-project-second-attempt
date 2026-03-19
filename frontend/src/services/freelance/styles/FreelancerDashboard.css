@@ -28,8 +28,9 @@
 }
 
 .nav-container {
-  max-width: 1000px;
-  margin: 0 auto;
+  max-width: 100%;
+  padding: 0 5%;
+  margin: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -108,8 +109,9 @@
 }
 
 .dashboard-inner {
-  max-width: 1000px;
-  margin: 0 auto;
+  max-width: 100%;
+  padding: 0 5%;
+  margin: 0;
 }
 
 /* Hero Banner */
@@ -394,6 +396,162 @@
   opacity: 0.9;
 }
 
+/* Direct Booking Highlight Styles */
+.highlight-card {
+  border-left: 4px solid var(--purple-main) !important;
+  background-color: #F5F3FF;
+}
+
+.pulse-icon {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.card-desc-short {
+  margin-top: 0.5rem !important;
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.deadline-text {
+  margin-top: 0.25rem !important;
+  color: #DC2626 !important;
+  font-weight: 600;
+}
+
+.card-actions-v2 {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.accept-btn-v2, .decline-btn-v2 {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.accept-btn-v2 {
+  background-color: var(--purple-main);
+  color: white;
+  border: 1px solid var(--purple-main);
+}
+
+.accept-btn-v2:hover {
+  background-color: #4338CA;
+}
+
+.decline-btn-v2 {
+  background-color: white;
+  color: #6B7280;
+  border: 1px solid #E5E7EB;
+}
+
+.decline-btn-v2:hover {
+  background-color: #F9FAFB;
+  color: #1F2937;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .stats-grid-v2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .dashboard-layout-v2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .data-card-v2 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .card-actions-v2 {
+    width: 100%;
+  }
+  
+  .accept-btn-v2, .decline-btn-v2 {
+    flex: 1;
+  }
+}
+
+/* Deliverables & Upload Styles */
+.deliverables-list-v2 {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.deliverable-item-v2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1.25rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.deliverable-item-v2:hover {
+  border-color: var(--purple-main);
+  background: #f5f3ff;
+}
+
+.file-info-v2 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.file-date-v2 {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.upload-box-v2 {
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px dashed #e5e7eb;
+}
+
+.upload-box-v2:hover {
+  border-color: var(--purple-main);
+  background: #f5f3ff;
+  color: var(--purple-main);
+}
+
+.upload-box-v2.uploading {
+  opacity: 0.7;
+  pointer-events: none;
+  background: #f3f4f6;
+}
+
+.btn-outline-v2.primary {
+  background: var(--purple-main);
+  color: white;
+  border-color: var(--purple-main);
+}
+
+.btn-outline-v2.primary:hover {
+  background: #4338ca;
+}
+
 /* Empty States */
 .empty-state-v2 {
   display: flex;
@@ -584,9 +742,9 @@
 
 /* Skeleton Loaders */
 .dashboard-loading-v2 {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 100%;
+  padding: 2rem 5%;
+  margin: 0;
 }
 
 .skeleton {

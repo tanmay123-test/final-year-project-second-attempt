@@ -40,8 +40,9 @@
 }
 
 .nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
+  padding: 0 5%;
+  margin: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -145,15 +146,15 @@
     margin: 1.5rem 5%;
     border-radius: 24px;
     text-align: left;
-    padding: 5rem 4rem;
+    padding: 5rem 6%;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
   
   .hero-container {
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -161,12 +162,12 @@
   }
   
   .hero-content {
-    max-width: 50%;
+    max-width: 55%;
   }
   
   .hero-search-wrapper {
     width: 100%;
-    max-width: 450px;
+    max-width: 500px;
   }
 }
 
@@ -202,9 +203,9 @@
 
 /* --- Main Content Layout --- */
 .main-content-wrapper {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+  max-width: 100%;
+  padding: 2rem 5%;
+  margin: 0;
 }
 
 /* --- Post Project Banner --- */
@@ -532,17 +533,237 @@
   to { transform: rotate(360deg); }
 }
 
+/* New Booking Modal V2 Styles */
+.booking-modal-v2 {
+  max-width: 550px !important;
+  border-radius: 32px !important;
+}
+
+.modal-header-v2 {
+  background: #111122; /* Dark navy/black background */
+  padding: 2rem;
+  color: white;
+}
+
+.freelancer-info-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.freelancer-info-header .avatar-circle-v3 {
+  width: 72px;
+  height: 72px;
+  font-size: 1.8rem;
+  background: #534AB7;
+  color: white;
+  border: none;
+}
+
+.header-details {
+  flex: 1;
+}
+
+.header-details .name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.header-details h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0;
+  color: white;
+}
+
+.price-tag-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.5rem 1.2rem;
+  border-radius: 99px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #D1D5DB;
+}
+
+.spec-rating-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1rem;
+  color: #9CA3AF;
+}
+
+.stars-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.stars-row span {
+  margin-left: 0.5rem;
+  font-weight: 600;
+}
+
+.direct-booking-form-v2 {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group-v3 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.form-group-v3 label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #9CA3AF;
+  letter-spacing: 0.05em;
+}
+
+.form-group-v3 input,
+.form-group-v3 textarea {
+  width: 100%;
+  padding: 1.2rem 1.5rem;
+  border: 2px solid #F3F4F6;
+  border-radius: 16px;
+  font-size: 1rem;
+  color: #111827;
+  background: #F9FAFB;
+  transition: all 0.2s;
+}
+
+.form-group-v3 input:focus,
+.form-group-v3 textarea:focus {
+  border-color: #D1D5DB;
+  background: white;
+  outline: none;
+}
+
+.form-group-v3 input::placeholder,
+.form-group-v3 textarea::placeholder {
+  color: #D1D5DB;
+}
+
+.form-row-v2 {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.form-group-v3.half {
+  flex: 1;
+}
+
+.input-with-currency {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-currency span {
+  position: absolute;
+  left: 1.5rem;
+  color: #9CA3AF;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.input-with-currency input {
+  padding-left: 2.8rem;
+}
+
+.modal-actions-v3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+
+.submit-btn-v3 {
+  width: 100%;
+  padding: 1.2rem;
+  background: #DDD6FE; /* Light purple from image */
+  color: #5B21B6; /* Darker purple text */
+  border: none;
+  border-radius: 18px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.submit-btn-v3:hover:not(:disabled) {
+  background: #C4B5FD;
+}
+
+.submit-btn-v3:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cancel-link-v3 {
+  background: none;
+  border: none;
+  color: #9CA3AF;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.cancel-link-v3:hover {
+  color: #6B7280;
+}
+
+/* Mobile adjustments for V2 Modal */
+@media (max-width: 640px) {
+  .modal-header-v2 {
+    padding: 1.5rem;
+  }
+  
+  .freelancer-info-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .header-details .name-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .direct-booking-form-v2 {
+    padding: 1.5rem;
+  }
+  
+  .form-row-v2 {
+    flex-direction: column;
+  }
+}
+
 /* Find Professionals Page V2 */
 .find-professionals-page-v2 {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
+  max-width: 100%;
+  margin: 0;
+  padding: 2rem 5%;
 }
 
 .find-layout-v2 {
   display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 2.5rem;
+  grid-template-columns: 320px 1fr;
+  gap: 3rem;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 /* Sidebar Filters V3 */

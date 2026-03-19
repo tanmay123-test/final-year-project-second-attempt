@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Briefcase, 
@@ -15,7 +15,9 @@ import {
   FileText,
   Wallet,
   User,
-  MoreHorizontal
+  MoreHorizontal,
+  File,
+  Download
 } from 'lucide-react';
 import axios from 'axios';
 import '../styles/FreelancerDashboard.css';
@@ -29,9 +31,11 @@ const FreelancerWork = () => {
   const [loading, setLoading] = useState(true);
   const [activeProjectId, setActiveProjectId] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [deliverables, setDeliverables] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchWorkData();
@@ -47,6 +51,7 @@ const FreelancerWork = () => {
   useEffect(() => {
     if (activeProjectId) {
       fetchMessages(activeProjectId);
+      fetchDeliverables(activeProjectId);
       const interval = setInterval(() => fetchMessages(activeProjectId), 5000);
       return () => clearInterval(interval);
     }
@@ -63,8 +68,8 @@ const FreelancerWork = () => {
       
       if (workRes.data.success) {
         setActiveWork(workRes.data.work);
-        if (workRes.data.work.length > 0) {
-          setActiveProjectId(workRes.data.work[0].project_id);
+        if (workRes.data.work.length > 0 && !activeProjectId) {
+          setActiveProjectId(workRes.data.work[0].id || workRes.data.work[0].project_id);
         }
       }
       if (bookingsRes.data.success) {
@@ -88,6 +93,49 @@ const FreelancerWork = () => {
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+    }
+  };
+
+  const fetchDeliverables = async (projectId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`http://localhost:5000/api/freelancer/work/${projectId}/deliverables`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        setDeliverables(response.data.deliverables);
+      }
+    } catch (error) {
+      console.error('Error fetching deliverables:', error);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !activeProjectId) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      setSubmitting(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`http://localhost:5000/api/freelancer/work/${activeProjectId}/deliverables`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      if (response.data.success) {
+        alert('File uploaded successfully!');
+        fetchDeliverables(activeProjectId);
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Failed to upload file');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -125,6 +173,22 @@ const FreelancerWork = () => {
       }
     } catch (error) {
       alert('Failed to submit milestone');
+    }
+  };
+
+  const handleCompleteProject = async () => {
+    if (!window.confirm('Mark this project as complete? This will notify the client.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`http://localhost:5000/api/freelancer/work/${activeProjectId}/complete`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.success) {
+        alert('Project marked as complete!');
+        fetchWorkData();
+      }
+    } catch (error) {
+      alert('Failed to mark project as complete');
     }
   };
 
@@ -256,18 +320,56 @@ const FreelancerWork = () => {
                 </div>
 
                 <div className="deliverables-section-v2">
-                  <label>Upload Deliverables</label>
-                  <div className="upload-box-v2">
+                  <label>Deliverables & Files</label>
+                  
+                  {deliverables.length > 0 && (
+                    <div className="deliverables-list-v2">
+                      {deliverables.map(file => (
+                        <div key={file.id} className="deliverable-item-v2">
+                          <div className="file-info-v2">
+                            <File size={16} />
+                            <span>{file.filename}</span>
+                          </div>
+                          <span className="file-date-v2">{new Date(file.created_at).toLocaleDateString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div 
+                    className={`upload-box-v2 ${submitting ? 'uploading' : ''}`}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      style={{ display: 'none' }} 
+                      onChange={handleFileUpload}
+                    />
                     <Upload size={32} />
-                    <p>Drag & drop files or click to upload</p>
+                    <p>{submitting ? 'Uploading...' : 'Click to upload deliverables'}</p>
                   </div>
+                  
                   <div className="action-buttons-v2">
-                    <button className="btn-outline-v2">
+                    <button 
+                      className="btn-outline-v2 primary"
+                      onClick={() => {
+                        const pendingMilestone = activeProject.milestones?.find(m => m.status === 'PENDING');
+                        if (pendingMilestone) {
+                          handleSubmitMilestone(pendingMilestone.id);
+                        } else {
+                          alert('No pending milestones to submit. Ensure you have milestones defined.');
+                        }
+                      }}
+                    >
                       <CheckCircle size={18} />
-                      Submit Milestone
+                      Submit Current Milestone
                     </button>
-                    <button className="btn-outline-v2">
-                      Mark Complete
+                    <button 
+                      className="btn-outline-v2"
+                      onClick={handleCompleteProject}
+                    >
+                      Mark Project Complete
                     </button>
                   </div>
                 </div>

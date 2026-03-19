@@ -7,6 +7,7 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/MyProjects.css';
+import ProjectDetailsModal from './ProjectDetailsModal';
 
 const MyProjects = () => {
   const navigate = useNavigate();
@@ -17,6 +18,10 @@ const MyProjects = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeStatus, setActiveStatus] = useState('OPEN');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [proposals, setProposals] = useState([]);
+  const [milestones, setMilestones] = useState([]);
   
   const statusTabs = [
     { label: 'Open', value: 'OPEN' },
@@ -26,9 +31,14 @@ const MyProjects = () => {
   ];
 
   useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'direct') setViewMode('direct');
-    else setViewMode('posted');
+    const sub = searchParams.get('sub');
+    const view = searchParams.get('view');
+
+    if (sub === 'direct' || view === 'direct') {
+      setViewMode('direct');
+    } else {
+      setViewMode('posted');
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -91,6 +101,26 @@ const MyProjects = () => {
     }
   };
 
+  const handleViewProposals = async (project) => {
+    setSelectedProject(project);
+    setIsModalOpen(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const proposalsRes = await axios.get(`http://localhost:5000/api/freelance/projects/${project.id}/proposals`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProposals(proposalsRes.data.proposals || []);
+
+      // Milestones are already part of the project object from the main list
+      setMilestones(project.milestones || []); 
+
+    } catch (err) {
+      console.error("Error fetching project details:", err);
+      // Handle error display if needed
+    }
+  };
+
   return (
     <div className="my-projects-page">
       {/* Desktop Navbar simulation */}
@@ -140,13 +170,13 @@ const MyProjects = () => {
         <div className="view-mode-tabs">
           <button 
             className={viewMode === 'posted' ? 'active' : ''} 
-            onClick={() => setSearchParams({ tab: 'posted' })}
+            onClick={() => setSearchParams({ view: 'posted' })}
           >
             Posted Projects
           </button>
           <button 
             className={viewMode === 'direct' ? 'active' : ''} 
-            onClick={() => setSearchParams({ tab: 'direct' })}
+            onClick={() => setSearchParams({ view: 'direct' })}
           >
             Direct Bookings
           </button>
@@ -237,7 +267,7 @@ const MyProjects = () => {
 
                     <button 
                       className="view-proposals-btn-v3"
-                      onClick={() => navigate(`/freelance/project/${project.id}`)}
+                      onClick={() => handleViewProposals(project)}
                     >
                       <User size={18} />
                       View Proposals ({project.proposals_count || 0})
@@ -251,7 +281,8 @@ const MyProjects = () => {
                 <div className="empty-state-card">
                   <ShieldAlert size={48} color="#cbd5e1" />
                   <h3>No direct bookings yet</h3>
-                  <p>When clients hire you directly, they'll appear here.</p>
+                  <p>When you hire freelancers directly, they will appear here.</p>
+                  <button className="post-btn-empty" onClick={() => navigate('/freelance/home?tab=find')}>Find Freelancers</button>
                 </div>
               ) : (
                 directBookings.map(booking => (
@@ -308,6 +339,19 @@ const MyProjects = () => {
           <User size={24} /> <span>Profile</span>
         </button>
       </nav>
+
+      {isModalOpen && (
+        <ProjectDetailsModal 
+          project={selectedProject}
+          proposals={proposals}
+          milestones={milestones}
+          onClose={() => setIsModalOpen(false)}
+          onAction={() => {
+            setIsModalOpen(false);
+            fetchMyProjects();
+          }}
+        />
+      )}
     </div>
   );
 };

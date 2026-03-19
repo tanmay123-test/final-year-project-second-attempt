@@ -89,8 +89,29 @@ const FreelancerDashboard = () => {
     profileCompletion, 
     activeProjects, 
     recentProposals, 
+    pendingBookings,
     recommendedProjects 
   } = dashboardData || {};
+
+  const handleBookingAction = async (bookingId, status) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post('http://localhost:5000/api/freelance/bookings/respond', {
+        booking_id: bookingId,
+        status: status
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        alert(`Booking ${status.toLowerCase()} successfully!`);
+        fetchDashboardData();
+      }
+    } catch (error) {
+      console.error('Error responding to booking:', error);
+      alert(error.response?.data?.error || 'Failed to respond to booking');
+    }
+  };
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -290,6 +311,47 @@ const FreelancerDashboard = () => {
                   )}
                 </div>
               </section>
+
+              {/* Direct Booking Requests */}
+              {pendingBookings && pendingBookings.length > 0 && (
+                <section className="section-container-v2">
+                  <div className="section-header-v2">
+                    <div className="section-title-v2">
+                      <Bell size={20} className="pulse-icon" />
+                      <h2>New Booking Requests</h2>
+                    </div>
+                  </div>
+                  
+                  <div className="section-body-v2">
+                    <div className="cards-list-v2">
+                      {pendingBookings.map((booking, idx) => (
+                        <div key={idx} className="data-card-v2 highlight-card">
+                          <div className="card-info-v2">
+                            <h4>{booking.project_title}</h4>
+                            <p>From: <strong>{booking.client_name}</strong> • Budget: ₹{booking.amount?.toLocaleString()}</p>
+                            <p className="card-desc-short">{booking.project_description}</p>
+                            {booking.deadline && <p className="deadline-text">Deadline: {new Date(booking.deadline).toLocaleDateString()}</p>}
+                          </div>
+                          <div className="card-actions-v2">
+                            <button 
+                              className="accept-btn-v2"
+                              onClick={() => handleBookingAction(booking.id, 'ACCEPTED')}
+                            >
+                              Accept
+                            </button>
+                            <button 
+                              className="decline-btn-v2"
+                              onClick={() => handleBookingAction(booking.id, 'DECLINED')}
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {/* Recent Proposals */}
               <section className="section-container-v2">
