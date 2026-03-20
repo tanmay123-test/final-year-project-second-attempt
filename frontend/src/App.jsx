@@ -210,8 +210,9 @@ const App = () => {
           <Route path="/housekeeping/explore" element={<ProtectedRoute><UserHome /></ProtectedRoute>} />
           <Route path="/housekeeping/booking/create" element={<ProtectedRoute><BookingFlow /></ProtectedRoute>} />
 
-          {/* Service Selection (No Authentication Required) */}
-          <Route path="/services" element={<ServiceSelection />} />
+          {/* Service Selection (Authentication Required) */}
+          <Route path="/services" element={<ProtectedRoute><ServiceSelection /></ProtectedRoute>} />
+          <Route path="/provide-service" element={<ProtectedRoute><ServiceSelection mode="worker" /></ProtectedRoute>} />
           
           {/* Car Service User Routes */}
           <Route path="/car-service/setup" element={<ProtectedRoute><CarServiceSetup /></ProtectedRoute>} />
@@ -226,9 +227,6 @@ const App = () => {
           
           {/* Freelance Marketplace Routes */}
           <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />
-
-          {/* Worker Routes - Service Specific */}
-          <Route path="/provide-service" element={<ServiceSelection mode="worker" />} />
           
           {/* Healthcare */}
           <Route path="/worker/healthcare/login" element={<DoctorLogin />} />

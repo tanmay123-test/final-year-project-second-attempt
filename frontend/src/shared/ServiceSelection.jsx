@@ -97,8 +97,29 @@ const ServiceSelection = ({ mode = 'user' }) => {
                     }
                   }
                   
-                  // For user mode, redirect to login first for all services including car service
-                  navigate('/login', { state: { from: { pathname: '/car-service/home' } } });
+                  // For user mode, redirect to login first for all services except healthcare
+                  if (service.id === 'healthcare') {
+                    navigate('/doctors');
+                    return;
+                  }
+                  if (service.id === 'housekeeping') {
+                    navigate('/housekeeping/home');
+                    return;
+                  }
+                  if (service.id === 'freelance') {
+                    navigate('/freelance/home');
+                    return;
+                  }
+                  if (service.id === 'car') {
+                    navigate('/car-service/setup');
+                    return;
+                  }
+                  if (service.id === 'money') {
+                    navigate('/worker/money/login');
+                    return;
+                  }
+                  // Default fallback
+                  navigate('/login', { state: { from: location } });
                 }}
                 aria-label={`Select ${service.label} service`}
               >
