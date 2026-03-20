@@ -730,10 +730,399 @@ const FuelDelivery = () => {
           color: #374151;
           margin-bottom: 0.75rem;
         }
+
         .detail-item {
           display: flex;
           align-items: center;
           gap: 0.5rem;
+          color: #6b7280;
+          font-size: 0.9rem;
+        }
+
+        .agent-services {
+          margin-top: 1rem;
+        }
+
+        .agent-services h4 {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+
+        .services-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+
+        .service-tag {
+          background: #f3f4f6;
+          padding: 0.25rem 0.5rem;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          color: #4b5563;
+        }
+
+        .more-services {
+          background: #e5e7eb;
+          padding: 0.25rem 0.5rem;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          color: #6b7280;
+        }
+
+        .select-agent-btn {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .select-agent-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .no-agents {
+          text-align: center;
+          padding: 3rem;
+          color: #6b7280;
+        }
+
+        .no-agents svg {
+          color: #7c3aed;
+          opacity: 0.5;
+          margin-bottom: 1rem;
+        }
+
+        .loading-state {
+          text-align: center;
+          padding: 3rem;
+        }
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #e5e7eb;
+          border-top: 4px solid #7c3aed;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .fuel-type-selection {
+          padding: 2rem;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .selection-header {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .selection-header h2 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #1f2937;
+          margin-bottom: 0.5rem;
+        }
+
+        .fuel-type-options {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+          margin-top: 2rem;
+        }
+
+        .fuel-type-card {
+          background: white;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 2rem;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .fuel-type-card:hover {
+          border-color: #7c3aed;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .fuel-icon {
+          width: 60px;
+          height: 60px;
+          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1rem;
+        }
+
+        .fuel-icon svg {
+          color: white;
+          font-size: 24px;
+        }
+
+        .fuel-type-card h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #1f2937;
+          margin: 1rem 0 0.5rem;
+        }
+
+        .fuel-type-card p {
+          color: #6b7280;
+          font-size: 0.9rem;
+          margin-bottom: 1rem;
+        }
+
+        .fuel-features {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .fuel-features span {
+          font-size: 0.8rem;
+          color: #059669;
+        }
+
+        .back-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: #f3f4f6;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+        }
+
+        .agent-profile {
+          margin-bottom: 2rem;
+        }
+
+        .profile-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+
+        .profile-avatar {
+          width: 60px;
+          height: 60px;
+          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .profile-avatar svg {
+          color: white;
+          font-size: 30px;
+        }
+
+        .rating-large {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 1.1rem;
+        }
+
+        .rating-large .star {
+          width: 20px;
+          height: 20px;
+        }
+
+        .rating-large .reviews {
+          font-size: 0.9rem;
+        }
+
+        .booking-form h2 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #1f2937;
+          margin-bottom: 1.5rem;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .form-group.full-width {
+          grid-column: 1 / -1;
+        }
+
+        .form-group label {
+          font-weight: 500;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+          padding: 0.75rem;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+          outline: none;
+          border-color: #7c3aed;
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 1rem;
+          justify-content: flex-end;
+          margin-top: 2rem;
+        }
+
+        .cancel-btn {
+          padding: 0.75rem 1.5rem;
+          background: #f3f4f6;
+          color: #6b7280;
+          border: none;
+          border-radius: 8px;
+          font-weight: 500;
+          cursor: pointer;
+        }
+
+        .submit-btn {
+          padding: 0.75rem 1.5rem;
+          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .booking-confirmed {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 60vh;
+        }
+
+        .confirmation-content {
+          text-align: center;
+          background: white;
+          padding: 3rem;
+          border-radius: 12px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          max-width: 500px;
+        }
+
+        .success-icon {
+          width: 80px;
+          height: 80px;
+          background: #dcfce7;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem;
+        }
+
+        .success-icon svg {
+          color: #16a34a;
+          font-size: 40px;
+        }
+
+        .booking-summary {
+          background: #f9fafb;
+          padding: 1.5rem;
+          border-radius: 8px;
+          margin: 2rem 0;
+        }
+
+        .summary-item {
+          display: flex;
+          justify-content: space-between;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-item:last-child {
+          border-bottom: none;
+        }
+
+        .summary-item .label {
+          color: #6b7280;
+        }
+
+        .summary-item .value {
+          font-weight: 600;
+          color: #1f2937;
+        }
+
+        .confirmation-actions {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+        }
+
+        .home-btn,
+        .bookings-btn {
+          padding: 0.75rem 1.5rem;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+
+        .home-btn {
+          background: #f3f4f6;
+          color: #6b7280;
+        }
+
+        .bookings-btn {
+          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+          color: white;
+        }
+
+        .page-header {
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+          font-size: 2rem;
           font-weight: 700;
           color: #1f2937;
         }
@@ -789,192 +1178,291 @@ const FuelDelivery = () => {
           background: transparent;
         }
 
-        /* Agent Details Section */
-        .agent-details {
+        .agents-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 2rem;
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 2rem;
-        }
-
-        .agent-profile {
-          background: white;
-          border-radius: 16px;
-          padding: 2rem;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          border: 1px solid #f3f4f6;
-        }
-
-        .profile-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 2rem;
-          padding-bottom: 1.5rem;
-          border-bottom: 2px solid #f9fafb;
-        }
-
-        .profile-info h2 {
-          font-size: 1.75rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        .profile-info .specialization {
-          color: #6b7280;
-          font-size: 1rem;
-          margin-bottom: 0.75rem;
-          font-weight: 500;
-        }
-
-        .agent-details-grid {
-          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
           gap: 1.5rem;
         }
 
-        .detail-card {
-          background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-          padding: 1.5rem;
+        .agent-card {
+          background: white;
           border-radius: 12px;
-          border: 1px solid #e2e8f0;
-          transition: all 0.3s ease;
+          padding: 1.5rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          transition: transform 0.2s;
         }
 
-        .detail-card:hover {
+        .agent-card:hover {
           transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-          border-color: #7c3aed;
         }
 
-        .detail-card h3 {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: #374151;
+        .agent-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
           margin-bottom: 1rem;
+        }
+
+        .agent-info h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          color: #1f2937;
+          margin-bottom: 0.25rem;
+        }
+
+        .specialization {
+          color: #6b7280;
+          font-size: 0.9rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .rating {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.25rem;
         }
 
-        .detail-card h3::before {
-          content: '';
-          width: 4px;
-          height: 20px;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          border-radius: 2px;
+        .star {
+          color: #fbbf24;
+          fill: #fbbf24;
+        }
+
+        .reviews {
+          color: #6b7280;
+          font-size: 0.8rem;
+        }
+
+        .status {
+          padding: 0.25rem 0.75rem;
+          border-radius: 20px;
+          font-size: 0.8rem;
+          font-weight: 500;
+        }
+
+        .status.online {
+          background: #dcfce7;
+          color: #16a34a;
+        }
+
+        .status.offline {
+          background: #f3f4f6;
+          color: #6b7280;
+        }
+
+        .agent-details {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
         }
 
         .detail-item {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.5rem 0;
+          gap: 0.5rem;
+          color: #6b7280;
+          font-size: 0.9rem;
+        }
+
+        .agent-services h4 {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 0.5rem;
+        }
+
+        .services-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          margin-bottom: 1rem;
+        }
+
+        .service-tag {
+          background: #f3f4f6;
+          padding: 0.25rem 0.5rem;
+          border-radius: 6px;
+          font-size: 0.75rem;
           color: #4b5563;
-          font-size: 0.95rem;
-          transition: color 0.2s ease;
         }
 
-        .detail-item:hover {
-          color: #7c3aed;
+        .more-services {
+          background: #e5e7eb;
+          padding: 0.25rem 0.5rem;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          color: #6b7280;
         }
 
-        .detail-item svg {
+        .select-agent-btn {
+          width: 100%;
+          padding: 0.75rem;
+          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .select-agent-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .loading-state {
+          text-align: center;
+          padding: 3rem;
+        }
+
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #e5e7eb;
+          border-top: 4px solid #7c3aed;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .no-agents {
+          text-align: center;
+          padding: 3rem;
+          color: #6b7280;
+        }
+
+        .no-agents svg {
           color: #7c3aed;
-          flex-shrink: 0;
+          opacity: 0.5;
+          margin-bottom: 1rem;
+        }
+
+        .agent-details {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+
+        .agent-profile {
+          background: white;
+          border-radius: 12px;
+          padding: 2rem;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .profile-header {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          margin-bottom: 2rem;
+        }
+
+        .back-btn {
+          align-self: flex-start;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
+          background: #f3f4f6;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+          width: 120px;
+          height: 120px;
+          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          margin-bottom: 1rem;
+        }
+
+        .profile-info h2 {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #1f2937;
+          margin-bottom: 0.5rem;
+        }
+
+        .rating-large {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          justify-content: center;
+        }
+
+        .agent-details-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1.5rem;
+        }
+
+        .detail-card {
+          background: #f9fafb;
+          padding: 1.5rem;
+          border-radius: 8px;
+        }
+
+        .detail-card h3 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #1f2937;
+          margin-bottom: 1rem;
         }
 
         .services-list {
           display: flex;
           flex-direction: column;
-          gap: 0.75rem;
+          gap: 0.5rem;
         }
 
         .service-item {
           display: flex;
           align-items: center;
-          gap: 0.75rem;
-          padding: 0.75rem;
-          background: white;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-          transition: all 0.2s ease;
-        }
-
-        .service-item:hover {
-          background: #f9fafb;
-          border-color: #7c3aed;
-          transform: translateX(4px);
-        }
-
-        .service-item svg {
-          color: #7c3aed;
+          gap: 0.5rem;
+          color: #4b5563;
         }
 
         .availability-info {
-          padding: 1rem;
-          background: white;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
+          text-align: center;
         }
 
-        .availability-info .status {
-          display: inline-block;
-          padding: 0.5rem 1rem;
-          border-radius: 20px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          margin-bottom: 0.5rem;
-        }
-
-        .availability-info .status.online {
-          background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-          color: #16a34a;
-          border: 1px solid #86efac;
-        }
-
-        .availability-info .status.offline {
-          background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-          color: #6b7280;
-          border: 1px solid #d1d5db;
-        }
-
-        /* Booking Section */
         .booking-section {
           background: white;
-          border-radius: 16px;
+          border-radius: 12px;
           padding: 2rem;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          border: 1px solid #f3f4f6;
-        }
-
-        .booking-form {
-          max-width: 100%;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          margin-top: 2rem;
         }
 
         .booking-form h2 {
           font-size: 1.5rem;
           font-weight: 700;
           color: #1f2937;
-          margin-bottom: 2rem;
-          text-align: center;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          margin-bottom: 1.5rem;
         }
 
         .form-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 1.5rem;
-          margin-bottom: 2rem;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
         }
 
         .form-group {
@@ -987,31 +1475,18 @@ const FuelDelivery = () => {
         }
 
         .form-group label {
-          font-weight: 600;
+          font-weight: 500;
           color: #374151;
-          margin-bottom: 0.75rem;
-          font-size: 0.95rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .form-group label::after {
-          content: '*';
-          color: #ef4444;
-          font-weight: 700;
+          margin-bottom: 0.5rem;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
-          padding: 1rem;
-          border: 2px solid #e5e7eb;
-          border-radius: 12px;
+          padding: 0.75rem;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
           font-size: 1rem;
-          background: #f9fafb;
-          transition: all 0.3s ease;
-          font-family: inherit;
         }
 
         .form-group input:focus,
@@ -1019,161 +1494,105 @@ const FuelDelivery = () => {
         .form-group textarea:focus {
           outline: none;
           border-color: #7c3aed;
-          background: white;
-          box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
-          transform: translateY(-1px);
-        }
-
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-          color: #9ca3af;
-        }
-
-        .form-group textarea {
-          resize: vertical;
-          min-height: 100px;
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
         }
 
         .form-actions {
           display: flex;
           gap: 1rem;
           justify-content: flex-end;
-          margin-top: 2rem;
-          padding-top: 2rem;
-          border-top: 2px solid #f3f4f6;
         }
 
         .cancel-btn {
-          padding: 1rem 2rem;
-          background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+          padding: 0.75rem 1.5rem;
+          background: #f3f4f6;
           color: #6b7280;
-          border: 2px solid #d1d5db;
-          border-radius: 12px;
-          font-weight: 600;
+          border: none;
+          border-radius: 8px;
+          font-weight: 500;
           cursor: pointer;
-          transition: all 0.3s ease;
-          font-size: 1rem;
-        }
-
-        .cancel-btn:hover {
-          background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .submit-btn {
-          padding: 1rem 2rem;
+          padding: 0.75rem 1.5rem;
           background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
           color: white;
           border: none;
-          border-radius: 12px;
+          border-radius: 8px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.3s ease;
-          font-size: 1rem;
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
         }
 
-        .submit-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+        .booking-confirmed {
+          text-align: center;
+          padding: 3rem;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        .submit-btn:active {
-          transform: translateY(0);
+        .success-icon {
+          width: 80px;
+          height: 80px;
+          background: #dcfce7;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #16a34a;
+          margin: 0 auto 1.5rem;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-          .agent-details {
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-            padding: 1rem;
-          }
-
-          .form-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-          }
-
-          .profile-header {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 1rem;
-          }
-
-          .form-actions {
-            flex-direction: column;
-          }
-
-          .cancel-btn,
-          .submit-btn {
-            width: 100%;
-            padding: 1rem;
-          }
+        .booking-summary {
+          background: #f9fafb;
+          padding: 1.5rem;
+          border-radius: 8px;
+          margin: 2rem 0;
         }
 
-        /* Animations */
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        .summary-item {
+          display: flex;
+          justify-content: space-between;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid #e5e7eb;
         }
 
-        .agent-details,
-        .booking-section {
-          animation: fadeIn 0.6s ease-out;
+        .summary-item:last-child {
+          border-bottom: none;
         }
 
-        .booking-section {
-          animation-delay: 0.2s;
+        .summary-item .label {
+          color: #6b7280;
         }
 
-        /* Fuel Type Card Enhancements */
-        .fuel-type-card.petrol {
-          border-color: #10b981;
-          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        .summary-item .value {
+          font-weight: 600;
+          color: #1f2937;
         }
 
-        .fuel-type-card.petrol:hover {
-          border-color: #059669;
-          box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        .confirmation-actions {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
         }
 
-        .fuel-type-card.diesel {
-          border-color: #3b82f6;
-          background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        .home-btn,
+        .bookings-btn {
+          padding: 0.75rem 1.5rem;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
         }
 
-        .fuel-type-card.diesel:hover {
-          border-color: #1d4ed8;
-          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        .home-btn {
+          background: #f3f4f6;
+          color: #6b7280;
         }
 
-        .fuel-type-card.premium {
-          border-color: #f59e0b;
-          background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-        }
-
-        .fuel-type-card.premium:hover {
-          border-color: #d97706;
-          box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
-        }
-
-        .fuel-type-card.other {
-          border-color: #8b5cf6;
-          background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%);
-        }
-
-        .fuel-type-card.other:hover {
-          border-color: #7c3aed;
-          box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        .bookings-btn {
+          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+          color: white;
         }
       `}</style>
     </div>
