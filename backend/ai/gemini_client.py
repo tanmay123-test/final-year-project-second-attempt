@@ -16,7 +16,13 @@ class GeminiClient:
     """
     
     def __init__(self):
-        self.api_key = os.getenv("GEMINI_API_KEY", "your_gemini_api_key_here")
+        # Try to load API key from separate config file if available
+        try:
+            from services.freelance.gemini_config import GEMINI_API_KEY
+            self.api_key = GEMINI_API_KEY
+        except ImportError:
+            self.api_key = os.getenv("GEMINI_API_KEY", "your_gemini_api_key_here")
+            
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
         self.model = "gemini-1.5-flash"  # Fast and efficient model
         

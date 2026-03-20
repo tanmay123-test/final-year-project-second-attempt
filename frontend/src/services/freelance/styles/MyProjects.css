@@ -1,0 +1,314 @@
+/* My Projects Page Styles */
+.my-projects-page {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Visibility Helpers */
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
+  .my-projects-page { padding-bottom: 0; }
+}
+
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+  .my-projects-page { padding-bottom: 80px; }
+}
+
+/* --- Hero Section --- */
+.my-projects-hero {
+  background: linear-gradient(135deg, #7F77DD 0%, #534AB7 50%, #3C3489 100%);
+  padding: 3rem 2rem;
+  color: white;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .my-projects-hero {
+    margin: 1.5rem 5%;
+    border-radius: 24px;
+    padding: 4rem 4rem;
+    text-align: left;
+  }
+}
+
+.hero-content h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 0.8rem;
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* --- Content Wrapper --- */
+.projects-content-wrapper {
+  max-width: 800px;
+  margin: -2rem auto 4rem;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+@media (max-width: 767px) {
+  .projects-content-wrapper {
+    margin-top: 1.5rem;
+    max-width: 100%;
+  }
+}
+
+/* --- Toggle Tabs --- */
+.view-mode-tabs {
+  display: flex;
+  background: white;
+  padding: 0.4rem;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 2rem;
+}
+
+.view-mode-tabs button {
+  flex: 1;
+  padding: 0.8rem;
+  border: none;
+  background: none;
+  font-weight: 700;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.view-mode-tabs button.active {
+  background: #f5f3ff;
+  color: #534AB7;
+  box-shadow: inset 0 0 0 1px #534AB7;
+}
+
+/* --- Filter Pills --- */
+.filter-pills-container {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: none;
+}
+
+.filter-pills-container::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-pill {
+  padding: 0.6rem 1.5rem;
+  border-radius: 30px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #4b5563;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.filter-pill.active {
+  background: #534AB7;
+  color: white;
+  border-color: #534AB7;
+}
+
+/* --- Project Cards --- */
+.projects-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.project-card-v3 {
+  background: white;
+  border-radius: 24px;
+  padding: 2rem;
+  border: 1px solid #e5e7eb;
+  transition: transform 0.2s;
+}
+
+@media (max-width: 767px) {
+  .project-card-v3 {
+    padding: 1.5rem;
+  }
+}
+
+.card-header-v3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.header-main-v3 h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.tags-row-v3 {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tag-v3 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.tag-v3:not(:last-child)::after {
+  content: "•";
+  margin-left: 0.5rem;
+}
+
+.status-badge-v3 {
+  padding: 0.4rem 1rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.status-open { background: #f0fdf4; color: #10b981; }
+.status-active { background: #eff6ff; color: #3b82f6; }
+.status-done { background: #f3f4f6; color: #6b7280; }
+.status-cancelled { background: #fef2f2; color: #ef4444; }
+
+.description-v3 {
+  color: #4b5563;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.meta-grid-v3 {
+  display: flex;
+  gap: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 500px) {
+  .meta-grid-v3 {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+}
+
+.meta-item-v3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* --- Milestones --- */
+.milestones-section-v3 {
+  margin-bottom: 2rem;
+}
+
+.milestones-section-v3 label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #9ca3af;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.milestone-row-v3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.m-info-v3 {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.m-info-v3 span {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.m-amount-v3 {
+  font-weight: 700;
+  color: #111827;
+}
+
+/* --- Action Button --- */
+.view-proposals-btn-v3 {
+  width: 100%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 1rem;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  font-weight: 700;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-proposals-btn-v3:hover {
+  background: #f9fafb;
+  border-color: #534AB7;
+  color: #534AB7;
+}
+
+/* --- States --- */
+.loading-container, .error-container, .empty-state-card {
+  background: white;
+  padding: 4rem 2rem;
+  border-radius: 24px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.empty-state-card h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-weight: 700;
+}
+
+.empty-state-card p {
+  color: #6b7280;
+  margin-bottom: 2rem;
+}
+
+.post-btn-empty {
+  background: #534AB7;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.booking-freelancer-name {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-top: 0.2rem;
+}

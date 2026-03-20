@@ -1,0 +1,358 @@
+/* Post Project Page Styles */
+.post-project-page {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Visibility Helpers */
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
+  .post-project-page { padding-bottom: 0; }
+}
+
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+  .post-project-page { padding-bottom: 80px; }
+}
+
+/* --- Hero Section --- */
+.post-project-hero {
+  background: linear-gradient(135deg, #7F77DD 0%, #534AB7 50%, #3C3489 100%);
+  padding: 3rem 2rem;
+  color: white;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .post-project-hero {
+    margin: 1.5rem 5%;
+    border-radius: 24px;
+    padding: 4rem 4rem;
+    text-align: left;
+  }
+}
+
+.hero-content h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 0.8rem;
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* --- Form Container --- */
+.post-project-form-container {
+  max-width: 680px;
+  margin: -2rem auto 4rem;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+@media (max-width: 767px) {
+  .post-project-form-container {
+    margin-top: 1.5rem;
+  }
+}
+
+.post-project-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 767px) {
+  .post-project-card {
+    padding: 1.5rem;
+  }
+}
+
+.form-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 2rem;
+}
+
+/* --- Form Groups --- */
+.form-group {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group input, 
+.form-group textarea, 
+.form-group select {
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+  background: #fcfcfc;
+}
+
+.form-group input:focus, 
+.form-group textarea:focus, 
+.form-group select:focus {
+  border-color: #534AB7;
+  box-shadow: 0 0 0 3px rgba(83, 74, 183, 0.1);
+  background: white;
+}
+
+.form-group input.error, 
+.form-group textarea.error, 
+.form-group select.error {
+  border-color: #ef4444;
+}
+
+.error-text {
+  font-size: 0.8rem;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.server-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid #fee2e2;
+}
+
+/* --- Form Grid --- */
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 500px) {
+  .form-row-2 {
+    gap: 1rem;
+  }
+}
+
+/* --- Select Wrapper --- */
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select-wrapper select {
+  width: 100%;
+  appearance: none;
+}
+
+.select-icon {
+  position: absolute;
+  right: 1rem;
+  pointer-events: none;
+  color: #9ca3af;
+  transform: rotate(90deg);
+}
+
+/* --- Skills Tags --- */
+.skills-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.skill-tag-v3 {
+  background: #f5f3ff;
+  color: #534AB7;
+  padding: 0.4rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.skill-tag-v3 svg {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.skill-tag-v3 svg:hover {
+  opacity: 1;
+}
+
+/* --- Upload Box --- */
+.upload-box {
+  border: 2px dashed #e5e7eb;
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.upload-box:hover {
+  border-color: #534AB7;
+  background: #f5f3ff;
+}
+
+.attachments-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem 1rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.attachment-item span {
+  flex: 1;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attachment-item svg:last-child {
+  cursor: pointer;
+  color: #9ca3af;
+}
+
+/* --- Milestones Toggle --- */
+.milestones-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 0;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 1rem;
+}
+
+.toggle-label {
+  font-weight: 700;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.toggle-desc {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 0.2rem;
+}
+
+/* --- Custom Switch --- */
+.switch-v2 {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+}
+
+.switch-v2 input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider-v2 {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e5e7eb;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider-v2:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider-v2 {
+  background-color: #534AB7;
+}
+
+input:checked + .slider-v2:before {
+  transform: translateX(24px);
+}
+
+/* --- Submit Button --- */
+.submit-project-btn {
+  width: 100%;
+  background: #534AB7;
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+.submit-project-btn:hover {
+  background: #453d9e;
+}
+
+.submit-project-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.spinner-white {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

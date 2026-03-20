@@ -19,6 +19,25 @@ const Navbar = () => {
 
   const isActive = (path) => location.pathname === path ? 'active' : '';
 
+  const getWorkerDashboardPath = () => {
+    if (!worker) return '/worker/dashboard';
+    const service = worker.service || '';
+    if (service.includes('healthcare')) return '/doctor/dashboard';
+    if (service.includes('housekeeping')) return '/worker/housekeeping/dashboard';
+    if (service.includes('freelance')) return '/freelancer/dashboard';
+    if (service.includes('car')) return '/worker/car/homepage';
+    return '/worker/dashboard';
+  };
+
+  const getWorkerName = () => {
+    if (!worker) return '';
+    if (worker.name) return worker.name;
+    const emailPrefix = worker.email.split('@')[0];
+    const service = worker.service || '';
+    if (service.includes('healthcare')) return `Dr. ${emailPrefix}`;
+    return emailPrefix;
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -59,7 +78,7 @@ const Navbar = () => {
           ) : worker ? (
             // Worker Logged In
             <>
-              <Link to="/worker/dashboard" className={`nav-link ${isActive('/worker/dashboard')}`} onClick={closeMenu}>
+              <Link to={getWorkerDashboardPath()} className={`nav-link ${isActive(getWorkerDashboardPath())}`} onClick={closeMenu}>
                 <LayoutDashboard size={18} />
                 <span>Dashboard</span>
               </Link>
@@ -67,7 +86,7 @@ const Navbar = () => {
                 <div className="user-avatar worker">
                   <Briefcase size={16} />
                 </div>
-                <span className="user-name">Dr. {worker.email.split('@')[0]}</span>
+                <span className="user-name">{getWorkerName()}</span>
               </div>
               <button onClick={handleLogout} className="btn-logout">
                 <LogOut size={18} />
