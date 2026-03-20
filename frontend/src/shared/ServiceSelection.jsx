@@ -11,7 +11,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
     { id: 'healthcare', label: 'Healthcare', path: '/services/healthcare' },
     { id: 'housekeeping', label: 'Housekeeping', path: '/housekeeping/home' },
     { id: 'freelance', label: 'Freelance Marketplace', path: '/freelance/home' },
-    { id: 'car', label: 'Car Services', path: '/worker/car/login' },
+    { id: 'car', label: 'Car Services', path: '/car-service/setup' },
     { id: 'money', label: 'Finny', path: '/finny' },
   ];
 
@@ -97,11 +97,25 @@ const ServiceSelection = ({ mode = 'user' }) => {
                     }
                   }
                   
+                  // For user mode, redirect to login first for all services except healthcare
+                  if (service.id === 'healthcare') {
+                    navigate('/doctors');
+                    return;
+                  }
+                  if (service.id === 'housekeeping') {
+                    navigate('/housekeeping/home');
+                    return;
+                  }
                   if (service.id === 'freelance') {
                     navigate('/freelance/home');
                     return;
                   }
                   
+                  if (service.id === 'car') {
+                    navigate('/car-service/setup');
+                    return;
+                  }
+
                   if (service.id === 'money') {
                     navigate('/finny');
                     return;

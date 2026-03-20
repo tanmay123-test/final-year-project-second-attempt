@@ -259,7 +259,7 @@ const TowTruckHomepage = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
             <div>
               <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '2px' }}>Phone</div>
-              <div style={{ fontSize: '14px', fontWeight: '600' }}>{workerData?.phone || 'N/A'}</div>
+              <div style={{ fontSize: '14px', fontWeight: '600' }}>{workerData?.phone || ''}</div>
             </div>
             <div>
               <div style={{ fontSize: '12px', opacity: 0.8, marginBottom: '2px' }}>City</div>

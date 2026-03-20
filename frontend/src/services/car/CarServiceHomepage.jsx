@@ -1,1452 +1,282 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  User, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Calendar, 
-  Award, 
-  Settings, 
+  Wrench, 
+  Fuel, 
+  Truck, 
+  Brain, 
+  Home,
+  Settings,
+  Calendar,
+  DollarSign,
+  ChevronLeft,
+  User,
   LogOut,
-  Wrench,
-  Truck,
-  Zap,
-  Car,
+  Bell,
+  TrendingUp,
   Clock,
   CheckCircle,
-  XCircle,
-  AlertCircle,
-  Home,
-  Briefcase,
-  DollarSign,
-  Shield,
-  UserCircle,
-  Star,
-  TrendingUp,
-  Users
+  AlertCircle
 } from 'lucide-react';
-import { carService } from '../../shared/api';
 
 const CarServiceHomepage = () => {
   const navigate = useNavigate();
+  const [selectedService, setSelectedService] = useState(null);
   const [workerData, setWorkerData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [stats, setStats] = useState({
-    totalJobs: 0,
+    activeJobs: 0,
     completedJobs: 0,
-    pendingJobs: 0,
     earnings: 0,
-    rating: 0,
-    todayJobs: 0,
-    completionRate: 0,
-    avgResponseTime: 0,
-    fairnessScore: 0
+    rating: 0
   });
-  const [recentActivity, setRecentActivity] = useState([]);
-  const [isOnline, setIsOnline] = useState(true);
-  const [serviceRadius, setServiceRadius] = useState(26); // Add radius state
 
   useEffect(() => {
-    fetchWorkerData();
+    // Get worker data from localStorage
+    const workerId = localStorage.getItem('worker_id');
+    const workerEmail = localStorage.getItem('worker_email');
+    
+    if (workerId && workerEmail) {
+      setWorkerData({
+        id: workerId,
+        email: workerEmail,
+        name: workerEmail.split('@')[0] // Extract name from email
+      });
+      
+      // Simulate fetching stats
+      setStats({
+        activeJobs: Math.floor(Math.random() * 5),
+        completedJobs: Math.floor(Math.random() * 50) + 10,
+        earnings: Math.floor(Math.random() * 5000) + 1000,
+        rating: (Math.random() * 2 + 3).toFixed(1)
+      });
+    }
   }, []);
 
-  const fetchWorkerData = async () => {
-    try {
-      // Get worker data from localStorage
-      const storedData = localStorage.getItem('workerData');
-      const token = localStorage.getItem('workerToken');
-      
-      if (!storedData || !token) {
-        navigate('/worker/car/mechanic/login');
-        return;
-      }
-
-      const worker = JSON.parse(storedData);
-      console.log('Worker data from localStorage:', worker);
-      
-      setWorkerData(worker);
-      
-      // Fetch dynamic data from backend
-      try {
-        // Get worker stats
-        const statsResponse = await carService.getWorkerStats(worker.id || worker.worker_id);
-        if (statsResponse.data) {
-          setStats(prev => ({
-            ...prev,
-            ...statsResponse.data
-          }));
-        }
-
-        // Get worker rating
-        const ratingResponse = await carService.getWorkerRating(worker.id || worker.worker_id);
-        if (ratingResponse.data) {
-          setStats(prev => ({
-            ...prev,
-            rating: ratingResponse.data.rating || 0
-          }));
-        }
-
-        // Get recent activity/jobs
-        const activityResponse = await carService.getWorkerRecentActivity(worker.id || worker.worker_id);
-        if (activityResponse.data && activityResponse.data.activities) {
-          setRecentActivity(activityResponse.data.activities);
-        }
-
-        // Get performance metrics
-        const performanceResponse = await carService.getWorkerPerformance(worker.id || worker.worker_id);
-        if (performanceResponse.data) {
-          setStats(prev => ({
-            ...prev,
-            ...performanceResponse.data
-          }));
-        }
-      } catch (apiError) {
-        console.log('API endpoints not available, using default values:', apiError.message);
-        // Set default values if API fails - don't show error to user
-        setStats({
-          totalJobs: 0,
-          completedJobs: 0,
-          pendingJobs: 0,
-          earnings: 0,
-          rating: 0,
-          todayJobs: 0,
-          completionRate: 0,
-          avgResponseTime: 0,
-          fairnessScore: 0
-        });
-        setRecentActivity([]);
-      }
-      
-    } catch (err) {
-      console.error('Error fetching worker data:', err);
-      setError('Failed to load worker data');
-    } finally {
-      setLoading(false);
+  const carServices = [
+    {
+      id: 'mechanic',
+      label: 'Mechanic Services',
+      icon: Wrench,
+      description: 'Vehicle repair and maintenance',
+      path: '/worker/car/mechanic/dashboard',
+      gradient: 'linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%)',
+      glassColor: 'rgba(59, 130, 246, 0.1)',
+      borderColor: 'rgba(59, 130, 246, 0.3)',
+      hoverColor: 'rgba(59, 130, 246, 0.2)'
+    },
+    {
+      id: 'fuel_delivery',
+      label: 'Fuel Delivery',
+      icon: Fuel,
+      description: 'Emergency fuel delivery',
+      path: '/worker/car/fuel-delivery/dashboard',
+      gradient: 'linear-gradient(135deg, #FB923C 0%, #EA580C 100%)',
+      glassColor: 'rgba(251, 146, 60, 0.1)',
+      borderColor: 'rgba(251, 146, 60, 0.3)',
+      hoverColor: 'rgba(251, 146, 60, 0.2)'
+    },
+    {
+      id: 'tow_truck',
+      label: 'Tow Truck',
+      icon: Truck,
+      description: 'Vehicle towing and recovery',
+      path: '/worker/car/tow-truck/dashboard',
+      gradient: 'linear-gradient(135deg, #10B981 0%, #047857 100%)',
+      glassColor: 'rgba(16, 185, 129, 0.1)',
+      borderColor: 'rgba(16, 185, 129, 0.3)',
+      hoverColor: 'rgba(16, 185, 129, 0.2)'
+    },
+    {
+      id: 'automobile_expert',
+      label: 'Automobile Expert',
+      icon: Brain,
+      description: 'Expert consultation services',
+      path: '/worker/car/automobile-expert/dashboard',
+      gradient: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
+      glassColor: 'rgba(139, 92, 246, 0.1)',
+      borderColor: 'rgba(139, 92, 246, 0.3)',
+      hoverColor: 'rgba(139, 92, 246, 0.2)'
     }
-  };
+  ];
 
   const handleLogout = () => {
-    localStorage.removeItem('workerToken');
-    localStorage.removeItem('workerData');
-    navigate('/worker/car/mechanic/login');
+    localStorage.removeItem('worker_id');
+    localStorage.removeItem('worker_email');
+    localStorage.removeItem('token');
+    navigate('/worker/car/login');
   };
 
-  const getWorkerIcon = (role) => {
-    switch (role?.toLowerCase()) {
-      case 'mechanic':
-        return <Wrench size={24} className="role-icon" />;
-      case 'fuel delivery agent':
-        return <Zap size={24} className="role-icon" />;
-      case 'automobile expert':
-        return <Car size={24} className="role-icon" />;
-      case 'tow truck operator':
-        return <Truck size={24} className="role-icon" />;
-      default:
-        return <Wrench size={24} className="role-icon" />;
-    }
-  };
-
-  const getRoleColor = (role) => {
-    switch (role?.toLowerCase()) {
-      case 'mechanic':
-        return '#2563eb';
-      case 'fuel delivery agent':
-        return '#dc2626';
-      case 'automobile expert':
-        return '#16a34a';
-      case 'tow truck operator':
-        return '#ea580c';
-      default:
-        return '#6b7280';
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="homepage-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading your dashboard...</p>
+  const StatCard = ({ icon: Icon, label, value, color }) => (
+    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-sm">{label}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+        </div>
+        <div className={`p-3 rounded-lg ${color}`}>
+          <Icon size={20} className="text-white" />
+        </div>
       </div>
-    );
-  }
-
-  if (error || !workerData) {
-    return (
-      <div className="homepage-error">
-        <AlertCircle size={48} />
-        <h3>Error Loading Dashboard</h3>
-        <p>{error || 'No worker data found'}</p>
-        <button onClick={() => navigate('/worker/car/mechanic/login')}>
-          Go to Login
-        </button>
-      </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="car-service-homepage">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
-      <div className="homepage-header">
-        <div className="header-content">
-          <div className="worker-info">
-            <div className="worker-avatar">
-              {getWorkerIcon(workerData.role)}
-            </div>
-            <div className="worker-details">
-              <h1>Welcome back, {workerData.name || 'Worker'}!</h1>
-              <p className="worker-role" style={{ color: getRoleColor(workerData.role) }}>
-                {workerData.role || 'Car Service Worker'}
-              </p>
-              <div className="worker-meta">
-                <span className="meta-item">
-                  <MapPin size={14} />
-                  {workerData.city || 'Location not set'}
-                </span>
-                <span className="meta-item">
-                  <Phone size={14} />
-                  {workerData.phone || 'Phone not set'}
-                </span>
-                <span className="meta-item">
-                  <Mail size={14} />
-                  {workerData.email || 'Email not set'}
-                </span>
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/')}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <ChevronLeft size={20} className="text-gray-600" />
+              </button>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Wrench size={16} className="text-white" />
+                </div>
+                <h1 className="text-xl font-bold text-gray-900">Car Services</h1>
               </div>
             </div>
-          </div>
-          <div className="header-actions">
-            <button className="action-btn secondary" onClick={() => navigate('/worker/car/mechanic/profile')}>
-              <Settings size={16} />
-              Profile
-            </button>
-            <button className="action-btn logout" onClick={handleLogout}>
-              <LogOut size={16} />
-              Logout
-            </button>
+            
+            <div className="flex items-center space-x-3">
+              <button className="p-2 rounded-lg hover:bg-gray-100 relative">
+                <Bell size={20} className="text-gray-600" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+              <button className="p-2 rounded-lg hover:bg-gray-100">
+                <Settings size={20} className="text-gray-600" />
+              </button>
+              <div className="flex items-center space-x-2 pl-3 border-l border-gray-200">
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                  <User size={16} className="text-gray-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {workerData?.name || 'Worker'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {workerData?.email || 'Loading...'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg hover:bg-red-50 text-red-600"
+              >
+                <LogOut size={20} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="homepage-content">
-        {/* Status Control Section */}
-        <div className="status-control-section">
-          <div className="status-control-card">
-            <div className="status-header">
-              <h2>Status Control</h2>
-              <div className="status-toggle">
-                <label className="toggle-switch">
-                  <input 
-                    type="checkbox" 
-                    checked={isOnline}
-                    onChange={(e) => setIsOnline(e.target.checked)}
-                  />
-                  <span className="toggle-slider"></span>
-                </label>
-                <span className={`status-text ${isOnline ? 'online' : 'offline'}`}>
-                  {isOnline ? 'On' : 'Off'}
-                </span>
-              </div>
-            </div>
-            
-            <div className="status-pills">
-              <div className={`status-pill ${isOnline ? 'online' : 'offline'}`}>
-                <div className="status-dot"></div>
-                {isOnline ? 'Online' : 'Offline'}
-              </div>
-              <div className="status-pill radius">
-                <MapPin size={16} />
-                Radius: {serviceRadius}km
-              </div>
-              <div className="status-pill mechanic">
-                <Wrench size={16} />
-                Mechanic
-              </div>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {workerData?.name || 'Worker'}!
+          </h2>
+          <p className="text-gray-600">
+            Manage your car service operations and track your performance
+          </p>
+        </div>
 
-            <div className="service-radius-section">
-              <label className="radius-label">Service Radius</label>
-              <div className="radius-slider">
-                <div className="slider-track">
-                  <div 
-                    className="slider-fill" 
-                    style={{ width: `${(serviceRadius / 50) * 100}%` }}
-                  ></div>
-                </div>
-                <input 
-                  type="range" 
-                  min="1" 
-                  max="50" 
-                  value={serviceRadius}
-                  className="slider"
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    setServiceRadius(value);
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatCard
+            icon={Clock}
+            label="Active Jobs"
+            value={stats.activeJobs}
+            color="bg-blue-500"
+          />
+          <StatCard
+            icon={CheckCircle}
+            label="Completed"
+            value={stats.completedJobs}
+            color="bg-green-500"
+          />
+          <StatCard
+            icon={DollarSign}
+            label="Earnings"
+            value={`₹${stats.earnings}`}
+            color="bg-yellow-500"
+          />
+          <StatCard
+            icon={TrendingUp}
+            label="Rating"
+            value={`⭐ ${stats.rating}`}
+            color="bg-purple-500"
+          />
+        </div>
+
+        {/* Service Selection */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Select Service</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {carServices.map((service) => {
+              const Icon = service.icon;
+              return (
+                <button
+                  key={service.id}
+                  onClick={() => navigate(service.path)}
+                  className="group relative p-6 rounded-2xl border transition-all duration-300 hover:scale-105"
+                  style={{
+                    background: service.glassColor,
+                    borderColor: service.borderColor,
+                    borderWidth: '1px'
                   }}
-                />
-                <div className="slider-value">{serviceRadius}km</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Today's Stats Cards - Below Status Control */}
-          <div className="today-stats-cards-full">
-            <div className="today-stat-card">
-              <div className="stat-icon-wrapper">
-                <div className="stat-icon-small today-icon">
-                  <Calendar size={20} />
-                </div>
-              </div>
-              <div className="stat-content">
-                <div className="stat-number">{stats.todayJobs}</div>
-                <div className="stat-change positive">+{Math.floor(stats.todayJobs * 0.4)}</div>
-                <div className="stat-label">Today's Jobs</div>
-              </div>
-            </div>
-            
-            <div className="today-stat-card">
-              <div className="stat-icon-wrapper">
-                <div className="stat-icon-small earnings-icon">
-                  <Award size={20} />
-                </div>
-              </div>
-              <div className="stat-content">
-                <div className="stat-number">₹{stats.earnings?.toLocaleString() || 0}</div>
-                <div className="stat-change positive">+₹{Math.floor((stats.earnings || 0) * 0.25)}</div>
-                <div className="stat-label">Today's Earnings</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="stats-grid">
-          <div className="stat-card primary">
-            <div className="stat-icon">
-              <Calendar size={24} />
-            </div>
-            <div className="stat-content">
-              <h3>{stats.totalJobs}</h3>
-              <p>Total Jobs</p>
-            </div>
-          </div>
-          
-          <div className="stat-card success">
-            <div className="stat-icon">
-              <CheckCircle size={24} />
-            </div>
-            <div className="stat-content">
-              <h3>{stats.completedJobs}</h3>
-              <p>Completed</p>
-            </div>
-          </div>
-          
-          <div className="stat-card warning">
-            <div className="stat-icon">
-              <Clock size={24} />
-            </div>
-            <div className="stat-content">
-              <h3>{stats.pendingJobs}</h3>
-              <p>Pending</p>
-            </div>
-          </div>
-          
-          <div className="stat-card info">
-            <div className="stat-icon">
-              <Award size={24} />
-            </div>
-            <div className="stat-content">
-              <h3>₹{stats.earnings}</h3>
-              <p>Total Earnings</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Rating and Today's Jobs */}
-        <div className="secondary-stats">
-          <div className="rating-card">
-            <div className="rating-header">
-              <Star size={20} className="star-icon" />
-              <span>Your Rating</span>
-            </div>
-            <div className="rating-value">
-              <span className="rating-number">{stats.rating.toFixed(1)}</span>
-              <div className="rating-stars">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    size={16}
-                    className={star <= Math.floor(stats.rating) ? "star-filled" : "star-empty"}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-          
-          <div className="today-jobs-card">
-            <div className="today-header">
-              <Users size={20} className="today-icon" />
-              <span>Today's Jobs</span>
-            </div>
-            <div className="today-value">
-              <span className="today-number">{stats.todayJobs}</span>
-              <span className="today-label">jobs assigned</span>
-            </div>
-          </div>
-        </div>
-
-        
-        {/* Performance Section */}
-        <div className="performance-section">
-          <h2><Zap size={20} /> Performance</h2>
-          <div className="performance-grid">
-            <div className="performance-card">
-              <p className="performance-value">{stats.completionRate || 0}%</p>
-              <span className="performance-label">Completion</span>
-            </div>
-            <div className="performance-card">
-              <p className="performance-value">{stats.avgResponseTime || 0}min</p>
-              <span className="performance-label">Avg Response</span>
-            </div>
-            <div className="performance-card">
-              <p className="performance-value">{stats.fairnessScore || 0}</p>
-              <span className="performance-label">Fairness</span>
-            </div>
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = service.hoverColor;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = service.glassColor;
+                  }}
+                >
+                  <div className="flex flex-col items-center text-center space-y-3">
+                    <div
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
+                      style={{ background: service.gradient }}
+                    >
+                      <Icon size={28} className="text-white" />
+                    </div>
+                    <h4 className="font-semibold text-gray-900">{service.label}</h4>
+                    <p className="text-sm text-gray-600">{service.description}</p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Recent Activity */}
-        <div className="recent-activity">
-          <h2>Recent Activity</h2>
-          <div className="activity-list">
-            {recentActivity.length > 0 ? (
-              recentActivity.map((activity, index) => (
-                <div key={index} className="activity-item">
-                  <div className={`activity-icon ${activity.status?.toLowerCase() || 'info'}`}>
-                    {activity.status === 'completed' && <CheckCircle size={16} />}
-                    {activity.status === 'in-progress' && <Clock size={16} />}
-                    {activity.status === 'pending' && <Clock size={16} />}
-                    {activity.status === 'cancelled' && <XCircle size={16} />}
-                    {(!activity.status || activity.status === 'info') && <AlertCircle size={16} />}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+          <div className="space-y-3">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Wrench size={16} className="text-blue-600" />
                   </div>
-                  <div className="activity-content">
-                    <div className="activity-header">
-                      <span className="customer-name">{activity.customerName || 'Unknown Customer'}</span>
-                      <span className="activity-time">
-                        {activity.time || new Date(activity.createdAt).toLocaleString([], {hour: '2-digit', minute:'2-digit'})}
-                      </span>
-                    </div>
-                    <p className="service-description">{activity.service || activity.description || 'No service description'}</p>
-                    <span className={`activity-status ${activity.status?.toLowerCase() || 'pending'}`}>
-                      {activity.status || 'Pending'}
-                    </span>
-                  </div>
-                  <div className={`activity-amount ${activity.earnings > 0 ? 'positive' : activity.earnings < 0 ? 'negative' : 'neutral'}`}>
-                    {activity.earnings > 0 ? `₹${activity.earnings}` : 
-                     activity.earnings < 0 ? `-₹${Math.abs(activity.earnings)}` : 
-                     '-'}
+                  <div>
+                    <p className="font-medium text-gray-900">Job #{item}00{item}</p>
+                    <p className="text-sm text-gray-500">Vehicle repair service</p>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="no-activity">
-                <AlertCircle size={32} />
-                <p>No recent activity</p>
+                <div className="text-right">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Completed
+                  </span>
+                  <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
-
-      {/* Bottom Navigation */}
-      <div className="bottom-navigation">
-        <div className="nav-item active" onClick={() => navigate('/worker/car/mechanic/dashboard')}>
-          <Home size={20} />
-          <span>Dashboard</span>
-        </div>
-        <div className="nav-item" onClick={() => navigate('/worker/car/mechanic/jobs')}>
-          <Briefcase size={20} />
-          <span>Jobs</span>
-        </div>
-        <div className="nav-item" onClick={() => navigate('/worker/car/mechanic/active-jobs')}>
-          <CheckCircle size={20} />
-          <span>Active Jobs</span>
-        </div>
-        <div className="nav-item" onClick={() => navigate('/worker/car/mechanic/performance')}>
-          <TrendingUp size={20} />
-          <span>Performance & Safety</span>
-        </div>
-        <div className="nav-item" onClick={() => navigate('/worker/car/mechanic/slots')}>
-          <Clock size={20} />
-          <span>Slots</span>
-        </div>
-        <div className="nav-item" onClick={() => navigate('/worker/car/mechanic/profile')}>
-          <UserCircle size={20} />
-          <span>Profile</span>
-        </div>
-      </div>
-
-      <style>{`
-        .car-service-homepage {
-          min-height: 100vh;
-          background: #f3f4f6;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          padding-bottom: 80px;
-          position: relative;
-        }
-
-        .homepage-header {
-          background: white;
-          padding: 1.5rem 1rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          border-radius: 0 0 1rem 1rem;
-        }
-
-        .header-content {
-          max-width: 100%;
-          margin: 0 auto;
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-
-        .worker-info {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .worker-avatar {
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #8B5CF6, #7C3AED);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-weight: 600;
-          font-size: 1.2rem;
-          box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2);
-        }
-
-        .worker-details h1 {
-          margin: 0;
-          font-size: 1.25rem;
-          color: #1f2937;
-          font-weight: 600;
-        }
-
-        .worker-role {
-          font-size: 0.875rem;
-          font-weight: 500;
-          margin: 0.25rem 0;
-          color: #6b7280;
-        }
-
-        .worker-status {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          color: #10b981;
-          font-size: 0.75rem;
-          font-weight: 500;
-        }
-
-        .worker-status::before {
-          content: '';
-          width: 6px;
-          height: 6px;
-          background: #10b981;
-          border-radius: 50%;
-        }
-
-        .worker-meta {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-top: 0.5rem;
-          color: #6b7280;
-          font-size: 0.875rem;
-        }
-
-        .header-actions {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 0.5rem;
-        }
-
-        .profile-section {
-          text-align: right;
-        }
-
-        .profile-name {
-          font-size: 1rem;
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .profile-role {
-          font-size: 0.75rem;
-          color: #6b7280;
-        }
-
-        .profile-status {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          color: #10b981;
-          font-size: 0.75rem;
-          font-weight: 500;
-        }
-
-        .profile-status::before {
-          content: '';
-          width: 6px;
-          height: 6px;
-          background: #10b981;
-          border-radius: 50%;
-        }
-
-        .action-btn {
-          padding: 0.5rem 1rem;
-          border: none;
-          border-radius: 0.5rem;
-          cursor: pointer;
-          font-weight: 500;
-          font-size: 0.875rem;
-          transition: all 0.2s;
-        }
-
-        .action-btn.logout {
-          background: #ef4444;
-          color: white;
-        }
-
-        .action-btn.logout:hover {
-          background: #dc2626;
-        }
-
-        .homepage-content {
-          max-width: 100%;
-          margin: 0 auto;
-          padding: 1rem;
-        }
-
-        /* Stats Cards - White Theme */
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-          background: white;
-          border-radius: 1rem;
-          padding: 1.25rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          transition: transform 0.2s;
-        }
-
-        .stat-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-icon {
-          width: 48px;
-          height: 48px;
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-        }
-
-        .stat-card.primary .stat-icon {
-          background: linear-gradient(135deg, #8B5CF6, #7C3AED);
-        }
-
-        .stat-card.success .stat-icon {
-          background: linear-gradient(135deg, #10b981, #059669);
-        }
-
-        .stat-card.warning .stat-icon {
-          background: linear-gradient(135deg, #f59e0b, #d97706);
-        }
-
-        .stat-card.info .stat-icon {
-          background: linear-gradient(135deg, #3b82f6, #2563eb);
-        }
-
-        .stat-content h3 {
-          margin: 0;
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-        }
-
-        .stat-content p {
-          margin: 0.25rem 0 0 0;
-          color: #6b7280;
-          font-size: 0.875rem;
-        }
-
-        /* Secondary Stats - White Cards */
-        .secondary-stats {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .rating-card, .today-jobs-card {
-          background: white;
-          border-radius: 1rem;
-          padding: 1.25rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .rating-header, .today-header {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-          color: #374151;
-          font-weight: 600;
-          font-size: 0.875rem;
-        }
-
-        .star-icon {
-          color: #8B5CF6;
-        }
-
-        .today-icon {
-          color: #8B5CF6;
-        }
-
-        .rating-value {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .rating-number {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-        }
-
-        .today-value {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .today-number {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-        }
-
-        .today-label {
-          color: #6b7280;
-          font-size: 0.75rem;
-        }
-
-        /* Performance Section - White Card */
-        .performance-section {
-          background: white;
-          border-radius: 1rem;
-          padding: 1.5rem;
-          margin-bottom: 1.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .performance-section h2 {
-          margin: 0 0 1rem 0;
-          color: #1f2937;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
-
-        .performance-section h2 svg {
-          color: #8B5CF6;
-        }
-
-        .performance-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 1rem;
-        }
-
-        .performance-card {
-          text-align: center;
-          padding: 1rem;
-          background: #f9fafb;
-          border-radius: 0.75rem;
-          transition: all 0.2s;
-        }
-
-        .performance-card:hover {
-          background: #f3f4f6;
-        }
-
-        .performance-value {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin: 0 0 0.25rem 0;
-          line-height: 1;
-        }
-
-        .performance-label {
-          color: #6b7280;
-          font-size: 0.75rem;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        /* Recent Activity - White Card */
-        .recent-activity {
-          background: white;
-          border-radius: 1rem;
-          padding: 1.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .recent-activity h2 {
-          margin: 0 0 1rem 0;
-          color: #1f2937;
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
-
-        .activity-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        .activity-item {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          background: #f9fafb;
-          border-radius: 0.75rem;
-          transition: all 0.2s;
-        }
-
-        .activity-item:hover {
-          background: #f3f4f6;
-        }
-
-        .activity-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          flex-shrink: 0;
-        }
-
-        .activity-icon.success {
-          background: #10b981;
-        }
-
-        .activity-icon.pending {
-          background: #f59e0b;
-        }
-
-        .activity-icon.in-progress {
-          background: #3b82f6;
-        }
-
-        .activity-icon.cancelled {
-          background: #ef4444;
-        }
-
-        .activity-icon.info {
-          background: #8B5CF6;
-        }
-
-        .activity-content {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .activity-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 0.25rem;
-        }
-
-        .customer-name {
-          font-weight: 600;
-          color: #1f2937;
-          font-size: 0.875rem;
-        }
-
-        .service-description {
-          margin: 0.25rem 0;
-          color: #6b7280;
-          font-size: 0.813rem;
-          line-height: 1.3;
-        }
-
-        .activity-status {
-          display: inline-block;
-          padding: 0.25rem 0.5rem;
-          border-radius: 9999px;
-          font-size: 0.75rem;
-          font-weight: 500;
-          text-transform: uppercase;
-          letter-spacing: 0.025em;
-          margin-top: 0.25rem;
-        }
-
-        .activity-status.completed {
-          background: #d1fae5;
-          color: #065f46;
-        }
-
-        .activity-status.in-progress {
-          background: #dbeafe;
-          color: #1e40af;
-        }
-
-        .activity-status.pending {
-          background: #fef3c7;
-          color: #92400e;
-        }
-
-        .activity-status.cancelled {
-          background: #fee2e2;
-          color: #991b1b;
-        }
-
-        .activity-time {
-          color: #9ca3af;
-          font-size: 0.75rem;
-        }
-
-        .activity-amount {
-          font-weight: 600;
-          color: #1f2937;
-          font-size: 0.875rem;
-          text-align: right;
-        }
-
-        .activity-amount.positive {
-          color: #10b981;
-        }
-
-        .activity-amount.negative {
-          color: #ef4444;
-        }
-
-        .no-activity {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 2rem;
-          color: #9ca3af;
-          text-align: center;
-        }
-
-        .no-activity svg {
-          margin-bottom: 1rem;
-          opacity: 0.5;
-        }
-
-        /* Status Control Section */
-        .status-control-section {
-          display: block;
-          margin-bottom: 1.5rem;
-        }
-
-        .status-control-card {
-          background: white;
-          border-radius: 1rem;
-          padding: 1.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .status-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1.5rem;
-        }
-
-        .status-header h2 {
-          margin: 0;
-          color: #1f2937;
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
-
-        .status-toggle {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .toggle-switch {
-          position: relative;
-          display: inline-block;
-          width: 50px;
-          height: 24px;
-        }
-
-        .toggle-switch input {
-          opacity: 0;
-          width: 0;
-          height: 0;
-        }
-
-        .toggle-slider {
-          position: absolute;
-          cursor: pointer;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: #e5e7eb;
-          transition: 0.4s;
-          border-radius: 24px;
-        }
-
-        .toggle-slider:before {
-          position: absolute;
-          content: "";
-          height: 18px;
-          width: 18px;
-          left: 3px;
-          bottom: 3px;
-          background-color: white;
-          transition: 0.4s;
-          border-radius: 50%;
-        }
-
-        .toggle-switch input:checked + .toggle-slider {
-          background-color: #10b981;
-        }
-
-        .toggle-switch input:not(:checked) + .toggle-slider {
-          background-color: #ef4444;
-        }
-
-        .toggle-switch input:checked + .toggle-slider:before {
-          transform: translateX(26px);
-        }
-
-        .toggle-switch input:not(:checked) + .toggle-slider:before {
-          transform: translateX(3px);
-        }
-
-        .status-text {
-          font-weight: 600;
-          font-size: 0.875rem;
-          transition: color 0.3s ease;
-        }
-
-        .status-text.online {
-          color: #10b981;
-        }
-
-        .status-text.offline {
-          color: #ef4444;
-        }
-
-        .status-pills {
-          display: flex;
-          gap: 0.75rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .status-pill {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          border-radius: 9999px;
-          font-size: 0.875rem;
-          font-weight: 500;
-          transition: all 0.3s ease;
-        }
-
-        .status-pill.online {
-          background: #d1fae5;
-          color: #065f46;
-        }
-
-        .status-pill.offline {
-          background: #fee2e2;
-          color: #991b1b;
-        }
-
-        .status-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          transition: background-color 0.3s ease;
-        }
-
-        .status-pill.online .status-dot {
-          background: #10b981;
-        }
-
-        .status-pill.offline .status-dot {
-          background: #ef4444;
-        }
-
-        .service-radius-section {
-          margin-bottom: 1rem;
-        }
-
-        .radius-label {
-          display: block;
-          margin-bottom: 0.75rem;
-          color: #374151;
-          font-weight: 500;
-          font-size: 0.875rem;
-        }
-
-        .radius-slider {
-          position: relative;
-        }
-
-        .slider-track {
-          position: absolute;
-          top: 50%;
-          left: 0;
-          right: 0;
-          height: 8px;
-          background: #e5e7eb;
-          border-radius: 4px;
-          transform: translateY(-50%);
-          pointer-events: none;
-        }
-
-        .slider-fill {
-          height: 100%;
-          background: #8B5CF6;
-          border-radius: 4px;
-          transition: width 0.3s ease;
-          position: relative;
-        }
-
-        .slider {
-          width: 100%;
-          height: 8px;
-          background: transparent;
-          outline: none;
-          -webkit-appearance: none;
-          position: relative;
-          z-index: 2;
-          cursor: pointer;
-        }
-
-        .slider::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: #8B5CF6;
-          cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
-          transition: all 0.2s ease;
-          position: relative;
-          z-index: 3;
-          top: -8px;
-        }
-
-        .slider::-webkit-slider-thumb:hover {
-          transform: scale(1.1);
-          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-        }
-
-        .slider::-moz-range-thumb {
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          background: #8B5CF6;
-          cursor: pointer;
-          border: 3px solid white;
-          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
-          transition: all 0.2s ease;
-          position: relative;
-          z-index: 3;
-          top: -8px;
-        }
-
-        .slider::-moz-range-thumb:hover {
-          transform: scale(1.1);
-          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-        }
-
-        .slider-value {
-          text-align: center;
-          margin-top: 1rem;
-          color: #6b7280;
-          font-size: 0.875rem;
-          font-weight: 500;
-        }
-
-        .today-stats-cards-full {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-          margin-top: 1.5rem;
-        }
-
-        .today-stat-card {
-          background: white;
-          border-radius: 1rem;
-          padding: 1.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .stat-icon-wrapper {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .stat-icon-small {
-          width: 48px;
-          height: 48px;
-          border-radius: 0.75rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-        }
-
-        .today-icon {
-          background: #8B5CF6;
-        }
-
-        .earnings-icon {
-          background: #8B5CF6;
-        }
-
-        .stat-content {
-          flex: 1;
-        }
-
-        .stat-number {
-          font-size: 1.75rem;
-          font-weight: 700;
-          color: #1f2937;
-          line-height: 1;
-        }
-
-        .stat-change {
-          font-size: 0.875rem;
-          font-weight: 600;
-          margin-top: 0.25rem;
-        }
-
-        .stat-change.positive {
-          color: #10b981;
-        }
-
-        .stat-label {
-          color: #6b7280;
-          font-size: 0.75rem;
-          margin-top: 0.25rem;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-          .secondary-stats {
-            grid-template-columns: 1fr;
-          }
-          
-          .performance-grid {
-            grid-template-columns: 1fr;
-            gap: 0.75rem;
-          }
-          
-          .stats-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .today-stats-cards-full {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-          }
-
-          .status-pills {
-            flex-wrap: wrap;
-            gap: 0.5rem;
-          }
-
-          .status-pill {
-            font-size: 0.75rem;
-            padding: 0.375rem 0.75rem;
-          }
-
-          .slider {
-            height: 6px;
-          }
-
-          .slider::-webkit-slider-thumb {
-            width: 20px;
-            height: 20px;
-            border: 2px solid white;
-          }
-
-          .slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border: 2px solid white;
-          }
-        }
-
-        /* Loading and Error States */
-        .homepage-loading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          color: #6b7280;
-        }
-
-        .loading-spinner {
-          width: 40px;
-          height: 40px;
-          border: 3px solid #e5e7eb;
-          border-top: 3px solid #8B5CF6;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .homepage-error {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          color: #6b7280;
-          text-align: center;
-          padding: 2rem;
-        }
-
-        .homepage-error h3 {
-          margin: 1rem 0;
-          color: #1f2937;
-        }
-
-        .homepage-error button {
-          margin-top: 1rem;
-          padding: 0.75rem 1.5rem;
-          background: #8B5CF6;
-          color: white;
-          border: none;
-          border-radius: 0.5rem;
-          cursor: pointer;
-          font-weight: 500;
-        }
-
-        .homepage-error button:hover {
-          background: #7C3AED;
-        }
-
-        /* Bottom Navigation */
-        .bottom-navigation {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: white;
-          border-top: 1px solid #e5e7eb;
-          display: flex;
-          justify-content: space-around;
-          align-items: center;
-          padding: 0.5rem 0;
-          z-index: 9999;
-          box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .nav-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.25rem;
-          cursor: pointer;
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          transition: all 0.2s ease;
-          min-width: 60px;
-        }
-
-        .nav-item:hover {
-          background: #f8fafc;
-          transform: translateY(-2px);
-        }
-
-        .nav-item.active {
-          color: #8B5CF6;
-        }
-
-        .nav-item.active svg {
-          color: #8B5CF6;
-        }
-
-        .nav-item svg {
-          color: #6b7280;
-          transition: color 0.2s ease;
-        }
-
-        .nav-item:hover svg {
-          color: #8B5CF6;
-        }
-
-        .nav-item span {
-          font-size: 0.75rem;
-          font-weight: 500;
-          color: #6b7280;
-          transition: color 0.2s ease;
-        }
-
-        .nav-item.active span {
-          color: #8B5CF6;
-          font-weight: 600;
-        }
-
-        .nav-item:hover span {
-          color: #8B5CF6;
-        }
-      `}</style>
     </div>
   );
 };

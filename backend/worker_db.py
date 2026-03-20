@@ -150,15 +150,25 @@ class WorkerDB:
         row = cursor.fetchone()
         return self._row_to_dict(row)
 
-    def verify_worker_login(self, email):
+    def verify_worker_login(self, email, password=None):
         cursor = self.conn.cursor()
         cursor.execute(
-            "SELECT id, status, service, specialization, full_name FROM workers WHERE email = ?",
+            "SELECT id, status, service, specialization, full_name, password FROM workers WHERE email = ?",
             (email,)
         )
         row = cursor.fetchone()
         if not row:
             return None
+        
+        # Check password if provided and worker has a password set
+        if password and row["password"]:
+            try:
+                if not bcrypt.checkpw(password.encode(), row["password"].encode()):
+                    return None
+            except:
+                # If password verification fails, return None
+                return None
+        
         return (row["id"], row["status"], row["service"], row["specialization"] or "", row["full_name"])
 
     def get_all_specializations(self, service_type='healthcare'):

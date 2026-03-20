@@ -34,6 +34,14 @@ import ProviderPricing from './services/housekeeping/provider/ProviderPricing';
 
 import UserLayout from './components/UserLayout';
 
+// Car Service Components
+import CarServiceSetup from './services/car/CarServiceSetup';
+import CarServiceHome from './services/car/CarServiceHome';
+import BookMechanic from './services/car/BookMechanic';
+import MyGarage from './services/car/MyGarage';
+import BookTowTruck from './services/car/BookTowTruck';
+import FuelDelivery from './services/car/FuelDelivery';
+
 // Freelance Marketplace
 import FreelanceHome from './services/freelance/client/FreelanceHome';
 import ProjectDetailPage from './services/freelance/client/ProjectDetailPage';
@@ -61,7 +69,16 @@ import AutomobileExpertAuth from './services/car/AutomobileExpertAuth';
 
 // Car Services Dashboards
 import CarServiceHomepage from './services/car/CarServiceHomepage';
+import MechanicDashboard from './services/car/MechanicDashboard';
 import AutomobileExpertHomepage from './services/car/AutomobileExpertHomepage';
+import AutomobileExpertRequests from './services/car/AutomobileExpertRequests';
+import ActiveConsultation from './services/car/ActiveConsultation';
+import AutomobileExpertConsultationMenu from './services/car/AutomobileExpertConsultationMenu';
+import AutomobileExpertConsultationHistory from './services/car/AutomobileExpertConsultationHistory';
+import AutomobileExpertPerformanceAnalytics from './services/car/AutomobileExpertPerformanceAnalytics';
+import AutomobileExpertReputation from './services/car/AutomobileExpertReputation';
+import AutomobileExpertReportUser from './services/car/AutomobileExpertReportUser';
+import AutomobileExpertQueueStatus from './services/car/AutomobileExpertQueueStatus';
 import MechanicJobs from './services/car/MechanicJobs';
 import MechanicActiveJobs from './services/car/MechanicActiveJobs';
 import MechanicPerformance from './services/car/MechanicPerformance';
@@ -76,11 +93,13 @@ import MechanicSupport from './services/car/MechanicSupport';
 // Fuel Delivery Components
 import FuelDeliveryLayout from './services/car/FuelDeliveryLayout';
 import FuelDeliveryHomepage from './services/car/FuelDeliveryHomepage';
-import FuelDeliveryRequests from './services/car/FuelDeliveryRequests';
-import FuelDeliveryActive from './services/car/FuelDeliveryActive';
+import FuelDeliveryRequests from './services/car/fuelDeliveryRequests';
+import FuelDeliveryActive from './services/car/fuelDeliveryActive';
 import FuelDeliveryHistory from './services/car/FuelDeliveryHistory';
 import FuelDeliveryPerformance from './services/car/FuelDeliveryPerformance';
 import FuelDeliveryProfile from './services/car/FuelDeliveryProfile';
+import MyBookings from './pages/MyBookings';
+import AIMechanic from './pages/AIMechanic';
 
 // Tow Truck Components
 import TowTruckHomepage from './services/car/TowTruckHomepage';
@@ -219,15 +238,27 @@ const App = () => {
           <Route path="/housekeeping/explore" element={<ProtectedRoute><UserHome /></ProtectedRoute>} />
           <Route path="/housekeeping/booking/create" element={<ProtectedRoute><BookingFlow /></ProtectedRoute>} />
 
-          {/* Service Selection (No Bottom Nav) */}
+          {/* Service Selection (Authentication Required) */}
           <Route path="/services" element={<ProtectedRoute><ServiceSelection /></ProtectedRoute>} />
+          <Route path="/provide-service" element={<ProtectedRoute><ServiceSelection mode="worker" /></ProtectedRoute>} />
+          
+          {/* Car Service User Routes */}
+          <Route path="/car-service/setup" element={<ProtectedRoute><CarServiceSetup /></ProtectedRoute>} />
+          <Route path="/car-service/home" element={<ProtectedRoute><CarServiceHome /></ProtectedRoute>} />
+          <Route path="/car-service/book-mechanic" element={<ProtectedRoute><BookMechanic /></ProtectedRoute>} />
+          <Route path="/car-service/garage" element={<ProtectedRoute><MyGarage /></ProtectedRoute>} />
+          <Route path="/car-service/book-tow-truck" element={<ProtectedRoute><BookTowTruck /></ProtectedRoute>} />
+          <Route path="/car-service/fuel-delivery" element={<ProtectedRoute><FuelDelivery /></ProtectedRoute>} />
+          <Route path="/car-service/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
+          <Route path="/car-service/ai-mechanic" element={<ProtectedRoute><AIMechanic /></ProtectedRoute>} />
+          <Route path="/car-service" element={<ProtectedRoute><CarServiceSetup /></ProtectedRoute>} />
           
           {/* Freelance Marketplace Routes */}
           <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />
           <Route path="/freelance/project/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
 
           {/* Worker Routes - Service Specific */}
-          <Route path="/provide-service" element={<ServiceSelection mode="worker" />} />
+          <Route path="/provide-service" element={<ProtectedRoute><ServiceSelection mode="worker" /></ProtectedRoute>} />
           
           {/* Healthcare */}
           <Route path="/worker/healthcare/login" element={<DoctorLogin />} />
@@ -375,7 +406,7 @@ const App = () => {
             path="/worker/car/mechanic/dashboard" 
             element={
               <ProtectedWorkerRoute>
-                <CarServiceHomepage />
+                <MechanicDashboard />
               </ProtectedWorkerRoute>
             } 
           />
@@ -501,6 +532,51 @@ const App = () => {
           <Route path="/worker/car/automobile-expert/home" element={
             <ProtectedWorkerRoute>
               <AutomobileExpertHomepage />
+            </ProtectedWorkerRoute>
+          } />
+          <Route path="/worker/car/automobile-expert/homepage" element={
+            <ProtectedWorkerRoute>
+              <AutomobileExpertHomepage />
+            </ProtectedWorkerRoute>
+          } />
+          <Route path="/worker/car/automobile-expert/requests" element={
+            <ProtectedWorkerRoute>
+              <AutomobileExpertRequests />
+            </ProtectedWorkerRoute>
+          } />
+          <Route path="/worker/car/automobile-expert/active" element={
+            <ProtectedWorkerRoute>
+              <ActiveConsultation />
+            </ProtectedWorkerRoute>
+          } />
+          <Route path="/worker/car/automobile-expert/consultation-menu" element={
+            <ProtectedWorkerRoute>
+              <AutomobileExpertConsultationMenu />
+            </ProtectedWorkerRoute>
+          } />
+          <Route path="/worker/car/automobile-expert/consultation-history" element={
+            <ProtectedWorkerRoute>
+              <AutomobileExpertConsultationHistory />
+            </ProtectedWorkerRoute>
+          } />
+          <Route path="/worker/car/automobile-expert/performance-analytics" element={
+            <ProtectedWorkerRoute>
+              <AutomobileExpertPerformanceAnalytics />
+            </ProtectedWorkerRoute>
+          } />
+          <Route path="/worker/car/automobile-expert/reputation" element={
+            <ProtectedWorkerRoute>
+              <AutomobileExpertReputation />
+            </ProtectedWorkerRoute>
+          } />
+          <Route path="/worker/car/automobile-expert/report-user" element={
+            <ProtectedWorkerRoute>
+              <AutomobileExpertReportUser />
+            </ProtectedWorkerRoute>
+          } />
+          <Route path="/worker/car/automobile-expert/queue-status" element={
+            <ProtectedWorkerRoute>
+              <AutomobileExpertQueueStatus />
             </ProtectedWorkerRoute>
           } />
 

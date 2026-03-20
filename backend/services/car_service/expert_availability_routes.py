@@ -4,12 +4,14 @@ RESTful endpoints for expert dashboard, availability management, and consultatio
 """
 
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from .expert_availability_service import expert_availability_service
 from .automobile_expert_db import automobile_expert_db
 
 expert_availability_bp = Blueprint('expert_availability', __name__, url_prefix='/api/expert-availability')
 
 @expert_availability_bp.route('/dashboard/<int:expert_id>', methods=['GET'])
+@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['GET'])
 def get_expert_dashboard(expert_id):
     """Get expert dashboard data"""
     try:
@@ -24,6 +26,7 @@ def get_expert_dashboard(expert_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @expert_availability_bp.route('/go-online', methods=['POST'])
+@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['POST'])
 def go_online():
     """Set expert status to ONLINE_AVAILABLE"""
     try:
@@ -44,6 +47,7 @@ def go_online():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @expert_availability_bp.route('/go-offline', methods=['POST'])
+@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['POST'])
 def go_offline():
     """Set expert status to OFFLINE"""
     try:

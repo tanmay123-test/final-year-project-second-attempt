@@ -484,5 +484,70 @@ class ExpertAvailabilityDB:
         
         return filtered_experts
 
+    def get_expert_consultation_history(self, expert_id: int, limit: int = 100) -> list:
+        """Get expert's completed consultation history"""
+        try:
+            cursor = self.conn.cursor()
+            
+            # First check if consultation_requests table exists
+            cursor.execute("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='consultation_requests'
+            """)
+            
+            table_exists = cursor.fetchone()
+            if not table_exists:
+                print("consultation_requests table does not exist")
+                return []
+            
+            # Check if the table has the expected columns
+            cursor.execute("PRAGMA table_info(consultation_requests)")
+            columns = [row[1] for row in cursor.fetchall()]
+            
+            required_columns = ['request_id', 'user_name', 'user_city', 'user_phone', 
+                              'issue_description', 'area_of_expertise', 'proposed_fee', 
+                              'user_rating', 'created_at', 'assigned_at', 'started_at', 
+                              'completed_at', 'status', 'expert_id']
+            
+            missing_columns = [col for col in required_columns if col not in columns]
+            if missing_columns:
+                print(f"Missing columns in consultation_requests: {missing_columns}")
+                return []
+            
+            # Query the consultation history
+            cursor.execute("""
+                SELECT 
+                    cr.request_id,
+                    cr.user_name,
+                    cr.user_city,
+                    cr.user_phone,
+                    cr.issue_description,
+                    cr.area_of_expertise,
+                    cr.proposed_fee,
+                    cr.user_rating,
+                    cr.created_at,
+                    cr.assigned_at,
+                    cr.started_at,
+                    cr.completed_at,
+                    cr.status,
+                    cr.expert_id
+            FROM consultation_requests cr
+            WHERE cr.expert_id = ? 
+            AND cr.status = 'COMPLETED'
+            ORDER BY cr.completed_at DESC
+            LIMIT ?
+        """, (expert_id, limit))
+            
+            consultations = []
+            for row in cursor.fetchall():
+                consultation = dict(row)
+                consultations.append(consultation)
+            
+            return consultations
+            
+        except Exception as e:
+            print(f"Error in get_expert_consultation_history: {str(e)}")
+            return []
+
 # Create database instance
 expert_availability_db = ExpertAvailabilityDB()
