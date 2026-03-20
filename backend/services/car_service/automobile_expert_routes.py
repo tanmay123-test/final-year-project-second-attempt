@@ -276,7 +276,28 @@ def update_status():
     except Exception as e:
         return jsonify({'error': f'Status update failed: {str(e)}'}), 500
 
+@automobile_expert_bp.route('/stats/<int:expert_id>', methods=['GET'])
+@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['GET'])
+def get_expert_stats(expert_id):
+    """Get individual expert statistics"""
+    try:
+        stats = automobile_expert_db.get_expert_stats_by_id(expert_id)
+        if stats:
+            return jsonify({
+                'success': True,
+                'completedJobs': stats.get('completed_jobs', 0),
+                'totalEarnings': stats.get('total_earnings', 0),
+                'activeJobs': stats.get('active_jobs', 0),
+                'avgRating': stats.get('avg_rating', 0)
+            }), 200
+        else:
+            return jsonify({'error': 'Expert not found'}), 404
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get stats: {str(e)}'}), 500
+
 @automobile_expert_bp.route('/stats', methods=['GET'])
+@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['GET'])
 def get_stats():
     """Get expert statistics"""
     try:
@@ -285,3 +306,30 @@ def get_stats():
         
     except Exception as e:
         return jsonify({'error': f'Failed to get stats: {str(e)}'}), 500
+
+@automobile_expert_bp.route('/status', methods=['PUT'])
+@cross_origin(origins=['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'], methods=['PUT'])
+def update_expert_availability():
+    """Update expert online/offline status"""
+    try:
+        data = request.get_json()
+        expert_id = data.get('expert_id')
+        is_online = data.get('is_online', False)
+        
+        if not expert_id:
+            return jsonify({'error': 'Expert ID is required'}), 400
+        
+        # Update expert availability in database
+        success = automobile_expert_db.update_expert_online_status(expert_id, is_online)
+        
+        if success:
+            status_text = 'online' if is_online else 'offline'
+            return jsonify({
+                'success': True, 
+                'message': f'Expert status updated to {status_text}'
+            }), 200
+        else:
+            return jsonify({'error': 'Expert not found or update failed'}), 404
+        
+    except Exception as e:
+        return jsonify({'error': f'Status update failed: {str(e)}'}), 500

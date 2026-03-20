@@ -11,7 +11,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
     { id: 'healthcare', label: 'Healthcare', path: '/doctors' },
     { id: 'housekeeping', label: 'Housekeeping', path: '/housekeeping/home' },
     { id: 'freelance', label: 'Freelance Marketplace', path: '/freelance/home' },
-    { id: 'car', label: 'Car Services', path: '/worker/car/login' },
+    { id: 'car', label: 'Car Services', path: '/car-service/setup' },
     { id: 'money', label: 'Money Management', path: '/worker/money/login' },
   ];
 
@@ -97,12 +97,8 @@ const ServiceSelection = ({ mode = 'user' }) => {
                     }
                   }
                   
-                  if (service.id === 'freelance') {
-                    navigate('/freelance/home');
-                    return;
-                  }
-                  
-                  navigate(service.path);
+                  // For user mode, redirect to login first for all services including car service
+                  navigate('/login', { state: { from: { pathname: '/car-service/home' } } });
                 }}
                 aria-label={`Select ${service.label} service`}
               >

@@ -302,7 +302,10 @@ def update_worker_availability():
         service_radius = request.json.get("service_radius", worker.get("service_radius", 10))
         current_city = request.json.get("current_city", worker.get("current_city"))
         
-        # Update status
+        # When explicitly going online, ensure not busy
+        if "is_online" in request.json and is_online:
+            is_busy = 0
+        
         cursor = car_service_worker_db.conn.cursor()
         
         # Update online status if provided

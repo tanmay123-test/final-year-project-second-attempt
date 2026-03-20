@@ -13,6 +13,34 @@ from car_service.mechanic_db import mechanic_db
 
 mechanic_bp = Blueprint("mechanic", __name__)
 
+def _current_user_id():
+    """Get current user ID from authorization token"""
+    auth = request.headers.get("Authorization")
+    if not auth or not auth.startswith("Bearer "):
+        return None
+    token = auth.split(" ")[1]
+    username = verify_token(token)
+    if not username:
+        return None
+    from user_db import UserDB
+    db = UserDB()
+    user = db.get_user_by_username(username)
+    return user['id'] if user else None
+
+def _current_mechanic_id():
+    """Get current mechanic ID from authorization token"""
+    auth = request.headers.get("Authorization")
+    if not auth or not auth.startswith("Bearer "):
+        return None
+    token = auth.split(" ")[1]
+    username = verify_token(token)
+    if not username:
+        return None
+    from auth.auth_db import AuthDB
+    db = AuthDB()
+    worker = db.verify_worker(username, None)  # Get worker by username
+    return worker['id'] if worker else None
+
 @mechanic_bp.route("/api/auth/car/mechanic/signup", methods=["POST"])
 def mechanic_signup():
     """Mechanic signup endpoint"""
@@ -164,41 +192,122 @@ def get_pending_workers():
 
 @mechanic_bp.route("/api/car/service/workers/approved", methods=["GET"])
 def get_approved_workers():
-    """Get all approved workers"""
+    """Get all approved workers (mechanics, tow truck operators, fuel delivery agents)"""
+    workers = []
     try:
         cursor = mechanic_db.conn.cursor()
-        cursor.execute("""
-            SELECT id, name, email, phone, age, city, address, experience, skills,
-                   profile_photo_path, aadhaar_path, license_path, certificate_path,
-                   created_at, role
-            FROM mechanics 
-            WHERE status = 'APPROVED'
-            ORDER BY created_at DESC
-        """)
         
-        workers = []
-        for row in cursor.fetchall():
-            workers.append({
-                'id': row[0],
-                'name': row[1],
-                'email': row[2],
-                'phone': row[3],
-                'age': row[4],
-                'city': row[5],
-                'address': row[6],
-                'experience': row[7],
-                'skills': row[8],
-                'profile_photo': row[9],
-                'aadhaar_path': row[10],
-                'license_path': row[11],
-                'certificate_path': row[12],
-                'created_at': row[13],
-                'role': row[14],
-                'worker_type': 'Regular Worker'
-            })
+        # Get mechanics
+        try:
+            cursor.execute("""
+                SELECT id, name, email, phone, age, city, address, experience, skills,
+                       profile_photo_path, aadhaar_path, license_path, certificate_path,
+                       created_at, role
+                FROM mechanics 
+                WHERE status = 'APPROVED'
+                ORDER BY created_at DESC
+            """)
+            
+            for row in cursor.fetchall():
+                workers.append({
+                    'id': row[0],
+                    'name': row[1],
+                    'email': row[2],
+                    'phone': row[3],
+                    'age': row[4],
+                    'city': row[5],
+                    'address': row[6],
+                    'experience': row[7],
+                    'skills': row[8],
+                    'profile_photo': row[9],
+                    'aadhaar_path': row[10],
+                    'license_path': row[11],
+                    'certificate_path': row[12],
+                    'created_at': row[13],
+                    'role': row[14],
+                    'worker_type': 'Regular Worker'
+                })
+        except Exception as e:
+            print(f"❌ Error fetching mechanics: {e}")
+        
+        # Get tow truck operators
+        try:
+            import os
+            tow_truck_db_path = os.path.join(os.path.dirname(__file__), '..', 'tow_truck_operators.db')
+            if os.path.exists(tow_truck_db_path):
+                import sqlite3
+                tow_conn = sqlite3.connect(tow_truck_db_path)
+                tow_cursor = tow_conn.cursor()
+                tow_cursor.execute("""
+                    SELECT id, name, email, phone, city, experience, 
+                           license_path, created_at
+                    FROM tow_truck_operators 
+                    WHERE is_online = 1
+                    ORDER BY created_at DESC
+                """)
+                
+                for row in tow_cursor.fetchall():
+                    workers.append({
+                        'id': row[0],
+                        'name': row[1],
+                        'email': row[2],
+                        'phone': row[3],
+                        'age': None,
+                        'city': row[4],
+                        'address': row[4],  # Use city as address
+                        'experience': row[5],
+                        'skills': 'Towing, Recovery, Roadside Assistance',
+                        'profile_photo': None,
+                        'aadhaar_path': None,
+                        'license_path': row[6] if len(row) > 6 else None,
+                        'certificate_path': None,
+                        'created_at': row[7],
+                        'role': 'Tow Truck Operator',
+                        'worker_type': 'Regular Worker'
+                    })
+                tow_conn.close()
+        except Exception as e:
+            print(f"❌ Error fetching tow truck operators: {e}")
+        
+        # Get fuel delivery agents
+        try:
+            fuel_delivery_db_path = os.path.join(os.path.dirname(__file__), '..', 'fuel_delivery.db')
+            if os.path.exists(fuel_delivery_db_path):
+                fuel_conn = sqlite3.connect(fuel_delivery_db_path)
+                fuel_cursor = fuel_conn.cursor()
+                fuel_cursor.execute("""
+                    SELECT id, name, email, phone_number, city, created_at
+                    FROM fuel_delivery_agents 
+                    WHERE approval_status = 'APPROVED'
+                    ORDER BY created_at DESC
+                """)
+                
+                for row in fuel_cursor.fetchall():
+                    workers.append({
+                        'id': row[0],
+                        'name': row[1],
+                        'email': row[2],
+                        'phone': row[3],
+                        'age': None,
+                        'city': row[4],
+                        'address': row[4],  # Use city as address
+                        'experience': 'Fuel Delivery Specialist',
+                        'skills': 'Fuel Delivery, Emergency Fuel, Bulk Fuel',
+                        'profile_photo': None,
+                        'aadhaar_path': None,
+                        'license_path': None,
+                        'certificate_path': None,
+                        'created_at': row[5],
+                        'role': 'Fuel Delivery Agent',
+                        'worker_type': 'Regular Worker'
+                    })
+                fuel_conn.close()
+        except Exception as e:
+            print(f"❌ Error fetching fuel delivery agents: {e}")
         
         return jsonify({"workers": workers}), 200
     except Exception as e:
+        print(f"❌ Get approved workers error: {e}")
         return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @mechanic_bp.route("/api/car/service/worker/status", methods=["PUT"])
@@ -748,3 +857,131 @@ def get_recommended_online_time():
     except Exception as e:
         print(f"❌ Get recommended online time error: {e}")
         return jsonify({"error": "Failed to get recommendation"}), 500
+
+@mechanic_bp.route("/api/car/mechanic/jobs", methods=["GET"])
+def get_mechanic_jobs():
+    """Get mechanic's job requests (for CLI)"""
+    try:
+        # Get current mechanic from auth token
+        auth = request.headers.get("Authorization")
+        if not auth or not auth.startswith("Bearer "):
+            return jsonify({"error": "Unauthorized"}), 401
+        token = auth.split(" ")[1]
+        email = verify_token(token)  # This returns the email
+        if not email:
+            return jsonify({"error": "Invalid token"}), 401
+            
+        # Find mechanic by email using the same database as login
+        mechanic = car_service_worker_db.verify_worker(email, None)  # Get worker by email
+        if not mechanic:
+            return jsonify({"error": "Mechanic not found"}), 404
+            
+        mechanic_id = mechanic.get('id')
+        
+        # Get job requests for this mechanic from BOTH databases
+        from car_service.job_requests_db import job_requests_db
+        from car_service.booking_db import booking_db
+        
+        # Try job_requests.db first (ASSIGNED jobs)
+        assigned_jobs = job_requests_db.get_pending_jobs(mechanic_id)
+        
+        # Also check car_jobs.db for SEARCHING jobs
+        cursor = booking_db.get_conn()
+        cursor.execute("""
+            SELECT * FROM mechanic_jobs 
+            WHERE mechanic_id = ? AND status IN ('SEARCHING', 'ACCEPTED')
+            ORDER BY created_at DESC
+        """, (mechanic_id,))
+        searching_jobs = [dict(row) for row in cursor.fetchall()]
+        cursor.close()
+        
+        # Combine both lists
+        all_jobs = assigned_jobs + searching_jobs
+        
+        print(f"🔧 Found {len(assigned_jobs)} assigned jobs + {len(searching_jobs)} searching jobs = {len(all_jobs)} total")
+        
+        return jsonify({
+            "success": True,
+            "jobs": all_jobs,
+            "count": len(all_jobs),
+            "assigned_count": len(assigned_jobs),
+            "searching_count": len(searching_jobs)
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Get mechanic jobs error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+@mechanic_bp.route("/api/car/book-mechanic", methods=["POST"])
+def book_mechanic():
+    """Book a mechanic (instant or pre-book)"""
+    try:
+        # Get user ID from auth token
+        user_id = _current_user_id()
+        if not user_id:
+            return jsonify({"error": "Unauthorized"}), 401
+        
+        # Get request data
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        mechanic_id = data.get('mechanic_id')
+        booking_type = data.get('booking_type')  # 'instant' or 'prebook'
+        issue_description = data.get('issue_description')
+        
+        if not all([mechanic_id, booking_type, issue_description]):
+            return jsonify({"error": "Missing required fields"}), 400
+        
+        print(f"🔧 Booking attempt: user_id={user_id}, mechanic_id={mechanic_id}, type={booking_type}")
+        
+        # Get user's default car
+        from car_service.car_profile_db import car_profile_db
+        default_car = car_profile_db.get_default_car(user_id)
+        if not default_car:
+            return jsonify({"error": "No car found. Please add a car first."}), 400
+        
+        # Verify mechanic exists and is available
+        from car_service.car_service_worker_db import car_service_worker_db
+        mechanic = car_service_worker_db.get_worker_by_id(mechanic_id)
+        if not mechanic:
+            return jsonify({"error": "Mechanic not found"}), 404
+        
+        print(f"🔧 Mechanic found: {mechanic.get('name', 'Unknown')}, status: {mechanic.get('status', 'Unknown')}")
+        
+        # Create booking using booking_db
+        from car_service.booking_db import booking_db
+        job_id = booking_db.create_job(
+            user_id=user_id,
+            mechanic_id=mechanic_id,
+            car_id=default_car['id'],
+            issue=issue_description,
+            estimated_cost=None
+        )
+        
+        print(f"🔧 Job created with ID: {job_id}")
+        
+        # Update mechanic status based on booking type
+        if booking_type == 'instant':
+            # For instant booking, set mechanic to busy immediately
+            success = car_service_worker_db.set_busy(mechanic_id)
+            print(f"🔧 Mechanic set to busy: {success}")
+            # Update job status to ACCEPTED
+            booking_db.update_job_status(job_id, "ACCEPTED", "Instant booking accepted")
+        else:
+            # For pre-book, keep mechanic available but mark job as searching
+            booking_db.update_job_status(job_id, "SEARCHING", "Pre-book created, searching for available time")
+        
+        return jsonify({
+            "success": True,
+            "job_id": job_id,
+            "message": f"Mechanic {'booked instantly' if booking_type == 'instant' else 'pre-booked'} successfully"
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Book mechanic error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Server error: {str(e)}"}), 500

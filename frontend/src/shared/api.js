@@ -101,6 +101,14 @@ export const appointmentService = {
   getUserAppointments: () => api.get('/user/appointments'),
 };
 
+export const fuelDeliveryService = {
+  getUserFuelDeliveryBookings: () => api.get('/user/fuel-delivery/bookings'),
+};
+
+export const towTruckService = {
+  getUserTowBookings: () => api.get('/user/tow-truck/bookings'),
+};
+
 export const videoService = {
   startVideo: (appointmentId, otp) => api.post('/appointment/video/start', { appointment_id: appointmentId, otp }),
   getVideoLink: (appointmentId) => api.get(`/appointment/${appointmentId}/video-link`),
@@ -111,6 +119,7 @@ export const videoService = {
 
 export const aiService = {
   analyzeSymptoms: (data) => api.post('/healthcare/ai-care', data),
+  analyzeMechanicIssues: (data) => api.post('/api/ai/mechanic-diagnosis', data),
 };
 
 export const commonService = {
@@ -144,6 +153,9 @@ export const carService = {
   getWorkerRating: (workerId) => api.get(`/api/car/service/worker/${workerId}/rating`),
   getWorkerPerformance: (workerId) => api.get(`/api/car/service/worker/${workerId}/performance`),
   getWorkerRecentActivity: (workerId) => api.get(`/api/car/service/worker/${workerId}/recent-activity`),
+  
+  // Car Service Setup
+  setupCarService: (data) => api.post('/api/car/service/setup', data),
   
   // Job Management
   getAvailableJobs: (serviceType) => api.get(`/api/car/jobs/available`, { params: { service_type: serviceType } }),

@@ -83,7 +83,7 @@ body {
   background: var(--medical-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  letter-spacing: -0.5px;
+  background-clip: text;
 }
 
 .navbar-links {
@@ -185,7 +185,14 @@ body {
 }
 
 .navbar-overlay {
-  display: none;
+  display: none !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
 }
 
 /* Responsive */
@@ -231,18 +238,6 @@ body {
     justify-content: center;
     margin-top: 1rem;
   }
-
-  .navbar-overlay {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
-  }
-}
 
 /* Auth Pages */
 .auth-container-wrapper {
@@ -532,6 +527,10 @@ body {
   font-size: 1.2rem;
   color: var(--text-secondary);
   margin-bottom: 3rem;
+  background: var(--medical-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .selection-cards {

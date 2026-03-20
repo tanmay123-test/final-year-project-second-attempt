@@ -9,7 +9,7 @@ const Landing = () => {
       <p className="landing-subtitle">Choose how you want to use the platform</p>
       
       <div className="selection-cards">
-        <Link to="/login" className="selection-card">
+        <Link to="/services" className="selection-card">
           <div className="card-icon-wrapper">
             <User size={40} color="white" strokeWidth={1.5} />
           </div>

@@ -5,8 +5,8 @@ import {
   Calendar,
   Download,
 } from 'lucide-react';
-
-const API_BASE = 'http://localhost:5000/api/fuel-delivery';
+import { useAuth } from '../../context/AuthContext';
+import { fuelDeliveryService } from '../../shared/api';
 
 const FuelDeliveryHistory = () => {
   const [history, setHistory] = useState([]);
@@ -24,25 +24,20 @@ const FuelDeliveryHistory = () => {
 
   const fetchHistory = async () => {
     try {
-      const workerId = localStorage.getItem('workerId');
-      if (!workerId) {
-        setLoading(false);
-        return;
-      }
-      const response = await fetch(`${API_BASE}/history/${workerId}`);
+      const response = await fuelDeliveryService.getUserFuelDeliveryBookings();
       if (!response.ok) {
         setHistory([]);
         setLoading(false);
         return;
       }
-      const data = await response.json();
-      if (data.success && Array.isArray(data.history)) {
-        setHistory(data.history);
+      const data = response.data;
+      if (data.success && Array.isArray(data.bookings)) {
+        setHistory(data.bookings);
       } else {
         setHistory([]);
       }
     } catch (err) {
-      console.error('Failed to fetch history:', err);
+      console.error('Failed to fetch fuel delivery history:', err);
       setHistory([]);
     } finally {
       setLoading(false);
@@ -60,8 +55,8 @@ const FuelDeliveryHistory = () => {
     let today = 0, week = 0, month = 0, all = 0;
     const completed = history.filter((d) => (d.status || '').toLowerCase() === 'completed');
     completed.forEach((d) => {
-      const earn = Number(d.earnings) || Number(d.estimated_earnings) || 0;
-      const dateStr = d.completed_at || d.created_at;
+      const earn = Number(d.earnings) || Number(d.estimated_earnings) || Number(d.total_cost) || 0;
+      const dateStr = d.completed_at || d.created_at || d.booking_date;
       if (!dateStr) {
         all += earn;
         return;
@@ -103,14 +98,14 @@ const FuelDeliveryHistory = () => {
 
   const handleExport = () => {
     const rows = [
-      ['Station / Delivery', 'Location', 'Date', 'Fuel Type', 'Quantity', 'Earnings', 'Status'],
+      ['Station / Worker', 'Location', 'Date', 'Fuel Type', 'Quantity', 'Total Cost', 'Status'],
       ...filteredHistory.map((d) => [
-        d.station_name || `Delivery #${d.delivery_id || d.id}`,
+        d.worker_name || d.station_name || `Worker #${d.worker_id || d.id}`,
         d.delivery_address || d.address || '—',
-        formatDate(d.completed_at || d.created_at),
+        formatDate(d.completed_at || d.created_at || d.booking_date),
         d.fuel_type || '—',
         formatQuantity(d.quantity_liters || d.quantity),
-        formatRupee(d.earnings || d.estimated_earnings),
+        formatRupee(d.earnings || d.estimated_earnings || d.total_cost),
         (d.status || '').toLowerCase(),
       ]),
     ];
@@ -118,7 +113,7 @@ const FuelDeliveryHistory = () => {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `fuel-delivery-history-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `fuel-delivery-bookings-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(link.href);
   };
@@ -329,7 +324,7 @@ const FuelDeliveryHistory = () => {
             <span>FuelFleet</span>
           </div>
           <div>
-            <h1 className="history-title">History & Earnings</h1>
+            <h1 className="history-title">My Fuel Delivery Bookings</h1>
           </div>
         </div>
         <button type="button" className="history-export-btn" onClick={handleExport}>
@@ -388,35 +383,35 @@ const FuelDeliveryHistory = () => {
         {filteredHistory.length === 0 ? (
           <div className="history-empty">No delivery history to show.</div>
         ) : (
-          filteredHistory.map((delivery) => (
-            <div key={delivery.id || delivery.delivery_id || delivery.request_id || Math.random()} className="history-card">
+          filteredHistory.map((booking) => (
+            <div key={booking.id || booking.booking_id || Math.random()} className="history-card">
               <div className="history-card-top">
                 <div className="history-card-station">
-                  {delivery.station_name || (delivery.delivery_address && delivery.delivery_address.split(',')[0]) || `Delivery #${delivery.delivery_id || delivery.id}`}
+                  {booking.worker_name || booking.station_name || `Worker #${booking.worker_id || booking.id}`}
                 </div>
                 <div className="history-card-earnings">
-                  ₹{formatRupee(delivery.earnings ?? delivery.estimated_earnings)}
+                  ₹{formatRupee(booking.earnings || booking.estimated_earnings || booking.total_cost)}
                 </div>
               </div>
-              {(delivery.delivery_address || delivery.address) && (
+              {(booking.delivery_address || booking.address) && (
                 <div className="history-card-location">
                   <MapPin size={14} />
-                  {delivery.delivery_address || delivery.address}
+                  {booking.delivery_address || booking.address}
                 </div>
               )}
-              <div className={`history-card-status ${(delivery.status || '').toLowerCase() === 'cancelled' ? 'cancelled' : ''}`}>
-                {getStatusDisplay(delivery.status)}
+              <div className={`history-card-status ${(booking.status || '').toLowerCase() === 'cancelled' ? 'cancelled' : ''}`}>
+                {getStatusDisplay(booking.status)}
               </div>
               <div className="history-card-details">
                 <span>
                   <Calendar size={14} />
-                  {formatDate(delivery.completed_at || delivery.created_at)}
+                  {formatDate(booking.completed_at || booking.created_at || booking.booking_date)}
                 </span>
                 <span>
                   <Fuel size={14} />
-                  {delivery.fuel_type || '—'}
+                  {booking.fuel_type || '—'}
                 </span>
-                <span>{formatQuantity(delivery.quantity_liters ?? delivery.quantity)}</span>
+                <span>{formatQuantity(booking.quantity_liters || booking.quantity)}</span>
               </div>
             </div>
           ))
