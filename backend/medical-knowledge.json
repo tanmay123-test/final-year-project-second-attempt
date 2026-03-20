@@ -1,0 +1,50 @@
+[
+  {
+    "category": "Dental",
+    "keywords": ["tooth pain", "toothache", "molar pain", "gum pain", "bleeding gums", "root canal", "cavity", "jaw pain", "pain while chewing"],
+    "body_part": "teeth",
+    "specialist": "Dentist"
+  },
+  {
+    "category": "General Illness",
+    "keywords": ["fever", "cold", "cough", "headache", "body ache", "viral", "flu", "infection"],
+    "body_part": "general",
+    "specialist": "General Physician"
+  },
+  {
+    "category": "Stomach",
+    "keywords": ["stomach pain", "acidity", "gas", "vomiting", "diarrhea", "bloating", "indigestion", "food poisoning"],
+    "body_part": "stomach",
+    "specialist": "Gastroenterologist"
+  },
+  {
+    "category": "Skin",
+    "keywords": ["skin rash", "acne", "pimples", "itching", "allergy", "eczema", "fungal infection"],
+    "body_part": "skin",
+    "specialist": "Dermatologist"
+  },
+  {
+    "category": "Eye",
+    "keywords": ["eye pain", "blurred vision", "red eyes", "eye irritation", "dry eyes", "vision problem"],
+    "body_part": "eyes",
+    "specialist": "Eye Specialist"
+  },
+  {
+    "category": "Orthopedic",
+    "keywords": ["knee pain", "joint pain", "back pain", "bone pain", "leg pain", "shoulder pain", "fracture", "stiffness"],
+    "body_part": "bones",
+    "specialist": "Orthopedic"
+  },
+  {
+    "category": "Heart",
+    "keywords": ["chest pain", "heart pain", "palpitations", "high bp", "breathlessness", "tight chest"],
+    "body_part": "heart",
+    "specialist": "Cardiologist"
+  },
+  {
+    "category": "Mental Health",
+    "keywords": ["anxiety", "stress", "depression", "panic attack", "overthinking", "can't sleep", "mental stress"],
+    "body_part": "mind",
+    "specialist": "Psychiatrist"
+  }
+]

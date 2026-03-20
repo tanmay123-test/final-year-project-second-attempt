@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ExpertEase Payment Test</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        body { font-family: Arial; text-align: center; margin: 50px; }
+        .payment-card { 
+            border: 1px solid #ddd; 
+            padding: 20px; 
+            max-width: 400px; 
+            margin: 0 auto; 
+            border-radius: 8px;
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            font-size: 16px; 
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+        .price-breakdown { 
+            text-align: left; 
+            margin: 20px 0; 
+            padding: 10px; 
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-card">
+        <h1>ExpertEase Healthcare</h1>
+        <h2>Doctor Consultation Payment</h2>
+        
+        <div class="price-breakdown" id="priceBreakdown">
+            <p><strong>Consultation Fee:</strong> ₹<span id="doctorFee">400</span></p>
+            <p><strong>Platform Fee (20%):</strong> ₹<span id="platformFee">80</span></p>
+            <hr>
+            <p><strong>Total Amount:</strong> ₹<span id="totalAmount">480</span></p>
+        </div>
+        
+        <button onclick="payNow()">Pay ₹<span id="buttonAmount">480</span></button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        let currentOrderId = null;
+        let currentAppointmentId = 1; // Test appointment ID
+
+        async function payNow() {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = 'Creating payment order...';
+            
+            try {
+                // Create payment order
+                const response = await fetch('/api/payment/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        appointment_id: currentAppointmentId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Update price breakdown with actual data
+                    if (data.pricing_breakdown) {
+                        document.getElementById('doctorFee').textContent = data.pricing_breakdown.doctor_fee;
+                        document.getElementById('platformFee').textContent = data.pricing_breakdown.platform_fee;
+                        document.getElementById('totalAmount').textContent = data.pricing_breakdown.total_amount;
+                        document.getElementById('buttonAmount').textContent = data.pricing_breakdown.total_amount;
+                    }
+                    
+                    currentOrderId = data.order_id;
+                    statusEl.innerHTML = 'Opening payment gateway...';
+                    
+                    // Open Razorpay checkout
+                    var options = {
+                        key: data.key,
+                        amount: data.amount * 100,
+                        currency: data.currency,
+                        name: "ExpertEase Healthcare",
+                        description: "Doctor Consultation Payment",
+                        order_id: data.order_id,
+                        handler: function (response) {
+                            statusEl.innerHTML = 'Payment successful! Confirming...';
+                            confirmPayment(response.razorpay_payment_id);
+                        },
+                        modal: {
+                            ondismiss: function() {
+                                statusEl.innerHTML = 'Payment cancelled';
+                            }
+                        }
+                    };
+                    
+                    var rzp = new Razorpay(options);
+                    rzp.open();
+                    
+                } else {
+                    statusEl.innerHTML = 'Error: ' + (data.error || 'Failed to create payment order');
+                }
+                
+            } catch (error) {
+                statusEl.innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        async function confirmPayment(paymentId) {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                const response = await fetch('/api/payment/confirm', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        appointment_id: currentAppointmentId,
+                        razorpay_payment_id: paymentId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusEl.innerHTML = '✅ Payment confirmed! Appointment confirmed.';
+                    
+                    if (data.video_details) {
+                        statusEl.innerHTML += '<br>📹 Video consultation details generated.';
+                        console.log('Video details:', data.video_details);
+                    }
+                } else {
+                    statusEl.innerHTML = 'Error confirming payment: ' + (data.error || 'Unknown error');
+                }
+                
+            } catch (error) {
+                statusEl.innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        // Check payment status on page load
+        async function checkPaymentStatus() {
+            try {
+                const response = await fetch(`/api/payment/status/${currentAppointmentId}`);
+                const data = await response.json();
+                
+                if (response.ok && data.payment_status === 'paid') {
+                    document.getElementById('status').innerHTML = '✅ Payment already completed';
+                    document.querySelector('button').disabled = true;
+                }
+            } catch (error) {
+                console.log('Could not check payment status');
+            }
+        }
+
+        // Check status on page load
+        checkPaymentStatus();
+    </script>
+</body>
+</html>

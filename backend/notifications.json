@@ -1,0 +1,68 @@
+{
+  "6": [
+    {
+      "id": "followup_6_1770537371",
+      "user_id": "6",
+      "type": "follow_up",
+      "symptoms": "\"from last night\"",
+      "severity": "medium",
+      "created_date": "2026-02-08T13:26:11.142337",
+      "follow_up_date": "2026-02-09T13:26:11.142337",
+      "status": "pending",
+      "questions": [
+        "How are you feeling today?",
+        "Have your symptoms improved, worsened, or stayed the same?",
+        "Did you take any medication?",
+        "Have you consulted a doctor?"
+      ]
+    },
+    {
+      "id": "followup_6_1770537417",
+      "user_id": "6",
+      "type": "follow_up",
+      "symptoms": "The most common and natural translations for \"dukhat aahe\" (from Marathi) in a medical context are:\n\n*   **It hurts.**\n*   **It's painful.**\n*   **It's aching.**\n*   **There is pain.**",
+      "severity": "low",
+      "created_date": "2026-02-08T13:26:57.350236",
+      "follow_up_date": "2026-02-09T13:26:57.350236",
+      "status": "pending",
+      "questions": [
+        "How are you feeling today?",
+        "Have your symptoms improved, worsened, or stayed the same?",
+        "Did you take any medication?",
+        "Have you consulted a doctor?"
+      ]
+    },
+    {
+      "id": "followup_6_1770538130",
+      "user_id": "6",
+      "type": "follow_up",
+      "symptoms": "The phrase \"last night\" is already in English.\n\nIf it was intended to be a medical symptom in another language, please provide the original symptom.",
+      "severity": "medium",
+      "created_date": "2026-02-08T13:38:50.076955",
+      "follow_up_date": "2026-02-09T13:38:50.076955",
+      "status": "pending",
+      "questions": [
+        "How are you feeling today?",
+        "Have your symptoms improved, worsened, or stayed the same?",
+        "Did you take any medication?",
+        "Have you consulted a doctor?"
+      ]
+    },
+    {
+      "id": "followup_6_1770538221",
+      "user_id": "6",
+      "type": "follow_up",
+      "symptoms": "Spinning",
+      "severity": "medium",
+      "created_date": "2026-02-08T13:40:21.768236",
+      "follow_up_date": "2026-02-09T13:40:21.768236",
+      "status": "pending",
+      "questions": [
+        "How are you feeling today?",
+        "Have your symptoms improved, worsened, or stayed the same?",
+        "Did you take any medication?",
+        "Have you consulted a doctor?"
+      ]
+    }
+  ]
+}
