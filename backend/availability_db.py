@@ -70,10 +70,7 @@ class AvailabilityDB:
         )
         """)
         self.conn.commit()
-
-    # ==================================================
-    # ADD AVAILABILITY (SAFE + DUPLICATE CHECK)
-    # ==================================================
+    
     def add_availability(self, worker_id, date, time_slot):
         # Normalize inputs
         date = self._normalize_date(date)
@@ -111,6 +108,7 @@ class AvailabilityDB:
         WHERE worker_id=? AND date=? AND time_slot=?
         """, (worker_id, date, time_slot))
         self.conn.commit()
+        return True, "Availability removed successfully"
 
     # ==================================================
     # GET AVAILABILITY (OPTIONAL DATE FILTER)

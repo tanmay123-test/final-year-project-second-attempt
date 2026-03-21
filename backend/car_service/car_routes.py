@@ -19,6 +19,36 @@ def _current_user_id():
     db = UserDB()
     return db.get_user_by_username(username)
 
+@car_bp.route("/api/car/mechanics", methods=["GET"])
+def get_mechanics():
+    """Get all available mechanics"""
+    try:
+        from worker_db import WorkerDB
+        worker_db = WorkerDB()
+        
+        # Get all mechanics (workers with role 'Mechanic')
+        all_workers = worker_db.get_all_workers()
+        mechanics = [
+            {
+                "id": w.get("id"),
+                "name": w.get("name"),
+                "email": w.get("email"),
+                "phone": w.get("phone"),
+                "specialization": w.get("specialization", "General Mechanic"),
+                "location": w.get("city", "Location not specified"),
+                "rating": w.get("rating", 4.5),
+                "reviews": w.get("reviews", 0),
+                "services": ["General Service", "Oil Change", "Brake Service", "Diagnostics"]  # Default services
+            }
+            for w in all_workers 
+            if w.get("role") == "Mechanic" and w.get("worker_type") == "Regular Worker"
+        ]
+        
+        return jsonify({"mechanics": mechanics}), 200
+    except Exception as e:
+        print(f"Error fetching mechanics: {e}")
+        return jsonify({"mechanics": []}), 200
+
 @car_bp.route("/api/car/setup-profile", methods=["POST"])
 def setup_profile():
     user_id = _current_user_id()

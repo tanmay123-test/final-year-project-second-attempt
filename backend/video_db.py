@@ -95,34 +95,28 @@ class VideoConsultDB:
     def verify_otp_and_start(self, appointment_id, otp):
         conn = self.get_conn()
         cursor = conn.cursor()
-
+        
         cursor.execute("""
         SELECT doctor_otp, otp_expiry FROM video_sessions
         WHERE appointment_id=?
         """, (appointment_id,))
-
+        
         row = cursor.fetchone()
         if not row:
             conn.close()
             return False
-
+        
         saved_otp, expiry = row
         expiry = datetime.fromisoformat(expiry)
-
+        
         if datetime.now() > expiry:
             conn.close()
             return False
-
-        if saved_otp != otp:
-            conn.close()
-            return False
-
-        # Mark session live
+        
         cursor.execute("""
-        UPDATE video_sessions
-        SET status='live'
-        WHERE appointment_id=?
-        """, (appointment_id,))
+        INSERT INTO video_sessions (appointment_id, worker_id, user_id, room_id, meeting_link, doctor_otp, otp_expiry, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+        """, (appointment_id, worker_id, user_id, room_id, meeting_link, saved_otp, expiry))
 
         conn.commit()
         conn.close()
@@ -134,16 +128,16 @@ class VideoConsultDB:
     def get_link(self, appointment_id):
         conn = self.get_conn()
         cursor = conn.cursor()
-
+        
         cursor.execute("""
         SELECT meeting_link FROM video_sessions
         WHERE appointment_id=? AND status='live'
         """, (appointment_id,))
-
+        
         row = cursor.fetchone()
         conn.close()
-
+        
         if not row:
             return None
-
+        
         return row[0]

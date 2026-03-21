@@ -231,6 +231,14 @@ try:
 except Exception as e:
     print(f"⚠️ Could not register Fuel Delivery blueprint: {e}")
 
+# Register Admin blueprint
+try:
+    from admin.admin_routes import admin_bp
+    app.register_blueprint(admin_bp)
+    print("✅ Admin blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register Admin blueprint: {e}")
+
 # Register Tow Truck blueprint
 try:
     from car_service.tow_truck_routes import tow_truck_bp
@@ -614,16 +622,19 @@ def worker_signup():
 
 @app.route("/worker/login", methods=["POST"])
 def worker_login():
-    w = worker_db.verify_worker_login(request.json["email"])
+    email = request.json["email"]
+    password = request.json.get("password")
+    
+    w = worker_db.verify_worker_login(email, password)
     if not w:
-        return jsonify({"error": "Not found"}), 404
+        return jsonify({"error": "Invalid email or password"}), 404
 
     wid, status, svc, spec, name = w
     if status != "approved":
         return jsonify({"error": "Not approved"}), 403
 
     # Generate token for worker
-    token = generate_token(request.json["email"])
+    token = generate_token(email)
 
     return jsonify({
         "token": token,
@@ -1017,7 +1028,7 @@ def ai_care():
             "suggested_doctors": []
         }), 200
 
-    # 🎯 Step 4 — Final stage - full analysis + doctor matching
+    # Step 4 — Final stage - full analysis + doctor matching
     specializations = ai_result.get("specializations", ["General Physician"])
     
     # Fetch doctors from DB based on specializations
@@ -1054,6 +1065,76 @@ def ai_care():
         "suggested_specializations": specializations,
         "suggested_doctors": top_doctors
     }), 200
+
+# ================= AI MECHANIC - CAR DIAGNOSTIC AI =================
+@app.route("/api/ai/mechanic-diagnosis", methods=["POST"])
+def ai_mechanic_diagnosis():
+    data = request.json
+    symptoms = data.get("symptoms", "")
+    user_id = data.get("user_id", "default")
+    service_type = data.get("service_type", "mechanic")
+
+    if not symptoms:
+        return jsonify({"error": "Symptoms required"}), 400
+
+    try:
+        # AI Mechanic response logic
+        symptoms_lower = symptoms.lower()
+        
+        # Emergency car situations
+        emergency_keywords = ["car won't start", "engine smoking", "brake failure", "flat tire", "overheating", "won't start", "no brakes"]
+        for keyword in emergency_keywords:
+            if keyword in symptoms_lower:
+                return jsonify({
+                    "success": True,
+                    "diagnosis": f"🚨 CAR EMERGENCY DETECTED!\n\n{keyword.title()} detected. This requires immediate attention:\n\n• Pull over safely if driving\n• Turn on hazard lights\n• Do not continue driving\n• Call roadside assistance immediately\n• Your safety is the top priority\n\nThis could be a serious mechanical issue that needs professional help right away.",
+                    "severity": "emergency",
+                    "recommendations": ["Stop driving immediately", "Call roadside assistance", "Do not attempt repairs yourself"]
+                })
+
+        # Common car issues and their solutions
+        if "check engine" in symptoms_lower:
+            response = """🔍 CHECK ENGINE LIGHT ANALYSIS:\n\nThe check engine light can indicate various issues:\n\n• Loose gas cap (most common) - tighten and see if light goes off\n• Oxygen sensor issue - affects fuel efficiency\n• Catalytic converter problem - reduces performance\n• Spark plug issues - causes rough running\n• Mass airflow sensor - affects engine performance\n\n📋 What to do:\n1. Check if gas cap is tight\n2. Note any unusual sounds or performance\n3. Avoid hard acceleration\n4. Visit mechanic within 1-2 days if light stays on\n5. If flashing, stop driving immediately"""
+
+        elif "noise" in symptoms_lower or "sound" in symptoms_lower:
+            if "squealing" in symptoms_lower:
+                response = """🔧 SQUEALING NOISE DIAGNOSIS:\n\nSquealing usually indicates:\n\n• Worn brake pads - needs immediate attention\n• Loose or worn serpentine belt\n• Bad wheel bearing\n• Low brake fluid\n\n⚠️ Safety: Brake issues are critical - get checked immediately"""
+            elif "clicking" in symptoms_lower:
+                response = """🔧 CLICKING NOISE DIAGNOSIS:\n\nClicking sounds typically indicate:\n\n• Low engine oil (critical)\n• Valve train issues\n• CV joint problems (when turning)\n• Bad spark plugs\n\n📋 Check oil level immediately if clicking from engine area"""
+            else:
+                response = """🔧 GENERAL NOISE DIAGNOSIS:\n\nUnusual noises need attention:\n\n• Note when the noise occurs (acceleration, braking, turning)\n• Note the type of noise (squeak, grind, knock, click)\n• Check if noise changes with speed\n• Visit mechanic for proper diagnosis"""
+
+        elif "battery" in symptoms_lower or "won't start" in symptoms_lower:
+            response = """🔋 BATTERY/STARTING ISSUES:\n\nCommon causes:\n\n• Dead battery - most common issue\n• Corroded battery terminals\n• Bad alternator (battery won't charge)\n• Starter motor failure\n• Bad ignition switch\n\n🔧 Quick checks:\n1. Check if lights work (battery power)\n2. Listen for clicking sound (starter)\n3. Try jump start\n4. Check battery terminals for corrosion\n\n⚡ If jump start works, likely battery or alternator issue"""
+
+        elif "overheating" in symptoms_lower or "hot" in symptoms_lower:
+            response = """🌡️ OVERHEATING DIAGNOSIS:\n\nSerious issue - stop driving if overheating:\n\n• Low coolant level - most common\n• Bad thermostat\n• Water pump failure\n• Radiator leak\n• Broken fan belt\n\n🚨 IMMEDIATE ACTIONS:\n1. Pull over safely\n2. Turn off A/C, turn on heat to high\n3. Do not open radiator cap when hot!\n4. Let engine cool before checking coolant\n5. Call for assistance if temperature is high"""
+
+        elif "brake" in symptoms_lower:
+            response = """🛑 BRAKE SYSTEM DIAGNOSIS:\n\nBrake issues are safety critical:\n\n• Squealing = worn brake pads\n• Grinding = metal-on-metal (urgent)\n• Soft pedal = brake fluid leak or air in lines\n• Pulling to one side = caliper issue\n• Vibration = warped rotors\n\n⚠️ Do not drive with brake problems!\nGet immediate professional attention."""
+
+        elif "oil" in symptoms_lower:
+            response = """🛢️ OIL ISSUES:\n\nOil is critical for engine health:\n\n• Low oil level - check and add oil immediately\n• Oil leak - look under car for puddles\n• Oil pressure light - stop engine immediately\n• Oil change overdue - schedule service\n\n📋 Maintenance:\n• Check oil level monthly\n• Change oil every 3,000-5,000 miles\n• Use correct oil type for your vehicle"""
+
+        elif "tire" in symptoms_lower:
+            response = """🛞 TIRE ISSUES:\n\nTire problems affect safety and fuel economy:\n\n• Flat tire - use spare or call assistance\n• Low pressure - inflate to recommended PSI\n• Vibration at high speed - balance needed\n• Pulling to one side - alignment or tire pressure\n• Uneven wear - alignment or rotation needed\n\n📏 Quick checks:\n1. Check tire pressure monthly\n2. Rotate tires every 6,000-8,000 miles\n3. Replace tires when tread is worn"""
+
+        else:
+            response = """🔧 GENERAL CAR DIAGNOSIS:\n\nI'll help you diagnose your car issue. Please provide more details:\n\n• What specific problem are you experiencing?\n• When does it occur? (starting, driving, braking, etc.)\n• Any warning lights on dashboard?\n• Any unusual sounds or smells?\n• Did this start suddenly or gradually?\n\n💡 Tips for better diagnosis:\n• Be specific about symptoms\n• Note when the problem occurs\n• Mention any recent repairs or maintenance\n• Describe any sounds (squeal, grind, knock, etc.)"""
+
+        return jsonify({
+            "success": True,
+            "diagnosis": response,
+            "severity": "moderate",
+            "recommendations": ["Monitor the issue", "Schedule maintenance if needed", "Stop driving if symptoms worsen"]
+        })
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"AI diagnosis failed: {str(e)}",
+            "diagnosis": "I apologize, but I'm having trouble processing your request. Please try again or describe your issue in more detail."
+        }), 500
 
 
 @app.route("/worker/freelance/signup", methods=["POST"])

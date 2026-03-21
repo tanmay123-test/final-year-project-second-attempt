@@ -35,14 +35,14 @@ def freelance_user_flow():
     """Freelance Marketplace User Flow (Client)"""
     while True:
         print("\n" + "="*60)
-        print("💜 FREELANCE MARKETPLACE (User Portal)")
+        print(" FREELANCE MARKETPLACE (User Portal)")
         print("="*60)
-        print("1. 🏠 Home (Browse Freelancers)")
-        print("2. 📝 Post a Project")
-        print("3. 💼 My Projects")
-        print("4. 🤖 AI Project Assistant")
-        print("5. 💳 Wallet & History")
-        print("6. ⬅️ Back")
+        print("1.  Home (Browse Freelancers)")
+        print("2.  Post a Project")
+        print("3.  My Projects")
+        print("4.  AI Project Assistant")
+        print("5.  Wallet & History")
+        print("6.  Back")
         
         choice = input("\nSelect tab: ").strip()
         
@@ -53,14 +53,9 @@ def freelance_user_flow():
         elif choice == "3":
             view_my_projects()
         elif choice == "4":
-            print("🤖 AI Assistant is analyzing marketplace trends...")
-            time.sleep(1)
-            print("💡 Recommended Budget: ₹5000 - ₹15000")
-            print("💡 Suggested Milestones: Design, Development, Testing")
-            input("\nPress Enter...")
+            ai_project_assistant()
         elif choice == "5":
-            print("💰 Opening Wallet...")
-            # Reuse existing wallet display if available
+            wallet_history()
             input("\nPress Enter...")
         elif choice == "6":
             break

@@ -153,6 +153,42 @@ class AutomobileExpertDB:
         """)
         result = cursor.fetchone()
         return dict(result) if result else {}
+    
+    def get_expert_stats_by_id(self, expert_id: int) -> Dict:
+        """Get individual expert statistics"""
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT 
+                COALESCE(COUNT(CASE WHEN c.status = 'COMPLETED' THEN 1 END), 0) as completed_jobs,
+                COALESCE(SUM(CASE WHEN c.status = 'COMPLETED' THEN c.amount ELSE 0 END), 0) as total_earnings,
+                COALESCE(COUNT(CASE WHEN c.status = 'ACTIVE' THEN 1 END), 0) as active_jobs,
+                COALESCE(AVG(CASE WHEN c.rating IS NOT NULL THEN c.rating ELSE 0 END), 0) as avg_rating
+            FROM automobile_experts e
+            LEFT JOIN consultations c ON e.id = c.expert_id
+            WHERE e.id = ?
+        """, (expert_id,))
+        result = cursor.fetchone()
+        return dict(result) if result else {
+            'completed_jobs': 0,
+            'total_earnings': 0,
+            'active_jobs': 0,
+            'avg_rating': 0
+        }
+    
+    def update_expert_online_status(self, expert_id: int, is_online: bool) -> bool:
+        """Update expert online/offline status"""
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE automobile_experts 
+                SET is_online = ?, updated_at = ?
+                WHERE id = ?
+            """, (1 if is_online else 0, datetime.now().isoformat(), expert_id))
+            self.conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            self.conn.rollback()
+            raise e
 
 # Create database instance
 automobile_expert_db = AutomobileExpertDB()
