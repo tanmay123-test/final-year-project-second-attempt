@@ -4,6 +4,7 @@ RESTful endpoints for expert dashboard, availability management, and consultatio
 """
 
 from flask import Blueprint, request, jsonify
+import psycopg2.extras
 from .expert_availability_service import expert_availability_service
 from .automobile_expert_db import automobile_expert_db
 from datetime import datetime
@@ -142,14 +143,15 @@ def create_consultation_request():
 @expert_availability_bp.route('/consultation-requests/<int:request_id>', methods=['GET'])
 def get_consultation_request(request_id):
     """Get consultation request details"""
+    conn = expert_availability_db.get_conn()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
-        cursor = expert_availability_db.conn.cursor()
         cursor.execute("""
             SELECT cr.*, ae.name as expert_name 
             FROM consultation_requests cr
             LEFT JOIN expert_availability ea ON cr.expert_id = ea.expert_id
             LEFT JOIN automobile_experts ae ON cr.expert_id = ae.id
-            WHERE cr.request_id = ?
+            WHERE cr.request_id = %s
         """, (request_id,))
         
         request_data = cursor.fetchone()
@@ -163,6 +165,9 @@ def get_consultation_request(request_id):
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 @expert_availability_bp.route('/consultation-requests/<int:request_id>/accept', methods=['POST'])
 def accept_consultation_request(request_id):

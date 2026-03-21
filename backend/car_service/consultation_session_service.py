@@ -44,8 +44,9 @@ class ConsultationSessionService:
     
     def _update_all_active_sessions(self):
         """Update durations for all active sessions"""
+        conn = consultation_session_db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = consultation_session_db.conn.cursor()
             cursor.execute("""
                 SELECT session_id FROM consultation_sessions 
                 WHERE status = 'ACTIVE'
@@ -53,10 +54,15 @@ class ConsultationSessionService:
             active_sessions = cursor.fetchall()
             
             for session in active_sessions:
-                consultation_session_db.update_session_duration(session['session_id'])
-                
+                consultation_session_db.update_session_duration(session[0])
+            
+            conn.commit()
         except Exception as e:
+            conn.rollback()
             print(f"Error updating session durations: {e}")
+        finally:
+            cursor.close()
+            conn.close()
     
     # Session Management
     def start_consultation_session(self, request_id: int, user_id: int, expert_id: int) -> Dict:

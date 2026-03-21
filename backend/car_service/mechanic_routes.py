@@ -24,6 +24,9 @@ from car_service.mechanic_db import mechanic_db
 
 
 
+from .fuel_delivery_db import fuel_delivery_db
+from .tow_truck_db import tow_truck_db
+
 mechanic_bp = Blueprint("mechanic", __name__)
 
 
@@ -310,9 +313,13 @@ def get_pending_workers():
 
     """Get all pending workers for admin approval"""
 
-    try:
+    import psycopg2.extras
 
-        cursor = mechanic_db.conn.cursor()
+    conn = mechanic_db.get_conn()
+
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    try:
 
         cursor.execute("""
 
@@ -332,293 +339,87 @@ def get_pending_workers():
 
         
 
-        workers = []
+        workers = cursor.fetchall()
 
-        for row in cursor.fetchall():
-
-            workers.append({
-
-                'id': row[0],
-
-                'name': row[1],
-
-                'email': row[2],
-
-                'phone': row[3],
-
-                'age': row[4],
-
-                'city': row[5],
-
-                'address': row[6],
-
-                'experience': row[7],
-
-                'skills': row[8],
-
-                'profile_photo': row[9],
-
-                'aadhaar_path': row[10],
-
-                'license_path': row[11],
-
-                'certificate_path': row[12],
-
-                'created_at': row[13],
-
-                'role': row[14],
-
-                'worker_type': 'Regular Worker'
-
-            })
-
-        
-
-        return jsonify({"workers": workers}), 200
+        return jsonify({"success": True, "workers": [dict(w) for w in workers]}), 200
 
     except Exception as e:
 
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    finally:
+
+        cursor.close()
+
+        conn.close()
 
 
 
 @mechanic_bp.route("/api/car/service/workers/approved", methods=["GET"])
-
 def get_approved_workers():
-
     """Get all approved workers (mechanics, tow truck operators, fuel delivery agents)"""
-
+    import psycopg2.extras
     workers = []
-
+    
+    # Get regular mechanics
+    conn = mechanic_db.get_conn()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
-
-        cursor = mechanic_db.conn.cursor()
-
-        
-
-        # Get mechanics
-
-        try:
-
-            cursor.execute("""
-
-                SELECT id, name, email, phone, age, city, address, experience, skills,
-
-                       profile_photo_path, aadhaar_path, license_path, certificate_path,
-
-                       created_at, role
-
-                FROM mechanics 
-
-                WHERE status = 'APPROVED'
-
-                ORDER BY created_at DESC
-
-            """)
-
+        cursor.execute("""
+            SELECT id, name, email, phone, city, experience, role, status
+            FROM mechanics 
+            WHERE status = 'APPROVED'
+            ORDER BY created_at DESC
+        """)
+        for row in cursor.fetchall():
+            w = dict(row)
+            w['worker_type'] = 'Mechanic'
+            workers.append(w)
             
-
-            for row in cursor.fetchall():
-
-                workers.append({
-
-                    'id': row[0],
-
-                    'name': row[1],
-
-                    'email': row[2],
-
-                    'phone': row[3],
-
-                    'age': row[4],
-
-                    'city': row[5],
-
-                    'address': row[6],
-
-                    'experience': row[7],
-
-                    'skills': row[8],
-
-                    'profile_photo': row[9],
-
-                    'aadhaar_path': row[10],
-
-                    'license_path': row[11],
-
-                    'certificate_path': row[12],
-
-                    'created_at': row[13],
-
-                    'role': row[14],
-
-                    'worker_type': 'Regular Worker'
-
-                })
-
-        except Exception as e:
-
-            print(f"❌ Error fetching mechanics: {e}")
-
-        
-
         # Get tow truck operators
-
+        tow_conn = tow_truck_db.get_conn()
+        tow_cursor = tow_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
-
-            import os
-
-            tow_truck_db_path = os.path.join(os.path.dirname(__file__), '..', 'tow_truck_operators.db')
-
-            if os.path.exists(tow_truck_db_path):
-
-                import sqlite3
-
-                tow_conn = sqlite3.connect(tow_truck_db_path)
-
-                tow_cursor = tow_conn.cursor()
-
-                tow_cursor.execute("""
-
-                    SELECT id, name, email, phone, city, experience, 
-
-                           license_path, created_at
-
-                    FROM tow_truck_operators 
-
-                    WHERE is_online = 1
-
-                    ORDER BY created_at DESC
-
-                """)
-
-                
-
-                for row in tow_cursor.fetchall():
-
-                    workers.append({
-
-                        'id': row[0],
-
-                        'name': row[1],
-
-                        'email': row[2],
-
-                        'phone': row[3],
-
-                        'age': None,
-
-                        'city': row[4],
-
-                        'address': row[4],  # Use city as address
-
-                        'experience': row[5],
-
-                        'skills': 'Towing, Recovery, Roadside Assistance',
-
-                        'profile_photo': None,
-
-                        'aadhaar_path': None,
-
-                        'license_path': row[6] if len(row) > 6 else None,
-
-                        'certificate_path': None,
-
-                        'created_at': row[7],
-
-                        'role': 'Tow Truck Operator',
-
-                        'worker_type': 'Regular Worker'
-
-                    })
-
-                tow_conn.close()
-
-        except Exception as e:
-
-            print(f"❌ Error fetching tow truck operators: {e}")
-
-        
-
+            tow_cursor.execute("""
+                SELECT id, name, email, phone, city, experience, approval_status as status
+                FROM tow_truck_operators
+                WHERE approval_status = 'APPROVED'
+            """)
+            for row in tow_cursor.fetchall():
+                w = dict(row)
+                w['worker_type'] = 'Tow Truck Operator'
+                w['role'] = 'Tow Truck Operator'
+                workers.append(w)
+        finally:
+            tow_cursor.close()
+            tow_conn.close()
+            
         # Get fuel delivery agents
-
+        fuel_conn = fuel_delivery_db.get_conn()
+        fuel_cursor = fuel_conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
-
-            fuel_delivery_db_path = os.path.join(os.path.dirname(__file__), '..', 'fuel_delivery.db')
-
-            if os.path.exists(fuel_delivery_db_path):
-
-                fuel_conn = sqlite3.connect(fuel_delivery_db_path)
-
-                fuel_cursor = fuel_conn.cursor()
-
-                fuel_cursor.execute("""
-
-                    SELECT id, name, email, phone_number, city, created_at
-
-                    FROM fuel_delivery_agents 
-
-                    WHERE approval_status = 'APPROVED'
-
-                    ORDER BY created_at DESC
-
-                """)
-
-                
-
-                for row in fuel_cursor.fetchall():
-
-                    workers.append({
-
-                        'id': row[0],
-
-                        'name': row[1],
-
-                        'email': row[2],
-
-                        'phone': row[3],
-
-                        'age': None,
-
-                        'city': row[4],
-
-                        'address': row[4],  # Use city as address
-
-                        'experience': 'Fuel Delivery Specialist',
-
-                        'skills': 'Fuel Delivery, Emergency Fuel, Bulk Fuel',
-
-                        'profile_photo': None,
-
-                        'aadhaar_path': None,
-
-                        'license_path': None,
-
-                        'certificate_path': None,
-
-                        'created_at': row[5],
-
-                        'role': 'Fuel Delivery Agent',
-
-                        'worker_type': 'Regular Worker'
-
-                    })
-
-                fuel_conn.close()
-
-        except Exception as e:
-
-            print(f"❌ Error fetching fuel delivery agents: {e}")
-
+            fuel_cursor.execute("""
+                SELECT id, name, email, phone_number as phone, city, approval_status as status
+                FROM fuel_delivery_agents
+                WHERE approval_status = 'APPROVED'
+            """)
+            for row in fuel_cursor.fetchall():
+                w = dict(row)
+                w['worker_type'] = 'Fuel Delivery Agent'
+                w['role'] = 'Fuel Delivery Agent'
+                w['experience'] = 'N/A'
+                workers.append(w)
+        finally:
+            fuel_cursor.close()
+            fuel_conn.close()
+            
+        return jsonify({"success": True, "workers": workers}), 200
         
-
-        return jsonify({"workers": workers}), 200
-
     except Exception as e:
-
-        print(f"❌ Get approved workers error: {e}")
-
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 
@@ -651,40 +452,29 @@ def update_worker_status():
         
 
         # Update worker status
-
-        cursor = mechanic_db.conn.cursor()
-
-        cursor.execute("""
-
-            UPDATE mechanics 
-
-            SET status = ?, updated_at = datetime('now')
-
-            WHERE id = ?
-
-        """, (status, worker_id))
-
-        
-
-        if cursor.rowcount == 0:
-
-            return jsonify({"error": "Worker not found"}), 404
-
-        
-
-        mechanic_db.conn.commit()
-
-        
-
-        return jsonify({
-
-            "message": f"Worker status updated to {status}",
-
-            "worker_id": worker_id,
-
-            "status": status
-
-        }), 200
+        conn = mechanic_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE mechanics 
+                SET status = %s, updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            """, (status, worker_id))
+            
+            if cursor.rowcount > 0:
+                conn.commit()
+                return jsonify({"success": True, "message": f"Worker status updated to {status}"}), 200
+            else:
+                return jsonify({"success": False, "error": "Worker not found"}), 404
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            return jsonify({"success": False, "error": str(e)}), 500
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
         
 

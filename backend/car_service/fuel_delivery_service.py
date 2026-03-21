@@ -5,6 +5,7 @@ Handles business logic for fuel delivery operations
 
 import os
 import time
+import psycopg2.extras
 from datetime import datetime, timedelta
 from .fuel_delivery_db import fuel_delivery_db
 from werkzeug.security import generate_password_hash
@@ -648,25 +649,23 @@ class FuelDeliveryService:
     
     def get_delivery_history(self, agent_id):
         """Get delivery history for an agent with address from request (for History & Earnings screen)"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 SELECT h.delivery_id, h.agent_id, h.user_id, h.fuel_type, h.quantity, h.earnings, h.status, h.completed_at, h.request_id,
                        r.address, r.user_name
                 FROM fuel_delivery_history h
                 LEFT JOIN fuel_delivery_requests r ON r.id = h.request_id
-                WHERE h.agent_id = ?
+                WHERE h.agent_id = %s
                 ORDER BY h.completed_at DESC
             ''', (agent_id,))
             rows = cursor.fetchall()
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
+            
             result = []
             for row in rows:
-                r = dict(row) if hasattr(row, 'keys') else None
-                if not r:
-                    col = ['delivery_id', 'agent_id', 'user_id', 'fuel_type', 'quantity', 'earnings', 'status', 'completed_at', 'request_id', 'address', 'user_name']
-                    r = dict(zip(col, row)) if len(row) >= len(col) else {}
+                r = dict(row)
                 status = (r.get('status') or '').lower()
                 result.append({
                     'id': r.get('delivery_id'),
@@ -686,12 +685,17 @@ class FuelDeliveryService:
                 })
             return result
         except Exception as e:
+            print(f"Error getting delivery history: {e}")
             return []
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_available_agents(self):
         """Get all available fuel delivery agents"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 SELECT id, name, vehicle_type, latitude, longitude, service_area_km,
                        rating, completion_rate, online_status, approval_status
@@ -702,8 +706,7 @@ class FuelDeliveryService:
             ''')
             
             agents = cursor.fetchall()
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             agent_list = []
             for agent in agents:
@@ -723,13 +726,18 @@ class FuelDeliveryService:
             return agent_list
             
         except Exception as e:
+            conn.rollback()
+            print(f"Error getting available agents: {e}")
             return []
+        finally:
+            cursor.close()
+            conn.close()
     
     def create_fuel_request(self, user_id, fuel_type, fuel_quantity, latitude, longitude, agent_id=None):
         """Create fuel delivery request"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
-            
             # If agent_id is provided, assign immediately
             if agent_id:
                 status = 'ASSIGNED'
@@ -743,21 +751,21 @@ class FuelDeliveryService:
             cursor.execute('''
                 INSERT INTO fuel_delivery_requests
                 (user_id, agent_id, fuel_type, fuel_quantity, latitude, longitude, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
             ''', (user_id, agent_id, fuel_type, fuel_quantity, latitude, longitude, status))
             
-            request_id = cursor.lastrowid
+            request_id = cursor.fetchone()[0]
             
             # Update agent status if assigned
             if agent_id and status == 'ASSIGNED':
                 cursor.execute('''
                     UPDATE fuel_delivery_agents
                     SET online_status = 'BUSY'
-                    WHERE id = ?
+                    WHERE id = %s
                 ''', (agent_id,))
             
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             return {
                 'success': True,
@@ -767,23 +775,27 @@ class FuelDeliveryService:
             }
             
         except Exception as e:
+            conn.rollback()
             return {'success': False, 'error': str(e)}
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_user_requests(self, user_id):
         """Get fuel requests for a user"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 SELECT r.*, a.name as agent_name, a.vehicle_type, a.rating
                 FROM fuel_delivery_requests r
                 LEFT JOIN fuel_delivery_agents a ON r.agent_id = a.id
-                WHERE r.user_id = ?
+                WHERE r.user_id = %s
                 ORDER BY r.created_at DESC
             ''', (user_id,))
             
             requests = cursor.fetchall()
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             request_list = []
             for req in requests:
@@ -805,22 +817,27 @@ class FuelDeliveryService:
             return request_list
             
         except Exception as e:
+            conn.rollback()
+            print(f"Error getting user requests: {e}")
             return []
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_request_status(self, request_id):
         """Get fuel request status"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 SELECT r.*, a.name as agent_name, a.phone_number as agent_phone
                 FROM fuel_delivery_requests r
                 LEFT JOIN fuel_delivery_agents a ON r.agent_id = a.id
-                WHERE r.id = ?
+                WHERE r.id = %s
             ''', (request_id,))
             
             request = cursor.fetchone()
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             if request:
                 return {
@@ -840,12 +857,18 @@ class FuelDeliveryService:
             return None
             
         except Exception as e:
+            conn.rollback()
+            print(f"Error getting request status: {e}")
             return None
+        finally:
+            cursor.close()
+            conn.close()
     
     def _auto_assign_agent(self, latitude, longitude, fuel_quantity):
         """Auto-assign best agent based on distance, rating, and availability"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 SELECT id, name, latitude, longitude, service_area_km, rating, completion_rate
                 FROM fuel_delivery_agents
@@ -869,7 +892,7 @@ class FuelDeliveryService:
                 # Service area validation
                 if distance <= service_area_km:
                     # Capacity validation
-                    cursor.execute('SELECT vehicle_type FROM fuel_delivery_agents WHERE id = ?', (agent_id,))
+                    cursor.execute('SELECT vehicle_type FROM fuel_delivery_agents WHERE id = %s', (agent_id,))
                     vehicle_result = cursor.fetchone()
                     if vehicle_result:
                         vehicle_type = vehicle_result[0]
@@ -892,13 +915,17 @@ class FuelDeliveryService:
                                 best_score = total_score
                                 best_agent_id = agent_id
             
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             return best_agent_id
             
         except Exception as e:
+            conn.rollback()
+            print(f"Error auto-assigning agent: {e}")
             return None
+        finally:
+            cursor.close()
+            conn.close()
     
     def _calculate_distance(self, lat1, lon1, lat2, lon2):
         """Calculate distance between two coordinates"""
@@ -997,52 +1024,64 @@ class FuelDeliveryService:
     
     def get_active_delivery(self, agent_id):
         """Get active delivery for agent"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 SELECT * FROM fuel_delivery_requests 
-                WHERE agent_id = ? 
+                WHERE agent_id = %s 
                 AND status IN ('ASSIGNED', 'IN_PROGRESS')
                 LIMIT 1
             ''', (agent_id,))
             
             result = cursor.fetchone()
-            cursor.close()
+            conn.commit()
             
             if result:
                 return dict(result)
             return None
         except Exception as e:
+            conn.rollback()
+            print(f"Error getting active delivery: {e}")
             return None
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_agent_earnings(self, agent_id):
         """Get total earnings for agent"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 SELECT COALESCE(SUM(earnings), 0) as total_earnings
                 FROM fuel_delivery_history 
-                WHERE agent_id = ? AND status = 'COMPLETED'
+                WHERE agent_id = %s AND status = 'COMPLETED'
             ''', (agent_id,))
             
             result = cursor.fetchone()
-            cursor.close()
+            conn.commit()
             
             return {
                 'total_earnings': result['total_earnings'] if result else 0
             }
         except Exception as e:
+            conn.rollback()
+            print(f"Error getting agent earnings: {e}")
             return {'total_earnings': 0}
+        finally:
+            cursor.close()
+            conn.close()
     
     def accept_delivery_request(self, request_id, agent_id):
         """Accept a fuel delivery request"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
-            
             # Check if request exists and is available (using id instead of request_id)
             cursor.execute('''
                 SELECT * FROM fuel_delivery_requests 
-                WHERE id = ? AND status = 'PENDING'
+                WHERE id = %s AND status = 'PENDING'
             ''', (request_id,))
             
             request = cursor.fetchone()
@@ -1052,7 +1091,7 @@ class FuelDeliveryService:
             # Check if agent already has an active delivery
             cursor.execute('''
                 SELECT * FROM fuel_delivery_requests 
-                WHERE agent_id = ? AND status IN ('ASSIGNED', 'IN_PROGRESS')
+                WHERE agent_id = %s AND status IN ('ASSIGNED', 'IN_PROGRESS')
             ''', (agent_id,))
             
             active_delivery = cursor.fetchone()
@@ -1062,19 +1101,18 @@ class FuelDeliveryService:
             # Update request status and assign agent
             cursor.execute('''
                 UPDATE fuel_delivery_requests 
-                SET agent_id = ?, status = 'ASSIGNED', assigned_at = CURRENT_TIMESTAMP
-                WHERE id = ?
+                SET agent_id = %s, status = 'ASSIGNED', assigned_at = CURRENT_TIMESTAMP
+                WHERE id = %s
             ''', (agent_id, request_id))
             
             # Update agent status to busy
             cursor.execute('''
                 UPDATE fuel_delivery_agents 
                 SET online_status = 'BUSY'
-                WHERE id = ?
+                WHERE id = %s
             ''', (agent_id,))
             
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             return {
                 'success': True,
@@ -1083,8 +1121,11 @@ class FuelDeliveryService:
             }
             
         except Exception as e:
-            self.db.conn.rollback()
+            conn.rollback()
             return {'success': False, 'error': str(e)}
+        finally:
+            cursor.close()
+            conn.close()
     
     def reject_delivery_request(self, request_id, agent_id):
         """Reject a fuel delivery request (for frontend - just remove from list)"""

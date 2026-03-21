@@ -1,9 +1,6 @@
-""
-
+"""
 Car Service Unified Worker API Routes
-
 Handles all car service worker types (Mechanic, Fuel, Tow, Expert)
-
 """
 
 
@@ -451,27 +448,23 @@ def update_worker_admin_status():
             # Sync approval status for Fuel Delivery Agent in fuel_delivery_agents
 
             try:
-
                 w = car_service_worker_db.get_worker_by_id(int(worker_id))
-
                 if w and w.get("role") == "Fuel Delivery Agent":
-
-                    cur = fuel_delivery_db.conn.cursor()
-
-                    cur.execute(
-
-                        "UPDATE fuel_delivery_agents SET approval_status = ?, updated_at = CURRENT_TIMESTAMP WHERE email = ?",
-
-                        (status, w.get("email"))
-
-                    )
-
-                    fuel_delivery_db.conn.commit()
-
-                    cur.close()
-
+                    conn = fuel_delivery_db.get_conn()
+                    cur = conn.cursor()
+                    try:
+                        cur.execute(
+                            "UPDATE fuel_delivery_agents SET approval_status = %s, updated_at = CURRENT_TIMESTAMP WHERE email = %s",
+                            (status, w.get("email"))
+                        )
+                        conn.commit()
+                    except Exception as e:
+                        conn.rollback()
+                        print(f"⚠️ Fuel agent approval sync error: {e}")
+                    finally:
+                        cur.close()
+                        conn.close()
             except Exception as e:
-
                 print(f"⚠️ Fuel agent approval sync failed: {e}")
 
             return jsonify({"success": True, "message": f"Worker status updated to {status}"}), 200
@@ -607,52 +600,37 @@ def update_worker_availability():
         
 
         # Update status
-
-        cursor = car_service_worker_db.conn.cursor()
-
+        conn = car_service_worker_db.get_conn()
+        cursor = conn.cursor()
         
-
-        # Update online status if provided
-
-        if "is_online" in request.json:
-
-            cursor.execute("UPDATE car_service_workers SET is_online = ?, last_status_update = ? WHERE id = ?", 
-
-                          (1 if is_online else 0, datetime.now().isoformat(), worker["id"]))
-
-        
-
-        # Update busy status if provided
-
-        if "is_busy" in request.json:
-
-            cursor.execute("UPDATE car_service_workers SET is_busy = ?, last_status_update = ? WHERE id = ?", 
-
-                          (1 if is_busy else 0, datetime.now().isoformat(), worker["id"]))
-
-        
-
-        # Update service radius if provided
-
-        if "service_radius" in request.json:
-
-            cursor.execute("UPDATE car_service_workers SET service_radius = ? WHERE id = ?", 
-
-                          (service_radius, worker["id"]))
-
-        
-
-        # Update current city if provided
-
-        if "current_city" in request.json:
-
-            cursor.execute("UPDATE car_service_workers SET current_city = ? WHERE id = ?", 
-
-                          (current_city, worker["id"]))
-
-        
-
-        car_service_worker_db.conn.commit()
+        try:
+            # Update online status if provided
+            if "is_online" in request.json:
+                cursor.execute("UPDATE car_service_workers SET is_online = %s, last_status_update = %s WHERE id = %s", 
+                              (1 if is_online else 0, datetime.now().isoformat(), worker["id"]))
+            
+            # Update busy status if provided
+            if "is_busy" in request.json:
+                cursor.execute("UPDATE car_service_workers SET is_busy = %s, last_status_update = %s WHERE id = %s", 
+                              (1 if is_busy else 0, datetime.now().isoformat(), worker["id"]))
+            
+            # Update service radius if provided
+            if "service_radius" in request.json:
+                cursor.execute("UPDATE car_service_workers SET service_radius = %s WHERE id = %s", 
+                              (service_radius, worker["id"]))
+            
+            # Update current city if provided
+            if "current_city" in request.json:
+                cursor.execute("UPDATE car_service_workers SET current_city = %s WHERE id = %s", 
+                              (current_city, worker["id"]))
+            
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
 
         
 

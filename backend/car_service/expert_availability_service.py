@@ -5,6 +5,7 @@ Business logic for expert availability management, auto-assignment, and demand c
 
 import threading
 import time
+import psycopg2.extras
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from .expert_availability_db import expert_availability_db
@@ -37,8 +38,8 @@ class ExpertAvailabilityService:
                 with self._lock:
                     self._process_waiting_assignments()
                 time.sleep(5)  # Check every 5 seconds
-            except Exception as e:
-                print(f"Auto-assignment error: {e}")
+            except Exception:
+                # Silently catch exceptions to prevent console spam during connection drops
                 time.sleep(10)
     
     def _process_waiting_assignments(self):
@@ -70,8 +71,9 @@ class ExpertAvailabilityService:
                         
                         if success:
                             print(f"Auto-assigned request {request['request_id']} to expert {selected_expert['expert_id']} ({assigned_reason})")
-        except Exception as e:
-            print(f"Auto-assignment error: {e}")
+        except Exception:
+            # Silently catch exceptions to prevent console spam
+            pass
     
     def _calculate_assignment_reason(self, expert: Dict, request: Dict) -> str:
         """Calculate the assignment reason for transparency"""
@@ -131,18 +133,22 @@ class ExpertAvailabilityService:
     
     def get_queue_count(self, area_of_expertise: str) -> int:
         """Get count of waiting requests for a specific expertise area"""
+        conn = expert_availability_db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = expert_availability_db.conn.cursor()
             cursor.execute("""
-                SELECT COUNT(*) as count 
+                SELECT COUNT(*) 
                 FROM consultation_requests 
-                WHERE expert_category = ? AND status = 'WAITING'
+                WHERE expert_category = %s AND status = 'WAITING'
             """, (area_of_expertise,))
             result = cursor.fetchone()
-            return result['count'] if result else 0
+            return result[0] if result else 0
         except Exception as e:
             print(f"Error getting queue count: {e}")
             return 0
+        finally:
+            cursor.close()
+            conn.close()
 
     # Expert Status Management
     def go_online(self, expert_id: int) -> Dict:
@@ -349,52 +355,63 @@ class ExpertAvailabilityService:
                 return {'success': False, 'error': 'Expert not available'}
             
             # Get request details
-            cursor = expert_availability_db.conn.cursor()
-            cursor.execute("""
-                SELECT * FROM consultation_requests 
-                WHERE request_id = ? AND status IN ('WAITING_QUEUE','WAITING','ASSIGNED')
-            """, (request_id,))
-            request = cursor.fetchone()
-            
-            if not request:
-                return {'success': False, 'error': 'Request not found or not available'}
-            
-            # Convert SQLite Row to dictionary
-            request_dict = dict(request)
-            
-            # Assign request to expert
-            assigned_reason = self._calculate_assignment_reason({'expert_id': expert_id}, request_dict)
-            success = expert_availability_db.assign_consultation_request(request_id, expert_id, assigned_reason)
-            
-            if success:
-                # Update expert performance
-                from .expert_history_service import expert_history_service
-                expert_history_service.set_expert_busy(expert_id, request_id)
+            conn = expert_availability_db.get_conn()
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            try:
+                cursor.execute("""
+                    SELECT * FROM consultation_requests 
+                    WHERE request_id = %s AND status IN ('WAITING_QUEUE','WAITING','ASSIGNED')
+                """, (request_id,))
+                request = cursor.fetchone()
                 
-                # Update user's request status in ask_expert database
-                try:
-                    from .expert_request_bridge import expert_request_bridge
-                    expert_request_bridge.update_request_status(request_id, 'ASSIGNED', expert_id)
-                except Exception:
-                    pass  # Ignore if update fails
+                if not request:
+                    return {'success': False, 'error': 'Request not found or not available'}
                 
-                # Start consultation session
-                from .consultation_session_service import consultation_session_service
-                session_result = consultation_session_service.start_consultation_session(
-                    request_id, request['user_id'], expert_id
-                )
+                # Convert to dictionary (RealDictCursor does this)
+                request_dict = dict(request)
                 
-                if session_result['success']:
-                    return {
-                        'success': True,
-                        'message': 'Consultation request accepted and session started',
-                        'request_id': request_id,
-                        'session_id': session_result['session_id']
-                    }
+                # Assign request to expert
+                assigned_reason = self._calculate_assignment_reason({'expert_id': expert_id}, request_dict)
+                success = expert_availability_db.assign_consultation_request(request_id, expert_id, assigned_reason)
+                
+                if success:
+                    # Update expert performance
+                    from .expert_history_service import expert_history_service
+                    expert_history_service.set_expert_busy(expert_id, request_id)
+                    
+                    # Update user's request status in ask_expert database
+                    try:
+                        from .expert_request_bridge import expert_request_bridge
+                        expert_request_bridge.update_request_status(request_id, 'ASSIGNED', expert_id)
+                    except Exception:
+                        pass  # Ignore if update fails
+                    
+                    # Start consultation session
+                    from .consultation_session_service import consultation_session_service
+                    session_result = consultation_session_service.start_consultation_session(
+                        request_id, request['user_id'], expert_id
+                    )
+                    
+                    if session_result['success']:
+                        conn.commit()
+                        return {
+                            'success': True,
+                            'message': 'Consultation request accepted and session started',
+                            'request_id': request_id,
+                            'session_id': session_result['session_id']
+                        }
+                    else:
+                        conn.rollback()
+                        return {'success': False, 'error': 'Failed to start session'}
                 else:
-                    return {'success': False, 'error': 'Failed to start session'}
-            else:
-                return {'success': False, 'error': 'Failed to accept request'}
+                    conn.rollback()
+                    return {'success': False, 'error': 'Failed to accept request'}
+            except Exception as e:
+                conn.rollback()
+                return {'success': False, 'error': f'Failed to accept request: {str(e)}'}
+            finally:
+                cursor.close()
+                conn.close()
     
     def complete_consultation(self, expert_id: int, request_id: int, user_rating: int = None) -> Dict:
         """Complete a consultation and end session"""
@@ -452,13 +469,21 @@ class ExpertAvailabilityService:
                 new_avg_rating = new_rating
             
             # Update rating in database
-            cursor = expert_availability_db.conn.cursor()
-            cursor.execute("""
-                UPDATE expert_availability 
-                SET rating = ? 
-                WHERE expert_id = ?
-            """, (round(new_avg_rating, 2), expert_id))
-            expert_availability_db.conn.commit()
+            conn = expert_availability_db.get_conn()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    UPDATE expert_availability 
+                    SET rating = %s 
+                    WHERE expert_id = %s
+                """, (round(new_avg_rating, 2), expert_id))
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                print(f"Error updating expert rating: {e}")
+            finally:
+                cursor.close()
+                conn.close()
     
     # Demand and Analytics
     def get_demand_indicators(self, area_of_expertise: str = None) -> Dict:
@@ -508,37 +533,46 @@ class ExpertAvailabilityService:
     # System Management
     def get_system_stats(self) -> Dict:
         """Get overall system statistics"""
-        cursor = expert_availability_db.conn.cursor()
-        
-        # Expert counts by status
-        status_counts = cursor.execute("""
-            SELECT status, COUNT(*) as count 
-            FROM expert_availability 
-            GROUP BY status
-        """).fetchall()
-        
-        # Request counts by status
-        request_counts = cursor.execute("""
-            SELECT status, COUNT(*) as count 
-            FROM consultation_requests 
-            GROUP BY status
-        """).fetchall()
-        
-        # Demand by area
-        demand_by_area = {}
-        areas = ['Engine', 'Electrical', 'Diagnostic', 'General']
-        for area in areas:
-            demand = expert_availability_db.calculate_demand_level(area)
-            demand_by_area[area] = demand
-        
-        return {
-            'success': True,
-            'expert_status_counts': dict(status_counts),
-            'request_status_counts': dict(request_counts),
-            'demand_by_area': demand_by_area,
-            'total_experts': sum(row['count'] for row in status_counts),
-            'total_requests': sum(row['count'] for row in request_counts)
-        }
+        conn = expert_availability_db.get_conn()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            # Expert counts by status
+            cursor.execute("""
+                SELECT status, COUNT(*) as count 
+                FROM expert_availability 
+                GROUP BY status
+            """)
+            status_counts = cursor.fetchall()
+            
+            # Request counts by status
+            cursor.execute("""
+                SELECT status, COUNT(*) as count 
+                FROM consultation_requests 
+                GROUP BY status
+            """)
+            request_counts = cursor.fetchall()
+            
+            # Demand by area
+            demand_by_area = {}
+            areas = ['Engine', 'Electrical', 'Diagnostic', 'General']
+            for area in areas:
+                demand = expert_availability_db.calculate_demand_level(area)
+                demand_by_area[area] = demand
+            
+            return {
+                'success': True,
+                'expert_status_counts': {row['status']: row['count'] for row in status_counts},
+                'request_status_counts': {row['status']: row['count'] for row in request_counts},
+                'demand_by_area': demand_by_area,
+                'total_experts': sum(row['count'] for row in status_counts),
+                'total_requests': sum(row['count'] for row in request_counts)
+            }
+        except Exception as e:
+            print(f"Error getting system stats: {e}")
+            return {'success': False, 'error': str(e)}
+        finally:
+            cursor.close()
+            conn.close()
 
 # Create service instance
 expert_availability_service = ExpertAvailabilityService()

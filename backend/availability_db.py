@@ -1,16 +1,19 @@
-import sqlite3
 import os
+import psycopg2
+import psycopg2.extras
+from dotenv import load_dotenv
 import logging
 from datetime import datetime
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "expertease.db")
-
+load_dotenv()
 
 class AvailabilityDB:
     def __init__(self):
-        self.conn = sqlite3.connect("expertease.db", check_same_thread=False)
         self.create_table()
+
+    def get_conn(self):
+        load_dotenv()
+        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
 
     def _normalize_date(self, date_str):
         """
@@ -60,39 +63,59 @@ class AvailabilityDB:
         return time_str
 
     def create_table(self):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS availability (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            worker_id INTEGER,
-            date TEXT,
-            time_slot TEXT
-        )
-        """)
-        self.conn.commit()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS availability (
+                id SERIAL PRIMARY KEY,
+                worker_id INTEGER,
+                date TEXT,
+                time_slot TEXT
+            )
+            """)
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def add_availability(self, worker_id, date, time_slot):
         # Normalize inputs
         date = self._normalize_date(date)
         time_slot = self._normalize_time(time_slot)
         
-        # Check if slot already exists
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        SELECT id FROM availability
-        WHERE worker_id=? AND date=? AND time_slot=?
-        """, (worker_id, date, time_slot))
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            # Check if slot already exists
+            cursor.execute("""
+            SELECT id FROM availability
+            WHERE worker_id=%s AND date=%s AND time_slot=%s
+            """, (worker_id, date, time_slot))
 
-        if cursor.fetchone():
-            return False, "This time slot is already added"
+            if cursor.fetchone():
+                return False, "This time slot is already added"
 
-        cursor.execute("""
-        INSERT INTO availability (worker_id, date, time_slot)
-        VALUES (?, ?, ?)
-        """, (worker_id, date, time_slot))
+            cursor.execute("""
+            INSERT INTO availability (worker_id, date, time_slot)
+            VALUES (%s, %s, %s)
+            """, (worker_id, date, time_slot))
 
-        self.conn.commit()
-        return True, "Availability added successfully"
+            conn.commit()
+            return True, "Availability added successfully"
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            return False, f"Database error: {e}"
+        finally:
+            cursor.close()
+            conn.close()
 
     # ==================================================
     # REMOVE AVAILABILITY
@@ -102,13 +125,23 @@ class AvailabilityDB:
         date = self._normalize_date(date)
         time_slot = self._normalize_time(time_slot)
         
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        DELETE FROM availability
-        WHERE worker_id=? AND date=? AND time_slot=?
-        """, (worker_id, date, time_slot))
-        self.conn.commit()
-        return True, "Availability removed successfully"
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            DELETE FROM availability
+            WHERE worker_id=%s AND date=%s AND time_slot=%s
+            """, (worker_id, date, time_slot))
+            conn.commit()
+            return True, "Availability removed successfully"
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            return False, f"Database error: {e}"
+        finally:
+            cursor.close()
+            conn.close()
 
     # ==================================================
     # GET AVAILABILITY (OPTIONAL DATE FILTER)
@@ -118,21 +151,31 @@ class AvailabilityDB:
         if date:
             date = self._normalize_date(date)
             
-        cursor = self.conn.cursor()
-        if date:
-            cursor.execute("""
-            SELECT date, time_slot FROM availability
-            WHERE worker_id=? AND date=?
-            ORDER BY time_slot
-            """, (worker_id, date))
-        else:
-            cursor.execute("""
-            SELECT date, time_slot FROM availability
-            WHERE worker_id=?
-            ORDER BY date, time_slot
-            """, (worker_id,))
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            if date:
+                cursor.execute("""
+                SELECT date, time_slot FROM availability
+                WHERE worker_id=%s AND date=%s
+                ORDER BY time_slot
+                """, (worker_id, date))
+            else:
+                cursor.execute("""
+                SELECT date, time_slot FROM availability
+                WHERE worker_id=%s
+                ORDER BY date, time_slot
+                """, (worker_id,))
 
-        return [
-            {"date": row[0], "time_slot": row[1]}
-            for row in cursor.fetchall()
-        ]
+            return [
+                {"date": row[0], "time_slot": row[1]}
+                for row in cursor.fetchall()
+            ]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()

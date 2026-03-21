@@ -207,12 +207,21 @@ class JobQueue:
     def _get_mechanics_jobs_today(self, mechanic_id: int) -> int:
         """Get number of jobs assigned to mechanic today"""
         today = datetime.now().date().isoformat()
-        cursor = self.job_requests_db.conn.cursor()
-        cursor.execute("""
-            SELECT COUNT(*) as count FROM job_requests 
-            WHERE mechanic_id = ? AND DATE(created_at) = ?
-        """, (mechanic_id, today))
-        return cursor.fetchone()['count']
+        conn = self.job_requests_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT COUNT(*) FROM job_requests 
+                WHERE mechanic_id = %s AND DATE(created_at) = %s
+            """, (mechanic_id, today))
+            result = cursor.fetchone()
+            return result[0] if result else 0
+        except Exception as e:
+            print(f"Error getting jobs today: {e}")
+            return 0
+        finally:
+            cursor.close()
+            conn.close()
     
     def _update_mechanic_job_count(self, mechanic_id: int):
         """Update mechanic's job count for the day"""

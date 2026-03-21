@@ -29,8 +29,8 @@ class ExpertHistoryService:
                 with self._lock:
                     self._process_waiting_queue()
                 time.sleep(10)  # Check every 10 seconds
-            except Exception as e:
-                print(f"Queue processor error: {e}")
+            except Exception:
+                # Silently catch exceptions to prevent console spam during connection drops
                 time.sleep(30)
     
     def _process_waiting_queue(self):
@@ -60,8 +60,9 @@ class ExpertHistoryService:
                         
                         print(f"Auto-assigned request {request['request_id']} to expert {expert['id']}")
                         
-        except Exception as e:
-            print(f"Error processing queue: {e}")
+        except Exception:
+            # Silently catch exceptions to prevent console spam
+            pass
     
     def _find_best_available_expert(self, category: str) -> Optional[Dict]:
         """Find best available expert for category using fair assignment"""
@@ -154,15 +155,24 @@ class ExpertHistoryService:
                 return {'success': False, 'error': 'Consultation cannot be reopened'}
             
             # Update consultation status back to IN_PROGRESS
-            cursor = expert_history_db.conn.cursor()
-            cursor.execute("""
-                UPDATE expert_requests 
-                SET status = 'IN_PROGRESS', resolved_at = NULL
-                WHERE id = ? AND expert_id = ?
-            """, (request_id, expert_id))
-            
-            success = cursor.rowcount > 0
-            expert_history_db.conn.commit()
+            conn = expert_history_db.get_conn()
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    UPDATE expert_requests 
+                    SET status = 'IN_PROGRESS', resolved_at = NULL
+                    WHERE id = %s AND expert_id = %s
+                """, (request_id, expert_id))
+                
+                success = cursor.rowcount > 0
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                print(f"Error reopening consultation: {e}")
+                success = False
+            finally:
+                cursor.close()
+                conn.close()
             
             if success:
                 # Update expert status to BUSY

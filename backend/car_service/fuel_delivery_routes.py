@@ -5,6 +5,7 @@ Handles all fuel delivery agent related endpoints
 
 from flask import Blueprint, request, jsonify
 from .fuel_delivery_service import fuel_delivery_service
+from .fuel_delivery_db import fuel_delivery_db
 
 fuel_delivery_bp = Blueprint('fuel_delivery_api', __name__)
 
@@ -167,14 +168,13 @@ def complete_fuel_delivery():
 @fuel_delivery_bp.route('/requests/status/<int:request_id>', methods=['GET'])
 def get_request_status(request_id):
     """Get status of a specific fuel delivery request"""
+    conn = fuel_delivery_db.get_conn()
+    cursor = conn.cursor()
     try:
-        db = FuelDeliveryDB()
-        cursor = db.conn.cursor()
         cursor.execute('''
-            SELECT status, otp, agent_id FROM fuel_delivery_requests WHERE id = ?
+            SELECT status, otp, agent_id FROM fuel_delivery_requests WHERE id = %s
         ''', (request_id,))
         result = cursor.fetchone()
-        cursor.close()
         
         if result:
             return jsonify({
@@ -186,6 +186,9 @@ def get_request_status(request_id):
         return jsonify({'success': False, 'error': 'Request not found'}), 404
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 @fuel_delivery_bp.route('/history/<int:agent_id>', methods=['GET'])
 def get_delivery_history(agent_id):

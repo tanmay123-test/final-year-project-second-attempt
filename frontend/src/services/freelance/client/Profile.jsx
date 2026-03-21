@@ -27,10 +27,45 @@ const Profile = () => {
       const response = await axios.get('http://localhost:5000/api/freelancer/profile/me', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setProfile(response.data.profile);
-      setFormData(response.data.profile);
+      if (response.data && response.data.profile) {
+        setProfile(response.data.profile);
+        setFormData(response.data.profile);
+      } else {
+        // Fallback for missing profile data
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        const fallbackProfile = {
+          name: userData.full_name || 'User',
+          email: userData.email || '',
+          avatarInitials: (userData.full_name || 'U').split(' ').map(n => n[0]).join(''),
+          role: userData.role || 'Client',
+          isVerified: true,
+          location: 'Not set',
+          memberSince: new Date().toISOString(),
+          stats: { totalProjects: 0, totalProposals: 0, rating: '5.0' },
+          skills: [],
+          recentActivity: []
+        };
+        setProfile(fallbackProfile);
+        setFormData(fallbackProfile);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      // Fallback on error
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const errorFallback = {
+        name: userData.full_name || 'User',
+        email: userData.email || '',
+        avatarInitials: (userData.full_name || 'U').split(' ').map(n => n[0]).join(''),
+        role: userData.role || 'Client',
+        isVerified: false,
+        location: 'Unknown',
+        memberSince: new Date().toISOString(),
+        stats: { totalProjects: 0, totalProposals: 0, rating: 'N/A' },
+        skills: [],
+        recentActivity: []
+      };
+      setProfile(errorFallback);
+      setFormData(errorFallback);
     } finally {
       setLoading(false);
     }
@@ -80,41 +115,6 @@ const Profile = () => {
 
   return (
     <div className="profile-page">
-      {/* Desktop Top Nav simulation */}
-      <header className="freelance-top-nav desktop-only">
-        <div className="nav-container">
-          <div className="nav-left" onClick={() => navigate('/freelance/home')} style={{cursor:'pointer'}}>
-            <span className="brand-name">FreelanceHub</span>
-          </div>
-          <div className="nav-center">
-            <div className="search-bar-nav">
-              <Search size={18} color="#9ca3af" />
-              <input type="text" placeholder="Search freelancers or skills..." />
-            </div>
-          </div>
-          <div className="nav-right">
-            <nav className="nav-links-desktop">
-              <button className="nav-link-item" onClick={() => navigate('/freelance/home')}>
-                <Home size={18} /> <span>Home</span>
-              </button>
-              <button className="nav-link-item" onClick={() => navigate('/freelance/home?tab=post')}>
-                <PlusCircle size={18} /> <span>Post</span>
-              </button>
-              <button className="nav-link-item" onClick={() => navigate('/freelance/home?tab=projects')}>
-                <Folder size={18} /> <span>Projects</span>
-              </button>
-              <button className="nav-link-item" onClick={() => navigate('/freelance/home?tab=ai')}>
-                <Bot size={18} /> <span>AI</span>
-              </button>
-              <button className="nav-link-item active">
-                <User size={18} /> <span>Profile</span>
-              </button>
-            </nav>
-            <button className="post-project-btn-desktop" onClick={() => navigate('/freelance/home?tab=post')}>Post Project</button>
-          </div>
-        </div>
-      </header>
-
       <div className="profile-hero">
         <div className="hero-content">
           <h1>My Profile</h1>
@@ -332,25 +332,6 @@ const Profile = () => {
           </div>
         </div>
       )}
-
-      {/* Mobile Bottom Nav */}
-      <nav className="freelance-bottom-nav mobile-only">
-        <button className="nav-item" onClick={() => navigate('/freelance/home?tab=home')}>
-          <Home size={24} /> <span>Home</span>
-        </button>
-        <button className="nav-item" onClick={() => navigate('/freelance/home?tab=post')}>
-          <PlusCircle size={24} /> <span>Post</span>
-        </button>
-        <button className="nav-item" onClick={() => navigate('/freelance/home?tab=projects')}>
-          <Folder size={24} /> <span>Projects</span>
-        </button>
-        <button className="nav-item" onClick={() => navigate('/freelance/home?tab=ai')}>
-          <Bot size={24} /> <span>AI</span>
-        </button>
-        <button className="nav-item active" onClick={() => navigate('/freelance/home?tab=profile')}>
-          <User size={24} /> <span>Profile</span>
-        </button>
-      </nav>
     </div>
   );
 };

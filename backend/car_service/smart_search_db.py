@@ -1,160 +1,235 @@
 """
 Smart Search Database
-Handles mechanic locations, FTS5 search, and smart search data storage
+Handles mechanic locations, full-text search, and smart search data storage
 """
 
 import os
-import sqlite3
+import psycopg2
+import psycopg2.extras
 import math
+import json
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Tuple
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'smart_search.db')
+load_dotenv()
 
 class SmartSearchDB:
     def __init__(self):
-        self.conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
         self._init_tables()
-        self._init_fts5()
+        self._init_fts()
+    
+    def get_conn(self):
+        load_dotenv()
+        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
     
     def _init_tables(self):
         """Initialize smart search database tables"""
-        cursor = self.conn.cursor()
-        
-        # Mechanic live locations table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS mechanic_live_locations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                mechanic_id INTEGER NOT NULL,
-                latitude REAL NOT NULL,
-                longitude REAL NOT NULL,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (mechanic_id) REFERENCES car_service_workers (id)
-            )
-        """)
-        
-        # Mechanic skills mapping table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS mechanic_skills (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                mechanic_id INTEGER NOT NULL,
-                skill_name TEXT NOT NULL,
-                confidence_score REAL DEFAULT 1.0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (mechanic_id) REFERENCES car_service_workers (id)
-            )
-        """)
-        
-        # Search cache table for performance
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS search_cache (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_lat REAL NOT NULL,
-                user_lon REAL NOT NULL,
-                required_skill TEXT NOT NULL,
-                search_radius_km REAL DEFAULT 5.0,
-                result_json TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP NOT NULL
-            )
-        """)
-        
-        self.conn.commit()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            # Mechanic live locations table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS mechanic_live_locations (
+                    id SERIAL PRIMARY KEY,
+                    mechanic_id INTEGER NOT NULL UNIQUE,
+                    latitude FLOAT NOT NULL,
+                    longitude FLOAT NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Mechanic skills mapping table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS mechanic_skills (
+                    id SERIAL PRIMARY KEY,
+                    mechanic_id INTEGER NOT NULL,
+                    skill_name TEXT NOT NULL,
+                    confidence_score FLOAT DEFAULT 1.0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # Search cache table for performance
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS search_cache (
+                    id SERIAL PRIMARY KEY,
+                    user_lat FLOAT NOT NULL,
+                    user_lon FLOAT NOT NULL,
+                    required_skill TEXT NOT NULL,
+                    search_radius_km FLOAT DEFAULT 5.0,
+                    result_json TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    expires_at TIMESTAMP NOT NULL
+                )
+            """)
+            
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
-    def _init_fts5(self):
-        """Initialize FTS5 virtual table for mechanic search"""
-        cursor = self.conn.cursor()
-        
-        # Create FTS5 virtual table
-        cursor.execute("""
-            CREATE VIRTUAL TABLE IF NOT EXISTS mechanics_fts USING fts5(
-                mechanic_id,
-                name,
-                skills,
-                service_area,
-                content='mechanic_fts_content',
-                content_rowid='id'
-            )
-        """)
-        
-        # Create content table for FTS5
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS mechanic_fts_content (
-                id INTEGER PRIMARY KEY,
-                mechanic_id INTEGER NOT NULL,
-                name TEXT NOT NULL,
-                skills TEXT NOT NULL,
-                service_area TEXT DEFAULT 'Mumbai'
-            )
-        """)
-        
-        self.conn.commit()
+    def _init_fts(self):
+        """Initialize full-text search for mechanic search in PostgreSQL"""
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            # Create content table for search
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS mechanic_search_content (
+                    id SERIAL PRIMARY KEY,
+                    mechanic_id INTEGER NOT NULL UNIQUE,
+                    name TEXT NOT NULL,
+                    skills TEXT NOT NULL,
+                    service_area TEXT DEFAULT 'Mumbai',
+                    search_vector tsvector
+                )
+            """)
+            
+            # Create trigger to update search_vector
+            cursor.execute("""
+                CREATE OR REPLACE FUNCTION mechanic_search_vector_update() RETURNS trigger AS $$
+                BEGIN
+                    new.search_vector :=
+                        setweight(to_tsvector('english', coalesce(new.name, '')), 'A') ||
+                        setweight(to_tsvector('english', coalesce(new.skills, '')), 'B') ||
+                        setweight(to_tsvector('english', coalesce(new.service_area, '')), 'C');
+                    return new;
+                END
+                $$ LANGUAGE plpgsql;
+            """)
+            
+            cursor.execute("""
+                DROP TRIGGER IF EXISTS tsvectorupdate ON mechanic_search_content;
+                CREATE TRIGGER tsvectorupdate BEFORE INSERT OR UPDATE
+                ON mechanic_search_content FOR EACH ROW EXECUTE FUNCTION mechanic_search_vector_update();
+            """)
+            
+            # Create GIN index for fast search
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_mechanic_search_vector ON mechanic_search_content USING GIN(search_vector);
+            """)
+            
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def update_mechanic_location(self, mechanic_id: int, latitude: float, longitude: float) -> bool:
         """Update mechanic's live location"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            INSERT OR REPLACE INTO mechanic_live_locations 
-            (mechanic_id, latitude, longitude, updated_at)
-            VALUES (?, ?, ?, ?)
-        """, (mechanic_id, latitude, longitude, datetime.now()))
-        self.conn.commit()
-        return True
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO mechanic_live_locations 
+                (mechanic_id, latitude, longitude, updated_at)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (mechanic_id) DO UPDATE SET
+                latitude = EXCLUDED.latitude,
+                longitude = EXCLUDED.longitude,
+                updated_at = EXCLUDED.updated_at
+            """, (mechanic_id, latitude, longitude))
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_mechanic_location(self, mechanic_id: int) -> Optional[Dict]:
         """Get mechanic's latest location"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            SELECT * FROM mechanic_live_locations 
-            WHERE mechanic_id = ? 
-            ORDER BY updated_at DESC 
-            LIMIT 1
-        """, (mechanic_id,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("""
+                SELECT * FROM mechanic_live_locations 
+                WHERE mechanic_id = %s 
+                ORDER BY updated_at DESC 
+                LIMIT 1
+            """, (mechanic_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def update_mechanic_fts(self, mechanic_id: int, name: str, skills: str, service_area: str = "Mumbai"):
-        """Update mechanic information in FTS5 table"""
-        cursor = self.conn.cursor()
-        
-        # Update content table
-        cursor.execute("""
-            INSERT OR REPLACE INTO mechanic_fts_content 
-            (mechanic_id, name, skills, service_area)
-            VALUES (?, ?, ?, ?)
-        """, (mechanic_id, name, skills, service_area))
-        
-        # Get the row ID
-        cursor.execute("SELECT id FROM mechanic_fts_content WHERE mechanic_id = ?", (mechanic_id,))
-        row = cursor.fetchone()
-        row_id = row[0] if row else None
-        
-        if row_id:
-            # Update FTS5 table
+        """Update mechanic information in search content table"""
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
             cursor.execute("""
-                INSERT OR REPLACE INTO mechanics_fts 
-                (rowid, mechanic_id, name, skills, service_area)
-                VALUES (?, ?, ?, ?, ?)
-            """, (row_id, mechanic_id, name, skills, service_area))
-        
-        self.conn.commit()
+                INSERT INTO mechanic_search_content 
+                (mechanic_id, name, skills, service_area)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (mechanic_id) DO UPDATE SET
+                name = EXCLUDED.name,
+                skills = EXCLUDED.skills,
+                service_area = EXCLUDED.service_area
+            """, (mechanic_id, name, skills, service_area))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def search_mechanics_fts(self, query: str) -> List[Dict]:
-        """Search mechanics using FTS5"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            SELECT mfc.*
-            FROM mechanics_fts mft
-            JOIN mechanic_fts_content mfc ON mft.mechanic_id = mfc.mechanic_id
-            WHERE mechanics_fts MATCH ?
-            ORDER BY rank
-        """, (query,))
-        
-        results = []
-        for row in cursor.fetchall():
-            results.append(dict(row))
-        return results
+        """Search mechanics using PostgreSQL full-text search"""
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            # Format query for to_tsquery
+            formatted_query = ' & '.join(query.split()) + ':*'
+            
+            cursor.execute("""
+                SELECT id, mechanic_id, name, skills, service_area,
+                       ts_rank(search_vector, to_tsquery('english', %s)) as rank
+                FROM mechanic_search_content
+                WHERE search_vector @@ to_tsquery('english', %s)
+                ORDER BY rank DESC
+            """, (formatted_query, formatted_query))
+            
+            return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            # Fallback to ILIKE if FTS fails or for partial matches
+            try:
+                cursor.execute("""
+                    SELECT id, mechanic_id, name, skills, service_area
+                    FROM mechanic_search_content
+                    WHERE name ILIKE %s OR skills ILIKE %s OR service_area ILIKE %s
+                """, (f"%{query}%", f"%{query}%", f"%{query}%"))
+                return [dict(row) for row in cursor.fetchall()]
+            except:
+                return []
+        finally:
+            cursor.close()
+            conn.close()
     
     def calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """Calculate distance between two coordinates using Haversine formula"""
@@ -175,80 +250,122 @@ class SmartSearchDB:
     def get_nearby_mechanics(self, user_lat: float, user_lon: float, 
                            radius_km: float = 5.0) -> List[Dict]:
         """Get mechanics within specified radius"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            SELECT csw.*, mll.latitude, mll.longitude, mll.updated_at
-            FROM car_service_workers csw
-            JOIN mechanic_live_locations mll ON csw.id = mll.mechanic_id
-            WHERE csw.role = 'Mechanic' 
-            AND csw.is_online = 1 
-            AND csw.is_busy = 0
-        """)
-        
-        nearby_mechanics = []
-        current_time = datetime.now()
-        
-        for row in cursor.fetchall():
-            mechanic = dict(row)
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            # Join with mechanics table (assuming it's in the same DB)
+            cursor.execute("""
+                SELECT m.*, mll.latitude, mll.longitude, mll.updated_at
+                FROM mechanics m
+                JOIN mechanic_live_locations mll ON m.id = mll.mechanic_id
+                WHERE m.role = 'Mechanic' 
+                AND m.is_online = TRUE 
+                AND m.is_busy = FALSE
+            """)
             
-            # Check if location is recent (within 10 minutes)
-            location_time = datetime.fromisoformat(mechanic['updated_at'])
-            if current_time - location_time > timedelta(minutes=10):
-                continue
+            nearby_mechanics = []
+            current_time = datetime.now()
             
-            # Calculate distance
-            distance = self.calculate_distance(
-                user_lat, user_lon, 
-                mechanic['latitude'], mechanic['longitude']
-            )
+            for row in cursor.fetchall():
+                mechanic = dict(row)
+                
+                # Check if location is recent (within 10 minutes)
+                # PostgreSQL returns datetime object for updated_at
+                location_time = mechanic['updated_at']
+                if isinstance(location_time, str):
+                    location_time = datetime.fromisoformat(location_time)
+                
+                if current_time - location_time > timedelta(minutes=10):
+                    continue
+                
+                # Calculate distance
+                distance = self.calculate_distance(
+                    user_lat, user_lon, 
+                    mechanic['latitude'], mechanic['longitude']
+                )
+                
+                # Filter by radius
+                if distance <= radius_km:
+                    mechanic['distance_km'] = distance
+                    nearby_mechanics.append(mechanic)
             
-            # Filter by radius
-            if distance <= radius_km:
-                mechanic['distance_km'] = distance
-                nearby_mechanics.append(mechanic)
-        
-        # Sort by distance
-        nearby_mechanics.sort(key=lambda x: x['distance_km'])
-        return nearby_mechanics
+            # Sort by distance
+            nearby_mechanics.sort(key=lambda x: x['distance_km'])
+            return nearby_mechanics
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def cache_search_results(self, user_lat: float, user_lon: float, 
                            required_skill: str, results: List[Dict], 
                            radius_km: float = 5.0, cache_minutes: int = 5):
         """Cache search results for performance"""
-        cursor = self.conn.cursor()
-        import json
-        
-        expires_at = datetime.now() + timedelta(minutes=cache_minutes)
-        cursor.execute("""
-            INSERT INTO search_cache 
-            (user_lat, user_lon, required_skill, search_radius_km, result_json, expires_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (user_lat, user_lon, required_skill, radius_km, json.dumps(results), expires_at))
-        self.conn.commit()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            expires_at = datetime.now() + timedelta(minutes=cache_minutes)
+            cursor.execute("""
+                INSERT INTO search_cache 
+                (user_lat, user_lon, required_skill, search_radius_km, result_json, expires_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (user_lat, user_lon, required_skill, radius_km, json.dumps(results), expires_at))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_cached_results(self, user_lat: float, user_lon: float, 
                           required_skill: str, radius_km: float = 5.0) -> Optional[List[Dict]]:
         """Get cached search results if available"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            SELECT result_json, expires_at FROM search_cache
-            WHERE user_lat = ? AND user_lon = ? AND required_skill = ? AND search_radius_km = ?
-            AND expires_at > ?
-            ORDER BY created_at DESC
-            LIMIT 1
-        """, (user_lat, user_lon, required_skill, radius_km, datetime.now()))
-        
-        row = cursor.fetchone()
-        if row:
-            import json
-            return json.loads(row[0])
-        return None
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("""
+                SELECT result_json, expires_at FROM search_cache
+                WHERE user_lat = %s AND user_lon = %s AND required_skill = %s AND search_radius_km = %s
+                AND expires_at > %s
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, (user_lat, user_lon, required_skill, radius_km, datetime.now()))
+            
+            row = cursor.fetchone()
+            if row:
+                return json.loads(row['result_json'])
+            return None
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_cached_results_count(self) -> int:
         """Get count of cached search results"""
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM search_cache WHERE expires_at > ?", (datetime.now(),))
-        return cursor.fetchone()[0]
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT COUNT(*) FROM search_cache WHERE expires_at > CURRENT_TIMESTAMP")
+            return cursor.fetchone()[0]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
 # Global instance
 smart_search_db = SmartSearchDB()

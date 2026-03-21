@@ -1,199 +1,319 @@
-import sqlite3
 import os
+import psycopg2
+import psycopg2.extras
+from dotenv import load_dotenv
 from datetime import datetime
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "..", "..", "expertease.db")
+load_dotenv()
 
 class MoneyServiceDB:
     def __init__(self):
-        self.conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
         self.create_tables()
 
+    def get_conn(self):
+        load_dotenv()
+        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+
     def create_tables(self):
-        cursor = self.conn.cursor()
-        
-        # Transactions table for Finny
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            amount REAL,
-            category TEXT,
-            merchant TEXT,
-            date TEXT,
-            description TEXT,
-            type TEXT DEFAULT 'expense',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """)
-        
-        # Add type column if it doesn't exist (for existing tables)
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
         try:
-            cursor.execute('''
-                ALTER TABLE transactions ADD COLUMN type TEXT DEFAULT 'expense'
-            ''')
-        except sqlite3.OperationalError:
-            # Column already exists, ignore error
-            pass
-        
-        # Budgets table for Smart Budget Planner
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS budgets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            category TEXT,
-            monthly_limit REAL,
-            current_spending REAL DEFAULT 0,
-            month TEXT,
-            year INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """)
-        
-        # Goal Jars table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS goal_jars (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            goal_name TEXT,
-            target_amount REAL,
-            current_amount REAL DEFAULT 0,
-            monthly_saving REAL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """)
-        
-        # Loan calculations table (for history)
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS loan_calculations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            loan_amount REAL,
-            interest_rate REAL,
-            tenure_months INTEGER,
-            monthly_emi REAL,
-            total_interest REAL,
-            total_repayment REAL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-        """)
-        
-        self.conn.commit()
+            # Transactions table for Finny
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS transactions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                amount FLOAT,
+                category TEXT,
+                merchant TEXT,
+                date TEXT,
+                description TEXT,
+                type TEXT DEFAULT 'expense',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """)
+            
+            # Budgets table for Smart Budget Planner
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS budgets (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                category TEXT,
+                monthly_limit FLOAT,
+                current_spending FLOAT DEFAULT 0,
+                month TEXT,
+                year INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, category, month, year)
+            )
+            """)
+            
+            # Goal Jars table
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS goal_jars (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                goal_name TEXT,
+                target_amount FLOAT,
+                current_amount FLOAT DEFAULT 0,
+                monthly_saving FLOAT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """)
+            
+            # Loan calculations table (for history)
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS loan_calculations (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                loan_amount FLOAT,
+                interest_rate FLOAT,
+                tenure_months INTEGER,
+                monthly_emi FLOAT,
+                total_interest FLOAT,
+                total_repayment FLOAT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """)
+            
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     # Finny - Transaction Management
     def add_transaction(self, user_id, amount, category, merchant, date, description="", type="expense"):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        INSERT INTO transactions (user_id, amount, category, merchant, date, description, type)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, amount, category, merchant, date, description, type))
-        self.conn.commit()
-        
-        # Update budget spending
-        self.update_budget_spending(user_id, category, amount)
-        
-        return cursor.lastrowid
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            INSERT INTO transactions (user_id, amount, category, merchant, date, description, type)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """, (user_id, amount, category, merchant, date, description, type))
+            transaction_id = cursor.fetchone()[0]
+            conn.commit()
+            
+            # Update budget spending
+            self.update_budget_spending(user_id, category, amount)
+            
+            return transaction_id
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def get_transactions(self, user_id, month=None, year=None):
-        cursor = self.conn.cursor()
-        if month and year:
-            cursor.execute("""
-            SELECT * FROM transactions WHERE user_id=? AND strftime('%m', date)=? AND strftime('%Y', date)=?
-            ORDER BY date DESC
-            """, (user_id, f"{month:02d}", str(year)))
-        else:
-            cursor.execute("""
-            SELECT * FROM transactions WHERE user_id=? ORDER BY date DESC
-            """, (user_id,))
-        rows = cursor.fetchall()
-        return [dict(r) for r in rows]
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            if month and year:
+                cursor.execute("""
+                SELECT * FROM transactions WHERE user_id=%s AND TO_CHAR(date::DATE, 'MM')=%s AND TO_CHAR(date::DATE, 'YYYY')=%s
+                ORDER BY date DESC
+                """, (user_id, f"{month:02d}", str(year)))
+            else:
+                cursor.execute("""
+                SELECT * FROM transactions WHERE user_id=%s ORDER BY date DESC
+                """, (user_id,))
+            rows = cursor.fetchall()
+            return [dict(r) for r in rows]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def get_monthly_summary(self, user_id, month, year):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        SELECT category, SUM(amount) as total, COUNT(*) as count
-        FROM transactions 
-        WHERE user_id=? AND strftime('%m', date)=? AND strftime('%Y', date)=?
-        GROUP BY category
-        ORDER BY total DESC
-        """, (user_id, f"{month:02d}", str(year)))
-        return cursor.fetchall()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("""
+            SELECT category, SUM(amount) as total, COUNT(*) as count
+            FROM transactions 
+            WHERE user_id=%s AND TO_CHAR(date::DATE, 'MM')=%s AND TO_CHAR(date::DATE, 'YYYY')=%s
+            GROUP BY category
+            ORDER BY total DESC
+            """, (user_id, f"{month:02d}", str(year)))
+            return [dict(r) for r in cursor.fetchall()]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     # Smart Budget Planner
     def create_budget(self, user_id, category, monthly_limit, month, year):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        INSERT OR REPLACE INTO budgets (user_id, category, monthly_limit, month, year)
-        VALUES (?, ?, ?, ?, ?)
-        """, (user_id, category, monthly_limit, month, year))
-        self.conn.commit()
-        return cursor.lastrowid
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            INSERT INTO budgets (user_id, category, monthly_limit, month, year)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (user_id, category, month, year) DO UPDATE SET
+            monthly_limit = EXCLUDED.monthly_limit
+            RETURNING id
+            """, (user_id, category, monthly_limit, month, year))
+            budget_id = cursor.fetchone()[0]
+            conn.commit()
+            return budget_id
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def get_budgets(self, user_id, month, year):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        SELECT * FROM budgets WHERE user_id=? AND month=? AND year=?
-        """, (user_id, month, year))
-        return cursor.fetchall()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("""
+            SELECT * FROM budgets WHERE user_id=%s AND month=%s AND year=%s
+            """, (user_id, month, year))
+            return [dict(r) for r in cursor.fetchall()]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def update_budget_spending(self, user_id, category, amount):
         current_month = datetime.now().strftime("%B")
         current_year = datetime.now().year
         
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        UPDATE budgets 
-        SET current_spending = current_spending + ?
-        WHERE user_id=? AND category=? AND month=? AND year=?
-        """, (amount, user_id, category, current_month, current_year))
-        self.conn.commit()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            UPDATE budgets 
+            SET current_spending = current_spending + %s
+            WHERE user_id=%s AND category=%s AND month=%s AND year=%s
+            """, (amount, user_id, category, current_month, current_year))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     # Goal Jar
     def create_goal_jar(self, user_id, goal_name, target_amount, monthly_saving):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        INSERT INTO goal_jars (user_id, goal_name, target_amount, monthly_saving)
-        VALUES (?, ?, ?, ?)
-        """, (user_id, goal_name, target_amount, monthly_saving))
-        self.conn.commit()
-        return cursor.lastrowid
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            INSERT INTO goal_jars (user_id, goal_name, target_amount, monthly_saving)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+            """, (user_id, goal_name, target_amount, monthly_saving))
+            jar_id = cursor.fetchone()[0]
+            conn.commit()
+            return jar_id
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def get_goal_jars(self, user_id):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        SELECT * FROM goal_jars WHERE user_id=? ORDER BY created_at DESC
-        """, (user_id,))
-        return cursor.fetchall()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("""
+            SELECT * FROM goal_jars WHERE user_id=%s ORDER BY created_at DESC
+            """, (user_id,))
+            return [dict(r) for r in cursor.fetchall()]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def update_goal_jar(self, jar_id, amount_to_add):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        UPDATE goal_jars 
-        SET current_amount = current_amount + ?
-        WHERE id=?
-        """, (amount_to_add, jar_id))
-        self.conn.commit()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            UPDATE goal_jars 
+            SET current_amount = current_amount + %s
+            WHERE id=%s
+            """, (amount_to_add, jar_id))
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     # Loan Analyzer
     def save_loan_calculation(self, user_id, loan_amount, interest_rate, tenure_months, monthly_emi, total_interest, total_repayment):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        INSERT INTO loan_calculations 
-        (user_id, loan_amount, interest_rate, tenure_months, monthly_emi, total_interest, total_repayment)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, loan_amount, interest_rate, tenure_months, monthly_emi, total_interest, total_repayment))
-        self.conn.commit()
-        return cursor.lastrowid
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            INSERT INTO loan_calculations 
+            (user_id, loan_amount, interest_rate, tenure_months, monthly_emi, total_interest, total_repayment)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+            """, (user_id, loan_amount, interest_rate, tenure_months, monthly_emi, total_interest, total_repayment))
+            calc_id = cursor.fetchone()[0]
+            conn.commit()
+            return calc_id
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def get_loan_history(self, user_id):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        SELECT * FROM loan_calculations WHERE user_id=? ORDER BY created_at DESC
-        """, (user_id,))
-        return cursor.fetchall()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("""
+            SELECT * FROM loan_calculations WHERE user_id=%s ORDER BY created_at DESC
+            """, (user_id,))
+            return [dict(r) for r in cursor.fetchall()]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()

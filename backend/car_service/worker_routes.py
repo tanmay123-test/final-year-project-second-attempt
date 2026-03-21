@@ -124,42 +124,48 @@ def worker_login():
             return jsonify({"error": "Email is required"}), 400
         
         # Get worker by email (no password verification)
-        cursor = worker_db.conn.cursor()
-        cursor.execute("SELECT * FROM workers WHERE email = ?", (email,))
-        row = cursor.fetchone()
-        
-        if not row:
-            return jsonify({"error": "Email not found"}), 401
-        
-        worker = dict(row)
-        
-        # Check if approved
-        if worker.get("status") != "APPROVED":
+        import psycopg2.extras
+        conn = worker_db.get_conn()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("SELECT * FROM workers WHERE email = %s", (email,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return jsonify({"error": "Email not found"}), 401
+            
+            worker = dict(row)
+            
+            # Check if approved
+            if worker.get("status") != "APPROVED":
+                return jsonify({
+                    "error": "Your account is pending admin approval",
+                    "status": worker.get("status")
+                }), 403
+            
+            # Generate token (reuse existing auth utils)
+            from auth_utils import generate_token
+            token = generate_token(email)
+            
+            # Remove sensitive data
+            worker_data = {
+                "id": worker["id"],
+                "name": worker["name"],
+                "phone": worker["phone"],
+                "email": worker["email"],
+                "role": worker["role"],
+                "city": worker["city"],
+                "experience": worker["experience"]
+            }
+            
             return jsonify({
-                "error": "Your account is pending admin approval",
-                "status": worker.get("status")
-            }), 403
-        
-        # Generate token (reuse existing auth utils)
-        from auth_utils import generate_token
-        token = generate_token(email)
-        
-        # Remove sensitive data
-        worker_data = {
-            "id": worker["id"],
-            "name": worker["name"],
-            "phone": worker["phone"],
-            "email": worker["email"],
-            "role": worker["role"],
-            "city": worker["city"],
-            "experience": worker["experience"]
-        }
-        
-        return jsonify({
-            "success": True,
-            "token": token,
-            "worker": worker_data
-        }), 200
+                "success": True,
+                "token": token,
+                "worker": worker_data
+            }), 200
+        finally:
+            cursor.close()
+            conn.close()
         
     except Exception as e:
         print(f"❌ Worker login error: {e}")

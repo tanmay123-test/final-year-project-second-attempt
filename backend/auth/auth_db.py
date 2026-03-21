@@ -1,112 +1,166 @@
-import sqlite3
+import psycopg2
+import psycopg2.extras
 import bcrypt
 import os
 from datetime import datetime, timedelta
 import jwt
+from dotenv import load_dotenv
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "..", "expertease.db")
+load_dotenv()
 
 class AuthDB:
     def __init__(self):
-        os.makedirs("data", exist_ok=True)
-        self.conn = sqlite3.connect(DB_PATH, check_same_thread=False)
         self.create_tables()
-        self.SECRET_KEY = "your-secret-key-change-in-production"
+        self.SECRET_KEY = os.environ.get("JWT_SECRET", "your-secret-key-change-in-production")
 
     def create_tables(self):
-        cursor = self.conn.cursor()
-        
-        # Users table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            username TEXT UNIQUE,
-            email TEXT UNIQUE,
-            password BLOB,
-            is_verified INTEGER DEFAULT 0,
-            role TEXT DEFAULT 'user',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """)
-        
-        # Workers table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS workers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            username TEXT UNIQUE,
-            email TEXT UNIQUE,
-            password BLOB,
-            is_verified INTEGER DEFAULT 0,
-            role TEXT DEFAULT 'worker',
-            service_type TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """)
-        
-        self.conn.commit()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            # Users table
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                name TEXT,
+                username TEXT UNIQUE,
+                email TEXT UNIQUE,
+                password BYTEA,
+                is_verified INTEGER DEFAULT 0,
+                role TEXT DEFAULT 'user',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """)
+            
+            # Workers table
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS workers (
+                id SERIAL PRIMARY KEY,
+                name TEXT,
+                username TEXT UNIQUE,
+                email TEXT UNIQUE,
+                password BYTEA,
+                is_verified INTEGER DEFAULT 0,
+                role TEXT DEFAULT 'worker',
+                service_type TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """)
+            
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def create_user(self, name, username, password, email):
-        cursor = self.conn.cursor()
-        hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-        cursor.execute("""
-        INSERT INTO users (name, username, email, password, role)
-        VALUES (?, ?, ?, ?, 'user')
-        """, (name, username, email, hashed))
-        self.conn.commit()
-        return cursor.lastrowid
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+            cursor.execute("""
+            INSERT INTO users (name, username, email, password, role)
+            VALUES (%s, %s, %s, %s, 'user') RETURNING id
+            """, (name, username, email, hashed))
+            new_id = cursor.fetchone()[0]
+            conn.commit()
+            return new_id
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def create_worker(self, name, username, password, email, service_type=None):
-        cursor = self.conn.cursor()
-        hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-        cursor.execute("""
-        INSERT INTO workers (name, username, email, password, service_type, role)
-        VALUES (?, ?, ?, ?, ?, 'worker')
-        """, (name, username, email, hashed, service_type))
-        self.conn.commit()
-        return cursor.lastrowid
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+            cursor.execute("""
+            INSERT INTO workers (name, username, email, password, service_type, role)
+            VALUES (%s, %s, %s, %s, %s, 'worker') RETURNING id
+            """, (name, username, email, hashed, service_type))
+            new_id = cursor.fetchone()[0]
+            conn.commit()
+            return new_id
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     def authenticate_user(self, username, password):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        SELECT id, password, is_verified, role FROM users WHERE username=?
-        """, (username,))
-        row = cursor.fetchone()
-        
-        if not row:
-            return None, "User not found"
-        
-        user_id, hashed_pw, is_verified, role = row
-        
-        if not bcrypt.checkpw(password.encode(), hashed_pw):
-            return None, "Invalid password"
-        
-        if not is_verified:
-            return None, "Email not verified"
-        
-        return {"id": user_id, "username": username, "role": role}, "Login successful"
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            SELECT id, password, is_verified, role FROM users WHERE username=%s
+            """, (username,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return None, "User not found"
+            
+            user_id, hashed_pw, is_verified, role = row
+            
+            if isinstance(hashed_pw, memoryview):
+                hashed_pw = hashed_pw.tobytes()
+
+            if not bcrypt.checkpw(password.encode(), hashed_pw):
+                return None, "Invalid password"
+            
+            if not is_verified:
+                return None, "Email not verified"
+            
+            return {"id": user_id, "username": username, "role": role}, "Login successful"
+        except Exception as e:
+            print(f"DB Error: {e}")
+            return None, str(e)
+        finally:
+            cursor.close()
+            conn.close()
 
     def authenticate_worker(self, username, password):
-        cursor = self.conn.cursor()
-        cursor.execute("""
-        SELECT id, password, is_verified, role, service_type FROM workers WHERE username=?
-        """, (username,))
-        row = cursor.fetchone()
-        
-        if not row:
-            return None, "Worker not found"
-        
-        worker_id, hashed_pw, is_verified, role, service_type = row
-        
-        if not bcrypt.checkpw(password.encode(), hashed_pw):
-            return None, "Invalid password"
-        
-        if not is_verified:
-            return None, "Email not verified"
-        
-        return {"id": worker_id, "username": username, "role": role, "service_type": service_type}, "Login successful"
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+            SELECT id, password, is_verified, role, service_type FROM workers WHERE username=%s
+            """, (username,))
+            row = cursor.fetchone()
+            
+            if not row:
+                return None, "Worker not found"
+            
+            worker_id, hashed_pw, is_verified, role, service_type = row
+            
+            if isinstance(hashed_pw, memoryview):
+                hashed_pw = hashed_pw.tobytes()
+
+            if not bcrypt.checkpw(password.encode(), hashed_pw):
+                return None, "Invalid password"
+            
+            if not is_verified:
+                return None, "Email not verified"
+            
+            return {"id": worker_id, "username": username, "role": role, "service_type": service_type}, "Login successful"
+        except Exception as e:
+            print(f"DB Error: {e}")
+            return None, str(e)
+        finally:
+            cursor.close()
+            conn.close()
 
     def generate_token(self, user_data):
         payload = {

@@ -15,9 +15,13 @@ const FreelanceHome = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('home');
+  
+  // Derived state from URL
+  const activeTab = searchParams.get('tab') || 'home';
+  
   const [featuredFreelancers, setFeaturedFreelancers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Direct Booking State
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -31,14 +35,25 @@ const FreelanceHome = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
 
   useEffect(() => {
-    // Handle URL parameters if any (for navigation simulation)
-    const tab = searchParams.get('tab');
+    // Sync search query from URL if present
     const q = searchParams.get('q');
-    if (tab) setActiveTab(tab);
     if (q) setSearchQuery(q);
     
     fetchFeaturedFreelancers();
   }, [searchParams]);
+
+  const handleTabChange = (tab, extraParams = {}) => {
+    setIsTransitioning(true);
+    // Use a small timeout to ensure clean unmounting/mounting and prevent flickering
+    setTimeout(() => {
+      if (tab === 'home') {
+        setSearchParams({}, { replace: true });
+      } else {
+        setSearchParams({ tab, ...extraParams }, { replace: true });
+      }
+      setIsTransitioning(false);
+    }, 50);
+  };
 
   const fetchFeaturedFreelancers = async () => {
     try {
@@ -59,9 +74,7 @@ const FreelanceHome = () => {
     e.preventDefault();
     const query = searchQuery.trim();
     if (query) {
-      setActiveTab('find');
-      // Update search params without navigating away
-      setSearchParams({ tab: 'find', q: query }, { replace: true });
+      handleTabChange('find', { q: query });
     }
   };
 
@@ -90,8 +103,7 @@ const FreelanceHome = () => {
       alert('Direct booking request sent! You can track it in the Projects tab.');
       setShowBookingModal(false);
       // Redirect to projects tab with direct sub-tab selected
-      setSearchParams({ tab: 'projects', sub: 'direct' });
-      setActiveTab('projects');
+      handleTabChange('projects', { sub: 'direct' });
     } catch (error) {
       console.error('Error creating direct booking:', error);
       alert(error.response?.data?.error || 'Failed to create booking');
@@ -110,54 +122,19 @@ const FreelanceHome = () => {
   ];
 
   const renderContent = () => {
+    if (isTransitioning) {
+      return (
+        <div className="tab-loading-state">
+          <div className="spinner-purple"></div>
+          <p>Switching view...</p>
+        </div>
+      );
+    }
+
     switch (activeTab) {
       case 'home':
         return (
           <>
-            {/* Desktop Top Navigation (Visible on Desktop only) */}
-            <header className="freelance-top-nav desktop-only">
-              <div className="nav-container">
-                <div className="nav-left">
-                  <span className="brand-name">FreelanceHub</span>
-                </div>
-                
-                <div className="nav-center">
-                  <form onSubmit={handleSearchSubmit} className="search-bar-nav">
-                    <Search size={18} color="#9ca3af" />
-                    <input 
-                      type="text" 
-                      placeholder="Search freelancers or skills..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </form>
-                </div>
-
-                <div className="nav-right">
-                  <nav className="nav-links-desktop">
-                    <button className={`nav-link-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
-                      <Home size={18} /> <span>Home</span>
-                    </button>
-                    <button className={`nav-link-item ${activeTab === 'post' ? 'active' : ''}`} onClick={() => setActiveTab('post')}>
-                      <PlusCircle size={18} /> <span>Post</span>
-                    </button>
-                    <button className={`nav-link-item ${activeTab === 'projects' ? 'active' : ''}`} onClick={() => setActiveTab('projects')}>
-                      <Folder size={18} /> <span>Projects</span>
-                    </button>
-                    <button className={`nav-link-item ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => setActiveTab('ai')}>
-                      <Bot size={18} /> <span>AI</span>
-                    </button>
-                    <button className="nav-link-item" onClick={() => navigate('/services')}>
-                      <User size={18} /> <span>Profile</span>
-                    </button>
-                  </nav>
-                  <button className="post-project-btn-desktop" onClick={() => setActiveTab('post')}>
-                    Post Project
-                  </button>
-                </div>
-              </div>
-            </header>
-
             {/* Hero Section */}
             <section className="freelance-hero">
               <div className="hero-container">
@@ -187,7 +164,7 @@ const FreelanceHome = () => {
                     <h3>Have a project idea?</h3>
                     <p>Post it and get proposals from top freelancers instantly</p>
                   </div>
-                  <button className="post-btn-new" onClick={() => setActiveTab('post')}>
+                  <button className="post-btn-new" onClick={() => handleTabChange('post')}>
                     Post Project
                   </button>
                 </div>
@@ -201,7 +178,7 @@ const FreelanceHome = () => {
                 <div className="categories-grid">
                   {categories.map(cat => (
                     <div key={cat.id} className="category-card" onClick={() => {
-                      setActiveTab('find');
+                      handleTabChange('find');
                       // Simulating search by category
                     }}>
                       <span className="cat-icon">{cat.icon}</span>
@@ -218,7 +195,7 @@ const FreelanceHome = () => {
               <section className="featured-section">
                 <div className="section-header">
                   <h2>Featured Freelancers</h2>
-                  <button className="view-all-link" onClick={() => setActiveTab('find')}>
+                  <button className="view-all-link" onClick={() => handleTabChange('find')}>
                     View All →
                   </button>
                 </div>
@@ -280,8 +257,8 @@ const FreelanceHome = () => {
       case 'post':
         return (
           <PostProject 
-            onBack={() => setActiveTab('home')} 
-            onSuccess={() => setActiveTab('projects')} 
+            onBack={() => handleTabChange('home')} 
+            onSuccess={() => handleTabChange('projects')} 
           />
         );
       case 'projects':
@@ -307,6 +284,50 @@ const FreelanceHome = () => {
 
   return (
     <div className="freelance-container">
+      {/* Desktop Top Navigation (Visible on all tabs) */}
+      <header className="freelance-top-nav desktop-only">
+        <div className="nav-container">
+          <div className="nav-left" onClick={() => handleTabChange('home')} style={{cursor:'pointer'}}>
+            <span className="brand-name">FreelanceHub</span>
+          </div>
+          
+          <div className="nav-center">
+            <form onSubmit={handleSearchSubmit} className="search-bar-nav">
+              <Search size={18} color="#9ca3af" />
+              <input 
+                type="text" 
+                placeholder="Search freelancers or skills..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
+          </div>
+
+          <div className="nav-right">
+            <nav className="nav-links-desktop">
+              <button className={`nav-link-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => handleTabChange('home')}>
+                <Home size={18} /> <span>Home</span>
+              </button>
+              <button className={`nav-link-item ${activeTab === 'post' ? 'active' : ''}`} onClick={() => handleTabChange('post')}>
+                <PlusCircle size={18} /> <span>Post</span>
+              </button>
+              <button className={`nav-link-item ${activeTab === 'projects' ? 'active' : ''}`} onClick={() => handleTabChange('projects')}>
+                <Folder size={18} /> <span>Projects</span>
+              </button>
+              <button className={`nav-link-item ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => handleTabChange('ai')}>
+                <Bot size={18} /> <span>AI</span>
+              </button>
+              <button className={`nav-link-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => handleTabChange('profile')}>
+                <User size={18} /> <span>Profile</span>
+              </button>
+            </nav>
+            <button className="post-project-btn-desktop" onClick={() => handleTabChange('post')}>
+              Post Project
+            </button>
+          </div>
+        </div>
+      </header>
+
       {renderContent()}
 
       {/* Direct Booking Modal */}
@@ -406,35 +427,35 @@ const FreelanceHome = () => {
       <nav className="freelance-bottom-nav mobile-only">
         <button 
           className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => setActiveTab('home')}
+          onClick={() => handleTabChange('home')}
         >
           <Home size={24} />
           <span>Home</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'post' ? 'active' : ''}`}
-          onClick={() => setActiveTab('post')}
+          onClick={() => handleTabChange('post')}
         >
           <PlusCircle size={24} />
           <span>Post</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'projects' ? 'active' : ''}`}
-          onClick={() => setActiveTab('projects')}
+          onClick={() => handleTabChange('projects')}
         >
           <Folder size={24} />
           <span>Projects</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'ai' ? 'active' : ''}`}
-          onClick={() => setActiveTab('ai')}
+          onClick={() => handleTabChange('ai')}
         >
           <Bot size={24} />
           <span>AI</span>
         </button>
         <button 
           className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-          onClick={() => setActiveTab('profile')}
+          onClick={() => handleTabChange('profile')}
         >
           <User size={24} />
           <span>Profile</span>

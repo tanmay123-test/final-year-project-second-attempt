@@ -123,41 +123,6 @@ const MyProjects = () => {
 
   return (
     <div className="my-projects-page">
-      {/* Desktop Navbar simulation */}
-      <header className="freelance-top-nav desktop-only">
-        <div className="nav-container">
-          <div className="nav-left" onClick={() => navigate('/freelance/home')} style={{cursor:'pointer'}}>
-            <span className="brand-name">FreelanceHub</span>
-          </div>
-          <div className="nav-center">
-            <div className="search-bar-nav">
-              <Search size={18} color="#9ca3af" />
-              <input type="text" placeholder="Search freelancers or skills..." />
-            </div>
-          </div>
-          <div className="nav-right">
-            <nav className="nav-links-desktop">
-              <button className="nav-link-item" onClick={() => navigate('/freelance/home')}>
-                <Home size={18} /> <span>Home</span>
-              </button>
-              <button className="nav-link-item" onClick={() => navigate('/freelance/home?tab=post')}>
-                <PlusCircle size={18} /> <span>Post</span>
-              </button>
-              <button className="nav-link-item active" onClick={() => navigate('/freelance/home?tab=projects')}>
-                <Folder size={18} /> <span>Projects</span>
-              </button>
-              <button className="nav-link-item">
-                <Bot size={18} /> <span>AI</span>
-              </button>
-              <button className="nav-link-item" onClick={() => navigate('/services')}>
-                <User size={18} /> <span>Profile</span>
-              </button>
-            </nav>
-            <button className="post-project-btn-desktop" onClick={() => navigate('/freelance/home?tab=post')}>Post Project</button>
-          </div>
-        </div>
-      </header>
-
       <div className="my-projects-hero">
         <div className="hero-content">
           <h1>My Projects</h1>
@@ -320,25 +285,6 @@ const MyProjects = () => {
           </div>
         )}
       </div>
-
-      {/* Mobile Bottom Nav */}
-      <nav className="freelance-bottom-nav mobile-only">
-        <button className="nav-item" onClick={() => navigate('/freelance/home?tab=home')}>
-          <Home size={24} /> <span>Home</span>
-        </button>
-        <button className="nav-item" onClick={() => navigate('/freelance/home?tab=post')}>
-          <PlusCircle size={24} /> <span>Post</span>
-        </button>
-        <button className="nav-item active" onClick={() => navigate('/freelance/home?tab=projects')}>
-          <Folder size={24} /> <span>Projects</span>
-        </button>
-        <button className="nav-item">
-          <Bot size={24} /> <span>AI</span>
-        </button>
-        <button className="nav-item" onClick={() => navigate('/services')}>
-          <User size={24} /> <span>Profile</span>
-        </button>
-      </nav>
 
       {isModalOpen && (
         <ProjectDetailsModal 

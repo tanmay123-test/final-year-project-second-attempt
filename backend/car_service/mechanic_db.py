@@ -4,95 +4,65 @@ Manages mechanic authentication and profiles
 """
 
 import os
-import sqlite3
+import psycopg2
+import psycopg2.extras
 import bcrypt
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
-# Database path
-MECHANICS_DB = os.path.join(os.path.dirname(__file__), 'mechanics.db')
+load_dotenv()
 
 class MechanicDB:
     def __init__(self):
-        self.conn = sqlite3.connect(MECHANICS_DB, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
         self.create_table()
     
     def get_conn(self):
-        return sqlite3.connect(MECHANICS_DB, check_same_thread=False)
+        load_dotenv()
+        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
     
     def create_table(self):
         """Create mechanics table"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS mechanics (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                phone TEXT NOT NULL,
-                password_hash TEXT NOT NULL,
-                age INTEGER NOT NULL,
-                city TEXT NOT NULL,
-                address TEXT,
-                experience INTEGER NOT NULL,
-                skills TEXT NOT NULL,
-                aadhaar_path TEXT,
-                license_path TEXT,
-                certificate_path TEXT,
-                profile_photo_path TEXT,
-                status TEXT NOT NULL DEFAULT 'APPROVED',
-                is_online INTEGER DEFAULT 0,
-                is_busy INTEGER DEFAULT 0,
-                service_radius INTEGER DEFAULT 10,
-                current_city TEXT,
-                last_status_update TEXT,
-                cooldown_until TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        # Add new columns if they don't exist (for existing databases)
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
         try:
-            cursor.execute("ALTER TABLE mechanics ADD COLUMN is_busy INTEGER DEFAULT 0")
-        except sqlite3.OperationalError:
-            pass
-        
-        try:
-            cursor.execute("ALTER TABLE mechanics ADD COLUMN service_radius INTEGER DEFAULT 10")
-        except sqlite3.OperationalError:
-            pass
-        
-        try:
-            cursor.execute("ALTER TABLE mechanics ADD COLUMN current_city TEXT")
-        except sqlite3.OperationalError:
-            pass
-        
-        try:
-            cursor.execute("ALTER TABLE mechanics ADD COLUMN role TEXT DEFAULT 'Mechanic'")
-        except sqlite3.OperationalError:
-            pass
-        
-        try:
-            cursor.execute("ALTER TABLE mechanics ADD COLUMN updated_at TIMESTAMP")
-        except sqlite3.OperationalError:
-            pass
-        
-        try:
-            cursor.execute("ALTER TABLE mechanics ADD COLUMN last_status_update TEXT")
-        except sqlite3.OperationalError:
-            pass
-        
-        try:
-            cursor.execute("ALTER TABLE mechanics ADD COLUMN cooldown_until TEXT")
-        except sqlite3.OperationalError:
-            pass
-        
-        try:
-            cursor.execute("ALTER TABLE mechanics ADD COLUMN address TEXT")
-        except sqlite3.OperationalError:
-            pass
-        
-        self.conn.commit()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS mechanics (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    phone TEXT NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    age INTEGER NOT NULL,
+                    city TEXT NOT NULL,
+                    address TEXT,
+                    experience INTEGER NOT NULL,
+                    skills TEXT NOT NULL,
+                    aadhaar_path TEXT,
+                    license_path TEXT,
+                    certificate_path TEXT,
+                    profile_photo_path TEXT,
+                    status TEXT NOT NULL DEFAULT 'APPROVED',
+                    is_online BOOLEAN DEFAULT FALSE,
+                    is_busy BOOLEAN DEFAULT FALSE,
+                    service_radius INTEGER DEFAULT 10,
+                    current_city TEXT,
+                    role TEXT DEFAULT 'Mechanic',
+                    last_status_update TEXT,
+                    cooldown_until TEXT,
+                    updated_at TIMESTAMP,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def hash_password(self, password: str) -> str:
         """Hash password using bcrypt"""
@@ -107,39 +77,70 @@ class MechanicDB:
                        aadhaar_path: str = None, license_path: str = None,
                        certificate_path: str = None, profile_photo_path: str = None) -> int:
         """Create a new mechanic"""
-        cursor = self.conn.cursor()
-        
-        # Check if email already exists
-        if self.get_mechanic_by_email(email):
-            raise ValueError("Email already registered")
-        
-        # Hash password
-        password_hash = self.hash_password(password)
-        
-        cursor.execute("""
-            INSERT INTO mechanics 
-            (name, email, phone, password_hash, age, city, address, experience, skills,
-             aadhaar_path, license_path, certificate_path, profile_photo_path, status, role)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (name, email, phone, password_hash, age, city, address, experience, skills,
-              aadhaar_path, license_path, certificate_path, profile_photo_path, 'PENDING', 'Mechanic'))
-        
-        self.conn.commit()
-        return cursor.lastrowid
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            # Check if email already exists
+            if self.get_mechanic_by_email(email):
+                raise ValueError("Email already registered")
+            
+            # Hash password
+            password_hash = self.hash_password(password)
+            
+            cursor.execute("""
+                INSERT INTO mechanics 
+                (name, email, phone, password_hash, age, city, address, experience, skills,
+                 aadhaar_path, license_path, certificate_path, profile_photo_path, status, role)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING id
+            """, (name, email, phone, password_hash, age, city, address, experience, skills,
+                  aadhaar_path, license_path, certificate_path, profile_photo_path, 'PENDING', 'Mechanic'))
+            
+            new_id = cursor.fetchone()[0]
+            conn.commit()
+            return new_id
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_mechanic_by_email(self, email: str) -> Optional[Dict]:
         """Get mechanic by email"""
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM mechanics WHERE email = ?", (email,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("SELECT * FROM mechanics WHERE email = %s", (email,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_mechanic_by_id(self, mechanic_id: int) -> Optional[Dict]:
         """Get mechanic by ID"""
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM mechanics WHERE id = ?", (mechanic_id,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("SELECT * FROM mechanics WHERE id = %s", (mechanic_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def verify_mechanic(self, email: str, password: str) -> Optional[Dict]:
         """Verify mechanic credentials"""
@@ -150,91 +151,173 @@ class MechanicDB:
     
     def set_online_status(self, mechanic_id: int, is_online: bool) -> bool:
         """Set mechanic online/offline status"""
-        cursor = self.conn.cursor()
-        cursor.execute("UPDATE mechanics SET is_online = ? WHERE id = ?", 
-                      (1 if is_online else 0, mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE mechanics SET is_online = %s WHERE id = %s", 
+                          (is_online, mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_online_mechanics(self) -> List[Dict]:
         """Get all online mechanics"""
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM mechanics WHERE is_online = 1 AND status = 'APPROVED'")
-        return [dict(row) for row in cursor.fetchall()]
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("SELECT * FROM mechanics WHERE is_online = TRUE AND status = 'APPROVED'")
+            return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_all_mechanics(self) -> List[Dict]:
         """Get all mechanics"""
-        cursor = self.conn.cursor()
-        cursor.execute("SELECT * FROM mechanics ORDER BY created_at DESC")
-        return [dict(row) for row in cursor.fetchall()]
-    
-    def update_mechanic_status(self, mechanic_id: int) -> bool:
-        """Update last status update timestamp"""
-        cursor = self.conn.cursor()
-        cursor.execute("UPDATE mechanics SET last_status_update = ? WHERE id = ?", 
-                      (datetime.now().isoformat(), mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("SELECT * FROM mechanics ORDER BY created_at DESC")
+            return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     # ===== STATUS MANAGEMENT FUNCTIONS =====
     
     def set_online(self, mechanic_id: int) -> bool:
         """Set mechanic to ONLINE status"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            UPDATE mechanics 
-            SET is_online = 1, is_busy = 0, last_status_update = ?, cooldown_until = NULL
-            WHERE id = ?
-        """, (datetime.now().isoformat(), mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE mechanics 
+                SET is_online = TRUE, is_busy = FALSE, last_status_update = %s, cooldown_until = NULL
+                WHERE id = %s
+            """, (datetime.now().isoformat(), mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def set_offline(self, mechanic_id: int) -> bool:
         """Set mechanic to OFFLINE status"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            UPDATE mechanics 
-            SET is_online = 0, is_busy = 0, last_status_update = ?, cooldown_until = NULL
-            WHERE id = ?
-        """, (datetime.now().isoformat(), mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE mechanics 
+                SET is_online = FALSE, is_busy = FALSE, last_status_update = %s, cooldown_until = NULL
+                WHERE id = %s
+            """, (datetime.now().isoformat(), mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def set_busy(self, mechanic_id: int) -> bool:
         """Set mechanic to BUSY status"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            UPDATE mechanics 
-            SET is_busy = 1, last_status_update = ?
-            WHERE id = ?
-        """, (datetime.now().isoformat(), mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE mechanics 
+                SET is_busy = TRUE, last_status_update = %s
+                WHERE id = %s
+            """, (datetime.now().isoformat(), mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def set_available(self, mechanic_id: int) -> bool:
         """Set mechanic to AVAILABLE (ONLINE but not BUSY)"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            UPDATE mechanics 
-            SET is_busy = 0, last_status_update = ?
-            WHERE id = ?
-        """, (datetime.now().isoformat(), mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE mechanics 
+                SET is_busy = FALSE, last_status_update = %s
+                WHERE id = %s
+            """, (datetime.now().isoformat(), mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def update_service_radius(self, mechanic_id: int, radius: int) -> bool:
         """Update mechanic service radius"""
-        cursor = self.conn.cursor()
-        cursor.execute("UPDATE mechanics SET service_radius = ? WHERE id = ?", (radius, mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE mechanics SET service_radius = %s WHERE id = %s", (radius, mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def update_current_location(self, mechanic_id: int, city: str) -> bool:
         """Update mechanic current working city"""
-        cursor = self.conn.cursor()
-        cursor.execute("UPDATE mechanics SET current_city = ? WHERE id = ?", (city, mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE mechanics SET current_city = %s WHERE id = %s", (city, mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def get_mechanic_status(self, mechanic_id: int) -> str:
         """Get mechanic's current status"""
@@ -242,8 +325,8 @@ class MechanicDB:
         if not mechanic:
             return "UNKNOWN"
         
-        is_online = mechanic.get('is_online', 0)
-        is_busy = mechanic.get('is_busy', 0)
+        is_online = mechanic.get('is_online', False)
+        is_busy = mechanic.get('is_busy', False)
         
         if not is_online:
             return "OFFLINE"
@@ -254,25 +337,45 @@ class MechanicDB:
     
     def get_available_mechanics(self) -> List[Dict]:
         """Get all available mechanics (ONLINE and not BUSY)"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            SELECT * FROM mechanics 
-            WHERE is_online = 1 AND is_busy = 0 AND status = 'APPROVED'
-            ORDER BY created_at DESC
-        """)
-        return [dict(row) for row in cursor.fetchall()]
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("""
+                SELECT * FROM mechanics 
+                WHERE is_online = TRUE AND is_busy = FALSE AND status = 'APPROVED'
+                ORDER BY created_at DESC
+            """)
+            return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def set_cooldown(self, mechanic_id: int, cooldown_minutes: int = 30) -> bool:
         """Set mechanic cooldown (temporary unavailability)"""
-        cursor = self.conn.cursor()
-        cooldown_until = (datetime.now() + datetime.timedelta(minutes=cooldown_minutes)).isoformat()
-        cursor.execute("""
-            UPDATE mechanics 
-            SET is_online = 0, cooldown_until = ?, last_status_update = ?
-            WHERE id = ?
-        """, (cooldown_until, datetime.now().isoformat(), mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cooldown_until = (datetime.now() + timedelta(minutes=cooldown_minutes)).isoformat()
+            cursor.execute("""
+                UPDATE mechanics 
+                SET is_online = FALSE, cooldown_until = %s, last_status_update = %s
+                WHERE id = %s
+            """, (cooldown_until, datetime.now().isoformat(), mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     def is_on_cooldown(self, mechanic_id: int) -> bool:
         """Check if mechanic is on cooldown"""
@@ -292,14 +395,24 @@ class MechanicDB:
     
     def clear_cooldown(self, mechanic_id: int) -> bool:
         """Clear mechanic cooldown"""
-        cursor = self.conn.cursor()
-        cursor.execute("""
-            UPDATE mechanics 
-            SET cooldown_until = NULL, last_status_update = ?
-            WHERE id = ?
-        """, (datetime.now().isoformat(), mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE mechanics 
+                SET cooldown_until = NULL, last_status_update = %s
+                WHERE id = %s
+            """, (datetime.now().isoformat(), mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
     
     # ===== DEMAND HEAT INDICATOR =====
     
@@ -325,10 +438,20 @@ class MechanicDB:
     
     def update_mechanic_status(self, mechanic_id: int, status: str) -> bool:
         """Update mechanic status"""
-        cursor = self.conn.cursor()
-        cursor.execute("UPDATE mechanics SET status = ? WHERE id = ?", (status, mechanic_id))
-        self.conn.commit()
-        return cursor.rowcount > 0
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE mechanics SET status = %s WHERE id = %s", (status, mechanic_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
 # Global instance
 mechanic_db = MechanicDB()

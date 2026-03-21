@@ -2,7 +2,6 @@
 Active Fuel Delivery Engine - Phase 3 Implementation
 """
 
-import sqlite3
 import os
 from datetime import datetime
 from .fuel_delivery_db import fuel_delivery_db
@@ -13,20 +12,20 @@ class ActiveDeliveryService:
     
     def get_active_delivery(self, agent_id):
         """Get active delivery for an agent"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 SELECT r.*, u.name as user_name, u.phone_number as user_phone
                 FROM fuel_delivery_requests r
                 LEFT JOIN users u ON r.user_id = u.id
-                WHERE r.agent_id = ? AND r.status IN ('ASSIGNED', 'ARRIVING', 'DELIVERING')
+                WHERE r.agent_id = %s AND r.status IN ('ASSIGNED', 'ARRIVING', 'DELIVERING')
                 ORDER BY r.created_at DESC
                 LIMIT 1
             ''', (agent_id,))
             
             delivery = cursor.fetchone()
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             if delivery:
                 return {
@@ -48,20 +47,24 @@ class ActiveDeliveryService:
             return None
             
         except Exception as e:
+            conn.rollback()
             return None
+        finally:
+            cursor.close()
+            conn.close()
     
     def start_arrival(self, agent_id, request_id):
         """Agent starts navigation to delivery location"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 UPDATE fuel_delivery_requests
-                SET status = 'ARRIVING', updated_at = ?
-                WHERE id = ? AND agent_id = ?
+                SET status = 'ARRIVING', updated_at = %s
+                WHERE id = %s AND agent_id = %s
             ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), request_id, agent_id))
             
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             # Log activity
             self._log_activity(agent_id, 'DELIVERY_ARRIVAL', {
@@ -71,20 +74,24 @@ class ActiveDeliveryService:
             return {'success': True, 'message': 'Navigation started'}
             
         except Exception as e:
+            conn.rollback()
             return {'success': False, 'error': str(e)}
+        finally:
+            cursor.close()
+            conn.close()
     
     def start_delivery(self, agent_id, request_id):
         """Agent starts fuel delivery"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 UPDATE fuel_delivery_requests
-                SET status = 'DELIVERING', delivery_started_at = ?
-                WHERE id = ? AND agent_id = ?
+                SET status = 'DELIVERING', delivery_started_at = %s
+                WHERE id = %s AND agent_id = %s
             ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), request_id, agent_id))
             
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             # Log activity
             self._log_activity(agent_id, 'DELIVERY_STARTED', {
@@ -94,17 +101,21 @@ class ActiveDeliveryService:
             return {'success': True, 'message': 'Delivery started'}
             
         except Exception as e:
+            conn.rollback()
             return {'success': False, 'error': str(e)}
+        finally:
+            cursor.close()
+            conn.close()
     
     def complete_delivery(self, agent_id, request_id, earnings_data=None):
         """Complete fuel delivery and calculate earnings"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
-            
             # Get delivery details (id is primary key of fuel_delivery_requests)
             cursor.execute('''
                 SELECT * FROM fuel_delivery_requests
-                WHERE id = ? AND agent_id = ?
+                WHERE id = %s AND agent_id = %s
             ''', (request_id, agent_id))
             
             delivery = cursor.fetchone()
@@ -128,26 +139,25 @@ class ActiveDeliveryService:
             # Update delivery status
             cursor.execute('''
                 UPDATE fuel_delivery_requests
-                SET status = 'COMPLETED', completed_at = ?
-                WHERE id = ? AND agent_id = ?
+                SET status = 'COMPLETED', completed_at = %s
+                WHERE id = %s AND agent_id = %s
             ''', (datetime.now().strftime('%Y-%m-%d %H:%M:%S'), request_id, agent_id))
             
             # Add to delivery history (with request_id for join to get address later)
             cursor.execute('''
                 INSERT INTO fuel_delivery_history
                 (agent_id, user_id, fuel_type, quantity, earnings, status, completed_at, request_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             ''', (agent_id, user_id, fuel_type, quantity, agent_earning, 'COMPLETED', datetime.now().strftime('%Y-%m-%d %H:%M:%S'), request_pk))
             
             # Update agent status to ONLINE_AVAILABLE
             cursor.execute('''
                 UPDATE fuel_delivery_agents
                 SET online_status = 'ONLINE_AVAILABLE', total_deliveries = total_deliveries + 1
-                WHERE id = ?
+                WHERE id = %s
             ''', (agent_id,))
             
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             # Log activity
             self._log_activity(agent_id, 'DELIVERY_COMPLETED', {
@@ -164,20 +174,29 @@ class ActiveDeliveryService:
             }
             
         except Exception as e:
+            conn.rollback()
             return {'success': False, 'error': str(e)}
+        finally:
+            cursor.close()
+            conn.close()
     
     def update_agent_location(self, agent_id, latitude, longitude):
         """Update agent live location"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
+            # Use PostgreSQL UPSERT pattern (INSERT ... ON CONFLICT)
             cursor.execute('''
-                INSERT OR REPLACE INTO fuel_agent_live_locations
+                INSERT INTO fuel_agent_live_locations
                 (agent_id, latitude, longitude, updated_at)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (agent_id) DO UPDATE SET
+                latitude = EXCLUDED.latitude,
+                longitude = EXCLUDED.longitude,
+                updated_at = EXCLUDED.updated_at
             ''', (agent_id, latitude, longitude, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             # Log activity
             self._log_activity(agent_id, 'LOCATION_UPDATED', {
@@ -188,23 +207,27 @@ class ActiveDeliveryService:
             return {'success': True, 'message': 'Location updated'}
             
         except Exception as e:
+            conn.rollback()
             return {'success': False, 'error': str(e)}
+        finally:
+            cursor.close()
+            conn.close()
     
     def upload_delivery_proof(self, agent_id, request_id, proof_image_path):
         """Upload delivery proof image"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
             if not os.path.exists(proof_image_path):
                 return {'success': False, 'error': 'Proof image not found'}
             
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 INSERT INTO fuel_delivery_proofs
                 (request_id, image_path, uploaded_at)
-                VALUES (?, ?, ?)
+                VALUES (%s, %s, %s)
             ''', (request_id, proof_image_path, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
             
             # Log activity
             self._log_activity(agent_id, 'PROOF_UPLOADED', {
@@ -215,22 +238,30 @@ class ActiveDeliveryService:
             return {'success': True, 'message': 'Proof uploaded successfully'}
             
         except Exception as e:
+            conn.rollback()
             return {'success': False, 'error': str(e)}
+        finally:
+            cursor.close()
+            conn.close()
     
     def _log_activity(self, agent_id, event_type, details=None):
         """Log agent activity"""
+        conn = self.db.get_conn()
+        cursor = conn.cursor()
         try:
-            cursor = self.db.conn.cursor()
             cursor.execute('''
                 INSERT INTO fuel_agent_activity_logs
                 (agent_id, activity_type, activity_details, timestamp)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             ''', (agent_id, event_type, str(details) if details else None, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             
-            self.db.conn.commit()
-            cursor.close()
+            conn.commit()
         except Exception:
+            conn.rollback()
             pass  # Don't fail main flow due to logging errors
+        finally:
+            cursor.close()
+            conn.close()
 
 # Create service instance
 active_delivery_service = ActiveDeliveryService()

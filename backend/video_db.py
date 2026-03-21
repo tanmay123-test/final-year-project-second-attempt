@@ -3,15 +3,17 @@
 # Handles video consultation sessions
 # --------------------------------------------------
 
-import sqlite3
+import os
+import psycopg2
+import psycopg2.extras
 import random
 import string
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
 from data.meeting_utils import generate_meeting_link as create_meeting_link
 
-DB_PATH = "data/expertease.db"
-
+load_dotenv()
 
 class VideoConsultDB:
 
@@ -20,31 +22,38 @@ class VideoConsultDB:
         self.create_table()
 
     def get_conn(self):
-        return sqlite3.connect(DB_PATH)
+        load_dotenv()
+        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
 
     # =====================================================
     # CREATE TABLE
     # =====================================================
     def create_table(self):
-        conn = self.get_conn()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
         cursor = conn.cursor()
-
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS video_sessions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            appointment_id INTEGER,
-            worker_id INTEGER,
-            user_id INTEGER,
-            room_id TEXT,
-            meeting_link TEXT,
-            doctor_otp TEXT,
-            otp_expiry TIMESTAMP,
-            status TEXT DEFAULT 'waiting'
-        )
-        """)
-
-        conn.commit()
-        conn.close()
+        try:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS video_sessions (
+                id SERIAL PRIMARY KEY,
+                appointment_id INTEGER UNIQUE,
+                worker_id INTEGER,
+                user_id INTEGER,
+                room_id TEXT,
+                meeting_link TEXT,
+                doctor_otp TEXT,
+                otp_expiry TIMESTAMP,
+                status TEXT DEFAULT 'waiting'
+            )
+            """)
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     # =====================================================
     # GENERATE OTP
@@ -60,84 +69,113 @@ class VideoConsultDB:
         Called when doctor ACCEPTS video consultation
         Creates meeting link + doctor OTP
         """
-
         meeting = create_meeting_link(appointment_id)
         otp = self.generate_otp()
-
         expiry = datetime.now() + timedelta(minutes=10)
 
-        conn = self.get_conn()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
         cursor = conn.cursor()
-
-        cursor.execute("""
-        INSERT INTO video_sessions
-        (appointment_id, worker_id, user_id, room_id,
-         meeting_link, doctor_otp, otp_expiry)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            appointment_id,
-            worker_id,
-            user_id,
-            meeting["room_id"],
-            meeting["jitsi_link"],
-            otp,
-            expiry
-        ))
-
-        conn.commit()
-        conn.close()
-
-        return otp  # returned so email can send it
+        try:
+            cursor.execute("""
+            INSERT INTO video_sessions
+            (appointment_id, worker_id, user_id, room_id,
+             meeting_link, doctor_otp, otp_expiry)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (appointment_id) DO UPDATE SET
+            worker_id = EXCLUDED.worker_id,
+            user_id = EXCLUDED.user_id,
+            room_id = EXCLUDED.room_id,
+            meeting_link = EXCLUDED.meeting_link,
+            doctor_otp = EXCLUDED.doctor_otp,
+            otp_expiry = EXCLUDED.otp_expiry,
+            status = 'waiting'
+            RETURNING id
+            """, (
+                appointment_id,
+                worker_id,
+                user_id,
+                meeting["room_id"],
+                meeting["jitsi_link"],
+                otp,
+                expiry
+            ))
+            conn.commit()
+            return otp
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     # =====================================================
     # VERIFY OTP + START CALL (DOCTOR SIDE)
     # =====================================================
     def verify_otp_and_start(self, appointment_id, otp):
-        conn = self.get_conn()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
         cursor = conn.cursor()
-        
-        cursor.execute("""
-        SELECT doctor_otp, otp_expiry FROM video_sessions
-        WHERE appointment_id=?
-        """, (appointment_id,))
-        
-        row = cursor.fetchone()
-        if not row:
-            conn.close()
-            return False
-        
-        saved_otp, expiry = row
-        expiry = datetime.fromisoformat(expiry)
-        
-        if datetime.now() > expiry:
-            conn.close()
-            return False
-        
-        cursor.execute("""
-        INSERT INTO video_sessions (appointment_id, worker_id, user_id, room_id, meeting_link, doctor_otp, otp_expiry, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
-        """, (appointment_id, worker_id, user_id, room_id, meeting_link, saved_otp, expiry))
+        try:
+            cursor.execute("""
+            SELECT doctor_otp, otp_expiry FROM video_sessions
+            WHERE appointment_id=%s
+            """, (appointment_id,))
+            
+            row = cursor.fetchone()
+            if not row:
+                return False
+            
+            saved_otp, expiry = row
+            # PostgreSQL returns datetime object for TIMESTAMP
+            if isinstance(expiry, str):
+                expiry = datetime.fromisoformat(expiry)
+            
+            if datetime.now() > expiry:
+                return False
+            
+            if saved_otp != otp:
+                return False
 
-        conn.commit()
-        conn.close()
-        return True
+            cursor.execute("""
+            UPDATE video_sessions 
+            SET status = 'active'
+            WHERE appointment_id = %s
+            """, (appointment_id,))
+
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
 
     # =====================================================
     # GET LINK FOR USER (JOIN CALL)
     # =====================================================
     def get_link(self, appointment_id):
-        conn = self.get_conn()
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
         cursor = conn.cursor()
-        
-        cursor.execute("""
-        SELECT meeting_link FROM video_sessions
-        WHERE appointment_id=? AND status='live'
-        """, (appointment_id,))
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if not row:
+        try:
+            cursor.execute("""
+            SELECT meeting_link FROM video_sessions
+            WHERE appointment_id=%s AND status='active'
+            """, (appointment_id,))
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            return row[0]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
             return None
-        
-        return row[0]
+        finally:
+            cursor.close()
+            conn.close()
