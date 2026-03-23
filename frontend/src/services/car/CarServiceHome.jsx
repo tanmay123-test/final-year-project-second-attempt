@@ -1,1026 +1,290 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Car, 
-  Wrench, 
-  Brain, 
-  Car as GarageIcon, 
-  CalendarCheck, 
-  User, 
-  MessageSquare, 
-  LogOut, 
-  LayoutDashboard, 
-  Search, 
-  Plus, 
-  Star, 
-  MapPin, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
-  UserPlus, 
-  Filter, 
-  ChevronRight,
-  Truck,
-  Droplet
-} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../shared/api';
 
 const CarServiceHome = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   
-  const [defaultCar, setDefaultCar] = useState(null);
+  const [cars, setCars] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('home');
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       try {
-        const token = localStorage.getItem('token');
+        setLoading(true);
         
-        // Set user name from auth context
-        console.log('AuthContext user data:', user);
-        if (user?.user_name || user?.name) {
-          setUserName(user.user_name || user.name);
-        } else {
-          // Try to get user info from localStorage as fallback
-          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-          console.log('Stored user data:', storedUser);
-          if (storedUser.user_name || storedUser.name) {
-            setUserName(storedUser.user_name || storedUser.name);
-          }
-        }
-        
-        // Fetch default car
-        try {
-          const carResponse = await api.get('/api/car/cars', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          
-          if (carResponse.data?.cars) {
-            // Get the default car from the cars list
-            const cars = carResponse.data.cars;
-            const defaultCar = cars.find(car => car.is_default) || cars[0];
-            setDefaultCar(defaultCar);
-          }
-        } catch (carError) {
-          console.log('Car profile not found or backend unavailable:', carError.message);
-          // Don't show error to user for missing profile, just continue
+        // Set user name
+        if (user) {
+          setUserName(user.user_name || user.name || 'User');
         }
 
-        // Fetch recent bookings
+        // Fetch cars
         try {
-          const bookingsResponse = await api.get('/api/car/jobs', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          
-          if (bookingsResponse.data?.jobs) {
-            setBookings(bookingsResponse.data.jobs.slice(0, 3)); // Show recent 3
+          const carResponse = await api.get('/api/car/cars');
+          if (carResponse.data?.cars) {
+            setCars(carResponse.data.cars);
           }
-        } catch (bookingsError) {
-          console.log('Bookings not available:', bookingsError.message);
-          // Don't show error to user for missing bookings, just continue
+        } catch (err) {
+          console.error('Error fetching cars:', err);
         }
-        
+
+        // Fetch bookings
+        try {
+          const bookingsResponse = await api.get('/api/car/jobs');
+          if (bookingsResponse.data?.jobs) {
+            setBookings(bookingsResponse.data.jobs);
+          }
+        } catch (err) {
+          console.error('Error fetching bookings:', err);
+        }
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        // Only show error for critical failures
-        if (error.code !== 'NETWORK_ERROR') {
-          console.error('Critical error:', error);
-        }
+        console.error('General error fetching home data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
+    fetchData();
   }, [user]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    logout();
-    navigate('/login');
-  };
-
-  const handleNavigation = (path) => {
-    navigate(path);
-  };
-
-  const getStatusColor = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'completed': return '#10B981';
-      case 'confirmed': return '#3B82F6';
-      case 'pending': return '#F59E0B';
-      case 'cancelled': return '#EF4444';
-      default: return '#6B7280';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status?.toLowerCase()) {
-      case 'completed': return <CheckCircle size={16} />;
-      case 'confirmed': return <CheckCircle size={16} />;
-      case 'pending': return <Clock size={16} />;
-      case 'cancelled': return <XCircle size={16} />;
-      default: return <AlertCircle size={16} />;
-    }
-  };
 
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading your dashboard...</p>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="car-service-home">
-      {/* Header */}
-      <header className="top-header">
-        <div className="header-left">
-          <div className="logo">
-            <Car size={30} />
-            <span>ExpertEase</span>
+    <div className="bg-surface font-body text-on-surface">
+      {/* TopNavBar */}
+      <nav className="bg-[#f8f9ff]/80 dark:bg-[#191c20]/80 backdrop-blur-xl fixed top-0 z-50 flex justify-between items-center w-full px-8 py-4 max-w-full shadow-[0_12px_32px_rgba(25,28,32,0.04)]">
+        <div className="flex items-center gap-8">
+          <span className="text-2xl font-black text-primary dark:text-[#675df9] italic font-headline cursor-pointer" onClick={() => navigate('/services')}>Expertease</span>
+          <div className="hidden md:flex gap-6 items-center">
+            <a className="text-slate-600 dark:text-slate-400 font-medium hover:text-primary transition-colors duration-200" href="#">Services</a>
+            <a className="text-slate-600 dark:text-slate-400 font-medium hover:text-primary transition-colors duration-200" href="#">Pricing</a>
+            <a className="text-slate-600 dark:text-slate-400 font-medium hover:text-primary transition-colors duration-200" href="#">Fleet</a>
+            <a className="text-slate-600 dark:text-slate-400 font-medium hover:text-primary transition-colors duration-200" href="#">Support</a>
           </div>
         </div>
-        <div className="header-right">
-          <button onClick={() => handleNavigation('/car-service/book-mechanic')} className="header-btn">
-            <Search size={20} />
-            Find Mechanic
+        <div className="flex items-center gap-4">
+          <button className="p-2 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+            <span className="material-symbols-outlined">notifications</span>
           </button>
-          <button onClick={() => handleNavigation('/car-service/profile')} className="header-btn">
-            <User size={20} />
-            Hi, {user?.name || 'User'}
+          <button className="p-2 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">
+            <span className="material-symbols-outlined">settings</span>
           </button>
-          <button onClick={handleLogout} className="logout-btn">
-            <LogOut size={20} />
-            Logout
-          </button>
-        </div>
-      </header>
-
-      <div className="main-layout">
-        {/* Sidebar */}
-        <aside className="sidebar">
-          <nav className="main-nav">
-            <ul>
-              <li className="active" onClick={() => handleNavigation('/car-service/home')}>
-                <LayoutDashboard size={20} />
-                <span>Home</span>
-              </li>
-              <li onClick={() => handleNavigation('/car-service/book-mechanic')}>
-                <Wrench size={20} />
-                <span>Book Mechanic</span>
-              </li>
-              <li onClick={() => handleNavigation('/car-service/ai-mechanic')}>
-                <Brain size={20} />
-                <span>AI Mechanic</span>
-              </li>
-              <li onClick={() => handleNavigation('/car-service/garage')}>
-                <GarageIcon size={20} />
-                <span>My Garage</span>
-              </li>
-              <li onClick={() => handleNavigation('/car-service/bookings')}>
-                <CalendarCheck size={20} />
-                <span>My Bookings</span>
-              </li>
-              <li onClick={() => handleNavigation('/car-service/profile')}>
-                <User size={20} />
-                <span>Profile</span>
-              </li>
-              <li onClick={() => handleNavigation('/car-service/ask-expert')}>
-                <MessageSquare size={20} />
-                <span>Ask Expert</span>
-              </li>
-            </ul>
-          </nav>
-          
-          <div className="sidebar-bottom">
-            <button onClick={handleLogout} className="sidebar-logout-btn">
-              <LogOut size={20} />
-              <span>Logout</span>
-            </button>
-            <button onClick={() => handleNavigation('/services')} className="back-to-services-btn">
-              <Car size={20} />
-              <span>Back to Services</span>
-            </button>
+          <div className="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant/15">
+            <img className="w-full h-full object-cover" alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2FVEsyOBRK5UUHT1TPVrU8Sl6ovcImYlJu90T59-ZKF1VGt6VHn5ASOkThdxeikc1onK_m205zf8s9vrxdUjOqIjy124SV4Dgu5Jn6Bet6Ta9XIWVPz9AxlgjItBDeid9NV199cLEhFwNM3zylRSe-XKIBGWm1qlQzXEKhLYYWHRbGaqA0r8g9PTZ6lSvWPTgrA_hj7aDBQYn3zSk43KxQTddB59GMQHlbThaZC3PUzGzKSv0tKWg0dkm8mb3Tm3KZ0Ak_ta7PMuN"/>
           </div>
-        </aside>
+        </div>
+      </nav>
 
-        {/* Main Content */}
-        <main className="main-content">
-          {/* Hero Section */}
-          <section className="hero-section">
-            <div className="hero-content">
-              <h1>Welcome back, {userName || 'User'}! 👋</h1>
-              <p>Manage your car services from one place</p>
+      <main className="pt-24 pb-32 px-6 md:px-12 max-w-7xl mx-auto">
+        {/* Welcome Banner */}
+        <section className="mb-12 relative overflow-hidden rounded-xl bg-primary px-8 py-16 text-on-primary">
+          <div className="relative z-10 max-w-2xl">
+            <h1 className="font-headline text-4xl md:text-5xl font-extrabold tracking-tight mb-4">Welcome back, {userName}!</h1>
+            <p className="text-on-primary/80 text-lg leading-relaxed mb-8">
+              {cars.length > 0 
+                ? `Your ${cars[0].brand} ${cars[0].model} is ready for its next checkup. Schedule a session with our premium experts today.`
+                : "Your vehicle's health is our priority. Add your first car to get started with our premium diagnostics."}
+            </p>
+            <div className="flex gap-4">
+              <button 
+                onClick={() => navigate('/car-service/book-mechanic')}
+                className="bg-surface-container-lowest text-primary font-bold px-6 py-3 rounded-lg hover:bg-surface-bright transition-all active:scale-95 shadow-lg"
+              >
+                Schedule Checkup
+              </button>
+              <button 
+                onClick={() => navigate('/car-service/my-bookings')}
+                className="bg-primary-container text-on-primary-container font-bold px-6 py-3 rounded-lg hover:opacity-90 transition-all border border-white/10"
+              >
+                View Reports
+              </button>
             </div>
-          </section>
+          </div>
+          <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
+            <span className="material-symbols-outlined text-[20rem] absolute -right-20 -top-20" style={{ fontVariationSettings: "'FILL' 1" }}>directions_car</span>
+          </div>
+        </section>
 
-          {/* Default Car Section */}
-          {defaultCar ? (
-            <section className="default-car-section">
-              <h2>Your Default Car</h2>
-              <div className="car-card">
-                <div className="car-header">
-                  <div className="car-info">
-                    <h3>{defaultCar.brand} {defaultCar.model}</h3>
-                    <div className="car-details">
-                      <span className="car-detail">
-                        <span className="label">Year:</span>
-                        <span className="value">{defaultCar.year}</span>
-                      </span>
-                      <span className="car-detail">
-                        <span className="label">Fuel:</span>
-                        <span className="value">{defaultCar.fuel_type}</span>
-                      </span>
-                      <span className="car-detail">
-                        <span className="label">Reg:</span>
-                        <span className="value">{defaultCar.registration_number}</span>
-                      </span>
+        {/* Premium Services Grid */}
+        <section className="mb-16">
+          <h2 className="font-headline text-2xl font-extrabold text-on-surface mb-8 tracking-tight">Premium Services</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Card 1: Mechanic */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl shadow-[0_12px_32px_rgba(25,28,32,0.04)] group hover:shadow-xl transition-all border border-outline-variant/10">
+              <div className="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-3xl">build</span>
+              </div>
+              <h3 className="font-headline text-xl font-bold mb-2">Mechanic</h3>
+              <p className="text-on-surface-variant text-sm mb-6 leading-relaxed">Full engine diagnostic, suspension repairs, and brake services by certified pros.</p>
+              <button 
+                onClick={() => navigate('/car-service/book-mechanic')}
+                className="w-full bg-primary py-3 rounded-lg text-on-primary font-bold text-sm tracking-wide hover:bg-primary-container transition-colors"
+              >
+                Book Now
+              </button>
+            </div>
+
+            {/* Card 2: Fuel Delivery */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl shadow-[0_12px_32px_rgba(25,28,32,0.04)] group hover:shadow-xl transition-all border border-outline-variant/10">
+              <div className="w-14 h-14 bg-secondary/10 rounded-lg flex items-center justify-center text-secondary mb-6 group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-3xl">local_gas_station</span>
+              </div>
+              <h3 className="font-headline text-xl font-bold mb-2">Fuel Delivery</h3>
+              <p className="text-on-surface-variant text-sm mb-6 leading-relaxed">Stranded? We deliver high-grade fuel directly to your location in minutes.</p>
+              <button 
+                onClick={() => navigate('/car-service/fuel-delivery')}
+                className="w-full bg-primary py-3 rounded-lg text-on-primary font-bold text-sm tracking-wide hover:bg-primary-container transition-colors"
+              >
+                Book Now
+              </button>
+            </div>
+
+            {/* Card 3: Tow Truck */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl shadow-[0_12px_32px_rgba(25,28,32,0.04)] group hover:shadow-xl transition-all border border-outline-variant/10">
+              <div className="w-14 h-14 bg-on-surface/5 rounded-lg flex items-center justify-center text-on-surface mb-6 group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-3xl">auto_towing</span>
+              </div>
+              <h3 className="font-headline text-xl font-bold mb-2">Tow Truck</h3>
+              <p className="text-on-surface-variant text-sm mb-6 leading-relaxed">24/7 emergency towing with flatbed options for luxury and electric vehicles.</p>
+              <button 
+                onClick={() => navigate('/car-service/book-tow-truck')}
+                className="w-full bg-primary py-3 rounded-lg text-on-primary font-bold text-sm tracking-wide hover:bg-primary-container transition-colors"
+              >
+                Book Now
+              </button>
+            </div>
+
+            {/* Card 4: Automobile Expert */}
+            <div className="bg-surface-container-lowest p-6 rounded-xl shadow-[0_12px_32px_rgba(25,28,32,0.04)] group hover:shadow-xl transition-all border border-outline-variant/10">
+              <div className="w-14 h-14 bg-tertiary/10 rounded-lg flex items-center justify-center text-tertiary mb-6 group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-3xl">psychology</span>
+              </div>
+              <h3 className="font-headline text-xl font-bold mb-2">Automobile Expert</h3>
+              <p className="text-on-surface-variant text-sm mb-6 leading-relaxed">Pre-purchase inspections and expert consulting for performance tuning.</p>
+              <button 
+                onClick={() => navigate('/car-service/ask-expert')}
+                className="w-full bg-primary py-3 rounded-lg text-on-primary font-bold text-sm tracking-wide hover:bg-primary-container transition-colors"
+              >
+                Book Now
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Two Column Layout for Garage and History */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* My Garage Section */}
+          <section className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-headline text-2xl font-extrabold text-on-surface tracking-tight">My Garage</h2>
+              <button 
+                onClick={() => navigate('/car-service/garage')}
+                className="text-primary font-bold text-sm hover:underline"
+              >
+                Add New Car
+              </button>
+            </div>
+            
+            {cars.length === 0 ? (
+              <div className="bg-surface-container-low rounded-xl p-12 text-center border-2 border-dashed border-outline-variant/30">
+                <span className="material-symbols-outlined text-6xl text-on-surface-variant mb-4 opacity-20">directions_car</span>
+                <p className="text-on-surface-variant">No cars in your garage yet. Add one to get personalized service suggestions.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {cars.map((car, index) => (
+                  <div key={index} className="bg-surface-container-low rounded-xl p-6 flex flex-col md:flex-row items-center gap-8 border border-transparent hover:border-outline-variant/20 transition-all">
+                    <div className="w-full md:w-48 h-32 rounded-lg bg-surface-container-highest overflow-hidden flex items-center justify-center">
+                      <span className="material-symbols-outlined text-5xl text-on-surface-variant">directions_car</span>
                     </div>
-                  </div>
-                  <div className="default-badge">
-                    <Star size={16} />
-                    <span>Default</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-          ) : (
-            <section className="no-car-section">
-              <h2>Your Default Car</h2>
-              <div className="no-car-card">
-                <div className="no-car-content">
-                  <GarageIcon size={40} />
-                  <h3>No car added yet</h3>
-                  <p>Add your first car to get started with car services</p>
-                  <button 
-                    onClick={() => handleNavigation('/car-service/garage')}
-                    className="add-car-btn"
-                  >
-                    <Plus size={16} />
-                    Add Your First Car
-                  </button>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Quick Actions */}
-          <section className="quick-actions">
-            <h2>Quick Actions</h2>
-            <div className="actions-grid">
-              <button 
-                onClick={() => handleNavigation('/car-service/book-mechanic')} 
-                className="action-card"
-              >
-                <div className="action-icon">
-                  <Wrench size={32} />
-                </div>
-                <h3>Book Mechanic</h3>
-                <p>Find and book a mechanic</p>
-              </button>
-              
-              <button 
-                onClick={() => handleNavigation('/car-service/garage')} 
-                className="action-card"
-              >
-                <div className="action-icon">
-                  <GarageIcon size={32} />
-                </div>
-                <h3>My Garage</h3>
-                <p>Manage your vehicles</p>
-              </button>
-              
-              <button 
-                onClick={() => handleNavigation('/car-service/ai-mechanic')} 
-                className="action-card"
-              >
-                <div className="action-icon">
-                  <Brain size={32} />
-                </div>
-                <h3>AI Mechanic</h3>
-                <p>Get AI assistance</p>
-              </button>
-              
-              <button 
-                onClick={() => handleNavigation('/car-service/book-tow-truck')} 
-                className="action-card"
-              >
-                <div className="action-icon">
-                  <Truck size={32} />
-                </div>
-                <h3>Book Tow Truck Operator</h3>
-                <p>Request towing service</p>
-              </button>
-              
-              <button 
-                onClick={() => handleNavigation('/car-service/bookings')} 
-                className="action-card"
-              >
-                <div className="action-icon">
-                  <CalendarCheck size={32} />
-                </div>
-                <h3>My Bookings</h3>
-                <p>View all bookings</p>
-              </button>
-              
-              <button 
-                onClick={() => handleNavigation('/car-service/fuel-delivery')} 
-                className="action-card"
-              >
-                <div className="action-icon">
-                  <Droplet size={32} />
-                </div>
-                <h3>Fuel Delivery Agent</h3>
-                <p>Request fuel delivery</p>
-              </button>
-            </div>
-          </section>
-
-          {/* Recent Bookings */}
-          <section className="recent-bookings">
-            <div className="section-header">
-              <h2>Recent Bookings</h2>
-              {bookings.length > 0 && (
-                <button 
-                  onClick={() => handleNavigation('/car-service/bookings')}
-                  className="view-all-btn"
-                >
-                  View All
-                  <ChevronRight size={16} />
-                </button>
-              )}
-            </div>
-            {bookings.length > 0 ? (
-              <div className="bookings-list">
-                {bookings.map((booking) => (
-                  <div key={booking.id} className="booking-item">
-                    <div className="booking-status">
-                      <div 
-                        className="status-icon" 
-                        style={{ color: getStatusColor(booking.status) }}
-                      >
-                        {getStatusIcon(booking.status)}
+                    <div className="flex-grow text-center md:text-left">
+                      <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+                        <h4 className="text-xl font-bold">{car.brand} {car.model}</h4>
+                        <span className="bg-tertiary/10 text-tertiary text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider self-center">
+                          {car.fuel_type || 'Regular'}
+                        </span>
                       </div>
-                      <span 
-                        className="status-text"
-                        style={{ color: getStatusColor(booking.status) }}
-                      >
-                        {booking.status}
-                      </span>
-                    </div>
-                    <div className="booking-details">
-                      <h4>{booking.service_type || 'General Service'}</h4>
-                      <p>{booking.mechanic_name || 'Mechanic'}</p>
-                      <div className="booking-meta">
-                        <span className="date">
-                          <Clock size={14} />
-                          {new Date(booking.date).toLocaleDateString()}
-                        </span>
-                        <span className="location">
-                          <MapPin size={14} />
-                          {booking.location || 'Location'}
-                        </span>
+                      <p className="text-on-surface-variant text-sm mb-4">Plate: {car.registration_number || 'N/A'}</p>
+                      <div className="flex justify-center md:justify-start gap-3">
+                        <button className="text-xs font-bold uppercase tracking-widest text-primary border border-primary/20 px-4 py-2 rounded-lg hover:bg-primary/5 transition-colors">Diagnostics</button>
+                        <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/30 px-4 py-2 rounded-lg hover:bg-surface-container-high transition-colors">History</button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="no-bookings">
-                <CalendarCheck size={40} />
-                <h3>No recent bookings</h3>
-                <p>When you book services, they will appear here</p>
-              </div>
             )}
           </section>
-        </main>
-      </div>
 
-      {/* Bottom Navigation */}
-      <div className="bottom-navigation">
-        <button 
-          onClick={() => handleNavigation('/car-service/home')}
-          className={`nav-item ${activeTab === 'home' ? 'active' : ''}`}
-        >
-          <LayoutDashboard size={24} />
-          <span>Home</span>
-        </button>
-        
-        <button 
-          onClick={() => handleNavigation('/car-service/book-mechanic')}
-          className={`nav-item ${activeTab === 'book' ? 'active' : ''}`}
-        >
-          <Wrench size={24} />
-          <span>Book</span>
-        </button>
-        
-        <button 
-          onClick={() => handleNavigation('/car-service/garage')}
-          className={`nav-item ${activeTab === 'garage' ? 'active' : ''}`}
-        >
-          <GarageIcon size={24} />
-          <span>Garage</span>
-        </button>
-        
-        <button 
-          onClick={() => handleNavigation('/car-service/ai-mechanic')}
-          className={`nav-item ${activeTab === 'ai' ? 'active' : ''}`}
-        >
-          <Brain size={24} />
-          <span>AI</span>
-        </button>
-        
-        <button 
-          onClick={() => handleNavigation('/car-service/bookings')}
-          className={`nav-item ${activeTab === 'bookings' ? 'active' : ''}`}
-        >
-          <CalendarCheck size={24} />
-          <span>Bookings</span>
-        </button>
-        
-        <button 
-          onClick={() => handleNavigation('/car-service/profile')}
-          className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-        >
-          <User size={24} />
-          <span>Profile</span>
-        </button>
-      </div>
-
-      <style>{`
-        .car-service-home {
-          min-height: 100vh;
-          background: #f8f9fa;
-        }
-
-        /* Header Styles */
-        .top-header {
-          background: white;
-          padding: 1rem 2rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          position: sticky;
-          top: 0;
-          z-index: 100;
-        }
-
-        .header-left .logo {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-weight: 700;
-          font-size: 1.25rem;
-          color: #7c3aed;
-        }
-
-        .header-right {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .header-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          border: 1px solid #e5e7eb;
-          background: white;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .header-btn:hover {
-          background: #f3f4f6;
-          border-color: #7c3aed;
-        }
-
-        .logout-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          background: #ef4444;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-
-        .logout-btn:hover {
-          background: #dc2626;
-        }
-
-        /* Layout */
-        .main-layout {
-          display: flex;
-          min-height: calc(100vh - 70px);
-        }
-
-        /* Sidebar */
-        .sidebar {
-          width: 280px;
-          background: white;
-          border-right: 1px solid #e5e7eb;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .main-nav ul {
-          list-style: none;
-          padding: 1.5rem 0;
-          margin: 0;
-        }
-
-        .main-nav li {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.75rem 1.5rem;
-          cursor: pointer;
-          transition: background 0.2s;
-          color: #6b7280;
-        }
-
-        .main-nav li:hover {
-          background: #f3f4f6;
-        }
-
-        .main-nav li.active {
-          background: linear-gradient(135deg, #f3f4f6 0%, #ede9fe 100%);
-          color: #7c3aed;
-          border-right: 3px solid #7c3aed;
-          font-weight: 600;
-        }
-
-        .sidebar-bottom {
-          margin-top: auto;
-          padding: 1rem;
-          border-top: 1px solid #e5e7eb;
-        }
-
-        .sidebar-logout-btn, .back-to-services-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          width: 100%;
-          padding: 0.75rem;
-          margin-bottom: 0.5rem;
-          border: 1px solid #e5e7eb;
-          background: white;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .sidebar-logout-btn:hover {
-          background: #fef2f2;
-          border-color: #ef4444;
-          color: #ef4444;
-        }
-
-        .back-to-services-btn:hover {
-          background: #f3f4f6;
-          border-color: #7c3aed;
-          color: #7c3aed;
-        }
-
-        /* Main Content */
-        .main-content {
-          flex: 1;
-          padding: 2rem;
-          padding-bottom: 6rem; /* Add bottom padding for navigation */
-          overflow-y: auto;
-        }
-
-        /* Hero Section */
-        .hero-section {
-          margin-bottom: 2rem;
-        }
-
-        .hero-content h1 {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .hero-content p {
-          font-size: 1.1rem;
-          color: #6b7280;
-          margin: 0;
-        }
-
-        /* Default Car Section */
-        .default-car-section {
-          margin-bottom: 2rem;
-        }
-
-        .default-car-section h2 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 1rem;
-        }
-
-        .car-card {
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          border-radius: 16px;
-          padding: 1.5rem;
-          color: white;
-          position: relative;
-          overflow: hidden;
-          box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
-        }
-
-        .car-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-
-        .car-info h3 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-          text-transform: capitalize;
-        }
-
-        .car-details {
-          display: flex;
-          gap: 2rem;
-          flex-wrap: wrap;
-        }
-
-        .car-detail {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .car-detail .label {
-          font-size: 0.875rem;
-          opacity: 0.8;
-          margin-bottom: 0.25rem;
-        }
-
-        .car-detail .value {
-          font-size: 1rem;
-          font-weight: 600;
-        }
-
-        .default-badge {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          background: rgba(255,255,255,0.2);
-          padding: 0.5rem 1rem;
-          border-radius: 20px;
-          font-size: 0.875rem;
-          font-weight: 500;
-        }
-
-        .no-car-section {
-          margin-bottom: 2rem;
-        }
-
-        .no-car-section h2 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 1rem;
-        }
-
-        .no-car-card {
-          background: white;
-          border-radius: 16px;
-          padding: 2rem;
-          border: 2px dashed #e5e7eb;
-          text-align: center;
-        }
-
-        .no-car-content {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .no-car-content h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 0;
-        }
-
-        .no-car-content p {
-          color: #6b7280;
-          margin: 0;
-        }
-
-        .no-car-content .add-car-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          background: #7c3aed;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-
-        .no-car-content .add-car-btn:hover {
-          background: #6d28d9;
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-          margin-bottom: 2rem;
-        }
-
-        .quick-actions h2 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 1rem;
-        }
-
-        .actions-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1rem;
-        }
-
-        .action-card {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 1.5rem;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.2s;
-          border: none;
-        }
-
-        .action-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-          border-color: #7c3aed;
-        }
-
-        .action-icon {
-          width: 60px;
-          height: 60px;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1rem;
-          color: white;
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
-
-        .action-card h3 {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .action-card p {
-          font-size: 0.875rem;
-          color: #6b7280;
-          margin: 0;
-        }
-
-        /* Recent Bookings */
-        .recent-bookings {
-          background: white;
-          border-radius: 12px;
-          padding: 1.5rem;
-          border: 1px solid #e5e7eb;
-        }
-
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-        }
-
-        .section-header h2 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .view-all-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          color: #7c3aed;
-          background: none;
-          border: none;
-          font-weight: 500;
-          cursor: pointer;
-          transition: color 0.2s;
-        }
-
-        .view-all-btn:hover {
-          color: #6d28d9;
-        }
-
-        .bookings-list {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .booking-item {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          padding: 1rem;
-          background: #f9fafb;
-          border-radius: 8px;
-          border-left: 4px solid #e5e7eb;
-        }
-
-        .booking-status {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          min-width: 80px;
-        }
-
-        .booking-details h4 {
-          font-size: 1rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.25rem;
-        }
-
-        .booking-details p {
-          font-size: 0.875rem;
-          color: #6b7280;
-          margin-bottom: 0.5rem;
-        }
-
-        .booking-meta {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .booking-meta span {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: 0.75rem;
-          color: #9ca3af;
-        }
-
-        .no-bookings {
-          text-align: center;
-          padding: 3rem 2rem;
-          background: white;
-          border-radius: 12px;
-          border: 2px dashed #e5e7eb;
-        }
-
-        .no-bookings h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 1rem 0 0.5rem;
-        }
-
-        .no-bookings p {
-          color: #6b7280;
-          margin: 0;
-        }
-
-        .no-bookings svg {
-          color: #7c3aed;
-          opacity: 0.5;
-        }
-
-        /* Bottom Navigation */
-        .bottom-navigation {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: white;
-          border-top: 1px solid #e5e7eb;
-          display: flex;
-          justify-content: space-around;
-          padding: 0.5rem 0;
-          z-index: 1000;
-          box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        }
-
-        .nav-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.25rem;
-          padding: 0.5rem 1rem;
-          background: none;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s;
-          color: #6b7280;
-          text-decoration: none;
-          font-size: 0.75rem;
-        }
-
-        .nav-item:hover {
-          background: #f3f4f6;
-          color: #7c3aed;
-        }
-
-        .nav-item.active {
-          color: #7c3aed;
-          background: #ede9fe;
-        }
-
-        .nav-item svg {
-          transition: all 0.2s;
-        }
-
-        .nav-item.active svg {
-          transform: scale(1.1);
-        }
-
-        /* Loading */
-        .loading-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 50vh;
-          color: #7c3aed;
-        }
-
-        .spinner {
-          width: 40px;
-          height: 40px;
-          border: 4px solid #f3e8ff;
-          border-top: 4px solid #7c3aed;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-          .main-layout {
-            flex-direction: column;
-          }
-          
-          .sidebar {
-            width: 100%;
-            order: 2;
-          }
-          
-          .main-content {
-            order: 1;
-            padding: 1rem;
-          }
-          
-          .actions-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .car-details {
-            flex-direction: column;
-            gap: 1rem;
-          }
-        }
-      `}</style>
+          {/* Booking History Section */}
+          <section className="lg:col-span-1">
+            <h2 className="font-headline text-2xl font-extrabold text-on-surface mb-8 tracking-tight">Booking History</h2>
+            <div className="bg-surface-container-lowest rounded-xl shadow-[0_12px_32px_rgba(25,28,32,0.04)] p-6 space-y-6">
+              {bookings.length === 0 ? (
+                <div className="text-center py-8">
+                  <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-2 opacity-20">history</span>
+                  <p className="text-xs text-on-surface-variant">No booking history available yet.</p>
+                </div>
+              ) : (
+                bookings.slice(0, 5).map((booking, index) => (
+                  <div key={index} className="flex items-start gap-4 pb-6 border-b border-outline-variant/10 last:border-0">
+                    <div className="p-2 bg-surface-container-low rounded-lg text-primary">
+                      <span className="material-symbols-outlined">{booking.service_type === 'Fuel' ? 'local_gas_station' : 'build'}</span>
+                    </div>
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="font-bold text-sm">{booking.service_type || 'Car Service'}</p>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter ${
+                          booking.status === 'Completed' ? 'bg-tertiary/10 text-tertiary' : 'bg-secondary-container/15 text-secondary'
+                        }`}>
+                          {booking.status || 'Pending'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant">{booking.car_model || 'Vehicle'} • {new Date(booking.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+              <button 
+                onClick={() => navigate('/car-service/my-bookings')}
+                className="w-full text-center text-sm font-bold text-primary py-2 hover:bg-primary/5 rounded-lg transition-colors"
+              >
+                View All History
+              </button> 
+            </div> 
+          </section> 
+        </div> 
+      </main> 
+
+      {/* BottomNavBar for Mobile */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-[#f8f9ff]/90 dark:bg-[#191c20]/90 backdrop-blur-lg rounded-t-xl shadow-[0_-4px_12px_rgba(25,28,32,0.04)] border-t border-[#c7c4d8]/15"> 
+        <button onClick={() => navigate('/car-service/home')} className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-xl px-4 py-1 active:scale-90 duration-150"> 
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span> 
+          <span className="font-label text-[10px] uppercase tracking-[0.05em] font-bold">Home</span> 
+        </button> 
+        <button onClick={() => navigate('/car-service/my-bookings')} className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-primary/5 active:scale-90 duration-150"> 
+          <span className="material-symbols-outlined">car_repair</span> 
+          <span className="font-label text-[10px] uppercase tracking-[0.05em] font-bold">Bookings</span> 
+        </button> 
+        <button className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-primary/5 active:scale-90 duration-150"> 
+          <span className="material-symbols-outlined">query_stats</span> 
+          <span className="font-label text-[10px] uppercase tracking-[0.05em] font-bold">Status</span> 
+        </button> 
+        <button className="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-primary/5 active:scale-90 duration-150"> 
+          <span className="material-symbols-outlined">menu</span> 
+          <span className="font-label text-[10px] uppercase tracking-[0.05em] font-bold">Menu</span> 
+        </button> 
+      </nav> 
     </div>
   );
 };

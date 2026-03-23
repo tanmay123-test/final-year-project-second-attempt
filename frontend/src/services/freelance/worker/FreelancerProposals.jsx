@@ -16,7 +16,7 @@ import {
   Check,
   X
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelancerDashboard.css';
 
 const FreelancerProposals = () => {
@@ -47,10 +47,7 @@ const FreelancerProposals = () => {
   const fetchProposals = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/freelancer/proposals/my-proposals?status=${statusFilter.toLowerCase()}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/freelancer/proposals/my-proposals?status=${statusFilter.toLowerCase()}`);
       if (response.data.success) {
         setProposals(response.data.proposals);
       }
@@ -64,10 +61,7 @@ const FreelancerProposals = () => {
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/freelancer/bookings/direct', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/freelancer/bookings/direct');
       if (response.data.success) {
         setBookings(response.data.bookings);
       }
@@ -81,10 +75,7 @@ const FreelancerProposals = () => {
   const handleWithdraw = async (id) => {
     if (!window.confirm('Are you sure you want to withdraw this proposal?')) return;
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.delete(`http://localhost:5000/api/freelancer/proposals/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.delete(`/api/freelancer/proposals/${id}`);
       if (response.data.success) {
         setProposals(proposals.filter(p => p.id !== id));
       }
@@ -95,10 +86,7 @@ const FreelancerProposals = () => {
 
   const handleBookingAction = async (id, action) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put(`http://localhost:5000/api/freelancer/bookings/${id}/${action}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.put(`/api/freelancer/bookings/${id}/${action}`, {});
       if (response.data.success) {
         // Update local state
         setBookings(bookings.map(b => 

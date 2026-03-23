@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Wrench, Mail, Phone, MapPin, Calendar, Award, FileText, User, Lock, Eye, EyeOff, AlertCircle, CheckCircle, Camera, Upload, ArrowLeft } from 'lucide-react';
+import api from '../../shared/api';
 
 const MechanicAuth = () => {
   const navigate = useNavigate();
@@ -61,19 +62,12 @@ const MechanicAuth = () => {
       if (isLogin) {
         const payload = { email: formData.email, password: formData.password };
         
-        const response = await fetch(`http://127.0.0.1:5000${endpoint}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-        console.log('Login response status:', response.status);
+        const response = await api.post(endpoint, payload);
+        const data = response.data;
+        
         console.log('Login response data:', data);
 
-        if (response.ok) {
+        if (data.token) {
           // Store token and user data
           localStorage.setItem('workerToken', data.token);
           localStorage.setItem('workerData', JSON.stringify(data.mechanic));
@@ -81,25 +75,14 @@ const MechanicAuth = () => {
           // Show success message like CLI
           alert(`✅ Login successful! Welcome back, ${data.mechanic?.name || 'Mechanic'}!`);
           
+          // Store workerId and type
+          localStorage.setItem('workerId', data.mechanic?.id);
+          localStorage.setItem('workerType', 'mechanic');
+          
           // Navigate to dashboard
-          navigate('/worker/car/homepage');
+          navigate('/worker/car/mechanic/dashboard');
         } else {
-          console.log('Login failed - status:', response.status);
-          console.log('Login failed - data:', data);
-          // Check if it's an approval pending error
-          if (data.requires_approval) {
-            // Show approval pending message and freeze login
-            setError('⏳ Your account is pending admin approval. Please wait for approval before logging in.');
-            // Disable form inputs
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => input.disabled = true);
-            // Disable submit button
-            const submitBtn = document.querySelector('.submit-button');
-            if (submitBtn) submitBtn.disabled = true;
-          } else {
-            console.error('Login error:', data);
-            setError(data.error || 'Login failed');
-          }
+          setError(data.error || 'Login failed');
         }
       } else {
         // For signup, show security declaration first
@@ -159,25 +142,16 @@ const MechanicAuth = () => {
       }
 
       console.log('Sending FormData to:', endpoint);
-      console.log('FormData contents:');
-      for (let [key, value] of formDataToSend.entries()) {
-        console.log(key, value);
-      }
-
-      const response = await fetch(`http://127.0.0.1:5000${endpoint}`, {
-        method: 'POST',
+      
+      const response = await api.post(endpoint, formDataToSend, {
         headers: {
-          'Accept': 'application/json',
-        },
-        body: formDataToSend
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (data.success || data.worker_id || data.mechanic_id) {
         // Store signup data and show approval status
         setSignupData(data);
         setShowSecurityDeclaration(false);

@@ -10,8 +10,7 @@ import {
   Zap,
   Target,
 } from 'lucide-react';
-
-const API_BASE = 'http://localhost:5000/api/fuel-delivery';
+import api from '../../shared/api';
 
 const FuelDeliveryPerformance = () => {
   const [data, setData] = useState(null);
@@ -28,13 +27,13 @@ const FuelDeliveryPerformance = () => {
         setLoading(false);
         return;
       }
-      const res = await fetch(`${API_BASE}/performance/${workerId}`);
-      if (!res.ok) {
+      const res = await api.get(`/api/fuel-delivery/performance/${workerId}`);
+      if (!res.data) {
         setData(null);
         setLoading(false);
         return;
       }
-      const json = await res.json();
+      const json = res.data;
       if (json.success && json.performance) {
         setData(json.performance);
       } else {

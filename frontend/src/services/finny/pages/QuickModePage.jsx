@@ -219,231 +219,251 @@ const QuickModePage = () => {
   };
 
   return (
-    <div className="quick-mode-page">
-      {/* Header */}
-      <div className="header">
-        <div className="header-content">
-          <button 
-            className="back-button" 
-            onClick={() => navigate('/finny')}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="header-text">
-            <h1 className="header-title">Quick Mode</h1>
-            <p className="header-subtitle">Fast & Simple tracking</p>
-          </div>
+    <div className="finny-page-layout">
+      {/* Sidebar for Desktop */}
+      <aside className="finny-sidebar">
+        <div className="sidebar-header">
+          <h1 className="sidebar-title">Finny</h1>
+          <p className="sidebar-subtitle">Smart Tracker</p>
         </div>
-      </div>
-
-      {/* Mode Switch Bar */}
-      <div className="mode-switch-bar">
-        <div className="tabs-container">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`tab ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => handleTabClick(tab.id)}
-            >
-              <tab.icon size={16} />
-              <span>{tab.label}</span>
-            </button>
+        <nav className="sidebar-nav">
+          {bottomNavItems.map((item, index) => (
+            <div key={index} className={`sidebar-item ${item.active ? 'active' : ''}`}>
+              <item.icon size={20} color={item.active ? '#F4B400' : '#6B7280'} />
+              <span className="sidebar-label">{item.label}</span>
+            </div>
           ))}
-        </div>
-      </div>
+        </nav>
+      </aside>
 
-      {/* Main Section */}
-      <div className="main-section">
-        {activeTab === 'quick-add' && (
-          <>
-            <div className="center-text">
-              Add a new transaction
-            </div>
-
-            {/* Recent Transactions */}
-            <div className="recent-transactions">
-              <h2 className="section-title">Recent</h2>
-              
-              {loading ? (
-                <div className="loading-state">
-                  <div className="loading-spinner"></div>
-                  <p>Loading transactions...</p>
-                </div>
-              ) : error ? (
-                <div className="error-state">
-                  <p>{error}</p>
-                  <button onClick={fetchTransactions} className="retry-button">Retry</button>
-                </div>
-              ) : (
-                <div className="transaction-list">
-                  {recentTransactions.map((transaction) => (
-                    <div key={transaction.id} className="transaction-card">
-                      <div className="transaction-left">
-                        <div 
-                          className="category-dot" 
-                          style={{ backgroundColor: transaction.categoryColor }}
-                        ></div>
-                      </div>
-                      <div className="transaction-middle">
-                        <div className="merchant-name">{transaction.merchant}</div>
-                        <div className="transaction-meta">
-                          <span className="category-text">{transaction.category}</span>
-                          <span className="date-text">{transaction.date}</span>
-                        </div>
-                      </div>
-                      <div className="transaction-right">
-                        <div className="amount">
-                          ₹{Math.abs(transaction.amount).toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {activeTab === 'transactions' && (
-          <TransactionsList
-            transactions={allTransactions}
-            loading={transactionsLoading}
-            onSearch={setSearchTerm}
-            onFilter={setFilterCategory}
-            searchTerm={searchTerm}
-            filterCategory={filterCategory}
-          />
-        )}
-
-        {activeTab === 'summary' && (
-          <div className="center-text">
-            <h3>Summary View</h3>
-            <p>Monthly spending analysis and insights coming soon...</p>
-            <button 
-              className="navigate-button"
-              onClick={() => navigate('/finny/summary')}
-            >
-              Open Full Summary
-            </button>
-          </div>
-        )}
-
-        {activeTab === 'analytics' && (
-          <div className="center-text">
-            <h3>Analytics View</h3>
-            <p>Advanced financial analytics coming soon...</p>
-            <button 
-              className="navigate-button"
-              onClick={() => navigate('/finny/analytics')}
-            >
-              Open Full Analytics
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Add Transaction Button */}
-      <button 
-        className="add-transaction-button"
-        onClick={() => setShowModal(true)}
-      >
-        <Plus size={32} color="#3A2A00" />
-      </button>
-
-      {/* Transaction Input Modal */}
-      {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Add Transaction</h3>
+      <div className="finny-page-content">
+        <div className="quick-mode-page">
+          {/* Header */}
+          <div className="header">
+            <div className="header-content">
               <button 
-                className="close-button"
-                onClick={() => setShowModal(false)}
+                className="back-button" 
+                onClick={() => navigate('/finny')}
               >
-                ×
+                <ArrowLeft size={20} />
               </button>
+              <div className="header-text">
+                <h1 className="header-title">Quick Mode</h1>
+                <p className="header-subtitle">Fast & Simple tracking</p>
+              </div>
             </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Amount</label>
-                <input 
-                  type="number" 
-                  placeholder="Enter amount" 
-                  value={transactionForm.amount}
-                  onChange={(e) => handleFormChange('amount', e.target.value)}
-                />
-              </div>
-              <div className="form-group">
-                <label>Merchant</label>
-                <input 
-                  type="text" 
-                  placeholder="Enter merchant name" 
-                  value={transactionForm.merchant}
-                  onChange={(e) => handleFormChange('merchant', e.target.value)}
-                />
-              </div>
-              <div className="form-group">
-                <label>Category</label>
-                <select 
-                  value={transactionForm.category}
-                  onChange={(e) => handleFormChange('category', e.target.value)}
+          </div>
+
+          {/* Mode Switch Bar */}
+          <div className="mode-switch-bar">
+            <div className="tabs-container">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  className={`tab ${activeTab === tab.id ? 'active' : ''}`}
+                  onClick={() => handleTabClick(tab.id)}
                 >
-                  <option value="Food">Food</option>
-                  <option value="Shopping">Shopping</option>
-                  <option value="Transport">Transport</option>
-                  <option value="Bills">Bills</option>
-                  <option value="Entertainment">Entertainment</option>
-                </select>
+                  <tab.icon size={16} />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Section */}
+          <div className="main-section">
+            {activeTab === 'quick-add' && (
+              <>
+                <div className="center-text">
+                  Add a new transaction
+                </div>
+
+                {/* Recent Transactions */}
+                <div className="recent-transactions">
+                  <h2 className="section-title">Recent</h2>
+                  
+                  {loading ? (
+                    <div className="loading-state">
+                      <div className="loading-spinner"></div>
+                      <p>Loading transactions...</p>
+                    </div>
+                  ) : error ? (
+                    <div className="error-state">
+                      <p>{error}</p>
+                      <button onClick={fetchTransactions} className="retry-button">Retry</button>
+                    </div>
+                  ) : (
+                    <div className="transaction-list">
+                      {recentTransactions.map((transaction) => (
+                        <div key={transaction.id} className="transaction-card">
+                          <div className="transaction-left">
+                            <div 
+                              className="category-dot" 
+                              style={{ backgroundColor: transaction.categoryColor }}
+                            ></div>
+                          </div>
+                          <div className="transaction-middle">
+                            <div className="merchant-name">{transaction.merchant}</div>
+                            <div className="transaction-meta">
+                              <span className="category-text">{transaction.category}</span>
+                              <span className="date-text">{transaction.date}</span>
+                            </div>
+                          </div>
+                          <div className="transaction-right">
+                            <div className="amount">
+                              ₹{Math.abs(transaction.amount).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {activeTab === 'transactions' && (
+              <TransactionsList
+                transactions={allTransactions}
+                loading={transactionsLoading}
+                onSearch={setSearchTerm}
+                onFilter={setFilterCategory}
+                searchTerm={searchTerm}
+                filterCategory={filterCategory}
+              />
+            )}
+
+            {activeTab === 'summary' && (
+              <div className="center-text">
+                <h3>Summary View</h3>
+                <p>Monthly spending analysis and insights coming soon...</p>
+                <button 
+                  className="navigate-button"
+                  onClick={() => navigate('/finny/summary')}
+                >
+                  Open Full Summary
+                </button>
               </div>
-              <div className="form-group">
-                <label>Date</label>
-                <input 
-                  type="date" 
-                  value={transactionForm.date}
-                  onChange={(e) => handleFormChange('date', e.target.value)}
+            )}
+
+            {activeTab === 'analytics' && (
+              <div className="center-text">
+                <h3>Analytics View</h3>
+                <p>Advanced financial analytics coming soon...</p>
+                <button 
+                  className="navigate-button"
+                  onClick={() => navigate('/finny/analytics')}
+                >
+                  Open Full Analytics
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Add Transaction Button */}
+          <button 
+            className="add-transaction-button"
+            onClick={() => setShowModal(true)}
+          >
+            <Plus size={32} color="#3A2A00" />
+          </button>
+
+          {/* Transaction Input Modal */}
+          {showModal && (
+            <div className="modal-overlay" onClick={() => setShowModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3>Add Transaction</h3>
+                  <button 
+                    className="close-button"
+                    onClick={() => setShowModal(false)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>Amount</label>
+                    <input 
+                      type="number" 
+                      placeholder="Enter amount" 
+                      value={transactionForm.amount}
+                      onChange={(e) => handleFormChange('amount', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Merchant</label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter merchant name" 
+                      value={transactionForm.merchant}
+                      onChange={(e) => handleFormChange('merchant', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Category</label>
+                    <select 
+                      value={transactionForm.category}
+                      onChange={(e) => handleFormChange('category', e.target.value)}
+                    >
+                      <option value="Food">Food</option>
+                      <option value="Shopping">Shopping</option>
+                      <option value="Transport">Transport</option>
+                      <option value="Bills">Bills</option>
+                      <option value="Entertainment">Entertainment</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Date</label>
+                    <input 
+                      type="date" 
+                      value={transactionForm.date}
+                      onChange={(e) => handleFormChange('date', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Description</label>
+                    <textarea 
+                      placeholder="Add description (optional)"
+                      value={transactionForm.description}
+                      onChange={(e) => handleFormChange('description', e.target.value)}
+                    ></textarea>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    className="cancel-button"
+                    onClick={() => setShowModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="save-button"
+                    onClick={handleSaveTransaction}
+                    disabled={!transactionForm.amount || !transactionForm.merchant}
+                  >
+                    Save Transaction
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Bottom Navigation for Mobile */}
+          <div className="finny-bottom-nav">
+            {bottomNavItems.map((item, index) => (
+              <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
+                <item.icon 
+                  size={20} 
+                  color={item.active ? '#F4B400' : '#6B7280'} 
                 />
+                <span className={`nav-label ${item.active ? 'active' : ''}`}>
+                  {item.label}
+                </span>
               </div>
-              <div className="form-group">
-                <label>Description</label>
-                <textarea 
-                  placeholder="Add description (optional)"
-                  value={transactionForm.description}
-                  onChange={(e) => handleFormChange('description', e.target.value)}
-                ></textarea>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button 
-                className="cancel-button"
-                onClick={() => setShowModal(false)}
-              >
-                Cancel
-              </button>
-              <button 
-                className="save-button"
-                onClick={handleSaveTransaction}
-                disabled={!transactionForm.amount || !transactionForm.merchant}
-              >
-                Save Transaction
-              </button>
-            </div>
+            ))}
           </div>
         </div>
-      )}
-
-      {/* Bottom Navigation */}
-      <div className="bottom-navigation">
-        {bottomNavItems.map((item, index) => (
-          <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
-            <item.icon 
-              size={20} 
-              color={item.active ? '#F4B400' : '#6B7280'} 
-            />
-            <span className={`nav-label ${item.active ? 'active' : ''}`}>
-              {item.label}
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );

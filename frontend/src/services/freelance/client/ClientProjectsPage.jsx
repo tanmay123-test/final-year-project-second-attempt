@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Briefcase, Clock, Wallet, Search, Plus, Filter, ArrowRight, FileText, IndianRupee, AlertCircle, XCircle } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelancerDashboard.css';
 
 const ClientProjectsPage = () => {
@@ -19,14 +19,9 @@ const ClientProjectsPage = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const [projectsRes, statsRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/freelance/my-projects${activeTab !== 'ALL' ? `?status=${activeTab}` : ''}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get('http://localhost:5000/api/freelance/client/dashboard', {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        api.get(`/api/freelance/my-projects${activeTab !== 'ALL' ? `?status=${activeTab}` : ''}`),
+        api.get('/api/freelance/client/dashboard')
       ]);
       setProjects(projectsRes.data.projects);
       setDashboardStats(statsRes.data.dashboard);
@@ -43,10 +38,7 @@ const ClientProjectsPage = () => {
     
     setCancellingId(projectId);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:5000/api/freelance/projects/${projectId}/cancel`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post(`/api/freelance/projects/${projectId}/cancel`, {});
       fetchData();
     } catch (err) {
       alert(err.response?.data?.error || 'Failed to cancel project');

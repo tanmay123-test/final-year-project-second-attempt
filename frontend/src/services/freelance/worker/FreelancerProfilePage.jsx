@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, Clock, Briefcase, MapPin, CheckCircle, MessageSquare, DollarSign, Calendar, X, Shield, IndianRupee, TrendingUp } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelancerDashboard.css';
 
 const FreelancerProfilePage = () => {
@@ -25,10 +25,7 @@ const FreelancerProfilePage = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/freelance/freelancer/${freelancerId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/freelance/freelancer/${freelancerId}`);
       setProfile(response.data.profile);
       setError(null);
     } catch (err) {
@@ -43,12 +40,9 @@ const FreelancerProfilePage = () => {
     e.preventDefault();
     setBookingLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/freelance/bookings', {
+      await api.post('/api/freelance/bookings', {
         freelancer_id: parseInt(freelancerId),
         ...bookingData
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       alert('Direct booking request sent successfully! The freelancer will review it.');
       setIsModalOpen(false);

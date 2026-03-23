@@ -1,13 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wrench, Settings, Bell, LogOut, ChevronLeft, User, Clock, CheckCircle, DollarSign, Star, Fuel, Battery, Zap, Shield } from 'lucide-react';
+import { Wrench, Settings, Bell, LogOut, ChevronLeft, User, Clock, CheckCircle, DollarSign, Star, Fuel, Battery, Zap, Shield, Power } from 'lucide-react';
+import api from '../../shared/api';
 
 const MechanicDashboard = () => {
   const navigate = useNavigate();
+  const [isOnline, setIsOnline] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [toggling, setToggling] = useState(false);
   
   const workerData = {
     name: 'Mechanic',
     email: 'mechanic@example.com'
+  };
+  
+  useEffect(() => {
+    fetchStatus();
+  }, []);
+  
+  const fetchStatus = async () => {
+    try {
+      const workerToken = localStorage.getItem('workerToken');
+      const response = await api.get('/api/car/mechanic/status', {
+        headers: { Authorization: `Bearer ${workerToken}` }
+      });
+      if (response.data?.is_online !== undefined) {
+        setIsOnline(response.data.is_online === 1 || response.data.is_online === true);
+      }
+    } catch (error) {
+      console.error('Error fetching status:', error);
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+  
+  const toggleOnlineStatus = async () => {
+    setToggling(true);
+    try {
+      const workerToken = localStorage.getItem('workerToken');
+      const endpoint = isOnline ? '/api/car/mechanic/go-offline' : '/api/car/mechanic/go-online';
+      const response = await api.put(endpoint, {}, {
+        headers: { Authorization: `Bearer ${workerToken}` }
+      });
+      if (response.data?.success) {
+        setIsOnline(!isOnline);
+      }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+    } finally {
+      setToggling(false);
+    }
   };
   
   const stats = {
@@ -84,9 +126,32 @@ const MechanicDashboard = () => {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
         {/* Welcome Section */}
         <div style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px', color: '#1f2937' }}>
-            Welcome back, {workerData.name}!
-          </h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+            <h2 style={{ fontSize: '32px', fontWeight: 'bold', margin: 0, color: '#1f2937' }}>
+              Welcome back, {workerData.name}!
+            </h2>
+            <button
+              onClick={toggleOnlineStatus}
+              disabled={statusLoading || toggling}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '12px 24px',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: toggling ? 'not-allowed' : 'pointer',
+                backgroundColor: isOnline ? '#dc2626' : '#16a34a',
+                color: 'white',
+                opacity: (statusLoading || toggling) ? 0.7 : 1
+              }}
+            >
+              <Power size={18} />
+              {statusLoading ? 'Loading...' : toggling ? 'Updating...' : isOnline ? 'Go Offline' : 'Go Online'}
+            </button>
+          </div>
           <p style={{ color: '#6b7280', fontSize: '16px' }}>
             Manage your repair services and track your performance
           </p>

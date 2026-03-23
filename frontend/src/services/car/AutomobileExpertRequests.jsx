@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Bell
 } from 'lucide-react';
+import api from '../../shared/api';
 import AutomobileExpertBottomNav from '../../components/AutomobileExpertBottomNav';
 
 const AutomobileExpertRequests = () => {
@@ -31,9 +32,9 @@ const AutomobileExpertRequests = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/expert-availability/consultation-queue/${workerId}`);
-      if (response.ok) {
-        const data = await response.json();
+      const response = await api.get(`/api/expert-availability/consultation-queue/${workerId}`);
+      if (response.data.success) {
+        const data = response.data;
         if (data.success) {
           setRequests(data.consultation_requests || []);
           setLastUpdated(new Date());
@@ -57,18 +58,11 @@ const AutomobileExpertRequests = () => {
       const workerData = JSON.parse(localStorage.getItem('automobileExpertData') || '{}');
       const workerId = workerData.id;
 
-      const response = await fetch(`http://localhost:5000/api/expert-availability/consultation-requests/${requestId}/accept`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          expert_id: workerId
-        })
+      const response = await api.post(`/api/expert-availability/consultation-requests/${requestId}/accept`, {
+        expert_id: workerId
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data.success) {
         if (data.success) {
           // Navigate to active consultation
           navigate('/worker/car/automobile-expert/active');
@@ -90,19 +84,12 @@ const AutomobileExpertRequests = () => {
       const workerData = JSON.parse(localStorage.getItem('automobileExpertData') || '{}');
       const workerId = workerData.id;
 
-      const response = await fetch(`http://localhost:5000/api/expert-availability/consultation-requests/${requestId}/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          expert_id: workerId,
-          rejection_reason: 'Expert declined the request'
-        })
+      const response = await api.post(`/api/expert-availability/consultation-requests/${requestId}/reject`, {
+        expert_id: workerId,
+        rejection_reason: 'Expert declined the request'
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data.success) {
         if (data.success) {
           // Remove the rejected request from the list
           setRequests(requests.filter(req => req.request_id !== requestId));

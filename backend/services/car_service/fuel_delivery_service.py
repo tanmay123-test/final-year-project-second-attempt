@@ -305,11 +305,18 @@ class FuelDeliveryService:
         """Approve a fuel delivery agent"""
         try:
             # Update status in fuel delivery DB
-            result = self.db.update_agent_status(agent_id, 'APPROVED')
+            result = self.db.update_agent_approval_status(agent_id, 'APPROVED')
             
             if result:
                 # Also update status in unified car service worker DB
-                car_service_worker_db.update_worker_status(agent_id, 'APPROVED')
+                try:
+                    agent = self.db.get_agent_details(agent_id)
+                    if agent and agent.get('email'):
+                        worker = car_service_worker_db.get_worker_by_email(agent['email'])
+                        if worker:
+                            car_service_worker_db.update_worker_status(worker['id'], 'APPROVED')
+                except Exception as e:
+                    print(f"⚠️ Unified worker sync error: {e}")
                 
                 return {'success': True, 'message': 'Agent approved successfully'}
             else:
@@ -321,11 +328,18 @@ class FuelDeliveryService:
         """Reject a fuel delivery agent"""
         try:
             # Update status in fuel delivery DB
-            result = self.db.update_agent_status(agent_id, 'REJECTED')
+            result = self.db.update_agent_approval_status(agent_id, 'REJECTED')
             
             if result:
                 # Also update status in unified car service worker DB
-                car_service_worker_db.update_worker_status(agent_id, 'REJECTED')
+                try:
+                    agent = self.db.get_agent_details(agent_id)
+                    if agent and agent.get('email'):
+                        worker = car_service_worker_db.get_worker_by_email(agent['email'])
+                        if worker:
+                            car_service_worker_db.update_worker_status(worker['id'], 'REJECTED')
+                except Exception as e:
+                    print(f"⚠️ Unified worker sync error: {e}")
                 
                 return {'success': True, 'message': 'Agent rejected successfully'}
             else:
@@ -355,7 +369,7 @@ class FuelDeliveryService:
                     return {'success': False, 'error': validation_result['error']}
             
             # Update status
-            success = self.db.update_agent_online_status(agent_id, new_status)
+            success = self.db.update_agent_status(agent_id, new_status)
             if not success:
                 return {'success': False, 'error': 'Failed to update status'}
             
@@ -370,7 +384,7 @@ class FuelDeliveryService:
                 auto_assign_result = self._auto_queue_pickup(agent_id)
                 if auto_assign_result['assigned']:
                     # Agent becomes BUSY due to assignment
-                    self.db.update_agent_online_status(agent_id, 'BUSY')
+                    self.db.update_agent_status(agent_id, 'BUSY')
                     return {
                         'success': True, 
                         'message': 'Online and auto-assigned delivery request',

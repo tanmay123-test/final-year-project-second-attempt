@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -153,10 +153,17 @@ export const moneyService = {
   getTransactions: (filters = {}) => api.get('/api/money/transactions', { params: filters }),
   setBudget: (data) => api.post('/api/money/budget', data),
   getBudgets: () => api.get('/api/money/budget'),
-  createGoal: (data) => api.post('/api/money/goals', data),
-  getGoals: () => api.get('/api/money/goals'),
+  createGoal: (data) => api.post('/api/goal/create', data),
+  getGoals: (userId) => api.get(`/api/goal/list?user_id=${userId}`),
+  addGoalSavings: (data) => api.post('/api/goal/add-savings', data),
   getMonthlyAnalytics: (months = 6) => api.get('/api/money/analytics/monthly', { params: { months } }),
   chatWithAI: (message) => api.post('/api/money/chat', { message }),
+};
+
+export const loanService = {
+  analyze: (data) => api.post('/api/loan/analyze', data),
+  getSchedule: (data) => api.post('/api/loan/schedule', data),
+  compare: (data) => api.post('/api/loan/compare', data),
 };
 
 export const carService = {

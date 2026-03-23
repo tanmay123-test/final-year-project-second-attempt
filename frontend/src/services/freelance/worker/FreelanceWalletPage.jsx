@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Wallet, TrendingUp, TrendingDown, Clock, Shield, Search, IndianRupee, CreditCard, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelancerDashboard.css';
 
 const FreelanceWalletPage = () => {
@@ -16,10 +16,7 @@ const FreelanceWalletPage = () => {
   const fetchWalletData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/freelance/wallet', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/freelance/wallet');
       setWallet(response.data.wallet);
     } catch (err) {
       console.error('Error fetching wallet data:', err);

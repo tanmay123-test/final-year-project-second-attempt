@@ -130,74 +130,94 @@ const AnalyticsPage = () => {
   }
 
   return (
-    <div className="analytics-page">
-      {/* Header */}
-      <div className="header">
-        <div className="header-content">
-          <button 
-            className="back-button" 
-            onClick={() => navigate('/finny')}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="header-text">
-            <h1 className="header-title">Quick Mode</h1>
-            <p className="header-subtitle">Fast & Simple tracking</p>
-          </div>
+    <div className="finny-page-layout">
+      {/* Sidebar for Desktop */}
+      <aside className="finny-sidebar">
+        <div className="sidebar-header">
+          <h1 className="sidebar-title">Finny</h1>
+          <p className="sidebar-subtitle">Smart Tracker</p>
         </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="mode-switch-bar">
-        <div className="tabs-container">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`tab ${tab.id === 'analytics' ? 'active' : ''}`}
-              onClick={() => {/* Tab switching handled by parent */}}
-            >
-              <tab.icon size={16} />
-              <span>{tab.label}</span>
-            </button>
+        <nav className="sidebar-nav">
+          {bottomNavItems.map((item, index) => (
+            <div key={index} className={`sidebar-item ${item.label === 'Finny' ? 'active' : ''}`}>
+              <item.icon size={20} color={item.label === 'Finny' ? '#F4B400' : '#6B7280'} />
+              <span className="sidebar-label">{item.label}</span>
+            </div>
           ))}
-        </div>
-      </div>
+        </nav>
+      </aside>
 
-      {/* Main Content */}
-      <div className="main-section">
-        {/* Weekly Spending Chart */}
-        <div className="analytics-card">
-          <WeeklyChart weeklySpending={analyticsData.weekly_spending} />
-        </div>
-
-        {/* Financial Health Score */}
-        <div className="analytics-card">
-          <FinancialHealth 
-            healthScore={analyticsData.financial_health_score}
-            healthStatus={analyticsData.health_status}
-            healthDescription={analyticsData.health_description}
-          />
-        </div>
-
-        {/* Spending Prediction */}
-        <div className="analytics-card">
-          <Prediction prediction={analyticsData.prediction} />
-        </div>
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="bottom-navigation">
-        {bottomNavItems.map((item, index) => (
-          <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
-            <item.icon 
-              size={20} 
-              color={item.active ? '#F4B400' : '#6B7280'} 
-            />
-            <span className={`nav-label ${item.active ? 'active' : ''}`}>
-              {item.label}
-            </span>
+      <div className="finny-page-content">
+        <div className="analytics-page">
+          {/* Header */}
+          <div className="header">
+            <div className="header-content">
+              <button 
+                className="back-button" 
+                onClick={() => navigate('/finny')}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div className="header-text">
+                <h1 className="header-title">Quick Mode</h1>
+                <p className="header-subtitle">Fast & Simple tracking</p>
+              </div>
+            </div>
           </div>
-        ))}
+
+          {/* Tab Navigation */}
+          <div className="mode-switch-bar">
+            <div className="tabs-container">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  className={`tab ${tab.id === 'analytics' ? 'active' : ''}`}
+                  onClick={() => {/* Tab switching handled by parent */}}
+                >
+                  <tab.icon size={16} />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="main-section">
+            {/* Weekly Spending Chart */}
+            <div className="analytics-card">
+              <WeeklyChart weeklySpending={analyticsData.weekly_spending} />
+            </div>
+
+            {/* Financial Health Score */}
+            <div className="analytics-card">
+              <FinancialHealth 
+                healthScore={analyticsData.financial_health_score}
+                healthStatus={analyticsData.health_status}
+                healthDescription={analyticsData.health_description}
+              />
+            </div>
+
+            {/* Spending Prediction */}
+            <div className="analytics-card">
+              <Prediction prediction={analyticsData.prediction} />
+            </div>
+          </div>
+
+          {/* Bottom Navigation for Mobile */}
+          <div className="finny-bottom-nav">
+            {bottomNavItems.map((item, index) => (
+              <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
+                <item.icon 
+                  size={20} 
+                  color={item.active ? '#F4B400' : '#6B7280'} 
+                />
+                <span className={`nav-label ${item.active ? 'active' : ''}`}>
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

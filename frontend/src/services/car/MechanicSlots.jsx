@@ -16,6 +16,7 @@ import {
   AlertCircle,
   TrendingUp
 } from 'lucide-react';
+import api from '../../shared/api';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -112,46 +113,29 @@ const MechanicSlots = () => {
   const fetchSlots = async () => {
     try {
       setLoading(true);
-      const storedData = localStorage.getItem('workerData');
       const token = localStorage.getItem('workerToken');
+      const storedData = localStorage.getItem('workerData');
       
-      if (!storedData || !token) {
+      if (!token || !storedData) {
         navigate('/worker/car/mechanic/login');
         return;
       }
 
       const workerData = JSON.parse(storedData);
-      const workerId = workerData.id || workerData.workerId || 7;
+      const workerId = workerData.id || workerData.workerId;
 
       // Try to fetch real data from API
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/slots`, {
+        const response = await api.get(`/api/car/service/worker/${workerId}/slots`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ API Response:', data);
-          console.log('✅ API Response structure:', JSON.stringify(data, null, 2));
-          console.log('✅ Data.slots:', data.slots);
-          console.log('✅ Direct data (if no slots property):', data);
-          
-          // Handle different API response structures
-          if (data.slots && Array.isArray(data.slots)) {
-            setSlots(data.slots);
-          } else if (Array.isArray(data)) {
-            setSlots(data);
-          } else if (data.data && Array.isArray(data.data)) {
-            setSlots(data.data);
-          } else {
-            console.warn('⚠️ Unexpected API response structure:', data);
-            setSlots([]);
-          }
+        if (response.data?.success) {
+          setSlots(response.data.slots || []);
         } else {
-          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+          throw new Error('Failed to fetch slots');
         }
       } catch (apiError) {
         console.log('🔄 API not available, using local storage:', apiError.message);
@@ -192,27 +176,21 @@ const MechanicSlots = () => {
       // Make API call to add slot
       try {
         const slotData = {
-            slot_date: newSlot.date,
-            start_time: newSlot.startTime,
-            end_time: newSlot.endTime,
-            max_jobs: newSlot.maxJobs,
-            status: newSlot.status
-          };
-          console.log('📤 Sending slot data:', slotData);
-          
-        const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/slots`, {
-          method: 'POST',
+          date: newSlot.date,
+          startTime: newSlot.startTime,
+          endTime: newSlot.endTime,
+          maxJobs: newSlot.maxJobs,
+          status: newSlot.status
+        };
+        
+        const response = await api.post(`/api/car/service/worker/${workerId}/slots`, slotData, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(slotData)
+            'Authorization': `Bearer ${token}`
+          }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ Slot added via API:', data);
-          setSuccess('Slot added successfully to server!');
+        if (response.data?.success) {
+          setSuccess('Slot added successfully!');
           setNewSlot({
             date: '',
             startTime: '',
@@ -226,7 +204,7 @@ const MechanicSlots = () => {
             setSuccess('');
           }, 2000);
         } else {
-          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+          throw new Error('Failed to add slot');
         }
       } catch (apiError) {
         console.log('🔄 API not available, adding slot locally:', apiError.message);
@@ -288,15 +266,13 @@ const MechanicSlots = () => {
 
       // Make API call to delete slot
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/slots/${slotId}`, {
-          method: 'DELETE',
+        const response = await api.delete(`/api/car/service/worker/${workerId}/slots/${slotId}`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
+        if (response.data?.success) {
           setSuccess('Slot deleted successfully!');
           fetchSlots(); // Refresh slots
           setTimeout(() => setSuccess(''), 2000);

@@ -9,6 +9,7 @@ import {
   User,
   AlertCircle
 } from 'lucide-react';
+import api from '../../shared/api';
 import AutomobileExpertBottomNav from '../../components/AutomobileExpertBottomNav';
 
 const AutomobileExpertConsultationHistory = () => {
@@ -27,10 +28,10 @@ const AutomobileExpertConsultationHistory = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/expert-availability/consultation-history/${workerId}`);
+      const response = await api.get(`/api/expert-availability/consultation-history/${workerId}`);
       
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data.success) {
+        const data = response.data;
         
         if (data.success) {
           setConsultations(data.consultations || []);

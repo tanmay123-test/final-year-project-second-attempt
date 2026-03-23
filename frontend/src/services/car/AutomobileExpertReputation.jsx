@@ -13,6 +13,7 @@ import {
   ThumbsUp,
   AlertCircle
 } from 'lucide-react';
+import api from '../../shared/api';
 import AutomobileExpertBottomNav from '../../components/AutomobileExpertBottomNav';
 
 const AutomobileExpertReputation = () => {
@@ -38,10 +39,10 @@ const AutomobileExpertReputation = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/expert-availability/reputation/${workerId}`);
+      const response = await api.get(`/api/expert-availability/reputation/${workerId}`);
       
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data.success) {
+        const data = response.data;
         
         if (data.success) {
           setReputationData(data.reputation || {});

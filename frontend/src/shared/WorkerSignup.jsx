@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { doctorService, workerService, housekeepingService } from '../shared/api';
+import api from './api';
 import { Stethoscope, Home, Car, Wallet, User, Mail, Phone, MapPin, Briefcase, Loader2, ChevronLeft, BadgeCheck, Lock, CreditCard } from 'lucide-react';
 
 const SERVICE_CONFIG = {
@@ -57,7 +58,7 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
     if (serviceType === 'freelance') {
       const fetchSkills = async () => {
         try {
-          const res = await axios.get('http://127.0.0.1:5000/api/freelance/skills');
+          const res = await api.get('/api/freelance/skills');
           setAvailableSkills(res.data.skills);
         } catch (err) {
           console.error("Failed to load skills", err);
@@ -154,7 +155,7 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
         response = await workerService.registerHealthcare(payload);
       } else if (serviceType === 'freelance') {
         // Direct call to freelance signup endpoint
-        response = await axios.post('http://127.0.0.1:5000/worker/freelance/signup', payload);
+        response = await api.post('/worker/freelance/signup', payload);
       } else {
         response = await workerService.register(payload);
       }

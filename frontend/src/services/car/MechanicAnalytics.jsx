@@ -5,6 +5,7 @@ import {
   DollarSign, Clock, Star, Calendar, Filter, Download,
   Target, Award, AlertCircle, Zap, Activity
 } from 'lucide-react';
+import api from '../../shared/api';
 
 const MechanicAnalytics = () => {
   const navigate = useNavigate();
@@ -24,21 +25,19 @@ const MechanicAnalytics = () => {
       
       if (storedData && token) {
         const workerData = JSON.parse(storedData);
-        const workerId = workerData.id || workerData.workerId || 7;
+        const workerId = workerData.id || workerData.workerId;
         
         try {
-          const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/analytics?range=${timeRange}`, {
+          const response = await api.get(`/api/car/service/worker/${workerId}/analytics?range=${timeRange}`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              'Authorization': `Bearer ${token}`
             }
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            setAnalytics(data.analytics || data);
+          if (response.data) {
+            setAnalytics(response.data.analytics || response.data);
           } else {
-            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+            throw new Error('Failed to fetch analytics');
           }
         } catch (error) {
           console.log('🔄 Analytics API not available, using sample data:', error.message);

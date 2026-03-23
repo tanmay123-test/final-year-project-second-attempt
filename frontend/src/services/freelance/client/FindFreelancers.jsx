@@ -12,7 +12,7 @@ import {
   MapPin,
   ChevronDown
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelanceHome.css';
 
 const FindFreelancers = ({ onBook, initialQuery = '' }) => {
@@ -49,7 +49,7 @@ const FindFreelancers = ({ onBook, initialQuery = '' }) => {
 
   const fetchSkills = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/freelance/skills');
+      const response = await api.get('/api/freelance/skills');
       setSkills(response.data.skills);
     } catch (err) {
       console.error('Error fetching skills:', err);
@@ -59,14 +59,14 @@ const FindFreelancers = ({ onBook, initialQuery = '' }) => {
   const fetchWorkers = async () => {
     setLoading(true);
     try {
-      let url = 'http://localhost:5000/api/freelance/workers';
+      let url = '/api/freelance/workers';
       const params = [];
       if (selectedSkills.length > 0) params.push(`skills=${selectedSkills.join(',')}`);
       if (filters.category !== 'All') params.push(`category=${filters.category}`);
       
       if (params.length > 0) url += `?${params.join('&')}`;
       
-      const response = await axios.get(url);
+      const response = await api.get(url);
       setWorkers(response.data.workers);
     } catch (err) {
       console.error('Error fetching workers:', err);

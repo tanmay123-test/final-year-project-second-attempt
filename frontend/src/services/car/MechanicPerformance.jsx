@@ -21,6 +21,7 @@ import {
   DollarSign,
   Wrench
 } from 'lucide-react';
+import api from '../../shared/api';
 
 const MechanicPerformance = () => {
   const navigate = useNavigate();
@@ -71,27 +72,24 @@ const MechanicPerformance = () => {
   const fetchPerformanceData = async () => {
     try {
       setLoading(true);
-      const storedData = localStorage.getItem('workerData');
       const token = localStorage.getItem('workerToken');
       
-      if (!storedData || !token) {
+      if (!token) {
         navigate('/worker/car/mechanic/login');
         return;
       }
 
       // Try to fetch real data from API
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/car/mechanic/performance', {
+        const response = await api.get('/api/car/mechanic/performance', {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setPerformanceData(data.performance || performanceData);
-          setTipsData(data.tips || tipsData);
+        if (response.data) {
+          setPerformanceData(response.data.performance || performanceData);
+          setTipsData(response.data.tips || tipsData);
         } else {
           throw new Error('API not available');
         }
@@ -113,16 +111,14 @@ const MechanicPerformance = () => {
       const token = localStorage.getItem('workerToken');
       
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/car/mechanic/safety-reports', {
+        const response = await api.get('/api/car/mechanic/safety-reports', {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setSafetyReports(data.reports || []);
+        if (response.data) {
+          setSafetyReports(response.data.reports || []);
         }
       } catch (apiError) {
         console.log('Safety reports API not available:', apiError.message);
@@ -137,16 +133,14 @@ const MechanicPerformance = () => {
       const token = localStorage.getItem('workerToken');
       
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/car/mechanic/panic-alerts', {
+        const response = await api.get('/api/car/mechanic/panic-alerts', {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setPanicAlerts(data.alerts || []);
+        if (response.data) {
+          setPanicAlerts(response.data.alerts || []);
         } else {
           throw new Error('API not available');
         }
@@ -174,17 +168,13 @@ const MechanicPerformance = () => {
       const token = localStorage.getItem('workerToken');
       
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/car/mechanic/panic-alert', {
-          method: 'POST',
+        const response = await api.post('/api/car/mechanic/panic-alert', panicForm, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(panicForm)
+            'Authorization': `Bearer ${token}`
+          }
         });
 
-        if (response.ok) {
-          const data = await response.json();
+        if (response.data?.success) {
           setSuccess('Panic alert sent successfully! Admin has been notified.');
           setPanicForm({ location: '', job_id: null });
           fetchPanicAlerts();
@@ -235,17 +225,13 @@ const MechanicPerformance = () => {
       const token = localStorage.getItem('workerToken');
       
       try {
-        const response = await fetch('http://127.0.0.1:5000/api/car/mechanic/report-incident', {
-          method: 'POST',
+        const response = await api.post('/api/car/mechanic/report-incident', incidentForm, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(incidentForm)
+            'Authorization': `Bearer ${token}`
+          }
         });
 
-        if (response.ok) {
-          const data = await response.json();
+        if (response.data?.success) {
           setSuccess('Incident reported successfully!');
           setIncidentForm({ incident_type: '', description: '', job_id: null });
           fetchSafetyReports();

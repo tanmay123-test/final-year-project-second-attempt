@@ -5,7 +5,7 @@ import {
   Search, Home, Bot, User, ChevronRight 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/PostProject.css';
 
 const PostProject = ({ onBack, onSuccess }) => {
@@ -98,7 +98,6 @@ const PostProject = ({ onBack, onSuccess }) => {
 
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const data = new FormData();
       
       Object.keys(formData).forEach(key => {
@@ -110,9 +109,8 @@ const PostProject = ({ onBack, onSuccess }) => {
         data.append('attachments', file);
       });
 
-      const response = await axios.post('http://localhost:5000/api/freelancer/projects/create', data, {
+      const response = await api.post('/api/freelancer/projects/create', data, {
         headers: { 
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });

@@ -1,17 +1,14 @@
 import React from 'react';
 import { X, Calendar, DollarSign, Check, X as XIcon } from 'lucide-react';
 import '../styles/ProjectDetailsModal.css';
-import axios from 'axios';
+import api from '../../../shared/api';
 
 const ProjectDetailsModal = ({ project, proposals, milestones, onClose, onAction }) => {
   if (!project) return null;
 
   const handleAccept = async (proposalId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/freelance/proposals/accept', { proposal_id: proposalId }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post('/api/freelance/proposals/accept', { proposal_id: proposalId });
       onAction(); // Refetch data in parent
     } catch (error) {
       console.error('Error accepting proposal:', error);
@@ -20,10 +17,7 @@ const ProjectDetailsModal = ({ project, proposals, milestones, onClose, onAction
 
   const handleReject = async (proposalId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/freelance/proposals/reject', { proposal_id: proposalId }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post('/api/freelance/proposals/reject', { proposal_id: proposalId });
       onAction(); // Refetch data in parent
     } catch (error) {
       console.error('Error rejecting proposal:', error);

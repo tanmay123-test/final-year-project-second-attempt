@@ -128,78 +128,98 @@ const SummaryPage = () => {
   }
 
   return (
-    <div className="summary-page">
-      {/* Header */}
-      <div className="header">
-        <div className="header-content">
-          <button 
-            className="back-button" 
-            onClick={() => navigate('/finny')}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="header-text">
-            <h1 className="header-title">Quick Mode</h1>
-            <p className="header-subtitle">Fast & Simple tracking</p>
-          </div>
+    <div className="finny-page-layout">
+      {/* Sidebar for Desktop */}
+      <aside className="finny-sidebar">
+        <div className="sidebar-header">
+          <h1 className="sidebar-title">Finny</h1>
+          <p className="sidebar-subtitle">Smart Tracker</p>
         </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="mode-switch-bar">
-        <div className="tabs-container">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={`tab ${tab.id === 'summary' ? 'active' : ''}`}
-              onClick={() => {/* Tab switching handled by parent */}}
-            >
-              <tab.icon size={16} />
-              <span>{tab.label}</span>
-            </button>
+        <nav className="sidebar-nav">
+          {bottomNavItems.map((item, index) => (
+            <div key={index} className={`sidebar-item ${item.label === 'Finny' ? 'active' : ''}`}>
+              <item.icon size={20} color={item.label === 'Finny' ? '#F4B400' : '#6B7280'} />
+              <span className="sidebar-label">{item.label}</span>
+            </div>
           ))}
-        </div>
-      </div>
+        </nav>
+      </aside>
 
-      {/* Main Content */}
-      <div className="main-section">
-        {/* Category Breakdown Card */}
-        <div className="category-breakdown-card">
-          <h2 className="card-title">Category Breakdown</h2>
-          <div className="breakdown-content">
-            <div className="chart-container">
-              <CategoryChart 
-                categories={summaryData.categories} 
-                totalSpending={summaryData.totalSpent}
-              />
-            </div>
-            <div className="breakdown-list">
-              <CategoryBreakdown categories={summaryData.categories} />
+      <div className="finny-page-content">
+        <div className="summary-page">
+          {/* Header */}
+          <div className="header">
+            <div className="header-content">
+              <button 
+                className="back-button" 
+                onClick={() => navigate('/finny')}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div className="header-text">
+                <h1 className="header-title">Quick Mode</h1>
+                <p className="header-subtitle">Fast & Simple tracking</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Statistics Cards */}
-        <StatisticsCards 
-          totalSpent={summaryData.totalSpent}
-          dailyAverage={summaryData.dailyAverage}
-          daysInPeriod={summaryData.daysInPeriod}
-        />
-      </div>
+          {/* Tab Navigation */}
+          <div className="mode-switch-bar">
+            <div className="tabs-container">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  className={`tab ${tab.id === 'summary' ? 'active' : ''}`}
+                  onClick={() => {/* Tab switching handled by parent */}}
+                >
+                  <tab.icon size={16} />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Bottom Navigation */}
-      <div className="bottom-navigation">
-        {bottomNavItems.map((item, index) => (
-          <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
-            <item.icon 
-              size={20} 
-              color={item.active ? '#F4B400' : '#6B7280'} 
+          {/* Main Content */}
+          <div className="main-section">
+            {/* Category Breakdown Card */}
+            <div className="category-breakdown-card">
+              <h2 className="card-title">Category Breakdown</h2>
+              <div className="breakdown-content">
+                <div className="chart-container">
+                  <CategoryChart 
+                    categories={summaryData.categories} 
+                    totalSpending={summaryData.totalSpent}
+                  />
+                </div>
+                <div className="breakdown-list">
+                  <CategoryBreakdown categories={summaryData.categories} />
+                </div>
+              </div>
+            </div>
+
+            {/* Statistics Cards */}
+            <StatisticsCards 
+              totalSpent={summaryData.totalSpent}
+              dailyAverage={summaryData.dailyAverage}
+              daysInPeriod={summaryData.daysInPeriod}
             />
-            <span className={`nav-label ${item.active ? 'active' : ''}`}>
-              {item.label}
-            </span>
           </div>
-        ))}
+
+          {/* Bottom Navigation for Mobile */}
+          <div className="finny-bottom-nav">
+            {bottomNavItems.map((item, index) => (
+              <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
+                <item.icon 
+                  size={20} 
+                  color={item.active ? '#F4B400' : '#6B7280'} 
+                />
+                <span className={`nav-label ${item.active ? 'active' : ''}`}>
+                  {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

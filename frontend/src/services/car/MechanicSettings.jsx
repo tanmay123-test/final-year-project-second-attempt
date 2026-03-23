@@ -6,6 +6,7 @@ import {
   MapPin, Clock, DollarSign, Save, Eye, EyeOff,
   ToggleLeft, ToggleRight, HelpCircle, LogOut, AlertCircle
 } from 'lucide-react';
+import api from '../../shared/api';
 
 const MechanicSettings = () => {
   const navigate = useNavigate();
@@ -78,15 +79,10 @@ const MechanicSettings = () => {
         const workerId = workerData.id || workerData.workerId;
         
         try {
-          const response = await fetch(`http://localhost:5000/api/car/service/worker/${workerId}/settings`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const response = await api.get(`/api/car/service/worker/${workerId}/settings`);
 
-          if (response.ok) {
-            const data = await response.json();
+          if (response.data) {
+            const data = response.data;
             setSettings({ ...settings, ...data.settings });
           } else {
             console.log('⚠️ Settings API not available, using local state');
@@ -127,20 +123,9 @@ const MechanicSettings = () => {
       
       const workerId = workerData.id || workerData.workerId;
       
-      const response = await fetch(`http://localhost:5000/api/car/service/worker/${workerId}/settings`, {
-        method: 'PUT',
-        mode: 'cors',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        },
-        body: JSON.stringify({ category, updates })
-      });
+      const response = await api.put(`/api/car/service/worker/${workerId}/settings`, { category, updates });
 
-      if (response.ok) {
+      if (response.data) {
         setSettings({ ...settings, [category]: { ...settings[category], ...updates } });
         alert('Settings updated successfully!');
       } else {

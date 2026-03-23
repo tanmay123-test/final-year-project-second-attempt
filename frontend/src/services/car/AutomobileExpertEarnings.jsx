@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   CreditCard
 } from 'lucide-react';
+import api from '../../shared/api';
 import AutomobileExpertBottomNav from '../../components/AutomobileExpertBottomNav';
 
 const AutomobileExpertEarnings = () => {
@@ -33,35 +34,29 @@ const AutomobileExpertEarnings = () => {
       }
 
       // Fetch consultation history from backend
-      const response = await fetch(`http://localhost:5000/api/expert-availability/consultation-history/${workerId}`);
+      const response = await api.get(`/api/expert-availability/consultation-history/${workerId}`);
       
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data?.success) {
+        const data = response.data;
+        // Calculate totals from consultation history
+        const totalEarnings = data.consultations.reduce((sum, consultation) => 
+          sum + (consultation.proposed_fee || 0), 0
+        );
         
-        if (data.success) {
-          // Calculate totals from consultation history
-          const totalEarnings = data.consultations.reduce((sum, consultation) => 
-            sum + (consultation.proposed_fee || 0), 0
-          );
-          
-          const totalConsultations = data.consultations.length;
-          
-          const avgRating = data.consultations.length > 0 
-            ? data.consultations.reduce((sum, consultation) => 
-                sum + (consultation.user_rating || 0), 0
-              ) / data.consultations.length
-            : 0;
+        const totalConsultations = data.consultations.length;
+        
+        const avgRating = data.consultations.length > 0 
+          ? data.consultations.reduce((sum, consultation) => 
+              sum + (consultation.user_rating || 0), 0
+            ) / data.consultations.length
+          : 0;
 
-          setEarningsData({
-            totalEarnings,
-            totalConsultations,
-            avgRating,
-            consultationHistory: data.consultations
-          });
-        } else {
-          console.error('Failed to fetch earnings data:', data.error);
-          setError(data.error);
-        }
+        setEarningsData({
+          totalEarnings,
+          totalConsultations,
+          avgRating,
+          consultationHistory: data.consultations
+        });
       } else {
         console.error('Failed to fetch earnings data');
         setError('Failed to load earnings data');

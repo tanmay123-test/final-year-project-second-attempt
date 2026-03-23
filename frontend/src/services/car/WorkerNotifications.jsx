@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, CheckCircle, AlertCircle, X, Pause, Play } from 'lucide-react';
+import api from '../../shared/api';
 
 const WorkerNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -12,16 +13,14 @@ const WorkerNotifications = () => {
         const token = localStorage.getItem('workerToken');
         if (!token) return;
 
-        const response = await fetch('http://127.0.0.1:5000/api/worker/notifications', {
+        const response = await api.get('/api/worker/notifications', {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setNotifications(data.notifications || []);
+        if (response.data) {
+          setNotifications(response.data.notifications || []);
         }
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
@@ -39,15 +38,13 @@ const WorkerNotifications = () => {
   const markAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem('workerToken');
-      const response = await fetch(`http://127.0.0.1:5000/api/worker/notifications/${notificationId}/read`, {
-        method: 'PUT',
+      const response = await api.put(`/api/worker/notifications/${notificationId}/read`, {}, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
-      if (response.ok) {
+      if (response.data?.success) {
         setNotifications(prev => 
           prev.map(notif => 
             notif.id === notificationId 

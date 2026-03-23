@@ -8,6 +8,7 @@ import FindFreelancers from './FindFreelancers';
 import AIAssistant from './AIAssistant';
 import Profile from './Profile';
 import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelanceHome.css';
 
 const FreelanceHome = () => {
@@ -58,7 +59,7 @@ const FreelanceHome = () => {
   const fetchFeaturedFreelancers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/home/featured-freelancers?limit=3');
+      const response = await api.get('/api/home/featured-freelancers?limit=3');
       if (response.data && response.data.freelancers) {
         setFeaturedFreelancers(response.data.freelancers);
       }
@@ -93,12 +94,9 @@ const FreelanceHome = () => {
     e.preventDefault();
     setBookingLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/freelance/bookings', {
+      await api.post('/api/freelance/bookings', {
         freelancer_id: selectedWorker.id,
         ...bookingData
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       alert('Direct booking request sent! You can track it in the Projects tab.');
       setShowBookingModal(false);

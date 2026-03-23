@@ -13,6 +13,7 @@ import {
   Calendar,
   DollarSign
 } from 'lucide-react';
+import api from '../../shared/api';
 import AutomobileExpertBottomNav from '../../components/AutomobileExpertBottomNav';
 
 const ActiveConsultation = () => {
@@ -46,41 +47,33 @@ const ActiveConsultation = () => {
       }
 
       // Fetch real active consultation from backend
-      const response = await fetch(`http://localhost:5000/api/expert-availability/dashboard/${workerId}`);
+      const response = await api.get(`/api/expert-availability/dashboard/${workerId}`);
       
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data?.success && response.data.current_consultation) {
+        // Transform backend data to match our component structure
+        const consultationData = {
+          request_id: response.data.current_consultation.request_id,
+          user_name: response.data.current_consultation.user_name,
+          user_city: response.data.current_consultation.user_city,
+          user_phone: response.data.current_consultation.user_phone || 'Not provided',
+          issue_description: response.data.current_consultation.issue_description,
+          area_of_expertise: response.data.current_consultation.area_of_expertise,
+          vehicle_details: response.data.current_consultation.vehicle_details || 'Not specified',
+          proposed_fee: response.data.current_consultation.proposed_fee || 200,
+          started_at: response.data.current_consultation.started_at || new Date(),
+          status: response.data.current_consultation.status || 'IN_PROGRESS'
+        };
         
-        if (data.success && data.current_consultation) {
-          // Transform backend data to match our component structure
-          const consultationData = {
-            request_id: data.current_consultation.request_id,
-            user_name: data.current_consultation.user_name,
-            user_city: data.current_consultation.user_city,
-            user_phone: data.current_consultation.user_phone || 'Not provided',
-            issue_description: data.current_consultation.issue_description,
-            area_of_expertise: data.current_consultation.area_of_expertise,
-            vehicle_details: data.current_consultation.vehicle_details || 'Not specified',
-            proposed_fee: data.current_consultation.proposed_fee || 200,
-            started_at: data.current_consultation.started_at || new Date(),
-            status: data.current_consultation.status || 'IN_PROGRESS'
-          };
-          
-          setSessionData(consultationData);
-        } else {
-          // No active consultation
-          setSessionData(null);
-        }
+        setSessionData(consultationData);
       } else {
-        console.error('Failed to fetch active consultation');
+        // No active consultation
         setSessionData(null);
       }
-      
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching active consultation:', error);
-      setLoading(false);
       setSessionData(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,33 +88,20 @@ const ActiveConsultation = () => {
         return;
       }
 
-      // Call backend to complete consultation
-      const response = await fetch(`http://localhost:5000/api/expert-availability/consultation-requests/${sessionData.request_id}/complete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          expert_id: workerId,
-          user_rating: null // Will be provided by user later
-        })
+      const response = await api.post(`/api/expert-availability/consultation-requests/${sessionData.request_id}/complete`, {
+        expert_id: workerId,
+        user_rating: null
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          // Consultation ended successfully
-          console.log('Consultation ended:', data.message);
-          // Navigate back to homepage or requests
-          navigate('/worker/car/automobile-expert/homepage');
-        } else {
-          console.error('Failed to end consultation:', data.error);
-          // Show error message to user
-          alert('Failed to end consultation: ' + (data.error || 'Unknown error'));
-        }
+      if (response.data?.success) {
+        // Consultation ended successfully
+        console.log('Consultation ended:', response.data.message);
+        // Navigate back to homepage or requests
+        navigate('/worker/car/automobile-expert/homepage');
       } else {
-        console.error('Failed to end consultation');
-        alert('Failed to end consultation. Please try again.');
+        console.error('Failed to end consultation:', response.data.error);
+        // Show error message to user
+        alert('Failed to end consultation: ' + (response.data.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error ending consultation:', error);

@@ -5,7 +5,7 @@ import {
   Home, PlusCircle, Folder, Bot, Search, IndianRupee 
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/MyProjects.css';
 import ProjectDetailsModal from './ProjectDetailsModal';
 
@@ -52,10 +52,7 @@ const MyProjects = () => {
   const fetchMyProjects = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/freelancer/projects/my-projects?status=${activeStatus}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/freelancer/projects/my-projects?status=${activeStatus}`);
       setProjects(response.data.projects || []);
       setError('');
     } catch (err) {
@@ -68,10 +65,7 @@ const MyProjects = () => {
   const fetchDirectBookings = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/freelancer/bookings/my-bookings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/freelancer/bookings/my-bookings`);
       setDirectBookings(response.data.bookings || []);
       setError('');
     } catch (err) {
@@ -106,10 +100,7 @@ const MyProjects = () => {
     setIsModalOpen(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const proposalsRes = await axios.get(`http://localhost:5000/api/freelance/projects/${project.id}/proposals`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const proposalsRes = await api.get(`/api/freelance/projects/${project.id}/proposals`);
       setProposals(proposalsRes.data.proposals || []);
 
       // Milestones are already part of the project object from the main list

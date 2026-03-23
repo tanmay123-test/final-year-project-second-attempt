@@ -71,68 +71,88 @@ const ChatModePage = () => {
   ];
 
   return (
-    <div className="chat-mode-page">
-      {/* Header */}
-      <div className="header">
-        <div className="header-content">
-          <button 
-            className="back-button" 
-            onClick={() => navigate('/finny')}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="header-text">
-            <h1 className="header-title">Chat Mode</h1>
-            <p className="header-subtitle">Natural language tracking</p>
-          </div>
-          <button 
-            className="help-button" 
-            onClick={handleHelpExamples}
-          >
-            <HelpCircle size={20} />
-            <span>Help & Examples</span>
-          </button>
+    <div className="finny-page-layout">
+      {/* Sidebar for Desktop */}
+      <aside className="finny-sidebar">
+        <div className="sidebar-header">
+          <h1 className="sidebar-title">Finny</h1>
+          <p className="sidebar-subtitle">Smart Tracker</p>
         </div>
-      </div>
+        <nav className="sidebar-nav">
+          {bottomNavItems.map((item, index) => (
+            <div key={index} className={`sidebar-item ${item.label === 'Finny' ? 'active' : ''}`}>
+              <item.icon size={20} color={item.label === 'Finny' ? '#F4B400' : '#6B7280'} />
+              <span className="sidebar-label">{item.label}</span>
+            </div>
+          ))}
+        </nav>
+      </aside>
 
-      {/* Main Content */}
-      <div className="main-content">
-        <div className="content-grid">
-          {/* Left Panel - Chat Assistant */}
-          <div className="left-panel">
-            <ChatAssistant />
-            {message && (
-              <div className="status-message">
-                {message}
+      <div className="finny-page-content">
+        <div className="chat-mode-page">
+          {/* Header */}
+          <div className="header">
+            <div className="header-content">
+              <button 
+                className="back-button" 
+                onClick={() => navigate('/finny')}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div className="header-text">
+                <h1 className="header-title">Chat Mode</h1>
+                <p className="header-subtitle">Natural language tracking</p>
               </div>
-            )}
+              <button 
+                className="help-button" 
+                onClick={handleHelpExamples}
+              >
+                <HelpCircle size={20} />
+                <span>Help & Examples</span>
+              </button>
+            </div>
           </div>
 
-          {/* Right Panel - Today Summary */}
-          <div className="right-panel">
-            <TodaySummary todayData={todayData} />
+          {/* Main Content */}
+          <div className="main-content">
+            <div className="content-grid">
+              {/* Left Panel - Chat Assistant */}
+              <div className="left-panel">
+                <ChatAssistant />
+                {message && (
+                  <div className="status-message">
+                    {message}
+                  </div>
+                )}
+              </div>
+
+              {/* Right Panel - Today Summary */}
+              <div className="right-panel">
+                <TodaySummary todayData={todayData} />
+              </div>
+            </div>
+          </div>
+
+          {/* Chat Input */}
+          <div className="chat-input-section">
+            <ChatInput onSendMessage={handleSendMessage} loading={loading} />
+          </div>
+
+          {/* Bottom Navigation for Mobile */}
+          <div className="finny-bottom-nav">
+            {bottomNavItems.map((item, index) => (
+              <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
+                <item.icon 
+                  size={20} 
+                  color={item.active ? '#F4B400' : '#6B7280'} 
+                />
+                <span className={`nav-label ${item.active ? 'active' : ''}`}>
+                  {item.label}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
-
-      {/* Chat Input */}
-      <div className="chat-input-section">
-        <ChatInput onSendMessage={handleSendMessage} loading={loading} />
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="bottom-navigation">
-        {bottomNavItems.map((item, index) => (
-          <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
-            <item.icon 
-              size={20} 
-              color={item.active ? '#F4B400' : '#6B7280'} 
-            />
-            <span className={`nav-label ${item.active ? 'active' : ''}`}>
-              {item.label}
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import {
   TrendingUp,
   Shield
 } from 'lucide-react';
+import api from '../../shared/api';
 
 const MechanicActiveJobs = () => {
   const navigate = useNavigate();
@@ -33,31 +34,39 @@ const MechanicActiveJobs = () => {
   const fetchActiveJobs = async () => {
     try {
       setLoading(true);
-      const storedData = localStorage.getItem('workerData');
       const token = localStorage.getItem('workerToken');
       
-      if (!storedData || !token) {
+      if (!token) {
         navigate('/worker/car/mechanic/login');
         return;
       }
 
-      const workerData = JSON.parse(storedData);
-      const workerId = workerData.id || workerData.workerId || 7;
-
       // Try to fetch real data from API
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/active-jobs`, {
+        const response = await api.get('/api/car/mechanic/active-job', {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setActiveJobs(data.activeJobs || []);
+        if (response.data?.active_job) {
+          // Format active_job to match the state structure
+          const job = response.data.active_job;
+          const formattedJob = {
+            id: job.id,
+            customerName: job.user_name || `User ${job.user_id}`,
+            customerPhone: job.user_phone || 'No phone',
+            customerLocation: job.user_city || 'Unknown',
+            carModel: job.car_model || 'Unknown Car',
+            serviceType: job.issue_type || job.issue,
+            description: job.issue,
+            requestedTime: job.created_at,
+            estimatedPrice: `₹${job.estimated_earning || 0}`,
+            status: job.status.toLowerCase()
+          };
+          setActiveJobs([formattedJob]);
         } else {
-          throw new Error('API not available');
+          setActiveJobs([]);
         }
       } catch (apiError) {
         console.log('API endpoints not available, using empty active jobs list:', apiError.message);
@@ -91,15 +100,15 @@ const MechanicActiveJobs = () => {
 
       // Make API call to update status
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/car/service/jobs/${jobId}/complete`, {
-          method: 'POST',
+        const response = await api.post('/api/car/mechanic/job/complete', {
+          job_id: jobId
+        }, {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        if (!response.ok) {
+        if (!response.data?.success) {
           // If API call fails, revert the state
           setActiveJobs(prevJobs => 
             prevJobs.map(job => 

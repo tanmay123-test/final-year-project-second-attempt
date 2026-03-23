@@ -13,7 +13,7 @@ import {
   TrendingUp,
   Wrench
 } from 'lucide-react';
-import { carService } from '../../shared/api';
+import api from '../../shared/api';
 import { useAuth } from '../../context/AuthContext';
 import AutomobileExpertBottomNav from '../../components/AutomobileExpertBottomNav';
 
@@ -49,9 +49,9 @@ const AutomobileExpertHomepage = () => {
     try {
       const workerData = JSON.parse(localStorage.getItem('automobileExpertData') || '{}');
       const workerId = workerData.id;
-      const response = await fetch(`http://localhost:5000/api/expert-availability/dashboard/${workerId}`);
-      if (response.ok) {
-        const data = await response.json();
+      const response = await api.get(`/api/expert-availability/dashboard/${workerId}`);
+      if (response.data) {
+        const data = response.data;
         setStatsData({
           completedJobs: data.performance_stats?.total_consultations || 0,
           totalEarnings: 0, // Add earnings tracking later
@@ -71,18 +71,11 @@ const AutomobileExpertHomepage = () => {
       
       if (isOnline) {
         // Go offline
-        const response = await fetch(`http://localhost:5000/api/expert-availability/go-offline`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            expert_id: parseInt(workerId)
-          })
+        const response = await api.post('/api/expert-availability/go-offline', {
+          expert_id: parseInt(workerId)
         });
 
-        if (response.ok) {
-          const result = await response.json();
+        if (response.data.success) {
           setIsOnline(false);
           // Update local storage
           const updatedWorkerData = { ...workerData, is_online: 0 };
@@ -91,18 +84,11 @@ const AutomobileExpertHomepage = () => {
         }
       } else {
         // Go online
-        const response = await fetch(`http://localhost:5000/api/expert-availability/go-online`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            expert_id: parseInt(workerId)
-          })
+        const response = await api.post('/api/expert-availability/go-online', {
+          expert_id: parseInt(workerId)
         });
 
-        if (response.ok) {
-          const result = await response.json();
+        if (response.data.success) {
           setIsOnline(true);
           // Update local storage
           const updatedWorkerData = { ...workerData, is_online: 1 };

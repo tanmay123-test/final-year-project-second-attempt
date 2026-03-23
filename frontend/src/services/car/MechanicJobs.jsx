@@ -18,6 +18,7 @@ import {
   Shield,
   TrendingUp
 } from 'lucide-react';
+import api from '../../shared/api';
 
 const MechanicJobs = () => {
   const navigate = useNavigate();
@@ -34,30 +35,23 @@ const MechanicJobs = () => {
   const fetchJobs = async () => {
     try {
       setLoading(true);
-      // Get worker data from localStorage
-      const storedData = localStorage.getItem('workerData');
       const token = localStorage.getItem('workerToken');
       
-      if (!storedData || !token) {
+      if (!token) {
         navigate('/worker/car/mechanic/login');
         return;
       }
 
-      const workerData = JSON.parse(storedData);
-      const workerId = workerData.id || workerData.workerId || 7;
-
       // Try to fetch real data from API
       try {
-        const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/jobs`, {
+        const response = await api.get('/api/car/mechanic/jobs', {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          setJobs(data.jobs || []);
+        if (response.data?.success) {
+          setJobs(response.data.jobs || []);
         } else {
           throw new Error('API not available');
         }
@@ -82,38 +76,19 @@ const MechanicJobs = () => {
     try {
       const token = localStorage.getItem('workerToken');
       
-      // Update job status in local state immediately for better UX
-      setJobs(prevJobs => 
-        prevJobs.map(job => 
-          job.id === jobId 
-            ? { ...job, status: 'accepted' }
-            : job
-        )
-      );
-
-      // Make API call to update status
-      try {
-        const response = await fetch(`http://127.0.0.1:5000/api/car/service/jobs/${jobId}/accept`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          // If API call fails, revert the state
-          setJobs(prevJobs => 
-            prevJobs.map(job => 
-              job.id === jobId 
-                ? { ...job, status: 'pending' }
-                : job
-            )
-          );
-          console.error('Failed to accept job on server');
+      const response = await api.post('/api/car/mechanic/job/accept', {
+        job_id: jobId
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      } catch (apiError) {
-        console.log('API call failed, but local state updated:', apiError.message);
+      });
+
+      if (response.data?.success) {
+        // Remove from current jobs list
+        setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
+        // Redirect to active jobs
+        navigate('/worker/car/mechanic/active-jobs');
       }
     } catch (err) {
       console.error('Error accepting job:', err);
@@ -124,38 +99,18 @@ const MechanicJobs = () => {
     try {
       const token = localStorage.getItem('workerToken');
       
-      // Update job status in local state immediately for better UX
-      setJobs(prevJobs => 
-        prevJobs.map(job => 
-          job.id === jobId 
-            ? { ...job, status: 'rejected' }
-            : job
-        )
-      );
-
-      // Make API call to update status
-      try {
-        const response = await fetch(`http://127.0.0.1:5000/api/car/service/jobs/${jobId}/reject`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (!response.ok) {
-          // If API call fails, revert the state
-          setJobs(prevJobs => 
-            prevJobs.map(job => 
-              job.id === jobId 
-                ? { ...job, status: 'pending' }
-                : job
-            )
-          );
-          console.error('Failed to reject job on server');
+      const response = await api.post('/api/car/mechanic/job/reject', {
+        job_id: jobId,
+        reason: 'Mechanic rejected job'
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      } catch (apiError) {
-        console.log('API call failed, but local state updated:', apiError.message);
+      });
+
+      if (response.data?.success) {
+        // Remove from current jobs list
+        setJobs(prevJobs => prevJobs.filter(job => job.id !== jobId));
       }
     } catch (err) {
       console.error('Error rejecting job:', err);

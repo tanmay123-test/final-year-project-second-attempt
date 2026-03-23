@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Phone, Mail, MapPin, Truck, Wrench, Clock, DollarSign, CheckCircle, AlertCircle, Power } from 'lucide-react';
+import api from '../../shared/api';
 
 const TowTruckDetails = () => {
   const navigate = useNavigate();
@@ -27,19 +28,12 @@ const TowTruckDetails = () => {
   const handleOnlineToggle = async () => {
     try {
       const workerId = localStorage.getItem('workerId');
-      const response = await fetch(`http://localhost:5000/api/tow-truck/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          operator_id: parseInt(workerId),
-          is_online: !isOnline
-        })
+      const response = await api.put('/api/tow-truck/status', {
+        operator_id: parseInt(workerId),
+        is_online: !isOnline
       });
 
-      if (response.ok) {
-        const result = await response.json();
+      if (response.data) {
         setIsOnline(!isOnline);
         // Update local storage
         const updatedWorkerData = { ...workerData, is_online: !isOnline ? 1 : 0 };

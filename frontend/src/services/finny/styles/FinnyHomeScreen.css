@@ -308,8 +308,79 @@
   background: #1A4F63;
 }
 
-/* Bottom Navigation */
-.bottom-navigation {
+.finny-sidebar { display: none; } 
+.finny-bottom-nav { display: flex; } 
+
+@media (min-width: 769px) { 
+  .finny-sidebar { 
+    display: flex; 
+    flex-direction: column; 
+    width: 220px; 
+    min-height: 100vh; 
+    border-right: 1px solid #E5E7EB; 
+    padding: 24px 16px; 
+    background: #FFFFFF;
+    position: sticky;
+    top: 0;
+  } 
+  .finny-bottom-nav { display: none !important; } 
+  .finny-page-layout { display: flex; flex-direction: row; } 
+  .finny-page-content { flex: 1; overflow-y: auto; } 
+}
+
+.sidebar-header {
+  margin-bottom: 32px;
+}
+
+.sidebar-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1F5F7A;
+  margin: 0;
+}
+
+.sidebar-subtitle {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 4px 0 0 0;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sidebar-item:hover {
+  background: #F3F4F6;
+}
+
+.sidebar-item.active {
+  background: #FEF9C3;
+}
+
+.sidebar-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.sidebar-item.active .sidebar-label {
+  color: #1F2937;
+}
+
+/* Bottom Navigation for Mobile */
+.finny-bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -394,4 +465,15 @@
   .app-subtitle {
     font-size: 13px;
   }
+}
+
+@media (min-width: 769px) { 
+  .bottom-nav, 
+  .app-bottom-nav, 
+  .main-bottom-nav, 
+  [class*="BottomNav"], 
+  [class*="bottomNav"], 
+  [class*="bottom-nav"] { 
+    display: none !important; 
+  } 
 }

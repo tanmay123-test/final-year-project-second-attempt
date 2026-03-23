@@ -1,642 +1,205 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Fuel,
-  MapPin,
-  Calendar,
-  Download,
-  Wrench,
-  Truck,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../shared/api';
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'completed' | 'cancelled' | 'pending'
-  const [filterService, setFilterService] = useState('all'); // 'all' | 'mechanic' | 'tow' | 'fuel'
+  const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'active' | 'completed' | 'cancelled'
 
   useEffect(() => {
-    console.log('MyBookings component mounted');
     fetchAllBookings();
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(fetchAllBookings, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const fetchAllBookings = async () => {
     try {
-      console.log('Fetching all bookings...');
+      setLoading(true);
       const [mechanicRes, towRes, fuelRes] = await Promise.allSettled([
-        api.getUserAppointments().catch(err => {
-          console.error('Mechanic API error:', err);
-          return { data: { success: false, appointments: [] } };
-        }),
-        api.getUserTowBookings().catch(err => {
-          console.error('Tow API error:', err);
-          return { data: { success: false, bookings: [] } };
-        }),
-        api.getUserFuelDeliveryBookings().catch(err => {
-          console.error('Fuel API error:', err);
-          return { data: { success: false, bookings: [] } };
-        })
+        api.getUserAppointments().catch(err => ({ data: { success: false, appointments: [] } })),
+        api.getUserTowBookings().catch(err => ({ data: { success: false, bookings: [] } })),
+        api.getUserFuelDeliveryBookings().catch(err => ({ data: { success: false, bookings: [] } }))
       ]);
-
-      console.log('API responses:', { mechanicRes, towRes, fuelRes });
 
       const allBookings = [];
       
-      // Add mechanic bookings
       if (mechanicRes.status === 'fulfilled' && mechanicRes.value?.data?.success) {
         mechanicRes.value.data.appointments.forEach(apt => {
           allBookings.push({
             ...apt,
             service_type: 'mechanic',
-            worker_name: apt.doctor_name || apt.worker_name,
-            status: apt.status || 'pending',
-            created_at: apt.appointment_date || apt.created_at,
-            earnings: apt.estimated_cost || 0,
-            quantity: '1 service',
-            fuel_type: 'Mechanic Service',
-            delivery_address: apt.clinic_address || apt.address,
-            booking_id: apt.id
+            display_name: apt.doctor_name || apt.worker_name || 'Expert Mechanic',
+            display_role: 'Mechanic Specialist',
+            display_status: apt.status || 'pending',
+            vehicle: apt.car_name || 'Vehicle',
+            license: apt.license_plate || 'PR-911-S',
+            details: apt.issue_description || 'General maintenance',
+            date: apt.appointment_date || apt.created_at,
+            time: apt.appointment_time || '09:30 AM',
+            job_id: `#EXP-${apt.id}-XP`,
+            image: apt.worker_image || 'https://lh3.googleusercontent.com/aida-public/AB6AXuB4di-NTf3OKwxTvxZm4mgYZG8Dn_verOfimHS_JGZK7FzHsXlqSRtJ9_gt2gBTon_U5qyIXG0nVPgsGCG-4yOMSUhxC51UM3rotcBAH0R94h-KOrK6rjJuSgCUfVydQu0yQzJd59MjLOcFklou6mbXB9QhKax1ZtoZCMiJUEK7poh8OIeEMoFCr-Jf_Bv_KYltuI8eKVaPr-GUkzK4-NwVXMdst1YHyTRJN3lzfd6DWnzDtUB3sjTQ8v3lFtQmDMbZpvr31xsfDut8'
           });
         });
       }
 
-      // Add tow truck bookings
       if (towRes.status === 'fulfilled' && towRes.value?.data?.success) {
         towRes.value.data.bookings.forEach(booking => {
           allBookings.push({
             ...booking,
             service_type: 'tow',
-            worker_name: booking.worker_name || booking.driver_name,
-            status: booking.status || 'pending',
-            created_at: booking.created_at || booking.booking_date,
-            earnings: booking.estimated_cost || 0,
-            quantity: '1 service',
-            fuel_type: 'Tow Service',
-            delivery_address: booking.pickup_address || booking.address,
-            booking_id: booking.id
+            display_name: booking.worker_name || booking.driver_name || 'Tow Operator',
+            display_role: 'Towing Expert',
+            display_status: booking.status || 'pending',
+            vehicle: booking.car_name || 'Vehicle',
+            license: booking.license_plate || 'TW-882-C',
+            details: `Tow from ${booking.pickup_address || 'Current Location'}`,
+            date: booking.created_at || booking.booking_date,
+            time: 'ASAP',
+            job_id: `#EXP-${booking.id}-TW`,
+            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBHdnc_q9ZEM31T0UwWgnFhTTr2G6qwO47zcjNTVE-V-vohDyx-MVwl7NV24NmrkaYBMN3Wh7KAwd49F_HEeEoYCwoh9q2HMV2Wel--3sf2ds-hzW2yVKOcIPjhKVBUP544QHRN-kmNlboUM726QFWEH4JjGMiAWfk88ZuCPU7T7WF109T7OTpVnJkl8Nohmld7hHUm40U-U7UAZjg3MPWDdrCs4RBmdpzG4LXQnCTyFKk8RXScHWrLWDpqGUVp1sv0Knm1kkF0F7yv'
           });
         });
       }
 
-      // Add fuel delivery bookings
       if (fuelRes.status === 'fulfilled' && fuelRes.value?.data?.success) {
         fuelRes.value.data.bookings.forEach(booking => {
           allBookings.push({
             ...booking,
             service_type: 'fuel',
-            worker_name: booking.worker_name || booking.station_name,
-            status: booking.status || 'pending',
-            created_at: booking.created_at || booking.booking_date,
-            earnings: booking.earnings || booking.estimated_earnings || booking.total_cost || 0,
-            quantity: booking.quantity_liters || booking.quantity || 0,
-            fuel_type: booking.fuel_type || 'Not specified',
-            delivery_address: booking.delivery_address || booking.address,
-            booking_id: booking.id
+            display_name: booking.worker_name || booking.station_name || 'Fuel Station',
+            display_role: 'Fuel Specialist',
+            display_status: booking.status || 'pending',
+            vehicle: booking.car_name || 'Vehicle',
+            license: booking.license_plate || 'FL-ROT-95',
+            details: `${booking.quantity_liters || booking.quantity || 0}L of ${booking.fuel_type || 'Fuel'}`,
+            date: booking.created_at || booking.booking_date,
+            time: 'Instant',
+            job_id: `#EXP-${booking.id}-FL`,
+            image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDR8EMHCPlmfnoM_tSlwSPLIooqEJe2h3GTurI-HKO-INuvA1hf3mK-K_XhQ1ceJOI4KBhCJfnNpxfVN9y-9Wqf_eOgjYLQfGpRQmZ1J13g5FNwA-ik0aOLrE6V5oL-G8kb0L6pvubTN2sLdASZg-urtU4y-SG9subhcG_BjldGADG1yyU05MaGrmDmvxw0JlZdgul_qMmPz5i5lfG1zDluEAe0mb2rwaAFRJMa4RZxdIi8I-ZlnbSugQ-CvLTiDnxjdKxDjvFddGP7'
           });
         });
       }
 
-      // Sort by date (newest first)
-      allBookings.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      console.log('Final bookings:', allBookings);
+      allBookings.sort((a, b) => new Date(b.date) - new Date(a.date));
       setBookings(allBookings);
-
     } catch (err) {
       console.error('Failed to fetch bookings:', err);
-      setBookings([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Earnings by period from real history (completed only)
-  const earningsByPeriod = useMemo(() => {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 7);
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    let today = 0, week = 0, month = 0, all = 0;
-    const completed = bookings.filter((d) => (d.status || '').toLowerCase() === 'completed');
-    completed.forEach((d) => {
-      const earn = Number(d.earnings) || Number(d.estimated_cost) || 0;
-      const dateStr = d.completed_at || d.created_at;
-      if (!dateStr) {
-        all += earn;
-        return;
-      }
-      const dDate = new Date(dateStr);
-      all += earn;
-      if (dDate >= monthStart) month += earn;
-      if (dDate >= weekStart) week += earn;
-      if (dDate >= todayStart) today += earn;
-    });
-
-    return { today, week, month, all };
-  }, [bookings]);
-
   const filteredBookings = useMemo(() => {
-    let filtered = bookings;
-    
-    // Filter by service type
-    if (filterService !== 'all') {
-      filtered = filtered.filter((d) => d.service_type === filterService);
+    if (filterStatus === 'all') return bookings;
+    if (filterStatus === 'active') {
+      return bookings.filter(b => ['pending', 'searching', 'accepted', 'in_progress'].includes(b.display_status.toLowerCase()));
     }
-    
-    // Filter by status
-    if (filterStatus === 'all') return filtered;
-    if (filterStatus === 'completed') return filtered.filter((d) => (d.status || '').toLowerCase() === 'completed');
-    if (filterStatus === 'cancelled') return filtered.filter((d) => (d.status || '').toLowerCase() === 'cancelled');
-    if (filterStatus === 'pending') return filtered.filter((d) => (d.status || '').toLowerCase() === 'pending');
-    return filtered;
-  }, [bookings, filterStatus, filterService]);
+    return bookings.filter(b => b.display_status.toLowerCase() === filterStatus.toLowerCase());
+  }, [bookings, filterStatus]);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '—';
-    const d = new Date(dateString);
-    return d.toISOString().slice(0, 10);
+  const getStatusStyle = (status) => {
+    const s = status.toLowerCase();
+    if (s === 'searching' || s === 'pending') return 'bg-secondary-container/15 text-secondary';
+    if (s === 'accepted' || s === 'in_progress') return 'bg-primary/10 text-primary';
+    if (s === 'completed') return 'bg-tertiary-container/10 text-tertiary';
+    if (s === 'cancelled') return 'bg-error-container/40 text-error';
+    return 'bg-surface-container-high text-on-surface-variant';
   };
 
-  const formatQuantity = (quantity) => {
-    if (typeof quantity === 'string' && quantity.includes('service')) {
-      return quantity;
-    }
-    const n = Number(quantity);
-    if (isNaN(n)) return '—';
-    return `${n.toLocaleString('en-IN')} L`;
-  };
-
-  const formatRupee = (amount) => {
-    const n = Number(amount);
-    if (isNaN(n)) return '0';
-    return n.toLocaleString('en-IN', { maximumFractionDigits: 0, minimumFractionDigits: 0 });
-  };
-
-  const getServiceIcon = (serviceType) => {
-    switch (serviceType) {
-      case 'mechanic': return <Wrench size={14} />;
-      case 'tow': return <Truck size={14} />;
-      case 'fuel': return <Fuel size={14} />;
-      default: return <Clock size={14} />;
-    }
-  };
-
-  const getServiceColor = (serviceType) => {
-    switch (serviceType) {
-      case 'mechanic': return '#3b82f6';
-      case 'tow': return '#059669';
-      case 'fuel': return '#f97316';
-      default: return '#6b7280';
-    }
-  };
-
-  const handleExport = () => {
-    const rows = [
-      ['Service Type', 'Worker Name', 'Location', 'Date', 'Details', 'Cost', 'Status'],
-      ...filteredBookings.map((d) => [
-        d.service_type || '—',
-        d.worker_name || '—',
-        d.delivery_address || '—',
-        formatDate(d.created_at),
-        `${d.fuel_type || d.quantity || '—'}`,
-        formatRupee(d.earnings || d.estimated_cost || 0),
-        (d.status || '').toLowerCase(),
-      ]),
-    ];
-    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `all-bookings-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
-  };
-
-  const getStatusDisplay = (status) => {
-    const s = (status || '').toLowerCase();
-    if (s === 'completed') return 'Completed';
-    if (s === 'cancelled') return 'Cancelled';
-    if (s === 'pending') return 'Pending';
-    return s || '—';
-  };
-
-  const getStatusColor = (status) => {
-    const s = (status || '').toLowerCase();
-    if (s === 'completed') return '#16a34a';
-    if (s === 'cancelled') return '#dc2626';
-    if (s === 'pending') return '#f59e0b';
-    return '#6b7280';
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Oct 24, 2023';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   if (loading) {
     return (
-      <div className="history-screen history-loading">
-        <div className="history-loading-spinner" />
-        <p className="history-loading-text">Loading all bookings...</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  // Test render
-  console.log('MyBookings render - loading:', loading, 'bookings count:', bookings.length);
-
   return (
-    <div className="history-screen">
-      <style>{`
-        .history-screen {
-          min-height: 100vh;
-          background: #f8f9fa;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          padding-bottom: 88px;
-        }
-        .history-loading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 48px;
-        }
-        .history-loading-spinner {
-          width: 40px;
-          height: 40px;
-          border: 3px solid #f0f0f0;
-          border-top-color: #3b82f6;
-          border-radius: 50%;
-          animation: historySpin 0.8s linear infinite;
-        }
-        .history-loading-text { margin-top: 16px; color: #6b7280; font-size: 14px; }
-        @keyframes historySpin { to { transform: rotate(360deg); } }
-
-        .history-header {
-          background: #fff;
-          padding: 16px 20px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-          position: sticky;
-          top: 0;
-          z-index: 10;
-        }
-        .history-header-left {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        .history-logo {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: #374151;
-          font-weight: 700;
-          font-size: 18px;
-        }
-        .history-logo svg { color: #3b82f6; flex-shrink: 0; }
-        .history-title {
-          font-size: 22px;
-          font-weight: 700;
-          color: #111827;
-          margin: 4px 0 0 0;
-        }
-        .history-export-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 14px;
-          background: #fff;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
-          color: #374151;
-          cursor: pointer;
-        }
-        .history-export-btn:hover { background: #f9fafb; border-color: #d1d5db; }
-
-        .history-filters {
-          padding: 16px 20px;
-          display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
-          align-items: center;
-        }
-        .history-filter-group {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-        }
-        .history-filter-label {
-          font-size: 12px;
-          font-weight: 500;
-          color: #6b7280;
-        }
-        .history-filter-btn {
-          padding: 8px 18px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
-          border: none;
-          cursor: pointer;
-          background: #e5e7eb;
-          color: #4b5563;
-          transition: all 0.2s;
-        }
-        .history-filter-btn:hover {
-          background: #f3f4f6;
-        }
-        .history-filter-btn.active {
-          background: #3b82f6;
-          color: #fff;
-          border-color: #3b82f6;
-        }
-
-        .history-earnings {
-          padding: 20px 20px 16px;
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
-        }
-        .history-earnings-card {
-          background: #f3f4f6;
-          border-radius: 12px;
-          padding: 14px 12px;
-          text-align: left;
-        }
-        .history-earnings-amount {
-          font-size: 18px;
-          font-weight: 700;
-          color: #111827;
-        }
-        .history-earnings-label {
-          font-size: 12px;
-          color: #6b7280;
-          margin-top: 4px;
-          font-weight: 500;
-        }
-
-        .history-list {
-          padding: 0 20px 24px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .history-card {
-          background: #fff;
-          border-radius: 12px;
-          padding: 16px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-          border: 1px solid #f3f4f6;
-          transition: all 0.2s;
-        }
-        .history-card:hover {
-          box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-          transform: translateY(-2px);
-        }
-        .history-card-top {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 8px;
-        }
-        .history-card-service {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-weight: 700;
-          font-size: 16px;
-          color: #111827;
-        }
-        .history-card-service svg {
-          flex-shrink: 0;
-        }
-        .history-card-worker {
-          font-size: 14px;
-          color: #6b7280;
-          margin-top: 2px;
-        }
-        .history-card-earnings {
-          font-size: 16px;
-          font-weight: 700;
-          color: #16a34a;
-        }
-        .history-card-location {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          color: #6b7280;
-          margin-bottom: 10px;
-        }
-        .history-card-location svg { flex-shrink: 0; color: #9ca3af; }
-        .history-card-status {
-          display: inline-block;
-          padding: 4px 10px;
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 600;
-          margin-bottom: 10px;
-          color: white;
-        }
-        .history-card-details {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 12px 16px;
-          font-size: 13px;
-          color: #6b7280;
-        }
-        .history-card-details span { display: inline-flex; align-items: center; gap: 4px; }
-        .history-card-details svg { flex-shrink: 0; color: #9ca3af; }
-
-        .history-empty {
-          text-align: center;
-          padding: 48px 24px;
-          color: #6b7280;
-          font-size: 15px;
-        }
-
-        @media (max-width: 768px) {
-          .history-earnings {
-            grid-template-columns: repeat(2, 1fr);
-          }
-          .history-filters {
-            flex-direction: column;
-            align-items: stretch;
-          }
-          .history-filter-group {
-            justify-content: space-between;
-          }
-        }
-      `}</style>
-
-      {/* Header */}
-      <header className="history-header">
-        <div className="history-header-left">
-          <div className="history-logo">
-            <Calendar size={24} />
-            <span>My Bookings</span>
-          </div>
-          <div>
-            <h1 className="history-title">All Service Bookings</h1>
-          </div>
+    <div className="max-w-7xl mx-auto px-6 pt-12 pb-32">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+        <div>
+          <h1 className="font-headline font-extrabold text-5xl tracking-tight text-on-surface mb-4">My Bookings</h1>
+          <p className="text-on-surface-variant max-w-md font-body leading-relaxed">
+            Track and manage your service appointments. Precision maintenance for your high-performance vehicle.
+          </p>
         </div>
-        <button type="button" className="history-export-btn" onClick={handleExport}>
-          <Download size={18} />
-          Export
-        </button>
-      </header>
-
-      {/* Earnings summary */}
-      <div className="history-earnings">
-        <div className="history-earnings-card">
-          <div className="history-earnings-amount">₹{formatRupee(earningsByPeriod.today)}</div>
-          <div className="history-earnings-label">TODAY</div>
-        </div>
-        <div className="history-earnings-card">
-          <div className="history-earnings-amount">₹{formatRupee(earningsByPeriod.week)}</div>
-          <div className="history-earnings-label">THIS WEEK</div>
-        </div>
-        <div className="history-earnings-card">
-          <div className="history-earnings-amount">₹{formatRupee(earningsByPeriod.month)}</div>
-          <div className="history-earnings-label">THIS MONTH</div>
-        </div>
-        <div className="history-earnings-card">
-          <div className="history-earnings-amount">₹{formatRupee(earningsByPeriod.all)}</div>
-          <div className="history-earnings-label">ALL TIME</div>
+        <div className="flex flex-wrap items-center bg-surface-container-low p-1.5 rounded-xl">
+          {['all', 'active', 'completed', 'cancelled'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status)}
+              className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                filterStatus === status 
+                  ? 'bg-surface-container-lowest text-primary shadow-sm' 
+                  : 'text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="history-filters">
-        <div className="history-filter-group">
-          <span className="history-filter-label">Service:</span>
-          <button
-            type="button"
-            className={`history-filter-btn ${filterService === 'all' ? 'active' : ''}`}
-            onClick={() => setFilterService('all')}
-          >
-            All
-          </button>
-          <button
-            type="button"
-            className={`history-filter-btn ${filterService === 'mechanic' ? 'active' : ''}`}
-            onClick={() => setFilterService('mechanic')}
-          >
-            <Wrench size={14} style={{ marginRight: '4px' }} />
-            Mechanic
-          </button>
-          <button
-            type="button"
-            className={`history-filter-btn ${filterService === 'tow' ? 'active' : ''}`}
-            onClick={() => setFilterService('tow')}
-          >
-            <Truck size={14} style={{ marginRight: '4px' }} />
-            Tow
-          </button>
-          <button
-            type="button"
-            className={`history-filter-btn ${filterService === 'fuel' ? 'active' : ''}`}
-            onClick={() => setFilterService('fuel')}
-          >
-            <Fuel size={14} style={{ marginRight: '4px' }} />
-            Fuel
-          </button>
+      {filteredBookings.length === 0 ? (
+        <div className="text-center py-20 bg-surface-container-lowest rounded-2xl border border-outline-variant/15">
+          <span className="material-symbols-outlined text-6xl text-outline-variant mb-4">calendar_today</span>
+          <h3 className="text-xl font-bold text-on-surface">No bookings found</h3>
+          <p className="text-on-surface-variant">You don't have any {filterStatus !== 'all' ? filterStatus : ''} bookings yet.</p>
         </div>
-        <div className="history-filter-group">
-          <span className="history-filter-label">Status:</span>
-          <button
-            type="button"
-            className={`history-filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('all')}
-          >
-            All
-          </button>
-          <button
-            type="button"
-            className={`history-filter-btn ${filterStatus === 'completed' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('completed')}
-          >
-            <CheckCircle2 size={14} style={{ marginRight: '4px' }} />
-            Completed
-          </button>
-          <button
-            type="button"
-            className={`history-filter-btn ${filterStatus === 'cancelled' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('cancelled')}
-          >
-            <AlertCircle size={14} style={{ marginRight: '4px' }} />
-            Cancelled
-          </button>
-          <button
-            type="button"
-            className={`history-filter-btn ${filterStatus === 'pending' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('pending')}
-          >
-            <Clock size={14} style={{ marginRight: '4px' }} />
-            Pending
-          </button>
-        </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {filteredBookings.map((booking) => (
+            <div key={booking.job_id} className="group bg-surface-container-lowest p-6 rounded-xl shadow-[0_12px_32px_rgba(25,28,32,0.04)] hover:bg-surface-bright transition-all border border-outline-variant/15">
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden shadow-inner">
+                    <img 
+                      className="w-full h-full object-cover" 
+                      src={booking.image} 
+                      alt={booking.display_name} 
+                    />
+                  </div>
+                  <div>
+                    <h3 className="font-headline font-bold text-lg text-on-surface">{booking.display_name}</h3>
+                    <p className="text-xs font-label uppercase tracking-widest text-on-surface-variant">{booking.display_role}</p>
+                  </div>
+                </div>
+                <span className={`px-3 py-1 rounded-[4px] text-[10px] font-label font-bold tracking-wider uppercase ${getStatusStyle(booking.display_status)}`}>
+                  {booking.display_status}
+                </span>
+              </div>
 
-      {/* Bookings list */}
-      <div className="history-list">
-        {filteredBookings.length === 0 ? (
-          <div className="history-empty">No bookings to show.</div>
-        ) : (
-          filteredBookings.map((booking) => (
-            <div key={booking.booking_id || booking.id || Math.random()} className="history-card">
-              <div className="history-card-top">
-                <div className="history-card-service" style={{ color: getServiceColor(booking.service_type) }}>
-                  {getServiceIcon(booking.service_type)}
-                  <span>{booking.service_type.charAt(0).toUpperCase() + booking.service_type.slice(1)} Service</span>
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-primary text-xl">car_repair</span>
+                  <div>
+                    <p className="text-sm font-semibold text-on-surface">{booking.vehicle}</p>
+                    <p className="text-xs text-on-surface-variant">License: {booking.license}</p>
+                  </div>
                 </div>
-                <div className="history-card-earnings">
-                  ₹{formatRupee(booking.earnings || booking.estimated_cost || 0)}
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-primary text-xl">build</span>
+                  <p className="text-sm text-on-surface-variant line-clamp-1 leading-relaxed">{booking.details}</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-primary text-xl">schedule</span>
+                  <p className="text-sm text-on-surface-variant">{formatDate(booking.date)} • {booking.time}</p>
                 </div>
               </div>
-              <div className="history-card-worker">
-                {booking.worker_name || 'Worker not assigned'}
-              </div>
-              {(booking.delivery_address || booking.address) && (
-                <div className="history-card-location">
-                  <MapPin size={14} />
-                  {booking.delivery_address || booking.address}
-                </div>
-              )}
-              <div 
-                className="history-card-status" 
-                style={{ 
-                  backgroundColor: getStatusColor(booking.status),
-                  color: 'white'
-                }}
-              >
-                {getStatusDisplay(booking.status)}
-              </div>
-              <div className="history-card-details">
-                <span>
-                  <Calendar size={14} />
-                  {formatDate(booking.created_at)}
-                </span>
-                <span>
-                  {getServiceIcon(booking.service_type)}
-                  {booking.fuel_type || booking.quantity || '—'}
-                </span>
-                <span>{formatQuantity(booking.quantity)}</span>
+
+              <div className="flex items-center justify-between pt-6 border-t border-outline-variant/10">
+                <span className="text-[10px] font-label font-medium text-outline">JOB ID: {booking.job_id}</span>
+                <button className="px-5 py-2 text-sm font-bold text-primary hover:bg-primary/5 rounded-lg transition-all">View Details</button>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

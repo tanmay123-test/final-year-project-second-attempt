@@ -1,0 +1,254 @@
+/* LoanPage.css */
+
+.loan-page {
+  min-height: 100vh;
+  background-color: #F9FAFB;
+  padding-bottom: 80px;
+}
+
+.header {
+  background: linear-gradient(135deg, #1F5F7A 0%, #2C7DA0 100%);
+  padding: 24px 16px;
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  margin: 4px 0 0 0;
+  opacity: 0.9;
+}
+
+.main-content {
+  padding: 20px 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.section-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1F2937;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.calculator-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4B5563;
+}
+
+.form-group input {
+  padding: 12px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #1F5F7A;
+}
+
+.btn-calculate {
+  background: #1F5F7A;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: flex-end;
+}
+
+.btn-calculate:hover {
+  background: #1A4F63;
+}
+
+/* Results Display */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #F3F4F6;
+}
+
+.result-card {
+  background: #F9FAFB;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.result-label {
+  font-size: 12px;
+  color: #6B7280;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.result-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1F2937;
+}
+
+.score-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.score-badge.high { background: #DCFCE7; color: #15803D; }
+.score-badge.medium { background: #FEF9C3; color: #A16207; }
+.score-badge.low { background: #FEE2E2; color: #B91C1C; }
+
+/* Table Styles */
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.schedule-table th {
+  text-align: left;
+  padding: 12px;
+  background: #F9FAFB;
+  color: #4B5563;
+  font-weight: 600;
+  border-bottom: 2px solid #E5E7EB;
+}
+
+.schedule-table td {
+  padding: 12px;
+  border-bottom: 1px solid #F3F4F6;
+  color: #1F2937;
+}
+
+/* Compare Section */
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.compare-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: #F9FAFB;
+  border-radius: 12px;
+}
+
+.compare-col h3 {
+  font-size: 16px;
+  margin: 0;
+  color: #1F5F7A;
+}
+
+.comparison-result {
+  margin-top: 24px;
+  padding: 20px;
+  background: #FEF3C7;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.comparison-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #92400E;
+}
+
+/* Sidebar/Nav consistency */
+.finny-sidebar { display: none; } 
+.finny-bottom-nav { display: flex; } 
+
+@media (min-width: 769px) { 
+  .finny-sidebar { 
+    display: flex; 
+    flex-direction: column; 
+    width: 220px; 
+    min-height: 100vh; 
+    border-right: 1px solid #E5E7EB; 
+    padding: 24px 16px; 
+    background: #FFFFFF;
+    position: sticky;
+    top: 0;
+  } 
+  .finny-bottom-nav { display: none !important; } 
+  .finny-page-layout { display: flex; flex-direction: row; } 
+  .finny-page-content { flex: 1; overflow-y: auto; } 
+
+  .bottom-nav, .app-bottom-nav, [class*="BottomNav"] { display: none !important; }
+}

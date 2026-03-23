@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Wallet, Clock, Briefcase, Star, User, CheckCircle, ExternalLink, IndianRupee, Shield, Calendar, AlertCircle } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelancerDashboard.css';
 
 const ProjectDetailPage = () => {
@@ -20,10 +20,7 @@ const ProjectDetailPage = () => {
   const fetchProjectDetail = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/freelance/projects/${projectId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/freelance/projects/${projectId}`);
       setProject(response.data.project);
       setProposals(response.data.project.proposals || []);
       setError(null);
@@ -40,10 +37,8 @@ const ProjectDetailPage = () => {
     
     setAcceptingId(proposalId);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/freelance/proposals/accept', 
-        { proposal_id: proposalId },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.post('/api/freelance/proposals/accept', 
+        { proposal_id: proposalId }
       );
       // Success state is handled by re-fetching project detail
       await fetchProjectDetail();

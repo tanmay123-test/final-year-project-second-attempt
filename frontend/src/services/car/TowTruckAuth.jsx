@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Truck, Eye, EyeOff, User, Lock, Mail, Phone, AlertCircle, ArrowLeft } from 'lucide-react';
+import api from '../../shared/api';
 
 const TowTruckAuth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -45,7 +46,6 @@ const TowTruckAuth = () => {
 
     try {
       const endpoint = isLogin ? 'login' : 'register';
-      const url = `http://localhost:5000/api/tow-truck/${endpoint}`;
       
       const payload = isLogin 
         ? { email: formData.email, password: formData.password }
@@ -66,17 +66,11 @@ const TowTruckAuth = () => {
             pollution_cert_path: formData.pollution_cert_path || null
           };
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = await api.post(`/api/tow-truck/${endpoint}`, payload);
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
+      if (data) {
         if (isLogin) {
           const operatorData = data.operator || data.worker; // Handle both response formats
           localStorage.setItem('workerToken', data.token);

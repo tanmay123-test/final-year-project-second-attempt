@@ -18,7 +18,7 @@ import {
   ExternalLink,
   Plus
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelancerDashboard.css';
 
 const FreelancerDashboard = () => {
@@ -42,11 +42,8 @@ const FreelancerDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       // Using existing backend endpoint
-      const response = await axios.get('http://localhost:5000/api/freelancer/dashboard', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/freelancer/dashboard');
       if (response.data.success) {
         setDashboardData(response.data.dashboard);
       }
@@ -95,12 +92,9 @@ const FreelancerDashboard = () => {
 
   const handleBookingAction = async (bookingId, status) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/freelance/bookings/respond', {
+      const response = await api.post('/api/freelance/bookings/respond', {
         booking_id: bookingId,
         status: status
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data.success) {

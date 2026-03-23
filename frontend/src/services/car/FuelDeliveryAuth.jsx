@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Fuel, Eye, EyeOff, User, Lock, Mail, Phone, MapPin, AlertCircle, ArrowLeft } from 'lucide-react';
 import { workerService } from '../../shared/api';
+import api from '../../shared/api';
 
 const FuelDeliveryAuth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -44,25 +45,25 @@ const FuelDeliveryAuth = () => {
     setSuccess('');
     setLoading(true);
 
+    if (!isLogin && !formData.safety_declaration_accepted) {
+      setError('You must accept the safety guidelines to register.');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isLogin) {
         // Use direct fetch for fuel delivery login
         try {
-          const response = await fetch('http://localhost:5000/api/fuel-delivery/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              email: formData.email,
-              password: formData.password
-            })
+          const response = await api.post('/api/fuel-delivery/login', {
+            email: formData.email,
+            password: formData.password
           });
           
           console.log('Login response:', response); // Debug log
           
-          if (response.ok) {
-            const data = await response.json();
+          if (response.data) {
+            const data = response.data;
             console.log('Login data:', data);
             
             // Handle fuel delivery specific response structure
@@ -111,9 +112,8 @@ const FuelDeliveryAuth = () => {
               }
             }
           } else {
-            const errorData = await response.json();
-            console.error('Login failed:', errorData);
-            setError(errorData.message || errorData.error || 'Login failed. Please try again.');
+            console.error('Login failed:', data);
+            setError(data.message || data.error || 'Login failed. Please try again.');
           }
         } catch (apiError) {
           console.error('API Error:', apiError);
@@ -121,9 +121,6 @@ const FuelDeliveryAuth = () => {
         }
       } else {
         // Registration logic
-        const endpoint = 'register';
-        const url = `http://localhost:5000/api/fuel-delivery/${endpoint}`;
-        
         const payload = {
           name: formData.name,
           email: formData.email,
@@ -141,17 +138,11 @@ const FuelDeliveryAuth = () => {
           safety_declaration_accepted: formData.safety_declaration_accepted
         };
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
+        const response = await api.post('/api/fuel-delivery/register', payload);
 
-        const data = await response.json();
+        const data = response.data;
 
-        if (response.ok) {
+        if (data) {
           setSuccess('Registration successful! Please wait for admin approval.');
           setTimeout(() => {
             setIsLogin(true);
@@ -163,7 +154,13 @@ const FuelDeliveryAuth = () => {
       }
     } catch (error) {
       console.error('Auth error:', error);
-      setError('Network error. Please try again.');
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else if (error.response?.data?.error) {
+        setError(error.response.data.error);
+      } else {
+        setError('Network error. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -647,6 +644,22 @@ const FuelDeliveryAuth = () => {
                   </div>
                 </div>
               </>
+            )}
+
+            {!isLogin && (
+              <div className="form-group" style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '1.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="safety_declaration"
+                  name="safety_declaration_accepted"
+                  checked={formData.safety_declaration_accepted}
+                  onChange={handleInputChange}
+                  style={{ width: '20px', height: '20px', marginTop: '4px', cursor: 'pointer' }}
+                />
+                <label htmlFor="safety_declaration" style={{ fontSize: '0.875rem', color: '#4b5563', lineHeight: '1.5', cursor: 'pointer' }}>
+                  I accept the <strong>safety guidelines</strong> for fuel delivery operations and confirm all provided information is accurate.
+                </label>
+              </div>
             )}
 
             <button type="submit" className="submit-btn" disabled={loading}>

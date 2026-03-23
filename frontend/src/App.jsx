@@ -33,6 +33,7 @@ import ProviderProfile from './services/housekeeping/provider/ProviderProfile';
 import ProviderPricing from './services/housekeeping/provider/ProviderPricing';
 
 import UserLayout from './components/UserLayout';
+import CarServiceUserLayout from './services/car/CarServiceUserLayout';
 
 // Car Service Components
 import CarServiceSetup from './services/car/CarServiceSetup';
@@ -57,6 +58,9 @@ import QuickModePage from './services/finny/pages/QuickModePage';
 import SummaryPage from './services/finny/pages/SummaryPage';
 import AnalyticsPage from './services/finny/pages/AnalyticsPage';
 import ChatModePage from './services/finny/pages/ChatModePage';
+import BudgetPage from './services/finny/pages/BudgetPage';
+import LoanPage from './services/finny/pages/LoanPage';
+import GoalJarPage from './services/finny/pages/GoalJarPage';
 import ChatFinancialAssistantPage from './services/finny/pages/ChatFinancialAssistantPage';
 import AnalyticsDashboardPage from './services/finny/pages/AnalyticsDashboardPage';
 
@@ -93,8 +97,8 @@ import MechanicSupport from './services/car/MechanicSupport';
 // Fuel Delivery Components
 import FuelDeliveryLayout from './services/car/FuelDeliveryLayout';
 import FuelDeliveryHomepage from './services/car/FuelDeliveryHomepage';
-import FuelDeliveryRequests from './services/car/fuelDeliveryRequests';
-import FuelDeliveryActive from './services/car/fuelDeliveryActive';
+import FuelDeliveryRequests from './services/car/FuelDeliveryRequests';
+import FuelDeliveryActive from './services/car/FuelDeliveryActive';
 import FuelDeliveryHistory from './services/car/FuelDeliveryHistory';
 import FuelDeliveryPerformance from './services/car/FuelDeliveryPerformance';
 import FuelDeliveryProfile from './services/car/FuelDeliveryProfile';
@@ -203,10 +207,13 @@ const ProtectedWorkerRoute = ({ children }) => {
 };
 
 const App = () => {
+  const location = useLocation();
+  const isCarServiceUserRoute = location.pathname.startsWith('/car-service');
+
   return (
     <div className="app">
-      <Navbar />
-      <div className="main-content">
+      {!isCarServiceUserRoute && <Navbar />}
+      <div className={isCarServiceUserRoute ? "" : "main-content"}>
         <Routes>
           <Route path="/" element={<Landing />} />
           
@@ -228,6 +235,10 @@ const App = () => {
             <Route path="/finny/summary" element={<ProtectedRoute><SummaryPage /></ProtectedRoute>} />
             <Route path="/finny/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
             <Route path="/finny/chat" element={<ProtectedRoute><ChatModePage /></ProtectedRoute>} />
+            <Route path="/finny/budget" element={<ProtectedRoute><BudgetPage /></ProtectedRoute>} />
+            <Route path="/finny/loan" element={<ProtectedRoute><LoanPage /></ProtectedRoute>} />
+            <Route path="/finny/goals" element={<ProtectedRoute><GoalJarPage /></ProtectedRoute>} />
+            <Route path="/finny/coach" element={<ProtectedRoute><ChatFinancialAssistantPage /></ProtectedRoute>} />
           </Route>
 
           {/* Housekeeping Arrival Routes */}
@@ -243,15 +254,17 @@ const App = () => {
           <Route path="/provide-service" element={<ProtectedRoute><ServiceSelection mode="worker" /></ProtectedRoute>} />
           
           {/* Car Service User Routes */}
-          <Route path="/car-service/setup" element={<ProtectedRoute><CarServiceSetup /></ProtectedRoute>} />
-          <Route path="/car-service/home" element={<ProtectedRoute><CarServiceHome /></ProtectedRoute>} />
-          <Route path="/car-service/book-mechanic" element={<ProtectedRoute><BookMechanic /></ProtectedRoute>} />
-          <Route path="/car-service/garage" element={<ProtectedRoute><MyGarage /></ProtectedRoute>} />
-          <Route path="/car-service/book-tow-truck" element={<ProtectedRoute><BookTowTruck /></ProtectedRoute>} />
-          <Route path="/car-service/fuel-delivery" element={<ProtectedRoute><FuelDelivery /></ProtectedRoute>} />
-          <Route path="/car-service/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
-          <Route path="/car-service/ai-mechanic" element={<ProtectedRoute><AIMechanic /></ProtectedRoute>} />
-          <Route path="/car-service" element={<ProtectedRoute><CarServiceSetup /></ProtectedRoute>} />
+          <Route element={<ProtectedRoute><CarServiceUserLayout /></ProtectedRoute>}>
+            <Route path="/car-service/setup" element={<CarServiceSetup />} />
+            <Route path="/car-service/home" element={<CarServiceHome />} />
+            <Route path="/car-service/book-mechanic" element={<BookMechanic />} />
+            <Route path="/car-service/garage" element={<MyGarage />} />
+            <Route path="/car-service/book-tow-truck" element={<BookTowTruck />} />
+            <Route path="/car-service/fuel-delivery" element={<FuelDelivery />} />
+            <Route path="/car-service/my-bookings" element={<MyBookings />} />
+            <Route path="/car-service/ai-mechanic" element={<AIMechanic />} />
+            <Route path="/car-service" element={<CarServiceSetup />} />
+          </Route>
           
           {/* Freelance Marketplace Routes */}
           <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />

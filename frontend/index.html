@@ -5,6 +5,78 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend</title>
+    <!-- Tailwind CDN for Stitch AI UI -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "inverse-primary": "#c4c0ff",
+              "primary": "#4d41df",
+              "on-primary": "#ffffff",
+              "secondary-fixed": "#ffdbd0",
+              "on-secondary": "#ffffff",
+              "secondary-fixed-dim": "#ffb59d",
+              "error": "#ba1a1a",
+              "tertiary-container": "#00855d",
+              "on-primary-container": "#fffbff",
+              "tertiary-fixed-dim": "#68dba9",
+              "tertiary-fixed": "#85f8c4",
+              "on-tertiary-fixed": "#002114",
+              "primary-fixed-dim": "#c4c0ff",
+              "tertiary": "#006948",
+              "surface-container-high": "#e7e8ee",
+              "on-primary-fixed-variant": "#3622ca",
+              "error-container": "#ffdad6",
+              "secondary": "#ab3500",
+              "surface-bright": "#f8f9ff",
+              "surface-dim": "#d8dae0",
+              "secondary-container": "#fe6a34",
+              "surface-container": "#eceef3",
+              "outline": "#777587",
+              "inverse-on-surface": "#eff0f6",
+              "on-secondary-fixed-variant": "#832600",
+              "on-surface": "#191c20",
+              "primary-fixed": "#e3dfff",
+              "on-secondary-container": "#5d1900",
+              "surface-variant": "#e1e2e8",
+              "inverse-surface": "#2e3135",
+              "on-tertiary": "#ffffff",
+              "on-secondary-fixed": "#390c00",
+              "on-background": "#191c20",
+              "surface-container-lowest": "#ffffff",
+              "on-primary-fixed": "#100069",
+              "on-error-container": "#93000a",
+              "surface-tint": "#4f44e2",
+              "on-tertiary-fixed-variant": "#005137",
+              "surface-container-low": "#f2f3f9",
+              "background": "#f8f9ff",
+              "surface-container-highest": "#e1e2e8",
+              "surface": "#f8f9ff",
+              "on-tertiary-container": "#f5fff7",
+              "outline-variant": "#c7c4d8",
+              "on-error": "#ffffff",
+              "primary-container": "#675df9",
+              "on-surface-variant": "#464555"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"/>
+    <!-- Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   </head>
   <body>
     <div id="root"></div>

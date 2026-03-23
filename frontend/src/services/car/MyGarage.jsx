@@ -1,48 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Car, Plus, Star, Edit, Trash2, Fuel, Calendar, 
-  FileText, Check, X 
-} from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../shared/api';
 
 const MyGarage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  
+  // State Management
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingCar, setEditingCar] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    brand: '',
+    make: '',
     model: '',
     year: '',
-    fuel_type: '',
+    color: '',
     registration_number: ''
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
+  // Fetch cars on mount
   useEffect(() => {
     fetchCars();
   }, []);
 
   const fetchCars = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.get('/api/car/cars', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.data?.cars) {
+      setLoading(true);
+      const response = await api.get('/api/car/cars');
+      if (response.data && response.data.cars) {
         setCars(response.data.cars);
       }
     } catch (error) {
-      console.error('Error fetching cars:', error);
-      // Set empty array to prevent infinite loading
-      setCars([]);
+      console.error('Failed to fetch cars:', error);
+      showToast('Failed to load garage. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -52,739 +41,331 @@ const MyGarage = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'registration_number' ? value.toUpperCase() : value
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    if (submitting) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const data = {
-        ...formData,
-        year: parseInt(formData.year) || formData.year
-      };
-
-      let response;
-      if (editingCar) {
-        response = await api.put(`/api/car/cars/${editingCar.id}`, data, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-      } else {
-        response = await api.post('/api/car/add-car', data, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-      }
-
-      if (response.status === 200 || response.status === 201) {
-        setSuccess(editingCar ? 'Car updated successfully!' : 'Car added successfully!');
-        setShowAddForm(false);
-        setEditingCar(null);
-        setFormData({
-          brand: '',
-          model: '',
-          year: '',
-          fuel_type: '',
-          registration_number: ''
-        });
-        fetchCars(); // Refresh the list
+      setSubmitting(true);
+      const response = await api.post('/api/car/add-car', formData);
+      
+      if (response.data) {
+        showToast('Vehicle registered successfully!', 'success');
+        setFormData({ make: '', model: '', year: '', color: '', registration_number: '' });
+        fetchCars(); // Refresh list
       }
     } catch (error) {
-      setError(editingCar ? 'Failed to update car. Please try again.' : 'Failed to add car. Please try again.');
-      console.error('Error saving car:', error);
+      const errorMsg = error.response?.data?.error || 'Failed to add car';
+      showToast(errorMsg, 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleEdit = (car) => {
-    setEditingCar(car);
-    setFormData({
-      brand: car.brand,
-      model: car.model,
-      year: car.year.toString(),
-      fuel_type: car.fuel_type,
-      registration_number: car.registration_number
-    });
-    setShowAddForm(true);
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
-  const handleDelete = async (carId) => {
-    if (!window.confirm('Are you sure you want to delete this car?')) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await api.delete(`/api/car/cars/${carId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      setCars(cars.filter(car => car.id !== carId));
-      setSuccess('Car deleted successfully!');
-    } catch (error) {
-      setError('Failed to delete car. Please try again.');
-      console.error('Error deleting car:', error);
-    }
+  const handleDeleteClick = () => {
+    showToast('Delete coming soon', 'success');
   };
 
-  const handleSetDefault = async (carId) => {
-    try {
-      const token = localStorage.getItem('token');
-      await api.put(`/api/car/cars/${carId}/set-default`, {}, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      setCars(cars.map(car => ({
-        ...car,
-        is_default: car.id === carId ? 1 : 0
-      })));
-      setSuccess('Default car updated successfully!');
-    } catch (error) {
-      setError('Failed to set default car. Please try again.');
-      console.error('Error setting default car:', error);
-    }
-  };
-
-  const resetForm = () => {
-    setShowAddForm(false);
-    setEditingCar(null);
-    setFormData({
-      brand: '',
-      model: '',
-      year: '',
-      fuel_type: '',
-      registration_number: ''
-    });
-    setError('');
-    setSuccess('');
-  };
-
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Loading your garage...</p>
+  // Skeleton Card Component
+  const SkeletonCard = () => (
+    <div className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm animate-pulse flex flex-col h-[400px]">
+      <div className="h-48 bg-slate-200"></div>
+      <div className="p-6 space-y-4">
+        <div className="h-8 bg-slate-200 rounded w-3/4"></div>
+        <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+          <div className="space-y-2">
+            <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+            <div className="h-4 bg-slate-200 rounded w-full"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 bg-slate-200 rounded w-1/2"></div>
+            <div className="h-4 bg-slate-200 rounded w-full"></div>
+          </div>
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="my-garage-container">
-      <div className="garage-header">
-        <h1>My Garage</h1>
-        <button 
-          onClick={() => setShowAddForm(true)}
-          className="add-car-btn"
-        >
-          <Plus size={20} />
-          Add Car
-        </button>
-      </div>
-
-      {error && (
-        <div className="error-message">
-          <X size={20} />
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="success-message">
-          <Check size={20} />
-          {success}
-        </div>
-      )}
-
-      <div className="cars-grid">
-        {cars.map(car => (
-          <div key={car.id} className="car-card">
-            <div className="car-header">
-              <div className="car-info">
-                <h3>{car.brand} {car.model}</h3>
-                <div className="car-meta">
-                  <span className="year">
-                    <Calendar size={16} />
-                    {car.year}
-                  </span>
-                  <span className="fuel">
-                    <Fuel size={16} />
-                    {car.fuel_type}
-                  </span>
-                </div>
-              </div>
-              {car.is_default && (
-                <div className="default-badge">
-                  <Star size={16} />
-                  <span>Default</span>
-                </div>
-              )}
-            </div>
-            
-            <div className="car-details">
-              <div className="detail-item">
-                <span className="label">Registration:</span>
-                <span className="value">{car.registration_number}</span>
-              </div>
-            </div>
-            
-            <div className="car-actions">
-              {!car.is_default && (
-                <button 
-                  onClick={() => handleSetDefault(car.id)}
-                  className="action-btn set-default-btn"
-                  title="Set as default car"
-                >
-                  <Star size={16} />
-                </button>
-              )}
-              <button 
-                onClick={() => handleEdit(car)}
-                className="action-btn edit-btn"
-                title="Edit car"
-              >
-                <Edit size={16} />
-              </button>
-              <button 
-                onClick={() => handleDelete(car.id)}
-                className="action-btn delete-btn"
-                title="Delete car"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {cars.length === 0 && (
-        <div className="empty-garage">
-          <Car size={60} />
-          <h3>No cars in your garage</h3>
-          <p>Add your first car to get started with car services</p>
-          <button 
-            onClick={() => setShowAddForm(true)}
-            className="add-first-car-btn"
+    <div className="bg-[#f8f9ff] min-h-screen font-body text-[#191c20] selection:bg-[#4d41df]/20">
+      {/* TopNavBar */}
+      <header className="bg-[#f8f9ff]/80 backdrop-blur-xl shadow-[0_12px_32px_rgba(25,28,32,0.04)] fixed top-0 z-50 flex justify-between items-center w-full px-8 py-4 max-w-full border-b border-[#c7c4d8]/10">
+        <div className="flex items-center gap-12">
+          <span 
+            onClick={() => navigate('/car-service/home')}
+            className="text-2xl font-black text-[#4d41df] italic font-headline tracking-tight cursor-pointer"
           >
-            <Plus size={20} />
-            Add Your First Car
-          </button>
+            Expertease
+          </span>
+          <nav className="hidden md:flex items-center gap-8">
+            <a 
+              onClick={(e) => { e.preventDefault(); navigate('/car-service/home'); }}
+              className="text-slate-600 font-medium hover:text-[#4d41df] transition-colors duration-200 cursor-pointer" 
+              href="#"
+            >
+              Services
+            </a>
+            <a className="text-slate-600 font-medium hover:text-[#4d41df] transition-colors duration-200" href="#">Pricing</a>
+            <a className="text-slate-600 font-medium hover:text-[#4d41df] transition-colors duration-200" href="#">Fleet</a>
+            <a className="text-slate-600 font-medium hover:text-[#4d41df] transition-colors duration-200" href="#">Support</a>
+          </nav>
         </div>
-      )}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 text-slate-500">
+            <button className="material-symbols-outlined hover:text-[#4d41df] transition-colors">notifications</button>
+            <button className="material-symbols-outlined hover:text-[#4d41df] transition-colors">settings</button>
+          </div>
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-[#e7e8ee] ring-2 ring-[#4d41df]/10">
+            <img alt="User profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANxn1VI4zyT7hDN1FZXf5jwGeEx1OTa4r9zT2S2ijae44t5tNBeOx4JaFOReacmvqjvu3hceGFs8RjW0gR1ZUeeR7D6943q2jX-n3ZUM22D_UXgtUAbGJ-xrTl0DOEoYFrk4EjHGJ054znin6GKV9M4re69I_yTwMOLAqJG_O_eE6nih4ZfS0rd1UfMUNwF224rwF9YQoqYpqJOcI4x3SdG4QVbUu3LIomq5FR7gvKysbKQZ5SdFNCwKou2un53UBfw2pOJcwnn6Gy" />
+          </div>
+        </div>
+      </header>
 
-      {/* Add/Edit Car Modal */}
-      {showAddForm && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>{editingCar ? 'Edit Car' : 'Add New Car'}</h2>
-              <button onClick={resetForm} className="close-btn">
-                <X size={20} />
-              </button>
+      <main className="pt-24 pb-32 px-6 lg:px-12 max-w-7xl mx-auto">
+        {/* Header Section */}
+        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-5xl lg:text-6xl font-headline font-extrabold tracking-tight text-[#191c20] mb-2">My Garage</h1>
+            <p className="text-[#464555] text-lg max-w-md font-medium">Manage your automotive fleet with professional-grade precision and history tracking.</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="bg-[#f2f3f9] px-4 py-2 rounded-xl flex items-center gap-3 border border-[#c7c4d8]/20">
+              <span className="material-symbols-outlined text-[#4d41df]">directions_car</span>
+              <span className="font-bold text-lg">{cars.length}</span>
+              <span className="uppercase tracking-wider text-xs font-bold text-[#777587]">Vehicles</span>
             </div>
-            
-            <form onSubmit={handleSubmit} className="car-form">
-              <div className="form-row">
-                <div className="form-group">
-                  <label>
-                    <Car size={18} />
-                    Brand
-                  </label>
-                  <input
+          </div>
+        </div>
+
+        {/* Bento Grid Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Add New Car Form */}
+          <div className="md:col-span-4 space-y-6">
+            <div className="bg-white rounded-xl p-8 shadow-[0_12px_32px_rgba(25,28,32,0.04)] border border-[#c7c4d8]/15">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-[#4d41df]/10 p-2 rounded-lg text-[#4d41df]">
+                  <span className="material-symbols-outlined">add_circle</span>
+                </div>
+                <h2 className="text-xl font-headline font-bold">Add New Car</h2>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-[#777587] px-1">Make</label>
+                  <input 
+                    name="make"
+                    value={formData.make}
+                    onChange={handleInputChange}
+                    className="w-full bg-[#f2f3f9] border-none rounded-lg focus:ring-2 focus:ring-[#4d41df]/20 transition-all placeholder:text-[#c7c4d8] py-3 px-4 text-sm font-medium" 
+                    placeholder="e.g. Porsche" 
+                    required 
                     type="text"
-                    name="brand"
-                    value={formData.brand}
-                    onChange={handleInputChange}
-                    placeholder="e.g., Toyota, Honda, BMW"
-                    required
                   />
                 </div>
-                
-                <div className="form-group">
-                  <label>
-                    <Car size={18} />
-                    Model
-                  </label>
-                  <input
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-[#777587] px-1">Model</label>
+                    <input 
+                      name="model"
+                      value={formData.model}
+                      onChange={handleInputChange}
+                      className="w-full bg-[#f2f3f9] border-none rounded-lg focus:ring-2 focus:ring-[#4d41df]/20 transition-all placeholder:text-[#c7c4d8] py-3 px-4 text-sm font-medium" 
+                      placeholder="911 Carrera" 
+                      required 
+                      type="text"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold tracking-widest text-[#777587] px-1">Year</label>
+                    <input 
+                      name="year"
+                      value={formData.year}
+                      onChange={handleInputChange}
+                      className="w-full bg-[#f2f3f9] border-none rounded-lg focus:ring-2 focus:ring-[#4d41df]/20 transition-all placeholder:text-[#c7c4d8] py-3 px-4 text-sm font-medium" 
+                      placeholder="2023" 
+                      required 
+                      type="number"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-[#777587] px-1">Color</label>
+                  <input 
+                    name="color"
+                    value={formData.color}
+                    onChange={handleInputChange}
+                    className="w-full bg-[#f2f3f9] border-none rounded-lg focus:ring-2 focus:ring-[#4d41df]/20 transition-all placeholder:text-[#c7c4d8] py-3 px-4 text-sm font-medium" 
+                    placeholder="Arctic Grey" 
+                    required 
                     type="text"
-                    name="model"
-                    value={formData.model}
-                    onChange={handleInputChange}
-                    placeholder="e.g., Camry, Civic, X5"
-                    required
                   />
                 </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label>
-                    <Calendar size={18} />
-                    Year
-                  </label>
-                  <input
-                    type="number"
-                    name="year"
-                    value={formData.year}
+                <div className="space-y-1 pb-4">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-[#777587] px-1">Registration Number</label>
+                  <input 
+                    name="registration_number"
+                    value={formData.registration_number}
                     onChange={handleInputChange}
-                    placeholder="e.g., 2022"
-                    min="1900"
-                    max={new Date().getFullYear() + 1}
-                    required
+                    className="w-full bg-[#f2f3f9] border-none rounded-lg focus:ring-2 focus:ring-[#4d41df]/20 transition-all placeholder:text-[#c7c4d8] py-3 px-4 text-sm font-medium uppercase tracking-widest" 
+                    placeholder="ABC-1234" 
+                    required 
+                    type="text"
                   />
                 </div>
-                
-                <div className="form-group">
-                  <label>
-                    <Fuel size={18} />
-                    Fuel Type
-                  </label>
-                  <select
-                    name="fuel_type"
-                    value={formData.fuel_type}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select fuel type</option>
-                    <option value="petrol">Petrol</option>
-                    <option value="diesel">Diesel</option>
-                    <option value="electric">Electric</option>
-                    <option value="hybrid">Hybrid</option>
-                    <option value="cng">CNG</option>
-                  </select>
+                <button 
+                  disabled={submitting}
+                  className="w-full py-4 bg-gradient-to-br from-[#4d41df] to-[#675df9] text-white rounded-xl font-bold shadow-lg shadow-[#4d41df]/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-70 disabled:scale-100" 
+                  type="submit"
+                >
+                  {submitting ? 'Registering...' : 'Register Vehicle'}
+                </button>
+              </form>
+            </div>
+            {/* Small Info Card */}
+            <div className="bg-[#ab3500] text-white rounded-xl p-6 relative overflow-hidden group">
+              <div className="relative z-10">
+                <span className="material-symbols-outlined text-4xl mb-2 opacity-80">verified_user</span>
+                <h3 className="text-lg font-headline font-bold">Premium Protection</h3>
+                <p className="text-sm opacity-90 mt-1">All registered vehicles are eligible for our 24/7 roadside assistance program.</p>
+              </div>
+              <div className="absolute -right-8 -bottom-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                <span className="material-symbols-outlined text-[120px]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Car List Area */}
+          <div className="md:col-span-8">
+            {loading ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </div>
+            ) : cars.length === 0 ? (
+              <div className="bg-[#f2f3f9] border-2 border-dashed border-[#c7c4d8]/30 rounded-3xl h-[400px] flex flex-col items-center justify-center text-center p-8">
+                <div className="bg-white p-6 rounded-full mb-6 shadow-sm">
+                  <span className="material-symbols-outlined text-6xl text-[#c7c4d8]">car_repair</span>
+                </div>
+                <h3 className="text-2xl font-headline font-bold mb-2">No cars in your garage yet.</h3>
+                <p className="text-[#464555] mb-8 max-w-xs font-medium">Start your premium service journey by adding your first vehicle today.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {cars.map((car, index) => (
+                  <div key={car.id || index} className="group bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col border border-[#c7c4d8]/10">
+                    <div 
+                      className="h-48 overflow-hidden relative"
+                      style={{ background: `linear-gradient(135deg, ${car.color?.toLowerCase() === 'white' ? '#e2e8f0' : car.color || '#4d41df'} 0%, #1e293b 100%)` }}
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                        <span className="material-symbols-outlined text-[120px] text-white">directions_car</span>
+                      </div>
+                      <div className="absolute top-4 left-4">
+                        <span className={`px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest backdrop-blur-md ${
+                          car.status === 'Maintenance Due' 
+                            ? 'bg-white/90 text-[#ab3500]' 
+                            : 'bg-white/90 text-[#006948]'
+                        }`}>
+                          {car.status || 'Active'}
+                        </span>
+                      </div>
+                      <div className="absolute top-4 right-4">
+                        <button 
+                          onClick={handleDeleteClick}
+                          className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500 hover:text-white transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-lg">delete</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-2xl font-headline font-extrabold leading-tight">{car.make} {car.model}</h3>
+                          <p className="text-[#4d41df] font-bold tracking-tight">Variant • {car.year}</p>
+                        </div>
+                        <div className="bg-[#f2f3f9] px-2 py-1 rounded font-mono text-xs font-bold border border-[#c7c4d8]/20 uppercase tracking-wider">
+                          {car.registration_number}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 border-t border-[#c7c4d8]/10 pt-4">
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-[#777587] tracking-wider">Color</p>
+                          <p className="text-sm font-semibold">{car.color}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-[#777587] tracking-wider">Last Service</p>
+                          <p className="text-sm font-semibold">{car.last_service_date || 'None'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {/* Empty Placeholder for Grid Balance */}
+                <div className="border-2 border-dashed border-[#c7c4d8]/15 rounded-xl flex items-center justify-center p-8 bg-[#f2f3f9] group/dashed hover:bg-[#eceef3] transition-colors cursor-pointer">
+                  <div className="text-center group-hover/dashed:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-4xl text-[#c7c4d8] mb-2">add_circle</span>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#777587]">Add More</p>
+                  </div>
                 </div>
               </div>
-              
-              <div className="form-group">
-                <label>
-                  <FileText size={18} />
-                  Registration Number
-                </label>
-                <input
-                  type="text"
-                  name="registration_number"
-                  value={formData.registration_number}
-                  onChange={handleInputChange}
-                  placeholder="e.g., MH01AB1234"
-                  required
-                />
-              </div>
-              
-              <div className="form-actions">
-                <button type="button" onClick={resetForm} className="cancel-btn">
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn">
-                  {editingCar ? 'Update Car' : 'Add Car'}
-                </button>
-              </div>
-            </form>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Mobile BottomNavBar */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-white/90 backdrop-blur-lg border-t border-[#c7c4d8]/15 shadow-[0_-4px_12px_rgba(25,28,32,0.04)] rounded-t-xl">
+        <button 
+          onClick={() => navigate('/car-service/home')}
+          className="flex flex-col items-center justify-center text-[#4d41df] bg-[#4d41df]/10 rounded-xl px-4 py-1"
+        >
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
+          <span className="text-[10px] uppercase tracking-[0.05em] font-bold mt-1">Home</span>
+        </button>
+        <button 
+          onClick={() => navigate('/car-service/my-bookings')}
+          className="flex flex-col items-center justify-center text-slate-400"
+        >
+          <span className="material-symbols-outlined">car_repair</span>
+          <span className="text-[10px] uppercase tracking-[0.05em] font-bold mt-1">Bookings</span>
+        </button>
+        <button className="flex flex-col items-center justify-center text-slate-400">
+          <span className="material-symbols-outlined">query_stats</span>
+          <span className="text-[10px] uppercase tracking-[0.05em] font-bold mt-1">Status</span>
+        </button>
+        <button className="flex flex-col items-center justify-center text-slate-400">
+          <span className="material-symbols-outlined">menu</span>
+          <span className="text-[10px] uppercase tracking-[0.05em] font-bold mt-1">Menu</span>
+        </button>
+      </nav>
+
+      {/* Mobile FAB */}
+      <button className="md:hidden fixed bottom-24 right-6 w-14 h-14 bg-[#4d41df] text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40">
+        <span className="material-symbols-outlined text-3xl">add</span>
+      </button>
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full text-white font-bold shadow-2xl z-[100] transition-all animate-bounce ${
+          toast.type === 'success' ? 'bg-[#006948]' : 'bg-[#ba1a1a]'
+        }`}>
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-sm">{toast.type === 'success' ? 'check_circle' : 'error'}</span>
+            {toast.message}
           </div>
         </div>
       )}
-
-      <style>{`
-        .my-garage-container {
-          min-height: 100vh;
-          background: #f8f9fa;
-          padding: 2rem;
-        }
-
-        .garage-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
-
-        .garage-header h1 {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #1f2937;
-        }
-
-        .add-car-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          background: #7c3aed;
-          color: white;
-          border: none;
-          border-radius: 10px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.2s;
-        }
-
-        .add-car-btn:hover {
-          background: #6d28d9;
-        }
-
-        .error-message, .success-message {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 1rem;
-          border-radius: 8px;
-          margin-bottom: 1rem;
-        }
-
-        .error-message {
-          background: #fef2f2;
-          color: #dc2626;
-          border: 1px solid #fecaca;
-        }
-
-        .success-message {
-          background: #f0fdf4;
-          color: #16a34a;
-          border: 1px solid #bbf7d0;
-        }
-
-        .cars-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-        }
-
-        .car-card {
-          background: white;
-          border-radius: 12px;
-          padding: 1.5rem;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          transition: transform 0.2s;
-          position: relative;
-        }
-
-        .car-card:hover {
-          transform: translateY(-2px);
-        }
-
-        .car-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        }
-
-        .car-info h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .car-meta {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .year, .fuel {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: 0.875rem;
-          color: #6b7280;
-        }
-
-        .default-badge {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          background: #fbbf24;
-          color: #78350f;
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.75rem;
-          font-weight: 500;
-        }
-
-        .car-details {
-          margin-bottom: 1rem;
-        }
-
-        .detail-item {
-          display: flex;
-          justify-content: space-between;
-          padding: 0.5rem 0;
-          border-bottom: 1px solid #f3f4f6;
-        }
-
-        .detail-item:last-child {
-          border-bottom: none;
-        }
-
-        .label {
-          font-weight: 500;
-          color: #6b7280;
-        }
-
-        .value {
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .car-actions {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .action-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 36px;
-          height: 36px;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .set-default-btn {
-          background: #fbbf24;
-          color: #78350f;
-        }
-
-        .set-default-btn:hover {
-          background: #f59e0b;
-        }
-
-        .edit-btn {
-          background: #3b82f6;
-          color: white;
-        }
-
-        .edit-btn:hover {
-          background: #2563eb;
-        }
-
-        .delete-btn {
-          background: #ef4444;
-          color: white;
-        }
-
-        .delete-btn:hover {
-          background: #dc2626;
-        }
-
-        .empty-garage {
-          text-align: center;
-          padding: 4rem 2rem;
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .empty-garage h3 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 1rem 0 0.5rem;
-        }
-
-        .empty-garage p {
-          color: #6b7280;
-          margin-bottom: 2rem;
-        }
-
-        .add-first-car-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 1rem 2rem;
-          background: #7c3aed;
-          color: white;
-          border: none;
-          border-radius: 10px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.2s;
-          margin: 0 auto;
-        }
-
-        .add-first-car-btn:hover {
-          background: #6d28d9;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-
-        .modal-content {
-          background: white;
-          border-radius: 16px;
-          padding: 2rem;
-          max-width: 600px;
-          width: 90%;
-          max-height: 90vh;
-          overflow-y: auto;
-        }
-
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1.5rem;
-        }
-
-        .modal-header h2 {
-          font-size: 1.5rem;
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .close-btn {
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: #6b7280;
-          padding: 0.5rem;
-          border-radius: 6px;
-          transition: background 0.2s;
-        }
-
-        .close-btn:hover {
-          background: #f3f4f6;
-        }
-
-        .car-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .form-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .form-group label {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-weight: 500;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-
-        .form-group input,
-        .form-group select {
-          padding: 0.75rem;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 1rem;
-          transition: border-color 0.2s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-          outline: none;
-          border-color: #7c3aed;
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 1rem;
-          margin-top: 1rem;
-        }
-
-        .cancel-btn, .submit-btn {
-          flex: 1;
-          padding: 0.75rem;
-          border: none;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .cancel-btn {
-          background: white;
-          color: #6b7280;
-          border: 1px solid #e5e7eb;
-        }
-
-        .cancel-btn:hover {
-          background: #f3f4f6;
-        }
-
-        .submit-btn {
-          background: #7c3aed;
-          color: white;
-        }
-
-        .submit-btn:hover {
-          background: #6d28d9;
-        }
-
-        .loading-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 50vh;
-          color: #7c3aed;
-        }
-
-        .spinner {
-          width: 40px;
-          height: 40px;
-          border: 4px solid #f3e8ff;
-          border-top: 4px solid #7c3aed;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-          .my-garage-container {
-            padding: 1rem;
-          }
-          
-          .garage-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: stretch;
-          }
-          
-          .cars-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .form-row {
-            grid-template-columns: 1fr;
-          }
-          
-          .modal-content {
-            padding: 1.5rem;
-          }
-        }
-      `}</style>
     </div>
   );
 };

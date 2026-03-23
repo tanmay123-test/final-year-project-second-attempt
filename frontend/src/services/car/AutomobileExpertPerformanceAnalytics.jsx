@@ -12,6 +12,7 @@ import {
   Calendar,
   AlertCircle
 } from 'lucide-react';
+import api from '../../shared/api';
 import AutomobileExpertBottomNav from '../../components/AutomobileExpertBottomNav';
 
 const AutomobileExpertPerformanceAnalytics = () => {
@@ -38,10 +39,10 @@ const AutomobileExpertPerformanceAnalytics = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/expert-availability/performance-analytics/${workerId}`);
+      const response = await api.get(`/api/expert-availability/performance-analytics/${workerId}`);
       
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data.success) {
+        const data = response.data;
         
         if (data.success) {
           setAnalyticsData(data.analytics || {});

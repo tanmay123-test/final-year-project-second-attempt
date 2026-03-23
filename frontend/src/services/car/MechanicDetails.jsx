@@ -5,6 +5,7 @@ import {
   Award, Wrench, Clock, Star, CheckCircle,
   Edit, Camera, Shield, FileText, AlertCircle
 } from 'lucide-react';
+import api from '../../shared/api';
 
 const MechanicDetails = () => {
   const navigate = useNavigate();
@@ -28,17 +29,15 @@ const MechanicDetails = () => {
         
         // Fetch comprehensive worker details
         try {
-          const workerId = data.id || data.workerId || 7;
-          const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/details`, {
+          const workerId = data.id || data.workerId;
+          const response = await api.get(`/api/car/service/worker/${workerId}/details`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              'Authorization': `Bearer ${token}`
             }
           });
 
-          if (response.ok) {
-            const detailsData = await response.json();
-            setWorkerData({ ...data, ...detailsData });
+          if (response.data) {
+            setWorkerData({ ...data, ...response.data });
           }
         } catch (error) {
           console.log('🔄 Details API not available, using enhanced data:', error.message);
@@ -77,18 +76,15 @@ const MechanicDetails = () => {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem('workerToken');
-      const workerId = workerData?.id || workerData?.workerId || 7;
+      const workerId = workerData?.id || workerData?.workerId;
       
-      const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/update`, {
-        method: 'PUT',
+      const response = await api.put(`/api/car/service/worker/${workerId}/update`, formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
+          'Authorization': `Bearer ${token}`
+        }
       });
 
-      if (response.ok) {
+      if (response.data?.success) {
         setWorkerData({ ...workerData, ...formData });
         setEditing(false);
         alert('Profile updated successfully!');

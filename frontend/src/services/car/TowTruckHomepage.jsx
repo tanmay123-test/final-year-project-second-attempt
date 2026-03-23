@@ -20,6 +20,7 @@ import {
   Users,
   Navigation
 } from 'lucide-react';
+import api from '../../shared/api';
 
 const TowTruckHomepage = () => {
   const navigate = useNavigate();
@@ -37,15 +38,8 @@ const TowTruckHomepage = () => {
       const newStatus = !isOnline;
       const workerId = localStorage.getItem('workerId');
       
-      const response = await fetch(`http://localhost:5000/api/tow-truck/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('workerToken')}`
-        },
-        body: JSON.stringify({
-          is_online: newStatus
-        })
+      const response = await api.put('/api/tow-truck/status', {
+        is_online: newStatus
       });
 
       if (response.ok) {
@@ -88,8 +82,8 @@ const TowTruckHomepage = () => {
   const fetchJobsAndEarnings = async (workerId) => {
     try {
       // Fetch active jobs count
-      const response = await fetch(`http://localhost:5000/api/tow-truck/active-jobs/${workerId}`);
-      const data = await response.json();
+      const response = await api.get(`/api/tow-truck/active-jobs/${workerId}`);
+      const data = response.data;
       
       if (data.success) {
         setJobsData({

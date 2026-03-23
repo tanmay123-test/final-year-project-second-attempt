@@ -53,9 +53,9 @@ def _current_user_id():
 
     db = UserDB()
 
-    user = db.get_user_by_username(username)
+    user_id = db.get_user_by_username(username)
 
-    return user['id'] if user else None
+    return user_id if user_id else None
 
 
 
@@ -676,9 +676,9 @@ def mechanic_login():
 
         token_payload = {
 
-            'mechanic_id': mechanic['id'],
+            'username': mechanic['email'],
 
-            'email': mechanic['email'],
+            'mechanic_id': mechanic['id'],
 
             'role': mechanic.get('role', 'Mechanic'),
 
@@ -688,7 +688,8 @@ def mechanic_login():
 
         
 
-        token = jwt.encode(token_payload, 'your-secret-key', algorithm='HS256')
+        from config import JWT_SECRET
+        token = jwt.encode(token_payload, JWT_SECRET, algorithm='HS256')
 
         
 

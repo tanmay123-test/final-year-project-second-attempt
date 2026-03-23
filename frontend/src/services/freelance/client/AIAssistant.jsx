@@ -4,7 +4,7 @@ import {
   Loader2, Home, PlusCircle, Folder, Bot, User, Search 
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/AIAssistant.css';
 
 const AIAssistant = () => {
@@ -27,10 +27,8 @@ const AIAssistant = () => {
     if (!idea.trim()) return;
     setLoading(prev => ({ ...prev, description: true }));
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/freelancer/ai/generate-description', 
-        { idea },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.post('/api/freelancer/ai/generate-description', 
+        { idea }
       );
       setDescription(response.data.description);
     } catch (error) {
@@ -43,14 +41,12 @@ const AIAssistant = () => {
   const handleSuggestBudget = async () => {
     setLoading(prev => ({ ...prev, budget: true }));
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/freelancer/ai/suggest-budget', 
+      const response = await api.post('/api/freelancer/ai/suggest-budget', 
         { 
-          category: 'Web Development', // Fallback or take from context
+          category: 'Web Development',
           experienceLevel: 'Intermediate',
           description: description || idea
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       setBudgetRange(response.data);
     } catch (error) {
@@ -63,14 +59,12 @@ const AIAssistant = () => {
   const handleSuggestMilestones = async () => {
     setLoading(prev => ({ ...prev, milestones: true }));
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/freelancer/ai/suggest-milestones', 
+      const response = await api.post('/api/freelancer/ai/suggest-milestones', 
         { 
           title: idea,
           description: description || idea,
           budget: budgetRange?.maxBudget || 10000
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       setMilestones(response.data.milestones);
     } catch (error) {
@@ -83,14 +77,12 @@ const AIAssistant = () => {
   const handleRecommendFreelancers = async () => {
     setLoading(prev => ({ ...prev, freelancers: true }));
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post('http://localhost:5000/api/freelancer/ai/recommend-freelancers', 
+      const response = await api.post('/api/freelancer/ai/recommend-freelancers', 
         { 
           category: 'Web Development',
           skills: ['React', 'Node.js'],
           budget: budgetRange?.maxBudget || 10000
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       setRecommendations(response.data.freelancers);
     } catch (error) {

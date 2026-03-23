@@ -14,7 +14,7 @@ import {
   DollarSign,
   User
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelancerDashboard.css';
 
 const BrowseProjects = () => {
@@ -59,7 +59,7 @@ const BrowseProjects = () => {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:5000/api/freelance/projects${filters.category !== 'All categories' ? `?category=${filters.category}` : ''}`);
+      const response = await api.get(`/api/freelance/projects${filters.category !== 'All categories' ? `?category=${filters.category}` : ''}`);
       setProjects(response.data.projects);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -97,12 +97,9 @@ const BrowseProjects = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/freelance/proposals', {
+      await api.post('/api/freelance/proposals', {
         project_id: selectedProject.id,
         ...proposalData
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       alert('Proposal submitted successfully!');
       setShowApplyModal(false);

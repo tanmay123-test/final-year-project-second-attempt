@@ -19,6 +19,7 @@ import {
   Search
 } from 'lucide-react';
 import { carService } from '../../shared/api';
+import api from '../../shared/api';
 
 const FuelDeliveryRequests = () => {
   const navigate = useNavigate();
@@ -86,18 +87,11 @@ const FuelDeliveryRequests = () => {
         }
       }
 
-      // Fetch available requests from backend (backend requires agent_id = workerId)
-      const response = await fetch(
-        `http://localhost:5000/api/fuel-delivery/queue/available?agent_id=${workerId}`
-      );
+      const response = await api.get(`/api/fuel-delivery/queue/available?agent_id=${workerId}`);
 
-      const data = await response.json().catch(() => ({}));
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch requests');
-      }
-
-      if (data.success && data.requests) {
+      if (data?.success && data.requests) {
         setRequests(data.requests);
       } else {
         setRequests([]);
@@ -115,20 +109,14 @@ const FuelDeliveryRequests = () => {
       setAcceptingRequest(request.request_id);
       const workerId = localStorage.getItem('workerId');
       
-      const response = await fetch(`http://localhost:5000/api/fuel-delivery/accept-request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          request_id: request.id,
-          worker_id: workerId
-        })
+      const response = await api.post('/api/fuel-delivery/accept-request', {
+        request_id: request.id,
+        worker_id: workerId
       });
       
-      const data = await response.json();
+      const data = response.data;
       
-      if (data.success) {
+      if (data?.success) {
         // Remove request from list and navigate to active delivery
         setRequests(prev => prev.filter(req => req.id !== request.id));
         navigate('/worker/car/fuel-delivery/active-delivery', { 
@@ -150,20 +138,14 @@ const FuelDeliveryRequests = () => {
       setRejectingRequest(request.id);
       const workerId = localStorage.getItem('workerId');
       
-      const response = await fetch(`http://localhost:5000/api/fuel-delivery/reject-request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          request_id: request.id,
-          worker_id: workerId
-        })
+      const response = await api.post('/api/fuel-delivery/reject-request', {
+        request_id: request.id,
+        worker_id: workerId
       });
       
-      const data = await response.json();
+      const data = response.data;
       
-      if (data.success) {
+      if (data?.success) {
         // Remove request from list
         setRequests(prev => prev.filter(req => req.id !== request.id));
       } else {

@@ -6,6 +6,7 @@ import {
   MapPin, Phone, Mail, Calendar, TrendingUp
 } from 'lucide-react';
 import { carService } from '../../shared/api';
+import api from '../../shared/api';
 
 const FuelDeliveryProfile = () => {
   const navigate = useNavigate();
@@ -32,15 +33,10 @@ const FuelDeliveryProfile = () => {
         const workerId = data.id || data.workerId;
         
         try {
-          const response = await fetch(`http://localhost:5000/api/car/fuel-delivery/${workerId}/ratings`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const response = await api.get(`/api/car/fuel-delivery/${workerId}/ratings`);
 
-          if (response.ok) {
-            const ratingsData = await response.json();
+          if (response.data) {
+            setRatings(response.data.ratings || response.data || []);
             setRatings(ratingsData.ratings || ratingsData || []);
           }
         } catch (error) {
@@ -97,17 +93,10 @@ const FuelDeliveryProfile = () => {
         const workerId = data.id || data.workerId;
         
         try {
-          // Fetch real transactions/deliveries from backend
-          const response = await fetch(`http://localhost:5000/api/car/fuel-delivery/${workerId}/transactions`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const response = await api.get(`/api/car/fuel-delivery/${workerId}/transactions`);
 
-          if (response.ok) {
-            const transactionsData = await response.json();
-            const transactions = transactionsData.transactions || transactionsData || [];
+          if (response.data) {
+            const transactions = response.data.transactions || response.data || [];
             
             // Calculate earnings from real transactions
             const completedTransactions = transactions.filter(t => t.status === 'completed');
@@ -170,16 +159,9 @@ const FuelDeliveryProfile = () => {
         const workerId = data.id || data.workerId;
         
         try {
-          // Fetch real ratings and performance data from backend
-          const response = await fetch(`http://localhost:5000/api/car/fuel-delivery/${workerId}/performance`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          const response = await api.get(`/api/car/fuel-delivery/${workerId}/performance`);
 
-          if (response.ok) {
-            const performanceData = await response.json();
+          if (response.data) {
             setPerformance(performanceData);
           } else {
             // Calculate from real transactions and ratings
@@ -204,27 +186,20 @@ const FuelDeliveryProfile = () => {
 
   const calculatePerformanceFromData = async (workerId, token) => {
     try {
-      // Fetch transactions and ratings to calculate performance
       const [transactionsResponse, ratingsResponse] = await Promise.all([
-        fetch(`http://localhost:5000/api/car/fuel-delivery/${workerId}/transactions`, {
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-        }),
-        fetch(`http://localhost:5000/api/car/fuel-delivery/${workerId}/ratings`, {
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-        })
+        api.get(`/api/car/fuel-delivery/${workerId}/transactions`),
+        api.get(`/api/car/fuel-delivery/${workerId}/ratings`)
       ]);
 
       let transactions = [];
       let ratings = [];
 
-      if (transactionsResponse.ok) {
-        const transactionsData = await transactionsResponse.json();
-        transactions = transactionsData.transactions || transactionsData || [];
+      if (transactionsResponse.data) {
+        transactions = transactionsResponse.data.transactions || transactionsResponse.data || [];
       }
 
-      if (ratingsResponse.ok) {
-        const ratingsData = await ratingsResponse.json();
-        ratings = ratingsData.ratings || ratingsData || [];
+      if (ratingsResponse.data) {
+        ratings = ratingsResponse.data.ratings || ratingsResponse.data || [];
       }
 
       // Calculate performance metrics from real data

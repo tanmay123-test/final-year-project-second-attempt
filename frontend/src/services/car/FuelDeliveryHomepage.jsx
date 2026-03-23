@@ -14,6 +14,7 @@ import {
   Truck
 } from 'lucide-react';
 import { carService } from '../../shared/api';
+import api from '../../shared/api';
 
 const FuelDeliveryHomepage = () => {
   const navigate = useNavigate();
@@ -52,19 +53,18 @@ const FuelDeliveryHomepage = () => {
 
   const fetchJobsAndEarnings = async (workerId) => {
     try {
-      // Fetch delivery history to get real earnings
-      const response = await fetch(`http://localhost:5000/api/fuel-delivery/history/${workerId}`);
-      const data = await response.json();
+      const response = await api.get(`/api/fuel-delivery/history/${workerId}`);
+      const data = response.data;
       
-      if (data.success && data.history) {
+      if (data?.success && data.history) {
         // Calculate real earnings from completed deliveries
         const completedDeliveries = data.history.filter(d => d.status === 'completed');
         const totalEarnings = completedDeliveries.reduce((sum, d) => sum + (d.estimated_earnings || 0), 0);
         
         // Check if worker has active delivery
-        const activeResponse = await fetch(`http://localhost:5000/api/fuel-delivery/active-delivery/${workerId}`);
-        const activeData = await activeResponse.json();
-        const hasActiveDelivery = activeData.success && activeData.delivery;
+        const activeResponse = await api.get(`/api/fuel-delivery/active-delivery/${workerId}`);
+        const activeData = activeResponse.data;
+        const hasActiveDelivery = activeData?.success && activeData.delivery;
         
         setJobsData({
           jobsAccepted: hasActiveDelivery ? 1 : 0,

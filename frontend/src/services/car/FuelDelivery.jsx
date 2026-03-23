@@ -1,1600 +1,383 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, Filter, MapPin, Clock, Star, Phone, Mail, Calendar, 
-  ChevronRight, Droplet, User, AlertCircle
-} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../shared/api';
 
 const FuelDelivery = () => {
   const navigate = useNavigate();
-  const [fuelAgents, setFuelAgents] = useState([]);
-  const [filteredAgents, setFilteredAgents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedService, setSelectedService] = useState('');
-  const [selectedAgent, setSelectedAgent] = useState(null);
-  const [bookingStep, setBookingStep] = useState('list');
-  const [bookingData, setBookingData] = useState({
-    date: '',
-    time: '',
-    location: '',
-    fuelType: 'petrol',
-    quantity: '',
-    description: ''
-  });
-  const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const { user } = useAuth();
 
-  const services = [
-    'Petrol Delivery',
-    'Diesel Delivery',
-    'Emergency Fuel',
-    'Bulk Fuel Delivery',
-    'Marine Fuel'
-  ];
+  const [selectedFuel, setSelectedFuel] = useState('Petrol');
+  const [quantity, setQuantity] = useState(20);
+  const [location, setLocation] = useState('');
+  const [agents, setAgents] = useState([]);
+  const [activeRequest, setActiveRequest] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ activeAgents: 0, avgEta: '18m' });
 
   useEffect(() => {
-    fetchFuelAgents();
+    fetchAgents();
   }, []);
 
   useEffect(() => {
-    filterAgents();
-  }, [searchQuery, selectedService, fuelAgents]);
+    let interval;
+    if (activeRequest && activeRequest.status !== 'COMPLETED') {
+      interval = setInterval(async () => {
+        try {
+          const response = await api.get(`/api/fuel-delivery/requests/${activeRequest.id}/status`);
+          if (response.data?.status) {
+            setActiveRequest(prev => ({ ...prev, status: response.data.status }));
+            if (response.data.status === 'COMPLETED') {
+              clearInterval(interval);
+            }
+          }
+        } catch (error) {
+          console.error('Error polling status:', error);
+        }
+      }, 10000);
+    }
+    return () => clearInterval(interval);
+  }, [activeRequest]);
 
-  const fetchFuelAgents = async () => {
+  const fetchAgents = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.get('/api/car/service/workers/approved', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      setLoading(true);
+      const response = await api.get('/api/fuel-delivery/agents/available');
+      const agentsList = response.data.agents || [];
+      setAgents(agentsList);
+      setStats({
+        activeAgents: agentsList.length,
+        avgEta: agentsList.length > 0 ? '15m' : 'N/A'
       });
-      
-      if (response.data?.workers) {
-        // Filter for fuel delivery agents only
-        const agents = response.data.workers.filter(worker => 
-          worker.role === 'Fuel Delivery Agent'
-        );
-        setFuelAgents(agents);
-      }
     } catch (error) {
-      console.error('Error fetching fuel agents:', error);
-      // Set empty array to prevent infinite loading
-      setFuelAgents([]);
+      console.error('Error fetching agents:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filterAgents = () => {
-    let filtered = fuelAgents;
-    
-    if (searchQuery) {
-      filtered = filtered.filter(agent => 
-        agent.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.specialization?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.city?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const handleCreateRequest = async () => {
+    if (!location || !quantity) {
+      alert('Please provide location and quantity');
+      return;
     }
-    
-    if (selectedService) {
-      filtered = filtered.filter(agent => 
-        agent.services?.includes(selectedService)
-      );
+
+    try {
+      setLoading(true);
+      const response = await api.post('/api/fuel-delivery/requests/create', {
+        fuel_type: selectedFuel,
+        quantity: quantity,
+        location: location,
+        user_id: user?.user_id || user?.id
+      });
+
+      if (response.data?.success) {
+        setActiveRequest({
+          id: response.data.request_id,
+          status: 'PENDING',
+          agent: response.data.agent || null
+        });
+      }
+    } catch (error) {
+      console.error('Error creating fuel request:', error);
+      alert('Failed to create fuel request');
+    } finally {
+      setLoading(false);
     }
-    
-    setFilteredAgents(filtered);
   };
 
-  const handleAgentSelect = (agent) => {
-    setSelectedAgent(agent);
-    setBookingStep('fuel-type'); // Show fuel type selection first
+  const getStatusProgress = (status) => {
+    const statuses = ['PENDING', 'ASSIGNED', 'EN_ROUTE', 'COMPLETED'];
+    const index = statuses.indexOf(status);
+    return ((index + 1) / statuses.length) * 100;
   };
-
-  const handleFuelTypeSelect = (fuelType) => {
-    setBookingData({...bookingData, fuelType});
-    setBookingStep('details'); // Then show booking form
-  };
-
-  const handleBookingSubmit = (e) => {
-    e.preventDefault();
-    setBookingConfirmed(true);
-  };
-
-  const handleBackToList = () => {
-    setSelectedAgent(null);
-    setBookingStep('list');
-  };
-
-  const renderAgentList = () => (
-    <div className="agents-list">
-      <div className="search-filters">
-        <div className="search-bar">
-          <Search size={20} />
-          <input
-            type="text"
-            placeholder="Search by name, location, or service..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <div className="filter-dropdown">
-          <Filter size={20} />
-          <select
-            value={selectedService}
-            onChange={(e) => setSelectedService(e.target.value)}
-          >
-            <option value="">All Services</option>
-            {services.map(service => (
-              <option key={service} value={service}>{service}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {bookingStep === 'list' && renderAgentList()}
-      {bookingStep === 'fuel-type' && selectedAgent && renderFuelTypeSelection()}
-      {bookingStep === 'details' && selectedAgent && renderBookingForm()}
-      {bookingStep === 'confirmed' && renderConfirmation()}
-    </div>
-  );
-
-  const renderFuelTypeSelection = () => (
-    <div className="fuel-type-selection">
-      <div className="selection-header">
-        <button onClick={handleBackToList} className="back-btn">
-          <ChevronRight size={20} />
-          Back to Agents
-        </button>
-        <h2>Select Fuel Type for {selectedAgent.name}</h2>
-        <p>Choose the type of fuel you need delivered</p>
-      </div>
-      
-      <div className="fuel-type-options">
-        <button onClick={() => handleFuelTypeSelect('petrol')} className="fuel-type-card petrol">
-          <div className="fuel-icon">
-            <Droplet size={40} />
-          </div>
-          <h3>Petrol</h3>
-          <p>Standard gasoline for most vehicles</p>
-          <div className="fuel-features">
-            <span>✓ Quick Delivery</span>
-            <span>✓ Available Everywhere</span>
-            <span>✓ Best Price</span>
-          </div>
-        </button>          
-        <button onClick={() => handleFuelTypeSelect('diesel')} className="fuel-type-card diesel">
-          <div className="fuel-icon">
-            <Droplet size={40} />
-          </div>
-          <h3>Diesel</h3>
-          <p>Efficient diesel for trucks and heavy vehicles</p>
-          <div className="fuel-features">
-            <span>✓ Better Mileage</span>
-            <span>✓ Heavy Duty</span>
-            <span>✓ Cost Effective</span>
-          </div>
-        </button>          
-        <button onClick={() => handleFuelTypeSelect('premium')} className="fuel-type-card premium">
-          <div className="fuel-icon">
-            <Droplet size={40} />
-          </div>
-          <h3>Premium</h3>
-          <p>High-quality fuel for performance vehicles</p>
-          <div className="fuel-features">
-            <span>✓ Premium Quality</span>
-            <span>✓ Enhanced Performance</span>
-            <span>✓ Engine Protection</span>
-          </div>
-        </button>          
-        <button onClick={() => handleFuelTypeSelect('other')} className="fuel-type-card other">
-          <div className="fuel-icon">
-            <Droplet size={40} />
-          </div>
-          <h3>Other</h3>
-          <p>Specialized fuel for specific requirements</p>
-          <div className="fuel-features">
-            <span>✓ Custom Solutions</span>
-            <span>✓ Expert Advice</span>
-            <span>✓ Special Handling</span>
-          </div>
-        </button>
-      </div>
-    </div>
-  );
-
-  if (bookingConfirmed) {
-    return (
-      <div className="booking-confirmed">
-        <div className="confirmation-content">
-          <div className="success-icon">
-            <AlertCircle size={40} />
-          </div>
-          <h2>Fuel Delivery Booking Confirmed!</h2>
-          <p>Your fuel delivery has been successfully booked with {selectedAgent.name}</p>
-          
-          <div className="booking-summary">
-            <div className="summary-item">
-              <span className="label">Agent:</span>
-              <span className="value">{selectedAgent.name}</span>
-            </div>
-            <div className="summary-item">
-              <span className="label">Date:</span>
-              <span className="value">{bookingData.date}</span>
-            </div>
-            <div className="summary-item">
-              <span className="label">Time:</span>
-              <span className="value">{bookingData.time}</span>
-            </div>
-            <div className="summary-item">
-              <span className="label">Location:</span>
-              <span className="value">{bookingData.location}</span>
-            </div>
-            <div className="summary-item">
-              <span className="label">Fuel Type:</span>
-              <span className="value">{bookingData.fuelType}</span>
-            </div>
-            <div className="summary-item">
-              <span className="label">Quantity:</span>
-              <span className="value">{bookingData.quantity} liters</span>
-            </div>
-          </div>
-          
-          <div className="confirmation-actions">
-            <button onClick={() => navigate('/car-service/home')} className="home-btn">
-              Back to Home
-            </button>
-            <button onClick={() => navigate('/car-service/bookings')} className="bookings-btn">
-              View My Bookings
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (bookingStep === 'fuel-type' && selectedAgent) {
-    return (
-      <div className="fuel-type-selection">
-        <div className="selection-header">
-          <button onClick={handleBackToList} className="back-btn">
-            <ChevronRight size={20} />
-            Back to Agents
-          </button>
-          <h2>Select Fuel Type for {selectedAgent.name}</h2>
-          <p>Choose the type of fuel you need delivered</p>
-        </div>
-        
-        <div className="fuel-type-options">
-          <button onClick={() => handleFuelTypeSelect('petrol')} className="fuel-type-card petrol">
-            <div className="fuel-icon">
-              <Droplet size={40} />
-            </div>
-            <h3>Petrol</h3>
-            <p>Standard gasoline for most vehicles</p>
-            <div className="fuel-features">
-              <span>✓ Quick Delivery</span>
-              <span>✓ Available Everywhere</span>
-              <span>✓ Best Price</span>
-            </div>
-          </button>
-          
-          <button onClick={() => handleFuelTypeSelect('diesel')} className="fuel-type-card diesel">
-            <div className="fuel-icon">
-              <Droplet size={40} />
-            </div>
-            <h3>Diesel</h3>
-            <p>Efficient diesel for trucks and heavy vehicles</p>
-            <div className="fuel-features">
-              <span>✓ Better Mileage</span>
-              <span>✓ Heavy Duty</span>
-              <span>✓ Cost Effective</span>
-            </div>
-          </button>
-          
-          <button onClick={() => handleFuelTypeSelect('premium')} className="fuel-type-card premium">
-            <div className="fuel-icon">
-              <Droplet size={40} />
-            </div>
-            <h3>Premium</h3>
-            <p>High-quality fuel for performance vehicles</p>
-            <div className="fuel-features">
-              <span>✓ Premium Quality</span>
-              <span>✓ Enhanced Performance</span>
-              <span>✓ Engine Protection</span>
-            </div>
-          </button>
-          
-          <button onClick={() => handleFuelTypeSelect('other')} className="fuel-type-card other">
-            <div className="fuel-icon">
-              <Droplet size={40} />
-            </div>
-            <h3>Other</h3>
-            <p>Specialized fuel for specific requirements</p>
-            <div className="fuel-features">
-              <span>✓ Custom Solutions</span>
-              <span>✓ Expert Advice</span>
-              <span>✓ Special Handling</span>
-            </div>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (bookingStep === 'details' && selectedAgent) {
-    return (
-      <div className="agent-details">
-        <div className="agent-profile">
-          <div className="profile-header">
-            <button onClick={handleBackToList} className="back-btn">
-              <ChevronRight size={20} />
-              Back to Agents
-            </button>
-            <div className="profile-avatar">
-              <User size={60} />
-            </div>
-            <div className="profile-info">
-              <h2>{selectedAgent.name}</h2>
-              <p className="specialization">{selectedAgent.specialization || selectedAgent.experience ? `${selectedAgent.experience || 'Experienced'} Agent` : 'Fuel Delivery Agent'}</p>
-              <div className="rating-large">
-                <Star size={20} className="star" />
-                <span>{selectedAgent.rating || '4.5'}</span>
-                <span className="reviews">({selectedAgent.reviews || '0'} reviews)</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="agent-details-grid">
-            <div className="detail-card">
-              <h3>Contact Information</h3>
-              <div className="detail-item">
-                <Phone size={16} />
-                <span>{selectedAgent.phone || 'Phone not available'}</span>
-              </div>
-              <div className="detail-item">
-                <Mail size={16} />
-                <span>{selectedAgent.email || 'Email not available'}</span>
-              </div>
-              <div className="detail-item">
-                <MapPin size={16} />
-                <span>{selectedAgent.city || 'Location not specified'}</span>
-              </div>
-            </div>
-            
-            <div className="detail-card">
-              <h3>Services</h3>
-              <div className="services-list">
-                {(selectedAgent.services || ['Petrol Delivery', 'Diesel Delivery', 'Emergency Fuel']).map(service => (
-                  <div key={service} className="service-item">
-                    <Droplet size={16} />
-                    <span>{service}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="detail-card">
-              <h3>Availability</h3>
-              <div className="availability-info">
-                <span className={`status ${selectedAgent.is_online ? 'online' : 'offline'}`}>
-                  {selectedAgent.is_online ? 'Available Now' : 'Currently Offline'}
-                </span>
-                <p>Response time: {selectedAgent.response_time || '30 minutes'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="booking-section">
-          <form onSubmit={handleBookingSubmit} className="booking-form">
-            <h2>Book Fuel Delivery with {selectedAgent.name}</h2>
-            
-            <div className="form-grid">
-              <div className="form-group">
-                <label>Date *</label>
-                <input
-                  type="date"
-                  required
-                  value={bookingData.date}
-                  onChange={(e) => setBookingData({...bookingData, date: e.target.value})}
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Time *</label>
-                <input
-                  type="time"
-                  required
-                  value={bookingData.time}
-                  onChange={(e) => setBookingData({...bookingData, time: e.target.value})}
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Fuel Type *</label>
-                <select
-                  required
-                  value={bookingData.fuelType}
-                  onChange={(e) => {
-                    setBookingData({...bookingData, fuelType: e.target.value, quantity: ''});
-                  }}
-                >
-                  <option value="">Select Fuel Type</option>
-                  <option value="petrol">Petrol</option>
-                  <option value="diesel">Diesel</option>
-                  <option value="premium">Premium</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              
-              {bookingData.fuelType && (
-                <div className="form-group">
-                  <label>Quantity (liters) *</label>
-                  {(bookingData.fuelType === 'petrol' || bookingData.fuelType === 'diesel') ? (
-                    bookingData.quantity === 'custom' ? (
-                      <input
-                        type="number"
-                        required
-                        min="1"
-                        placeholder="Enter custom quantity"
-                        value={bookingData.quantity === 'custom' ? '' : bookingData.quantity}
-                        onChange={(e) => setBookingData({...bookingData, quantity: e.target.value})}
-                      />
-                    ) : (
-                      <select
-                        required
-                        value={bookingData.quantity}
-                        onChange={(e) => setBookingData({...bookingData, quantity: e.target.value})}
-                      >
-                        <option value="">Select Quantity</option>
-                        <option value="5">5 Liters</option>
-                        <option value="10">10 Liters</option>
-                        <option value="20">20 Liters</option>
-                        <option value="30">30 Liters</option>
-                        <option value="50">50 Liters</option>
-                        <option value="custom">Custom Quantity</option>
-                      </select>
-                    )
-                  ) : (
-                    <input
-                      type="number"
-                      required
-                      min="1"
-                      placeholder="Enter quantity"
-                      value={bookingData.quantity}
-                      onChange={(e) => setBookingData({...bookingData, quantity: e.target.value})}
-                    />
-                  )}
-                </div>
-              )}
-              
-              <div className="form-group full-width">
-                <label>Delivery Location *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter delivery location"
-                  value={bookingData.location}
-                  onChange={(e) => setBookingData({...bookingData, location: e.target.value})}
-                />
-              </div>
-              
-              <div className="form-group full-width">
-                <label>Additional Notes</label>
-                <textarea
-                  placeholder="Any special requirements..."
-                  value={bookingData.description}
-                  onChange={(e) => setBookingData({...bookingData, description: e.target.value})}
-                  rows={4}
-                />
-              </div>
-            </div>
-            
-            <div className="form-actions">
-              <button type="button" onClick={handleBackToList} className="cancel-btn">
-                Cancel
-              </button>
-              <button type="submit" className="submit-btn">
-                Confirm Booking
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="fuel-delivery">
-      <div className="page-header">
-        <h1>Book Fuel Delivery Agent</h1>
-        <p>Find and book reliable fuel delivery services in your area</p>
-      </div>
-
-      <div className="search-filters">
-        <div className="search-bar">
-          <Search size={20} />
-          <input
-            type="text"
-            placeholder="Search by name, location, or service..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <div className="filter-dropdown">
-          <Filter size={20} />
-          <select
-            value={selectedService}
-            onChange={(e) => setSelectedService(e.target.value)}
-          >
-            <option value="">All Services</option>
-            {services.map(service => (
-              <option key={service} value={service}>{service}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Finding fuel delivery agents...</p>
-        </div>
-      ) : filteredAgents.length > 0 ? (
-        <div className="agents-grid">
-          {filteredAgents.map(agent => (
-            <div key={agent.id} className="agent-card">
-              <div className="agent-header">
-                <div className="agent-info">
-                  <h3>{agent.name || 'Unknown Agent'}</h3>
-                  <p className="specialization">{agent.specialization || agent.experience ? `${agent.experience || 'Experienced'} Agent` : 'Fuel Delivery Agent'}</p>
-                  <div className="rating">
-                    <Star size={16} className="star" />
-                    <span>{agent.rating || '4.5'}</span>
-                    <span className="reviews">({agent.reviews || '0'} reviews)</span>
-                  </div>
-                </div>
-                <div className="agent-status">
-                  <span className={`status ${agent.is_online ? 'online' : 'offline'}`}>
-                    {agent.is_online ? 'Available' : 'Offline'}
-                  </span>
-                </div>
-              </div>
-              <div className="agent-details">
-                <div className="detail-item">
-                  <MapPin size={16} />
-                  <span>{agent.city || 'Location not specified'}</span>
-                </div>
-                <div className="detail-item">
-                  <Phone size={16} />
-                  <span>{agent.phone || 'Phone not available'}</span>
-                </div>
-                <div className="detail-item">
-                  <Mail size={16} />
-                  <span>{agent.email || 'Email not available'}</span>
-                </div>
-              </div>
-              
-              <div className="agent-services">
-                <h4>Services:</h4>
-                <div className="services-tags">
-                  {(agent.services || ['Petrol Delivery', 'Diesel Delivery', 'Emergency Fuel']).slice(0, 3).map(service => (
-                    <span key={service} className="service-tag">{service}</span>
-                  ))}
-                  {(agent.services || ['Petrol Delivery', 'Diesel Delivery', 'Emergency Fuel']).length > 3 && (
-                    <span className="more-services">+{(agent.services || ['Petrol Delivery', 'Diesel Delivery', 'Emergency Fuel']).length - 3} more</span>
-                  )}
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => handleAgentSelect(agent)}
-                className="select-agent-btn"
-              >
-                Book Now
-                <ChevronRight size={16} />
+    <div className="bg-surface font-body text-on-surface">
+      {/* TopNavBar Shell */}
+      <header className="bg-[#f8f9ff]/80 backdrop-blur-xl docked full-width top-0 z-50 shadow-[0_12px_32px_rgba(25,28,32,0.04)] fixed w-full">
+        <nav className="flex justify-between items-center w-full px-8 py-4 max-w-full">
+          <div className="flex items-center gap-12">
+            <span className="text-2xl font-black text-[#4d41df] italic font-headline tracking-tight cursor-pointer" onClick={() => navigate('/car-service/home')}>Expertease</span>
+            <div className="hidden md:flex gap-8">
+              <a className="text-slate-600 font-medium font-headline hover:text-[#4d41df] transition-colors duration-200" href="#">Services</a>
+              <a className="text-slate-600 font-medium font-headline hover:text-[#4d41df] transition-colors duration-200" href="#">Pricing</a>
+              <a className="text-slate-600 font-medium font-headline hover:text-[#4d41df] transition-colors duration-200" href="#">Fleet</a>
+              <a className="text-slate-600 font-medium font-headline hover:text-[#4d41df] transition-colors duration-200" href="#">Support</a>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              <button className="p-2 text-slate-600 hover:text-primary transition-colors">
+                <span className="material-symbols-outlined">notifications</span>
+              </button>
+              <button className="p-2 text-slate-600 hover:text-primary transition-colors">
+                <span className="material-symbols-outlined">settings</span>
               </button>
             </div>
-          ))}
+            <div className="w-10 h-10 rounded-full bg-surface-container overflow-hidden border border-outline-variant/15">
+              <img alt="User profile avatar" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCoU4osPojcG6jiTaW3snx8T38Db_DHWp6A8vintR_pj9p9Y9mGmE8Ar5SCp2Z6U8pqH4m_mumWVU0wTOyrsQt46Df5tJaH31CMc3IZuQBmpjuBMBZ5A8WeWeW48guJlnucJPAsWvRwHdU9VujzWQqCqaaoKV9bjb-JO5r-2TTzW_ACgNrmyZtnjjw75ypOF7ZH6BTwZVuFX1PNBnWrYRHluIdqFNEWzO8OFtAlnz2U-ypCswjx8PvDIjFpvJmSbXSrqws2Nfbfxsd6" />
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      <main className="pt-24 pb-20 px-4 md:px-8 max-w-7xl mx-auto min-h-screen">
+        {/* Editorial Header Section */}
+        <section className="mb-12 mt-8">
+          <div className="flex flex-col md:flex-row justify-between items-end gap-6">
+            <div className="max-w-2xl">
+              <span className="text-secondary font-bold tracking-[0.05em] text-[11px] uppercase mb-3 block">Premium Roadside Assistance</span>
+              <h1 className="text-5xl md:text-6xl font-headline font-extrabold tracking-tight text-on-surface leading-[1.1]">
+                Fuel <span className="text-primary italic">Precision</span> Delivery.
+              </h1>
+              <p className="mt-6 text-lg text-on-surface-variant leading-relaxed font-medium">
+                Running low on the road shouldn't be a crisis. Connect with certified fuel agents nearby and track your delivery in high-fidelity.
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <div className="bg-surface-container-low px-6 py-4 rounded-xl">
+                <span className="text-primary font-black text-2xl block">{stats.activeAgents}</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-outline">Agents Active</span>
+              </div>
+              <div className="bg-surface-container-low px-6 py-4 rounded-xl">
+                <span className="text-tertiary font-black text-2xl block">{stats.avgEta}</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-outline">Avg ETA</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Main Content Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Request Form & Map */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Request Form Card */}
+            <div className="bg-surface-container-lowest p-8 rounded-xl shadow-[0_12px_32px_rgba(25,28,32,0.04)]">
+              <h2 className="text-2xl font-headline font-bold mb-8 flex items-center gap-3">
+                <span className="material-symbols-outlined text-primary">local_gas_station</span>
+                Request Fuel
+              </h2>
+              <form className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Fuel Type Selection */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-widest text-outline mb-2">Fuel Type</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button 
+                        type="button"
+                        onClick={() => setSelectedFuel('Petrol')}
+                        className={`p-4 rounded-lg flex flex-col items-center gap-2 transition-all border-2 ${selectedFuel === 'Petrol' ? 'border-primary bg-primary/5 text-primary' : 'border-outline-variant/30 text-on-surface-variant hover:border-primary/50'}`}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontVariationSettings: selectedFuel === 'Petrol' ? "'FILL' 1" : "'FILL' 0" }}>oil_barrel</span>
+                        <span className="font-bold text-sm">Petrol</span>
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setSelectedFuel('Diesel')}
+                        className={`p-4 rounded-lg flex flex-col items-center gap-2 transition-all border-2 ${selectedFuel === 'Diesel' ? 'border-primary bg-primary/5 text-primary' : 'border-outline-variant/30 text-on-surface-variant hover:border-primary/50'}`}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontVariationSettings: selectedFuel === 'Diesel' ? "'FILL' 1" : "'FILL' 0" }}>propane_tank</span>
+                        <span className="font-bold text-sm">Diesel</span>
+                      </button>
+                    </div>
+                  </div>
+                  {/* Quantity */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-widest text-outline mb-2">Quantity (Liters)</label>
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        className="w-full bg-surface-container-low border-none rounded-lg p-4 font-bold text-lg focus:ring-2 focus:ring-primary transition-all" 
+                        placeholder="20" 
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-outline font-bold">LTR</span>
+                    </div>
+                  </div>
+                </div>
+                {/* Location */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-widest text-outline mb-2">Current Location</label>
+                  <div className="relative group">
+                    <input 
+                      type="text" 
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full bg-surface-container-low border-none rounded-lg p-4 pr-12 font-medium focus:ring-2 focus:ring-primary transition-all" 
+                      placeholder="Enter address or pinpoint on map" 
+                    />
+                    <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-primary group-hover:scale-110 transition-transform">my_location</span>
+                  </div>
+                  <div className="mt-4 h-48 rounded-xl overflow-hidden relative">
+                    <img className="w-full h-full object-cover brightness-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCfDYQVg4SzVuF6OXXubuUVeKUYVQB0JHPYVmXt3-mHF-1au_HUvseYvNx-0rfitkWMKugRbfJ6VzBYYnBia2NZNZsbEMgofvHgCqTV5n5hX1Hz_Pb2rhDxQjUnaF9iBEZ302qSeTAfJCwZOOZLIyowc1UcrCciQc5Oj6zf9FodZ3oesBO7EME-IQhDOiDIwLck4ftpR-jY_vvO1rb9hZqZiJtoC7jh6JCG4qffTHOKNYmm_XWJZATzvszNi-yDHsGPz6H16UDN6ky" alt="Map" />
+                    <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                      <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white shadow-xl animate-pulse">
+                        <span className="material-symbols-outlined">location_on</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Submit */}
+                <div className="pt-4">
+                  <button 
+                    type="button"
+                    onClick={handleCreateRequest}
+                    disabled={loading}
+                    className="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary py-5 rounded-xl font-bold text-lg shadow-lg hover:shadow-primary/25 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : 'Create Fuel Request'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Live Status Tracking Card */}
+            {activeRequest && (
+              <div className="bg-surface-container-high/50 p-8 rounded-xl border border-primary/10">
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h3 className="text-xl font-headline font-bold">Delivery in Progress</h3>
+                    <p className="text-sm text-on-surface-variant font-medium mt-1">Request ID: #{activeRequest.id}</p>
+                  </div>
+                  <span className="bg-secondary/10 text-secondary px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider">{activeRequest.status.replace('_', ' ')}</span>
+                </div>
+                
+                <div className="relative py-10">
+                  <div className="absolute top-[48px] left-0 w-full h-1 bg-outline-variant/30 rounded-full"></div>
+                  <div 
+                    className="absolute top-[48px] left-0 h-1 bg-primary rounded-full shadow-[0_0_8px_rgba(77,65,223,0.5)] transition-all duration-1000"
+                    style={{ width: `${getStatusProgress(activeRequest.status)}%` }}
+                  ></div>
+                  <div className="relative flex justify-between">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-surface-container-low ${['PENDING', 'ASSIGNED', 'EN_ROUTE', 'COMPLETED'].indexOf(activeRequest.status) >= 0 ? 'bg-primary text-white' : 'bg-surface-container-highest text-outline'}`}>
+                        <span className="material-symbols-outlined text-sm">check</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase text-outline">Received</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-surface-container-low ${['ASSIGNED', 'EN_ROUTE', 'COMPLETED'].indexOf(activeRequest.status) >= 0 ? 'bg-primary text-white' : 'bg-surface-container-highest text-outline'}`}>
+                        <span className="material-symbols-outlined text-sm">person</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase text-outline">Assigned</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-surface-container-low ${['EN_ROUTE', 'COMPLETED'].indexOf(activeRequest.status) >= 0 ? 'bg-primary text-white animate-bounce' : 'bg-surface-container-highest text-outline'}`}>
+                        <span className="material-symbols-outlined text-sm">local_shipping</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase text-outline">En Route</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ring-4 ring-surface-container-low ${activeRequest.status === 'COMPLETED' ? 'bg-primary text-white' : 'bg-surface-container-highest text-outline'}`}>
+                        <span className="material-symbols-outlined text-sm">done_all</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase text-outline">Complete</span>
+                    </div>
+                  </div>
+                </div>
+
+                {activeRequest.agent && (
+                  <div className="mt-4 flex items-center gap-4 bg-white p-4 rounded-xl">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-surface-variant">
+                      <img src={activeRequest.agent.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuARWvUEZH7IsIZjjVLXY87Y6D5a_udnVbyGe0cC5_2n-7AYgAMVOAvs3E-y056LP6gONZzH7Pcjw1pc4D5LN82qxA_Woxpv3wr4dEnWkYpQH6Zmed_vujWLln5NKfunb5I0JQMEQgZPezXXebAru_hpWnAACGdhDGYmGANQ9VeRHHiOCinGJ1Wcp0Ok7OOjxafZTmtejjMsVApQ6xJ-eNojf0P-sgkRlOv_dwpRguNqYXXmHlPfflj9KFaX9b7SEkxBClPT1WRZGnWl"} alt="Agent" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-sm">{activeRequest.agent.name}</h4>
+                      <p className="text-xs text-outline">{activeRequest.agent.vehicle || 'White Ford Transit'} • {activeRequest.agent.plate || 'AB-9201'}</p>
+                    </div>
+                    <button className="bg-surface-container-low p-2 rounded-lg text-primary">
+                      <span className="material-symbols-outlined">call</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Nearby Agents */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="bg-surface-container-low p-6 rounded-xl">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-headline font-bold">Nearby Agents</h2>
+                <span className="text-xs text-primary font-bold hover:underline cursor-pointer">View All</span>
+              </div>
+              <div className="space-y-4">
+                {agents.length === 0 ? (
+                  <p className="text-center py-4 text-on-surface-variant text-sm">No agents nearby at the moment.</p>
+                ) : (
+                  agents.map((agent, index) => (
+                    <div key={index} className="bg-surface-container-lowest p-4 rounded-xl flex items-center gap-4 group hover:shadow-md transition-all cursor-pointer">
+                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-surface-variant relative">
+                        <img src={agent.avatar || `https://i.pravatar.cc/150?u=${agent.id}`} alt={agent.name} className="w-full h-full object-cover" />
+                        <div className={`absolute bottom-1 right-1 w-3 h-3 rounded-full border-2 border-white ${agent.status === 'AVAILABLE' ? 'bg-tertiary' : 'bg-error'}`}></div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between">
+                          <h4 className="font-bold group-hover:text-primary transition-colors">{agent.name}</h4>
+                          <div className="flex items-center gap-1 text-secondary">
+                            <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                            <span className="text-xs font-bold">{agent.rating || '4.8'}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${agent.is_fastest ? 'text-tertiary bg-tertiary/10' : 'text-outline-variant bg-surface-container'}`}>
+                            {agent.is_fastest ? 'Fastest' : 'Standard'}
+                          </span>
+                          <span className="text-xs text-outline font-medium">{agent.distance || '0.8'} miles away</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Info Card */}
+            <div className="bg-primary p-8 rounded-xl text-on-primary relative overflow-hidden group">
+              <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                <span className="material-symbols-outlined text-9xl">verified</span>
+              </div>
+              <h3 className="text-xl font-headline font-bold mb-4">The Expertease Guarantee</h3>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-primary-fixed-dim">verified</span>
+                  <p className="text-sm font-medium">All agents are certified precision mechanics and safety-trained.</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-primary-fixed-dim">speed</span>
+                  <p className="text-sm font-medium">Ultra-low response times with AI-optimized routing.</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-primary-fixed-dim">shield</span>
+                  <p className="text-sm font-medium">Transparent pricing and spill-free delivery protocols.</p>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="no-agents">
-          <Droplet size={40} />
-          <h3>No fuel delivery agents available</h3>
-          <p>Try adjusting your search criteria or check back later</p>
-        </div>
-      )}
-
-      <style>{`
-        .agents-list {
-          padding: 2rem;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .search-filters {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-          background: white;
-          padding: 1rem;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .search-bar, .filter-dropdown {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          flex: 1;
-        }
-
-        .search-bar input, .filter-dropdown select {
-          flex: 1;
-          padding: 0.75rem;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 1rem;
-        }
-
-        .agents-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .agent-card {
-          background: white;
-          border-radius: 12px;
-          padding: 1.5rem;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          transition: transform 0.2s;
-          cursor: pointer;
-        }
-
-        .agent-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
-
-        .agent-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        }
-
-        .agent-info h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.25rem;
-        }
-
-        .specialization {
-          color: #6b7280;
-          font-size: 0.9rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .rating {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-        }
-
-        .star {
-          color: #fbbf24;
-          fill: #fbbf24;
-        }
-
-        .reviews {
-          color: #6b7280;
-          font-size: 0.8rem;
-        }
-
-        .agent-status {
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 500;
-        }
-
-        .status.online {
-          background: #dcfce7;
-          color: #16a34a;
-        }
-
-        .status.offline {
-          background: #f3f4f6;
-          color: #6b7280;
-        }
-
-        .agent-details {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-          margin-top: 1rem;
-        }
-
-        .detail-card {
-          background: #f9fafb;
-          padding: 1rem;
-          border-radius: 8px;
-        }
-
-        .detail-card h3 {
-          font-size: 1rem;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 0.75rem;
-        }
-
-        .detail-item {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: #6b7280;
-          font-size: 0.9rem;
-        }
-
-        .agent-services {
-          margin-top: 1rem;
-        }
-
-        .agent-services h4 {
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-
-        .services-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-        }
-
-        .service-tag {
-          background: #f3f4f6;
-          padding: 0.25rem 0.5rem;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          color: #4b5563;
-        }
-
-        .more-services {
-          background: #e5e7eb;
-          padding: 0.25rem 0.5rem;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          color: #6b7280;
-        }
-
-        .select-agent-btn {
-          width: 100%;
-          padding: 0.75rem 1rem;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .select-agent-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
-
-        .no-agents {
-          text-align: center;
-          padding: 3rem;
-          color: #6b7280;
-        }
-
-        .no-agents svg {
-          color: #7c3aed;
-          opacity: 0.5;
-          margin-bottom: 1rem;
-        }
-
-        .loading-state {
-          text-align: center;
-          padding: 3rem;
-        }
-
-        .spinner {
-          width: 40px;
-          height: 40px;
-          border: 4px solid #e5e7eb;
-          border-top: 4px solid #7c3aed;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .fuel-type-selection {
-          padding: 2rem;
-          max-width: 800px;
-          margin: 0 auto;
-        }
-
-        .selection-header {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-
-        .selection-header h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .fuel-type-options {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1.5rem;
-          margin-top: 2rem;
-        }
-
-        .fuel-type-card {
-          background: white;
-          border: 2px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 2rem;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .fuel-type-card:hover {
-          border-color: #7c3aed;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
-
-        .fuel-icon {
-          width: 60px;
-          height: 60px;
-          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1rem;
-        }
-
-        .fuel-icon svg {
-          color: white;
-          font-size: 24px;
-        }
-
-        .fuel-type-card h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin: 1rem 0 0.5rem;
-        }
-
-        .fuel-type-card p {
-          color: #6b7280;
-          font-size: 0.9rem;
-          margin-bottom: 1rem;
-        }
-
-        .fuel-features {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-
-        .fuel-features span {
-          font-size: 0.8rem;
-          color: #059669;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          background: #f3f4f6;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-        }
-
-        .agent-profile {
-          margin-bottom: 2rem;
-        }
-
-        .profile-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 1rem;
-        }
-
-        .profile-avatar {
-          width: 60px;
-          height: 60px;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .profile-avatar svg {
-          color: white;
-          font-size: 30px;
-        }
-
-        .rating-large {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 1.1rem;
-        }
-
-        .rating-large .star {
-          width: 20px;
-          height: 20px;
-        }
-
-        .rating-large .reviews {
-          font-size: 0.9rem;
-        }
-
-        .booking-form h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 1.5rem;
-        }
-
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .form-group.full-width {
-          grid-column: 1 / -1;
-        }
-
-        .form-group label {
-          font-weight: 500;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-          padding: 0.75rem;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 1rem;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-          outline: none;
-          border-color: #7c3aed;
-          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: flex-end;
-          margin-top: 2rem;
-        }
-
-        .cancel-btn {
-          padding: 0.75rem 1.5rem;
-          background: #f3f4f6;
-          color: #6b7280;
-          border: none;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-        }
-
-        .submit-btn {
-          padding: 0.75rem 1.5rem;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        .booking-confirmed {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 60vh;
-        }
-
-        .confirmation-content {
-          text-align: center;
-          background: white;
-          padding: 3rem;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          max-width: 500px;
-        }
-
-        .success-icon {
-          width: 80px;
-          height: 80px;
-          background: #dcfce7;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 1.5rem;
-        }
-
-        .success-icon svg {
-          color: #16a34a;
-          font-size: 40px;
-        }
-
-        .booking-summary {
-          background: #f9fafb;
-          padding: 1.5rem;
-          border-radius: 8px;
-          margin: 2rem 0;
-        }
-
-        .summary-item {
-          display: flex;
-          justify-content: space-between;
-          padding: 0.5rem 0;
-          border-bottom: 1px solid #e5e7eb;
-        }
-
-        .summary-item:last-child {
-          border-bottom: none;
-        }
-
-        .summary-item .label {
-          color: #6b7280;
-        }
-
-        .summary-item .value {
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .confirmation-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-        }
-
-        .home-btn,
-        .bookings-btn {
-          padding: 0.75rem 1.5rem;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        .home-btn {
-          background: #f3f4f6;
-          color: #6b7280;
-        }
-
-        .bookings-btn {
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          color: white;
-        }
-
-        .page-header {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-
-        .page-header h1 {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #1f2937;
-        }
-
-        .page-header p {
-          color: #6b7280;
-          font-size: 1rem;
-        }
-
-        .page-header p {
-          color: #6b7280;
-          font-size: 1.1rem;
-        }
-
-        .search-filters {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-        }
-
-        .search-bar {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1rem;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          background: white;
-        }
-
-        .search-bar input {
-          flex: 1;
-          border: none;
-          outline: none;
-          font-size: 1rem;
-        }
-
-        .filter-dropdown {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1rem;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          background: white;
-        }
-
-        .filter-dropdown select {
-          border: none;
-          outline: none;
-          font-size: 1rem;
-          background: transparent;
-        }
-
-        .agents-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .agent-card {
-          background: white;
-          border-radius: 12px;
-          padding: 1.5rem;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          transition: transform 0.2s;
-        }
-
-        .agent-card:hover {
-          transform: translateY(-2px);
-        }
-
-        .agent-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        }
-
-        .agent-info h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.25rem;
-        }
-
-        .specialization {
-          color: #6b7280;
-          font-size: 0.9rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .rating {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-        }
-
-        .star {
-          color: #fbbf24;
-          fill: #fbbf24;
-        }
-
-        .reviews {
-          color: #6b7280;
-          font-size: 0.8rem;
-        }
-
-        .status {
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 500;
-        }
-
-        .status.online {
-          background: #dcfce7;
-          color: #16a34a;
-        }
-
-        .status.offline {
-          background: #f3f4f6;
-          color: #6b7280;
-        }
-
-        .agent-details {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-
-        .detail-item {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: #6b7280;
-          font-size: 0.9rem;
-        }
-
-        .agent-services h4 {
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-
-        .services-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-
-        .service-tag {
-          background: #f3f4f6;
-          padding: 0.25rem 0.5rem;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          color: #4b5563;
-        }
-
-        .more-services {
-          background: #e5e7eb;
-          padding: 0.25rem 0.5rem;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          color: #6b7280;
-        }
-
-        .select-agent-btn {
-          width: 100%;
-          padding: 0.75rem;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .select-agent-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
-
-        .loading-state {
-          text-align: center;
-          padding: 3rem;
-        }
-
-        .spinner {
-          width: 40px;
-          height: 40px;
-          border: 4px solid #e5e7eb;
-          border-top: 4px solid #7c3aed;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .no-agents {
-          text-align: center;
-          padding: 3rem;
-          color: #6b7280;
-        }
-
-        .no-agents svg {
-          color: #7c3aed;
-          opacity: 0.5;
-          margin-bottom: 1rem;
-        }
-
-        .agent-details {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 2rem;
-        }
-
-        .agent-profile {
-          background: white;
-          border-radius: 12px;
-          padding: 2rem;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .profile-header {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-
-        .back-btn {
-          align-self: flex-start;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          background: #f3f4f6;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          margin-bottom: 2rem;
-        }
-
-        .profile-avatar {
-          width: 120px;
-          height: 120px;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          margin-bottom: 1rem;
-        }
-
-        .profile-info h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .rating-large {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          justify-content: center;
-        }
-
-        .agent-details-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .detail-card {
-          background: #f9fafb;
-          padding: 1.5rem;
-          border-radius: 8px;
-        }
-
-        .detail-card h3 {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 1rem;
-        }
-
-        .services-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .service-item {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: #4b5563;
-        }
-
-        .availability-info {
-          text-align: center;
-        }
-
-        .booking-section {
-          background: white;
-          border-radius: 12px;
-          padding: 2rem;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          margin-top: 2rem;
-        }
-
-        .booking-form h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 1.5rem;
-        }
-
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-          margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .form-group.full-width {
-          grid-column: 1 / -1;
-        }
-
-        .form-group label {
-          font-weight: 500;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-          padding: 0.75rem;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 1rem;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-          outline: none;
-          border-color: #7c3aed;
-          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: flex-end;
-        }
-
-        .cancel-btn {
-          padding: 0.75rem 1.5rem;
-          background: #f3f4f6;
-          color: #6b7280;
-          border: none;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-        }
-
-        .submit-btn {
-          padding: 0.75rem 1.5rem;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        .booking-confirmed {
-          text-align: center;
-          padding: 3rem;
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .success-icon {
-          width: 80px;
-          height: 80px;
-          background: #dcfce7;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #16a34a;
-          margin: 0 auto 1.5rem;
-        }
-
-        .booking-summary {
-          background: #f9fafb;
-          padding: 1.5rem;
-          border-radius: 8px;
-          margin: 2rem 0;
-        }
-
-        .summary-item {
-          display: flex;
-          justify-content: space-between;
-          padding: 0.5rem 0;
-          border-bottom: 1px solid #e5e7eb;
-        }
-
-        .summary-item:last-child {
-          border-bottom: none;
-        }
-
-        .summary-item .label {
-          color: #6b7280;
-        }
-
-        .summary-item .value {
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .confirmation-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-        }
-
-        .home-btn,
-        .bookings-btn {
-          padding: 0.75rem 1.5rem;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        .home-btn {
-          background: #f3f4f6;
-          color: #6b7280;
-        }
-
-        .bookings-btn {
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          color: white;
-        }
-      `}</style>
+      </main>
+
+      {/* BottomNavBar */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-2 bg-[#f8f9ff]/90 backdrop-blur-lg border-t border-[#c7c4d8]/15 shadow-[0_-4px_12px_rgba(25,28,32,0.04)]">
+        <button onClick={() => navigate('/car-service/home')} className="flex flex-col items-center justify-center text-slate-400">
+          <span className="material-symbols-outlined">home</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-[0.05em] font-bold mt-1">Home</span>
+        </button>
+        <button onClick={() => navigate('/car-service/my-bookings')} className="flex flex-col items-center justify-center bg-[#4d41df]/10 text-[#4d41df] rounded-xl px-4 py-1">
+          <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>car_repair</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-[0.05em] font-bold mt-1">Bookings</span>
+        </button>
+        <button className="flex flex-col items-center justify-center text-slate-400">
+          <span className="material-symbols-outlined">query_stats</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-[0.05em] font-bold mt-1">Status</span>
+        </button>
+        <button className="flex flex-col items-center justify-center text-slate-400">
+          <span className="material-symbols-outlined">menu</span>
+          <span className="font-['Inter'] text-[10px] uppercase tracking-[0.05em] font-bold mt-1">Menu</span>
+        </button>
+      </nav>
     </div>
   );
 };

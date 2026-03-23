@@ -1,40 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, Filter, MapPin, Clock, Star, Phone, Mail, Calendar, 
-  ChevronRight, User, AlertCircle, Wrench
-} from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../shared/api';
 
 const BookMechanic = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   
+  const [step, setStep] = useState('list'); // 'list' or 'details'
   const [mechanics, setMechanics] = useState([]);
   const [filteredMechanics, setFilteredMechanics] = useState([]);
-  const [selectedMechanic, setSelectedMechanic] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedService, setSelectedService] = useState('');
-  const [bookingStep, setBookingStep] = useState('list'); // list, booking-type, issue-description, confirmation
-  const [bookingType, setBookingType] = useState(''); // 'instant' or 'prebook'
+  const [selectedService, setSelectedService] = useState('All Services');
+  
+  // Booking State
+  const [selectedMechanic, setSelectedMechanic] = useState(null);
+  const [bookingType, setBookingType] = useState('instant');
   const [issueDescription, setIssueDescription] = useState('');
-  const [bookingConfirmed, setBookingConfirmed] = useState(false);
+  const [userCars, setUserCars] = useState([]);
+  const [selectedCar, setSelectedCar] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const services = [
-    'General Service',
-    'Oil Change',
+    'All Services',
+    'Engine Repair',
     'Brake Service',
-    'Battery Service',
-    'Tire Service',
-    'Engine Diagnostics',
-    'AC Service',
-    'Transmission Service'
+    'Electrical',
+    'Battery',
+    'Tyre'
   ];
 
   useEffect(() => {
     fetchMechanics();
+    fetchUserCars();
   }, []);
 
   useEffect(() => {
@@ -43,24 +40,28 @@ const BookMechanic = () => {
 
   const fetchMechanics = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.get('/api/car/service/workers/approved', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.data?.workers) {
-        // Filter for mechanics only
-        const mechanicWorkers = response.data.workers.filter(worker => 
-          worker.role === 'Mechanic'
-        );
-        setMechanics(mechanicWorkers);
+      setLoading(true);
+      const response = await api.get('/api/car/mechanics/available');
+      if (response.data?.mechanics) {
+        setMechanics(response.data.mechanics);
       }
     } catch (error) {
       console.error('Error fetching mechanics:', error);
-      // Set empty array to prevent infinite loading
       setMechanics([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserCars = async () => {
+    try {
+      const response = await api.get('/api/car/cars');
+      if (response.data?.cars && response.data.cars.length > 0) {
+        setUserCars(response.data.cars);
+        setSelectedCar(response.data.cars[0]); // Default to first car
+      }
+    } catch (error) {
+      console.error('Error fetching user cars:', error);
     }
   };
 
@@ -75,9 +76,10 @@ const BookMechanic = () => {
       );
     }
     
-    if (selectedService) {
+    if (selectedService !== 'All Services') {
       filtered = filtered.filter(mechanic => 
-        mechanic.services?.includes(selectedService)
+        mechanic.specialization?.toLowerCase().includes(selectedService.toLowerCase()) ||
+        mechanic.services?.some(s => s.toLowerCase().includes(selectedService.toLowerCase()))
       );
     }
     
@@ -86,836 +88,375 @@ const BookMechanic = () => {
 
   const handleMechanicSelect = (mechanic) => {
     setSelectedMechanic(mechanic);
-    setBookingStep('booking-type');
+    setStep('details');
+    window.scrollTo(0, 0);
   };
 
-  const handleBookingTypeSelect = (type) => {
-    setBookingType(type);
-    setBookingStep('issue-description');
-  };
+  const handleSubmitBooking = async () => {
+    if (!selectedCar || !issueDescription) {
+      alert('Please select a vehicle and describe your issue.');
+      return;
+    }
 
-  const handleIssueSubmit = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
-      // Create booking based on type
+      setSubmitting(true);
       const bookingData = {
         mechanic_id: selectedMechanic.id,
-        booking_type: bookingType, // 'instant' or 'prebook'
+        car_id: selectedCar.id,
+        booking_type: bookingType,
         issue_description: issueDescription,
-        user_id: user?.id
+        service_fee: 45.00 // From design
       };
-      
-      const response = await api.post('/api/car/book-mechanic', bookingData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
+
+      const response = await api.post('/api/car/book-mechanic', bookingData);
       if (response.data?.success) {
-        setBookingConfirmed(true);
-        setBookingStep('confirmation');
+        alert('Booking submitted successfully!');
+        navigate('/car-service/my-bookings');
       }
     } catch (error) {
-      console.error('Booking error:', error);
-      alert('Error booking mechanic. Please try again.');
+      console.error('Error submitting booking:', error);
+      alert('Failed to submit booking. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleBackToList = () => {
-    setSelectedMechanic(null);
-    setBookingStep('list');
-    setBookingType('');
-    setIssueDescription('');
-    setBookingConfirmed(false);
-  };
-
-  const renderMechanicList = () => (
-    <div className="book-mechanic-container">
-      <div className="search-filters">
-        <div className="search-bar">
-          <Search size={20} />
-          <input
-            type="text"
-            placeholder="Search mechanics..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        
-        <div className="service-filter">
-          <Filter size={20} />
-          <select
-            value={selectedService}
-            onChange={(e) => setSelectedService(e.target.value)}
-          >
-            <option value="">All Services</option>
-            {services.map(service => (
-              <option key={service} value={service}>{service}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Finding mechanics near you...</p>
-        </div>
-      ) : filteredMechanics.length > 0 ? (
-        <div className="mechanics-grid">
-          {filteredMechanics.map(mechanic => (
-            <div key={mechanic.id} className="mechanic-card">
-              <div className="mechanic-header">
-                <div className="mechanic-info">
-                  <h3>{mechanic.name || 'Unknown Mechanic'}</h3>
-                  <p className="specialization">{mechanic.specialization || mechanic.experience ? `${mechanic.experience || 'Experienced'} Mechanic` : 'General Mechanic'}</p>
-                  <div className="rating">
-                    <Star size={16} className="star" />
-                    <span>{mechanic.rating || '4.5'}</span>
-                    <span className="reviews">({mechanic.reviews || '0'} reviews)</span>
-                  </div>
-                </div>
-                <div className="mechanic-status">
-                  <span className={`status ${mechanic.is_online ? 'online' : 'offline'}`}>
-                    {mechanic.is_online ? 'Available' : 'Offline'}
-                  </span>
-                </div>
-              </div>
-              <div className="mechanic-details">
-                <div className="detail-item">
-                  <MapPin size={16} />
-                  <span>{mechanic.city || 'Location not specified'}</span>
-                </div>
-                <div className="detail-item">
-                  <Phone size={16} />
-                  <span>{mechanic.phone || 'Phone not available'}</span>
-                </div>
-                <div className="detail-item">
-                  <Mail size={16} />
-                  <span>{mechanic.email || 'Email not available'}</span>
-                </div>
-              </div>
-              
-              <div className="mechanic-services">
-                <h4>Services:</h4>
-                <div className="services-tags">
-                  {(mechanic.services || ['General Service', 'Maintenance', 'Diagnostics']).slice(0, 3).map(service => (
-                    <span key={service} className="service-tag">{service}</span>
-                  ))}
-                  {(mechanic.services || ['General Service', 'Maintenance', 'Diagnostics']).length > 3 && (
-                    <span className="more-services">+{(mechanic.services || ['General Service', 'Maintenance', 'Diagnostics']).length - 3} more</span>
-                  )}
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => handleMechanicSelect(mechanic)}
-                className="select-mechanic-btn"
-              >
-                Select Mechanic
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="no-mechanics">
-          <User size={40} />
-          <h3>No mechanics available</h3>
-          <p>Try adjusting your search criteria or check back later</p>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderBookingTypeSelection = () => (
-    <div className="booking-type-container">
-      <div className="booking-type-header">
-        <button onClick={handleBackToList} className="back-btn">
-          <ChevronRight size={20} />
-          Back to Mechanics
-        </button>
-        <h2>Select Booking Type</h2>
-        <p>Choose how you want to book {selectedMechanic?.name || 'this mechanic'}</p>
-      </div>
-      
-      <div className="mechanic-summary">
-        <div className="mechanic-info">
-          <h3>{selectedMechanic?.name || 'Unknown Mechanic'}</h3>
-          <p className="specialization">{selectedMechanic?.specialization || selectedMechanic?.experience ? `${selectedMechanic?.experience || 'Experienced'} Mechanic` : 'General Mechanic'}</p>
-          <div className="rating">
-            <Star size={16} className="star" />
-            <span>{selectedMechanic?.rating || '4.5'}</span>
-            <span className="reviews">({selectedMechanic?.reviews || '0'} reviews)</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="booking-type-options">
-        <button 
-          onClick={() => handleBookingTypeSelect('instant')}
-          className="booking-type-card instant"
-        >
-          <div className="booking-type-icon">
-            <Clock size={32} />
-          </div>
-          <h3>Instant Book</h3>
-          <p>Book immediately for urgent issues</p>
-          <div className="booking-type-features">
-            <span>✓ Immediate response</span>
-            <span>✓ Emergency service</span>
-            <span>✓ Quick booking</span>
-          </div>
-        </button>
-        
-        <button 
-          onClick={() => handleBookingTypeSelect('prebook')}
-          className="booking-type-card prebook"
-        >
-          <div className="booking-type-icon">
-            <Calendar size={32} />
-          </div>
-          <h3>Pre-Book (Schedule)</h3>
-          <p>Schedule for a later time</p>
-          <div className="booking-type-features">
-            <span>✓ Choose your time</span>
-            <span>✓ Plan ahead</span>
-            <span>✓ Flexible scheduling</span>
-          </div>
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderIssueDescription = () => (
-    <div className="issue-description-container">
-      <div className="issue-header">
-        <button onClick={handleBackToList} className="back-btn">
-          <ChevronRight size={20} />
-          Back to Mechanics
-        </button>
-        <h2>Describe Your Issue</h2>
-        <p>Tell {selectedMechanic?.name || 'the mechanic'} about your car problem</p>
-      </div>
-      
-      <div className="mechanic-summary">
-        <div className="mechanic-info">
-          <h3>{selectedMechanic?.name || 'Unknown Mechanic'}</h3>
-          <p className="booking-type">
-            Booking Type: <span className={`type-badge ${bookingType}`}>
-              {bookingType === 'instant' ? 'Instant Book' : 'Pre-Book'}
-            </span>
-          </p>
-        </div>
-      </div>
-      
-      <form onSubmit={handleIssueSubmit} className="issue-form">
-        <div className="form-group">
-          <label htmlFor="issue">Issue Description *</label>
-          <textarea
-            id="issue"
-            value={issueDescription}
-            onChange={(e) => setIssueDescription(e.target.value)}
-            required
-            placeholder="Please describe your car issue in detail (e.g., 'engine making strange noise', 'brakes not working properly', 'car won't start', etc.)"
-            rows={6}
-          />
-        </div>
-        
-        <div className="form-actions">
-          <button type="button" onClick={handleBackToList} className="cancel-btn">
-            Cancel
-          </button>
-          <button type="submit" className="submit-btn">
-            {bookingType === 'instant' ? 'Book Instantly' : 'Schedule Appointment'}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-
-  const renderConfirmation = () => (
-    <div className="confirmation-container">
-      <div className="confirmation-content">
-        <div className="success-icon">
-          <AlertCircle size={40} />
-        </div>
-        <h2>Booking Confirmed!</h2>
-        <p>
-          {bookingType === 'instant' 
-            ? `Your instant booking with ${selectedMechanic?.name || 'the mechanic'} has been confirmed. The mechanic will contact you shortly.`
-            : `Your appointment with ${selectedMechanic?.name || 'the mechanic'} has been scheduled. The mechanic will contact you to arrange timing.`
-          }
-        </p>
-        
-        <div className="booking-summary">
-          <div className="summary-item">
-            <span className="label">Mechanic:</span>
-            <span className="value">{selectedMechanic?.name || 'Unknown'}</span>
-          </div>
-          <div className="summary-item">
-            <span className="label">Booking Type:</span>
-            <span className="value">{bookingType === 'instant' ? 'Instant Book' : 'Pre-Book'}</span>
-          </div>
-          <div className="summary-item">
-            <span className="label">Issue:</span>
-            <span className="value">{issueDescription}</span>
-          </div>
-        </div>
-        
-        <div className="confirmation-actions">
-          <button onClick={() => navigate('/car-service/home')} className="home-btn">
-            Back to Home
-          </button>
-          <button onClick={() => navigate('/car-service/bookings')} className="bookings-btn">
-            View My Bookings
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   if (loading) {
     return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Finding mechanics near you...</p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#4d41df]/20 border-t-[#4d41df]"></div>
       </div>
     );
   }
 
   return (
-    <div className="book-mechanic-page">
-      <style>{`
-        .book-mechanic-page {
-          padding: 2rem;
-          max-width: 1200px;
-          margin: 0 auto;
-          min-height: 100vh;
-          background: #f9fafb;
-        }
-
-        .book-mechanic-container {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .search-filters {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-          background: white;
-          padding: 1rem;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .search-bar, .service-filter {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          flex: 1;
-        }
-
-        .search-bar input, .service-filter select {
-          flex: 1;
-          padding: 0.75rem;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 1rem;
-        }
-
-        .mechanics-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .mechanic-card {
-          background: white;
-          border-radius: 12px;
-          padding: 1.5rem;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          transition: transform 0.2s;
-        }
-
-        .mechanic-card:hover {
-          transform: translateY(-2px);
-        }
-
-        .mechanic-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        }
-
-        .mechanic-info h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.25rem;
-        }
-
-        .specialization {
-          color: #6b7280;
-          font-size: 0.9rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .rating {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-        }
-
-        .star {
-          color: #fbbf24;
-          fill: #fbbf24;
-        }
-
-        .reviews {
-          color: #6b7280;
-          font-size: 0.8rem;
-        }
-
-        .status {
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 500;
-        }
-
-        .status.online {
-          background: #dcfce7;
-          color: #16a34a;
-        }
-
-        .status.offline {
-          background: #f3f4f6;
-          color: #6b7280;
-        }
-
-        .mechanic-details {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-
-        .detail-item {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          color: #6b7280;
-          font-size: 0.9rem;
-        }
-
-        .mechanic-services h4 {
-          font-size: 0.9rem;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-
-        .services-tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-          margin-bottom: 1rem;
-        }
-
-        .service-tag {
-          background: #f3f4f6;
-          padding: 0.25rem 0.5rem;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          color: #4b5563;
-        }
-
-        .more-services {
-          background: #e5e7eb;
-          padding: 0.25rem 0.5rem;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          color: #6b7280;
-        }
-
-        .select-mechanic-btn {
-          width: 100%;
-          padding: 0.75rem;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .select-mechanic-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
-
-        .loading-state {
-          text-align: center;
-          padding: 3rem;
-        }
-
-        .spinner {
-          width: 40px;
-          height: 40px;
-          border: 4px solid #e5e7eb;
-          border-top: 4px solid #7c3aed;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
-        .no-mechanics {
-          text-align: center;
-          padding: 3rem;
-          color: #6b7280;
-        }
-
-        .no-mechanics svg {
-          color: #7c3aed;
-          opacity: 0.5;
-          margin-bottom: 1rem;
-        }
-
-        .booking-type-container {
-          max-width: 800px;
-          margin: 0 auto;
-        }
-
-        .booking-type-header {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-
-        .back-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem 1rem;
-          background: #f3f4f6;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          margin-bottom: 2rem;
-          align-self: flex-start;
-        }
-
-        .booking-type-header h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .mechanic-summary {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          margin-bottom: 2rem;
-        }
-
-        .mechanic-summary h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .booking-type {
-          color: #6b7280;
-          font-size: 0.9rem;
-        }
-
-        .type-badge {
-          padding: 0.25rem 0.5rem;
-          border-radius: 6px;
-          font-weight: 500;
-        }
-
-        .type-badge.instant {
-          background: #dcfce7;
-          color: #16a34a;
-        }
-
-        .type-badge.prebook {
-          background: #dbeafe;
-          color: #1e40af;
-        }
-
-        .booking-type-options {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .booking-type-card {
-          background: white;
-          border: 2px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 2rem;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .booking-type-card:hover {
-          border-color: #7c3aed;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.1);
-        }
-
-        .booking-type-icon {
-          width: 80px;
-          height: 80px;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          margin: 0 auto 1rem;
-        }
-
-        .booking-type-card h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .booking-type-card p {
-          color: #6b7280;
-          margin-bottom: 1rem;
-        }
-
-        .booking-type-features {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          text-align: left;
-        }
-
-        .booking-type-features span {
-          color: #4b5563;
-          font-size: 0.9rem;
-        }
-
-        .issue-description-container {
-          max-width: 600px;
-          margin: 0 auto;
-        }
-
-        .issue-header {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-
-        .issue-form {
-          background: white;
-          padding: 2rem;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .form-group {
-          margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-          display: block;
-          font-weight: 500;
-          color: #374151;
-          margin-bottom: 0.5rem;
-        }
-
-        .form-group textarea {
-          width: 100%;
-          padding: 0.75rem;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 1rem;
-          resize: vertical;
-        }
-
-        .form-group textarea:focus {
-          outline: none;
-          border-color: #7c3aed;
-          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: flex-end;
-        }
-
-        .cancel-btn {
-          padding: 0.75rem 1.5rem;
-          background: #f3f4f6;
-          color: #6b7280;
-          border: none;
-          border-radius: 8px;
-          font-weight: 500;
-          cursor: pointer;
-        }
-
-        .submit-btn {
-          padding: 0.75rem 1.5rem;
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        .confirmation-container {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 60vh;
-        }
-
-        .confirmation-content {
-          text-align: center;
-          background: white;
-          padding: 3rem;
-          border-radius: 12px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-          max-width: 500px;
-        }
-
-        .success-icon {
-          width: 80px;
-          height: 80px;
-          background: #dcfce7;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #16a34a;
-          margin: 0 auto 1.5rem;
-        }
-
-        .confirmation-content h2 {
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-bottom: 1rem;
-        }
-
-        .confirmation-content p {
-          color: #6b7280;
-          margin-bottom: 2rem;
-        }
-
-        .booking-summary {
-          background: #f9fafb;
-          padding: 1.5rem;
-          border-radius: 8px;
-          margin: 2rem 0;
-        }
-
-        .summary-item {
-          display: flex;
-          justify-content: space-between;
-          padding: 0.5rem 0;
-          border-bottom: 1px solid #e5e7eb;
-        }
-
-        .summary-item:last-child {
-          border-bottom: none;
-        }
-
-        .summary-item .label {
-          color: #6b7280;
-        }
-
-        .summary-item .value {
-          font-weight: 600;
-          color: #1f2937;
-        }
-
-        .confirmation-actions {
-          display: flex;
-          gap: 1rem;
-          justify-content: center;
-        }
-
-        .home-btn,
-        .bookings-btn {
-          padding: 0.75rem 1.5rem;
-          border: none;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-
-        .home-btn {
-          background: #f3f4f6;
-          color: #6b7280;
-        }
-
-        .bookings-btn {
-          background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
-          color: white;
-        }
-
-        .loading-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 50vh;
-        }
-
-        @media (max-width: 768px) {
-          .book-mechanic-page {
-            padding: 1rem;
-          }
-          
-          .search-filters {
-            flex-direction: column;
-          }
-          
-          .mechanics-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .booking-type-options {
-            grid-template-columns: 1fr;
-          }
-          
-          .form-actions {
-            flex-direction: column;
-          }
-          
-          .confirmation-actions {
-            flex-direction: column;
-          }
-        }
-      `}</style>
-      {bookingStep === 'list' && renderMechanicList()}
-      {bookingStep === 'booking-type' && renderBookingTypeSelection()}
-      {bookingStep === 'issue-description' && renderIssueDescription()}
-      {bookingStep === 'confirmation' && renderConfirmation()}
+    <div className="text-[#191c20] bg-surface min-h-screen font-body selection:bg-[#4d41df]/20">
+      {step === 'list' ? (
+        <main className="pt-12 pb-20 px-6 max-w-7xl mx-auto">
+          {/* Back Navigation & Title Section */}
+          <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div className="space-y-2">
+              <button 
+                onClick={() => navigate('/car-service/home')}
+                className="flex items-center gap-2 text-[#4d41df] font-bold mb-4 hover:gap-3 transition-all group"
+              >
+                <span className="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span>
+                <span>Back to Dashboard</span>
+              </button>
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#191c20] leading-tight font-headline">
+                Book a Mechanic
+              </h1>
+              <p className="text-lg text-[#464555] max-w-lg font-medium">Certified mechanics near you, on demand. Expert service delivered to your driveway.</p>
+            </div>
+            {/* Stats Boxes */}
+            <div className="flex gap-4">
+              <div className="bg-surface-container-low p-6 rounded-xl flex flex-col gap-1 min-w-[160px] border border-[#c7c4d8]/20">
+                <span className="text-[#4d41df] font-black text-3xl font-headline">{mechanics.length}</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#777587]">Mechanics Online</span>
+              </div>
+              <div className="bg-surface-container-low p-6 rounded-xl flex flex-col gap-1 min-w-[160px] border border-[#c7c4d8]/20">
+                <span className="text-[#ab3500] font-black text-3xl font-headline">12m</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#777587]">Avg Response</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Search & Filter Bar */}
+          <div className="bg-surface-container-lowest p-4 rounded-2xl shadow-[0_8px_24px_rgba(25,28,32,0.03)] flex flex-col md:flex-row gap-4 mb-12 border border-[#c7c4d8]/15">
+            <div className="flex-1 relative">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#777587]">search</span>
+              <input 
+                className="w-full pl-12 pr-4 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-[#4d41df]/20 text-[#191c20] placeholder:text-[#777587] font-medium transition-all" 
+                placeholder="Search by name or skill..." 
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="relative min-w-[200px]">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#777587]">filter_list</span>
+              <select 
+                className="w-full pl-12 pr-10 py-3 bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-[#4d41df]/20 text-[#191c20] appearance-none cursor-pointer font-bold"
+                value={selectedService}
+                onChange={(e) => setSelectedService(e.target.value)}
+              >
+                {services.map(service => (
+                  <option key={service} value={service}>{service}</option>
+                ))}
+              </select>
+              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#777587] pointer-events-none">expand_more</span>
+            </div>
+          </div>
+
+          {/* Mechanics Grid */}
+          {filteredMechanics.length === 0 ? (
+            <div className="bg-surface-container-low border-2 border-dashed border-[#c7c4d8]/30 rounded-3xl h-[400px] flex flex-col items-center justify-center text-center p-8">
+              <div className="bg-surface-container-lowest p-6 rounded-full mb-6 shadow-sm">
+                <span className="material-symbols-outlined text-6xl text-[#c7c4d8]">person_off</span>
+              </div>
+              <h3 className="text-2xl font-headline font-bold mb-2">No mechanics found</h3>
+              <p className="text-[#464555] mb-8 max-w-xs font-medium">Try adjusting your search filters to find available experts near you.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {filteredMechanics.map((mechanic) => (
+                <div key={mechanic.id} className="group bg-surface-container-lowest p-6 rounded-2xl flex flex-col sm:flex-row gap-6 hover:shadow-[0_12px_32px_rgba(25,28,32,0.06)] transition-all duration-300 border border-[#c7c4d8]/10">
+                  <div className="relative shrink-0">
+                    <div className="w-24 h-24 rounded-full border-4 border-surface-container-low overflow-hidden bg-slate-100">
+                      <img 
+                        alt={mechanic.name} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                        src={mechanic.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(mechanic.name)}&background=4d41df&color=fff`}
+                      />
+                    </div>
+                    <div className="absolute bottom-1 right-1 w-6 h-6 bg-[#00855d] rounded-full border-4 border-white flex items-center justify-center">
+                      <div className="w-2.5 h-2.5 bg-[#85f8c4] rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-xl font-bold text-[#191c20] font-headline">{mechanic.name}</h3>
+                        <p className="text-sm font-bold text-[#4d41df] tracking-tight">{mechanic.specialization || 'Master Mechanic'}</p>
+                      </div>
+                      <div className="bg-[#00855d]/10 text-[#006948] px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest border border-[#00855d]/20">
+                        Available
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-[#464555] font-medium">
+                      <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[18px] text-[#4d41df]">location_on</span>
+                        <span>{mechanic.city || 'Chicago, IL'}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[18px] text-[#4d41df]">history</span>
+                        <span>{mechanic.experience || '10'} yrs exp.</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(mechanic.services || ['Engine Rebuild', 'Diagnostics', 'Brakes']).slice(0, 3).map((service, idx) => (
+                        <span key={idx} className="bg-surface-container-low text-[#464555] text-[11px] px-3 py-1 rounded-full font-bold border border-[#c7c4d8]/20">
+                          {service}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="pt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[#ab3500]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                        <span className="font-bold text-[#191c20]">{mechanic.rating || '4.9'}</span>
+                        <span className="text-[#777587] text-xs font-medium">({mechanic.reviews || '128'} reviews)</span>
+                      </div>
+                      <button 
+                        onClick={() => handleMechanicSelect(mechanic)}
+                        className="bg-gradient-to-br from-[#4d41df] to-[#675df9] text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-[1.05] active:scale-95 transition-all shadow-lg shadow-[#4d41df]/20"
+                      >
+                        Select Mechanic
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      ) : (
+        <main className="pt-12 pb-20 px-6 max-w-5xl mx-auto">
+          {/* Progress Indicator */}
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#4d41df]/30"></div>
+              <div className="w-2 h-2 rounded-full bg-[#4d41df]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#4d41df]/30"></div>
+            </div>
+          </div>
+
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl font-headline font-black tracking-tight text-[#191c20] mb-2">Service Details</h1>
+            <p className="text-[#464555] font-medium">Help us understand what your vehicle needs.</p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            {/* Left Content: Booking Form */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Step 1: Booking Type */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#4d41df]/10 flex items-center justify-center text-[#4d41df] font-bold text-xs">01</div>
+                  <h2 className="text-lg font-headline font-bold">Choose Booking Type</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => setBookingType('instant')}
+                    className={`p-6 rounded-2xl border-2 transition-all text-left relative group ${
+                      bookingType === 'instant' ? 'border-[#4d41df] bg-surface-container-lowest shadow-xl shadow-[#4d41df]/5' : 'border-[#c7c4d8]/20 bg-surface-container-lowest hover:border-[#4d41df]/30'
+                    }`}
+                  >
+                    {bookingType === 'instant' && (
+                      <div className="absolute top-4 right-4 text-[#4d41df]">
+                        <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      </div>
+                    )}
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-colors ${
+                      bookingType === 'instant' ? 'bg-[#4d41df] text-white' : 'bg-surface-container-low text-[#464555]'
+                    }`}>
+                      <span className="material-symbols-outlined text-xl">bolt</span>
+                    </div>
+                    <h3 className="font-bold text-[#191c20] mb-1">Instant Book</h3>
+                    <p className="text-xs text-[#464555] font-medium leading-relaxed">Mechanic arrives within 30-60 mins</p>
+                  </button>
+
+                  <button 
+                    onClick={() => setBookingType('prebook')}
+                    className={`p-6 rounded-2xl border-2 transition-all text-left relative group ${
+                      bookingType === 'prebook' ? 'border-[#4d41df] bg-surface-container-lowest shadow-xl shadow-[#4d41df]/5' : 'border-[#c7c4d8]/20 bg-surface-container-lowest hover:border-[#4d41df]/30'
+                    }`}
+                  >
+                    {bookingType === 'prebook' && (
+                      <div className="absolute top-4 right-4 text-[#4d41df]">
+                        <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      </div>
+                    )}
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 transition-colors ${
+                      bookingType === 'prebook' ? 'bg-[#4d41df] text-white' : 'bg-surface-container-low text-[#464555]'
+                    }`}>
+                      <span className="material-symbols-outlined text-xl">calendar_today</span>
+                    </div>
+                    <h3 className="font-bold text-[#191c20] mb-1">Pre-Book</h3>
+                    <p className="text-xs text-[#464555] font-medium leading-relaxed">Schedule for later today or tomorrow</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Step 2: Describe Issue */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#4d41df]/10 flex items-center justify-center text-[#4d41df] font-bold text-xs">02</div>
+                  <h2 className="text-lg font-headline font-bold">Describe Your Issue</h2>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black tracking-widest text-[#777587] ml-1">The Problem</label>
+                  <textarea 
+                    value={issueDescription}
+                    onChange={(e) => setIssueDescription(e.target.value)}
+                    placeholder="Describe your vehicle issue... e.g. Strange knocking sound from front left wheel when braking at low speeds."
+                    className="w-full bg-surface-container-low border-none rounded-2xl p-6 text-sm font-medium focus:ring-2 focus:ring-[#4d41df]/20 transition-all placeholder:text-[#777587]/60 min-h-[160px]"
+                  />
+                </div>
+              </div>
+
+              {/* Selected Vehicle */}
+              <div className="bg-surface-container-low rounded-2xl p-6 border border-[#c7c4d8]/10">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="text-[10px] uppercase font-black tracking-widest text-[#777587]">Selected Vehicle</label>
+                  <button 
+                    onClick={() => navigate('/car-service/garage')}
+                    className="text-[10px] uppercase font-black tracking-widest text-[#4d41df] hover:underline"
+                  >
+                    Change
+                  </button>
+                </div>
+                {selectedCar ? (
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-12 bg-surface-container-lowest rounded-lg flex items-center justify-center border border-[#c7c4d8]/20">
+                      <span className="material-symbols-outlined text-2xl text-[#4d41df]">directions_car</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[#191c20]">{selectedCar.make} {selectedCar.model}</h4>
+                      <p className="text-xs text-[#464555] font-medium">{selectedCar.year} • {selectedCar.fuel_type || 'Petrol'} • Plate: {selectedCar.registration_number}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-[#464555]">No vehicle selected</p>
+                    <button 
+                      onClick={() => navigate('/car-service/garage')}
+                      className="bg-[#4d41df] text-white px-4 py-2 rounded-lg text-xs font-bold"
+                    >
+                      Add Vehicle
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-4 text-center space-y-4">
+                <button 
+                  onClick={handleSubmitBooking}
+                  disabled={submitting || !selectedCar || !issueDescription}
+                  className="w-full py-5 bg-gradient-to-br from-[#4d41df] to-[#675df9] text-white rounded-2xl font-black text-lg shadow-xl shadow-[#4d41df]/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none"
+                >
+                  {submitting ? 'Submitting...' : 'Submit Booking'}
+                </button>
+                <p className="text-xs text-[#777587] font-medium">You won't be charged until the service is complete.</p>
+              </div>
+            </div>
+
+            {/* Right Sidebar: Assigned Specialist */}
+            <div className="space-y-6">
+              <div className="bg-surface-container-lowest rounded-3xl p-8 shadow-[0_20px_50px_rgba(25,28,32,0.06)] border border-[#c7c4d8]/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-surface-container-low rounded-full -mr-16 -mt-16 -z-0"></div>
+                <div className="relative z-10">
+                  <label className="text-[10px] uppercase font-black tracking-widest text-[#777587] mb-6 block">Assigned Specialist</label>
+                  
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-surface-container-low border-2 border-white shadow-sm">
+                      <img 
+                        src={selectedMechanic?.profile_image || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedMechanic?.name)}&background=4d41df&color=fff`} 
+                        alt={selectedMechanic?.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-headline font-black text-[#191c20]">{selectedMechanic?.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 text-[#00855d]">
+                          <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                          <span className="text-xs font-bold">{selectedMechanic?.rating || '4.9'}</span>
+                        </div>
+                        <span className="text-[#777587] text-[10px] font-bold">•</span>
+                        <span className="text-[#777587] text-[10px] font-bold uppercase tracking-tighter">{selectedMechanic?.reviews || '124'} Jobs Done</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-6 border-t border-surface-container-low">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium text-[#464555]">Response Time</span>
+                      <span className="text-xs font-bold text-[#191c20]">~8 mins</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium text-[#464555]">Distance</span>
+                      <span className="text-xs font-bold text-[#191c20]">2.4 miles away</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-4 border-t border-surface-container-low">
+                      <span className="text-sm font-bold text-[#191c20]">Service Fee</span>
+                      <span className="text-xl font-black text-[#4d41df]">$45.00</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Satisfaction Guarantee */}
+              <div className="bg-[#00855d]/5 rounded-2xl p-4 border border-[#00855d]/10 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#00855d]/10 flex items-center justify-center text-[#006948]">
+                  <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
+                </div>
+                <div>
+                  <h4 className="text-[10px] font-black text-[#006948] uppercase tracking-wider">Expert Satisfaction Guarantee</h4>
+                  <p className="text-[9px] font-bold text-[#00855d] uppercase opacity-70">Fully Insured & Certified</p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setStep('list')}
+                className="w-full py-4 text-[#4d41df] font-bold text-sm hover:bg-[#4d41df]/5 rounded-2xl transition-all"
+              >
+                Choose another mechanic
+              </button>
+            </div>
+          </div>
+        </main>
+      )}
     </div>
   );
 };

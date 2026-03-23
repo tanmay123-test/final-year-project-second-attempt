@@ -19,7 +19,7 @@ import {
   File,
   Download
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelancerDashboard.css';
 
 const FreelancerWork = () => {
@@ -60,10 +60,9 @@ const FreelancerWork = () => {
   const fetchWorkData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
       const [workRes, bookingsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/freelancer/work/my-work', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('http://localhost:5000/api/freelancer/bookings/direct', { headers: { Authorization: `Bearer ${token}` } })
+        api.get('/api/freelancer/work/my-work'),
+        api.get('/api/freelancer/bookings/direct')
       ]);
       
       if (workRes.data.success) {
@@ -84,10 +83,7 @@ const FreelancerWork = () => {
 
   const fetchMessages = async (projectId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/freelancer/work/${projectId}/messages`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/freelancer/work/${projectId}/messages`);
       if (response.data.success) {
         setMessages(response.data.messages);
       }
@@ -98,10 +94,7 @@ const FreelancerWork = () => {
 
   const fetchDeliverables = async (projectId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5000/api/freelancer/work/${projectId}/deliverables`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/freelancer/work/${projectId}/deliverables`);
       if (response.data.success) {
         setDeliverables(response.data.deliverables);
       }
@@ -119,10 +112,8 @@ const FreelancerWork = () => {
 
     try {
       setSubmitting(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`http://localhost:5000/api/freelancer/work/${activeProjectId}/deliverables`, formData, {
+      const response = await api.post(`/api/freelancer/work/${activeProjectId}/deliverables`, formData, {
         headers: { 
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
@@ -144,11 +135,8 @@ const FreelancerWork = () => {
     if (!newMessage.trim() || !activeProjectId) return;
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`http://localhost:5000/api/freelancer/work/${activeProjectId}/messages`, {
+      const response = await api.post(`/api/freelancer/work/${activeProjectId}/messages`, {
         message: newMessage
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
         setNewMessage('');
@@ -162,11 +150,8 @@ const FreelancerWork = () => {
   const handleSubmitMilestone = async (milestoneId) => {
     if (!window.confirm('Mark this milestone as submitted?')) return;
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`http://localhost:5000/api/freelancer/work/${activeProjectId}/submit-milestone`, {
+      const response = await api.post(`/api/freelancer/work/${activeProjectId}/submit-milestone`, {
         milestoneId
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.success) {
         fetchWorkData();
@@ -179,10 +164,7 @@ const FreelancerWork = () => {
   const handleCompleteProject = async () => {
     if (!window.confirm('Mark this project as complete? This will notify the client.')) return;
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`http://localhost:5000/api/freelancer/work/${activeProjectId}/complete`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.post(`/api/freelancer/work/${activeProjectId}/complete`, {});
       if (response.data.success) {
         alert('Project marked as complete!');
         fetchWorkData();

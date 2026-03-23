@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Bell, Settings, User, Plus, MessageSquare, BarChart3, Home, PiggyBank, Calculator, Target, Brain } from 'lucide-react';
 import { moneyService } from '../../../shared/api';
 import '../styles/FinnyHomeScreen.css';
 
 const FinnyHomeScreen = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [monthlyData, setMonthlyData] = useState({
@@ -115,138 +116,168 @@ const FinnyHomeScreen = () => {
   ];
 
   const bottomNavItems = [
-    { icon: Home, label: 'Finny', active: true },
-    { icon: PiggyBank, label: 'Budget', active: false },
-    { icon: Calculator, label: 'Loan', active: false },
-    { icon: Target, label: 'Goal Jar', active: false },
-    { icon: Brain, label: 'AI Coach', active: false }
+    { icon: Home, label: 'Finny', path: '/finny', active: location.pathname === '/finny' },
+    { icon: PiggyBank, label: 'Budget', path: '/finny/budget', active: location.pathname === '/finny/budget' },
+    { icon: Calculator, label: 'Loan', path: '/finny/loan', active: location.pathname === '/finny/loan' },
+    { icon: Target, label: 'Goal Jar', path: '/finny/goals', active: location.pathname === '/finny/goals' },
+    { icon: Brain, label: 'AI Coach', path: '/finny/coach', active: location.pathname === '/finny/coach' }
   ];
 
   return (
-    <div className="finny-home-screen">
-      {/* Header */}
-      <div className="finny-header">
-        <div className="header-content">
-          <div className="header-text">
-            <h1 className="app-title">Unified Finny</h1>
-            <p className="app-subtitle">Smart Transaction Tracker</p>
-          </div>
-          <div className="header-icons">
-            <div className="icon-button">
-              <Bell size={20} />
-            </div>
-            <div className="icon-button">
-              <Settings size={20} />
-            </div>
-            <div className="user-avatar">
-              <User size={20} />
-            </div>
-          </div>
+    <div className="finny-page-layout">
+      {/* Sidebar for Desktop */}
+      <aside className="finny-sidebar">
+        <div className="sidebar-header">
+          <h1 className="sidebar-title">Finny</h1>
+          <p className="sidebar-subtitle">Smart Tracker</p>
         </div>
-      </div>
+        <nav className="sidebar-nav">
+          {bottomNavItems.map((item, index) => (
+            <div 
+              key={index} 
+              className={`sidebar-item ${item.active ? 'active' : ''}`}
+              onClick={() => navigate(item.path)}
+              style={{ cursor: 'pointer' }}
+            >
+              <item.icon size={20} color={item.active ? '#F4B400' : '#6B7280'} />
+              <span className="sidebar-label">{item.label}</span>
+            </div>
+          ))}
+        </nav>
+      </aside>
 
-      {/* Main Content */}
-      <div className="main-content">
-        {/* Monthly Summary Card */}
-        <div className="monthly-summary-card">
-          <h2 className="card-title">Monthly Summary</h2>
-          {loading ? (
-            <div className="loading-state">
-              <div className="loading-spinner"></div>
-              <p>Loading your financial data...</p>
-            </div>
-          ) : error ? (
-            <div className="error-state">
-              <p>{error}</p>
-              <button onClick={fetchDashboardData} className="retry-button">Retry</button>
-            </div>
-          ) : (
-            <div className="summary-content">
-              <div className="donut-chart-container">
-                <svg viewBox="0 0 100 100" className="donut-chart">
-                  {donutChartData.map((segment, index) => (
-                    <path
-                      key={index}
-                      d={createDonutPath(donutChartData, index, monthlyData.totalSpending)}
-                      fill={segment.color}
-                      className="chart-segment"
-                    />
-                  ))}
-                  <circle cx="50" cy="50" r="25" fill="white" />
-                </svg>
+      <div className="finny-page-content">
+        <div className="finny-home-screen">
+          {/* Header */}
+          <div className="finny-header">
+            <div className="header-content">
+              <div className="header-text">
+                <h1 className="app-title">Unified Finny</h1>
+                <p className="app-subtitle">Smart Transaction Tracker</p>
               </div>
-              <div className="summary-details">
-                <div className="total-spending">
-                  <p className="total-label">Total Spending</p>
-                  <p className="total-amount">₹{monthlyData.totalSpending.toLocaleString()}</p>
+              <div className="header-icons">
+                <div className="icon-button">
+                  <Bell size={20} />
                 </div>
-                <div className="categories-list">
-                  {monthlyData.categories.map((category, index) => (
-                    <div key={index} className="category-item">
-                      <div className="category-info">
-                        <div 
-                          className="category-dot" 
-                          style={{ backgroundColor: category.color }}
-                        ></div>
-                        <span className="category-name">{category.name}</span>
-                      </div>
-                      <span className="category-amount">₹{category.amount.toLocaleString()}</span>
-                    </div>
-                  ))}
+                <div className="icon-button">
+                  <Settings size={20} />
+                </div>
+                <div className="user-avatar">
+                  <User size={20} />
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Select Mode Section */}
-        <div className="mode-section">
-          <h2 className="section-title">Select Mode</h2>
-          
-          {/* Mode Cards */}
-          <div className="mode-cards">
-            {modeCards.map((mode, index) => (
-              <div key={index} className="mode-card">
-                <div className="mode-content">
-                  <div className="mode-left">
-                    <div 
-                      className="mode-icon-circle"
-                      style={{ backgroundColor: mode.iconBg }}
-                    >
-                      <mode.icon size={24} color="white" />
+          {/* Main Content */}
+          <div className="main-content">
+            {/* Monthly Summary Card */}
+            <div className="monthly-summary-card">
+              <h2 className="card-title">Monthly Summary</h2>
+              {loading ? (
+                <div className="loading-state">
+                  <div className="loading-spinner"></div>
+                  <p>Loading your financial data...</p>
+                </div>
+              ) : error ? (
+                <div className="error-state">
+                  <p>{error}</p>
+                  <button onClick={fetchDashboardData} className="retry-button">Retry</button>
+                </div>
+              ) : (
+                <div className="summary-content">
+                  <div className="donut-chart-container">
+                    <svg viewBox="0 0 100 100" className="donut-chart">
+                      {donutChartData.map((segment, index) => (
+                        <path
+                          key={index}
+                          d={createDonutPath(donutChartData, index, monthlyData.totalSpending)}
+                          fill={segment.color}
+                          className="chart-segment"
+                        />
+                      ))}
+                      <circle cx="50" cy="50" r="25" fill="white" />
+                    </svg>
+                  </div>
+                  <div className="summary-details">
+                    <div className="total-spending">
+                      <p className="total-label">Total Spending</p>
+                      <p className="total-amount">₹{monthlyData.totalSpending.toLocaleString()}</p>
                     </div>
-                    <div className="mode-text">
-                      <h3 className="mode-title">{mode.title}</h3>
-                      <p className="mode-subtitle">{mode.subtitle}</p>
-                      <p className="mode-description">{mode.description}</p>
+                    <div className="categories-list">
+                      {monthlyData.categories.map((category, index) => (
+                        <div key={index} className="category-item">
+                          <div className="category-info">
+                            <div 
+                              className="category-dot" 
+                              style={{ backgroundColor: category.color }}
+                            ></div>
+                            <span className="category-name">{category.name}</span>
+                          </div>
+                          <span className="category-amount">₹{category.amount.toLocaleString()}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-                <button 
-                  className="mode-button"
-                  onClick={() => navigate(mode.navigation)}
-                >
-                  {mode.buttonText}
-                </button>
+              )}
+            </div>
+
+            {/* Select Mode Section */}
+            <div className="mode-section">
+              <h2 className="section-title">Select Mode</h2>
+              
+              {/* Mode Cards */}
+              <div className="mode-cards">
+                {modeCards.map((mode, index) => (
+                  <div key={index} className="mode-card">
+                    <div className="mode-content">
+                      <div className="mode-left">
+                        <div 
+                          className="mode-icon-circle"
+                          style={{ backgroundColor: mode.iconBg }}
+                        >
+                          <mode.icon size={24} color="white" />
+                        </div>
+                        <div className="mode-text">
+                          <h3 className="mode-title">{mode.title}</h3>
+                          <p className="mode-subtitle">{mode.subtitle}</p>
+                          <p className="mode-description">{mode.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <button 
+                      className="mode-button"
+                      onClick={() => navigate(mode.navigation)}
+                    >
+                      {mode.buttonText}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Navigation for Mobile */}
+          <div className="finny-bottom-nav">
+            {bottomNavItems.map((item, index) => (
+              <div 
+                key={index} 
+                className={`nav-item ${item.active ? 'active' : ''}`}
+                onClick={() => navigate(item.path)}
+                style={{ cursor: 'pointer' }}
+              >
+                <item.icon 
+                  size={20} 
+                  color={item.active ? '#F4B400' : '#6B7280'} 
+                />
+                <span className={`nav-label ${item.active ? 'active' : ''}`}>
+                  {item.label}
+                </span>
               </div>
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="bottom-navigation">
-        {bottomNavItems.map((item, index) => (
-          <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
-            <item.icon 
-              size={20} 
-              color={item.active ? '#F4B400' : '#6B7280'} 
-            />
-            <span className={`nav-label ${item.active ? 'active' : ''}`}>
-              {item.label}
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );

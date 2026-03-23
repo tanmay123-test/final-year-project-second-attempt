@@ -10,6 +10,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import api from '../../shared/api';
 import AutomobileExpertBottomNav from '../../components/AutomobileExpertBottomNav';
 
 const AutomobileExpertReportUser = () => {
@@ -43,10 +44,10 @@ const AutomobileExpertReportUser = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/expert-availability/recent-users/${workerId}`);
+      const response = await api.get(`/api/expert-availability/recent-users/${workerId}`);
       
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data.success) {
+        const data = response.data;
         
         if (data.success) {
           setRecentUsers(data.users || []);
@@ -80,22 +81,16 @@ const AutomobileExpertReportUser = () => {
       const workerData = JSON.parse(localStorage.getItem('automobileExpertData') || '{}');
       const workerId = workerData.id;
 
-      const response = await fetch(`http://localhost:5000/api/expert-availability/report-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          expert_id: workerId,
-          user_id: reportData.user_id,
-          request_id: reportData.request_id || null,
-          category: reportData.category,
-          description: reportData.description
-        })
+      const response = await api.post('/api/expert-availability/report-user', {
+        expert_id: workerId,
+        user_id: reportData.user_id,
+        request_id: reportData.request_id || null,
+        category: reportData.category,
+        description: reportData.description
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data.success) {
+        const data = response.data;
         
         if (data.success) {
           setSuccess(true);

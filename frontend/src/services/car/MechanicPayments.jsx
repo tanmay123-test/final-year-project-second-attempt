@@ -5,6 +5,7 @@ import {
   Download, Search, TrendingUp, TrendingDown, CheckCircle,
   Clock, AlertCircle, FileText, Eye
 } from 'lucide-react';
+import api from '../../shared/api';
 
 const MechanicPayments = () => {
   const navigate = useNavigate();
@@ -26,21 +27,19 @@ const MechanicPayments = () => {
       
       if (storedData && token) {
         const workerData = JSON.parse(storedData);
-        const workerId = workerData.id || workerData.workerId || 7;
+        const workerId = workerData.id || workerData.workerId;
         
         try {
-          const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/payments`, {
+          const response = await api.get(`/api/car/service/worker/${workerId}/payments`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              'Authorization': `Bearer ${token}`
             }
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            setPayments(data.payments || data || []);
+          if (response.data) {
+            setPayments(response.data.payments || response.data || []);
           } else {
-            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+            throw new Error('Failed to fetch payments');
           }
         } catch (error) {
           console.log('🔄 Payments API not available, using sample data:', error.message);

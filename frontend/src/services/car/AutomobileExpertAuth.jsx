@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Brain, Eye, EyeOff, User, Lock, Mail, Phone, AlertCircle, ArrowLeft, Award } from 'lucide-react';
+import api from '../../shared/api';
 
 const AutomobileExpertAuth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -39,7 +40,6 @@ const AutomobileExpertAuth = () => {
 
     try {
       const endpoint = isLogin ? 'login' : 'signup';
-      const url = `http://localhost:5000/api/automobile-expert/${endpoint}`;
       
       const payload = isLogin 
         ? { email: formData.email, password: formData.password }
@@ -54,17 +54,11 @@ const AutomobileExpertAuth = () => {
             worker_type: formData.worker_type
           };
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = await api.post(`/api/automobile-expert/${endpoint}`, payload);
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
+      if (response.data) {
         if (isLogin) {
           console.log('AutomobileExpertAuth - Login response:', data);
           // The backend returns individual fields, not wrapped in a worker object

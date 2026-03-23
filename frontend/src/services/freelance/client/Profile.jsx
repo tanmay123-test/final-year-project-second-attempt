@@ -6,7 +6,7 @@ import {
   Home, PlusCircle, Folder, Bot, Search
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/Profile.css';
 
 const Profile = () => {
@@ -23,10 +23,7 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/freelancer/profile/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/freelancer/profile/me');
       if (response.data && response.data.profile) {
         setProfile(response.data.profile);
         setFormData(response.data.profile);
@@ -75,10 +72,7 @@ const Profile = () => {
     e.preventDefault();
     setUpdateLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put('http://localhost:5000/api/freelancer/profile/update', editData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.put('/api/freelancer/profile/update', editData);
       setProfile(response.data.profile);
       setEditingField(null);
       alert('Profile updated successfully');
@@ -91,10 +85,7 @@ const Profile = () => {
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/freelancer/auth/logout', {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post('/api/freelancer/auth/logout', {});
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

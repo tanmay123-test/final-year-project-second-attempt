@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell, CheckCircle, MessageSquare, DollarSign, Clock, Star, Trash2, X } from 'lucide-react';
-import axios from 'axios';
+import api from '../../../shared/api';
 import '../styles/FreelancerDashboard.css';
 
 const NotificationsPage = () => {
@@ -16,10 +16,7 @@ const NotificationsPage = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/freelance/notifications', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/freelance/notifications');
       setNotifications(response.data.notifications || []);
     } catch (err) {
       console.error('Error fetching notifications:', err);
@@ -30,10 +27,7 @@ const NotificationsPage = () => {
 
   const markAsRead = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/freelance/notifications/read', {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post('/api/freelance/notifications/read', {});
       fetchNotifications();
     } catch (err) {
       console.error('Error marking notifications as read:', err);

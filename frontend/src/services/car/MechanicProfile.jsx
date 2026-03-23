@@ -6,6 +6,7 @@ import {
   TrendingUp, DollarSign, Award, Clock,
   Target, Zap, AlertCircle, BarChart3
 } from 'lucide-react';
+import api from '../../shared/api';
 import MechanicDetails from './MechanicDetails';
 import MechanicPayments from './MechanicPayments';
 import MechanicAnalytics from './MechanicAnalytics';
@@ -37,17 +38,15 @@ const MechanicProfile = () => {
         
         // Fetch worker's ratings - NO HARDCODED VALUES
         try {
-          const workerId = data.id || data.workerId || 7;
-          const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/ratings`, {
+          const workerId = data.id || data.workerId;
+          const response = await api.get(`/api/car/service/worker/${workerId}/ratings`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              'Authorization': `Bearer ${token}`
             }
           });
 
-          if (response.ok) {
-            const ratingsData = await response.json();
-            setWorkerRatings(ratingsData.ratings || ratingsData || []);
+          if (response.data) {
+            setWorkerRatings(response.data.ratings || response.data || []);
           } else {
             // NO SAMPLE DATA - just empty array if API fails
             setWorkerRatings([]);
@@ -69,23 +68,20 @@ const MechanicProfile = () => {
       const storedData = localStorage.getItem('workerData');
       if (token && storedData) {
         const workerData = JSON.parse(storedData);
-        const workerId = workerData.id || workerData.workerId || 7;
+        const workerId = workerData.id || workerData.workerId;
         
         // Fetch real earnings data from API
         try {
-          const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/earnings`, {
+          const response = await api.get(`/api/car/service/worker/${workerId}/earnings`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              'Authorization': `Bearer ${token}`
             }
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Earnings data:', data);
-            setEarnings(data.earnings || data);
+          if (response.data) {
+            setEarnings(response.data.earnings || response.data);
           } else {
-            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+            throw new Error('Failed to fetch earnings');
           }
         } catch (apiError) {
           console.log('🔄 Earnings API not available, calculating from tasks:', apiError.message);
@@ -101,18 +97,16 @@ const MechanicProfile = () => {
 
   const calculateEarningsFromTasks = async (workerId, token) => {
     try {
-      // Fetch worker's recent tasks
-      const tasksResponse = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/tasks`, {
+      // Fetch worker's tasks
+      const tasksResponse = await api.get(`/api/car/service/worker/${workerId}/tasks`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
       let tasks = [];
-      if (tasksResponse.ok) {
-        const tasksData = await tasksResponse.json();
-        tasks = tasksData.tasks || tasksData || [];
+      if (tasksResponse.data) {
+        tasks = tasksResponse.data.tasks || tasksResponse.data || [];
       }
 
       // Calculate simple, clean metrics from actual tasks
@@ -173,23 +167,20 @@ const MechanicProfile = () => {
       const storedData = localStorage.getItem('workerData');
       if (token && storedData) {
         const workerData = JSON.parse(storedData);
-        const workerId = workerData.id || workerData.workerId || 7;
+        const workerId = workerData.id || workerData.workerId;
         
         // Fetch real fairness insights from API
         try {
-          const response = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/fairness`, {
+          const response = await api.get(`/api/car/service/worker/${workerId}/fairness`, {
             headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+              'Authorization': `Bearer ${token}`
             }
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Fairness insights data:', data);
-            setFairnessInsights(data.fairness || data);
+          if (response.data) {
+            setFairnessInsights(response.data.fairness || response.data);
           } else {
-            throw new Error(`API returned ${response.status}: ${response.statusText}`);
+            throw new Error('Failed to fetch fairness insights');
           }
         } catch (apiError) {
           console.log('🔄 Fairness API not available, calculating from tasks:', apiError.message);
@@ -206,31 +197,27 @@ const MechanicProfile = () => {
   const calculateFairnessFromTasks = async (workerId, token) => {
     try {
       // Fetch worker's tasks and ratings
-      const tasksResponse = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/tasks`, {
+      const tasksResponse = await api.get(`/api/car/service/worker/${workerId}/tasks`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
-      const ratingsResponse = await fetch(`http://127.0.0.1:5000/api/car/service/worker/${workerId}/ratings`, {
+      const ratingsResponse = await api.get(`/api/car/service/worker/${workerId}/ratings`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`
         }
       });
 
       let tasks = [];
       let ratings = [];
 
-      if (tasksResponse.ok) {
-        const tasksData = await tasksResponse.json();
-        tasks = tasksData.tasks || tasksData || [];
+      if (tasksResponse.data) {
+        tasks = tasksResponse.data.tasks || tasksResponse.data || [];
       }
 
-      if (ratingsResponse.ok) {
-        const ratingsData = await ratingsResponse.json();
-        ratings = ratingsData.ratings || ratingsData || [];
+      if (ratingsResponse.data) {
+        ratings = ratingsResponse.data.ratings || ratingsResponse.data || [];
       }
 
       // Simple, clean calculations based on actual performance

@@ -10,6 +10,7 @@ import {
   XCircle,
   Package
 } from 'lucide-react';
+import api from '../../shared/api';
 
 const FuelDeliveryActive = () => {
   const navigate = useNavigate();
@@ -73,29 +74,18 @@ const FuelDeliveryActive = () => {
       }
 
       // Fetch active delivery from backend
-      const response = await fetch(`http://localhost:5000/api/fuel-delivery/active-delivery/${workerId}`);
+      const response = await api.get(`/api/fuel-delivery/active-delivery/${workerId}`);
       
-      if (!response.ok) {
-        if (response.status === 404) {
-          // No active delivery
-          setActiveDelivery(null);
-        } else {
-          throw new Error('Failed to fetch active delivery');
-        }
+      if (response.data?.success && response.data.delivery) {
+        setActiveDelivery(response.data.delivery);
+        setCurrentStep(response.data.delivery.status === 'on_the_way' ? 1 : 
+                     response.data.delivery.status === 'arrived' ? 2 : 3);
       } else {
-        const data = await response.json();
-        if (data.success && data.delivery) {
-          setActiveDelivery(data.delivery);
-          // Set current step based on delivery status
-          setCurrentStep(data.delivery.status === 'on_the_way' ? 1 : 
-                       data.delivery.status === 'arrived' ? 2 : 3);
-        } else {
-          setActiveDelivery(null);
-        }
+        setActiveDelivery(null);
       }
     } catch (error) {
       console.error('Error fetching active delivery:', error);
-      setError('Failed to load active delivery');
+      setError('Failed to fetch active delivery');
     } finally {
       setLoading(false);
     }
@@ -154,20 +144,14 @@ const FuelDeliveryActive = () => {
       setCancelling(true);
       const workerId = localStorage.getItem('workerId');
       
-      const response = await fetch(`http://localhost:5000/api/fuel-delivery/queue/reject`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          worker_id: workerId,
-          cancel_reason: 'Cancelled by worker'
-        })
+      const response = await api.post('/api/fuel-delivery/queue/reject', {
+        worker_id: workerId,
+        cancel_reason: 'Cancelled by worker'
       });
 
-      const data = await response.json();
+      const data = response.data;
       
-      if (data.success) {
+      if (data?.success) {
         alert('Delivery cancelled successfully');
         navigate('/worker/car/fuel-delivery/home');
       } else {
@@ -187,20 +171,14 @@ const FuelDeliveryActive = () => {
     try {
       const workerId = localStorage.getItem('workerId');
       
-      const response = await fetch(`http://localhost:5000/api/fuel-delivery/delivery/start-arrival`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          worker_id: workerId,
-          status: 'arrived'
-        })
+      const response = await api.post('/api/fuel-delivery/delivery/start-arrival', {
+        worker_id: workerId,
+        status: 'arrived'
       });
 
-      const data = await response.json();
+      const data = response.data;
       
-      if (data.success) {
+      if (data?.success) {
         setCurrentStep(2);
         alert('Status updated to Arrived');
       } else {
@@ -221,20 +199,14 @@ const FuelDeliveryActive = () => {
       setCompleting(true);
       const workerId = localStorage.getItem('workerId');
       
-      const response = await fetch(`http://localhost:5000/api/fuel-delivery/delivery/complete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          worker_id: workerId,
-          delivery_note: deliveryNote
-        })
+      const response = await api.post('/api/fuel-delivery/delivery/complete', {
+        worker_id: workerId,
+        delivery_note: deliveryNote
       });
 
-      const data = await response.json();
+      const data = response.data;
       
-      if (data.success) {
+      if (data?.success) {
         alert('Delivery completed successfully! Earnings added to your account.');
         navigate('/worker/car/fuel-delivery/home');
       } else {
