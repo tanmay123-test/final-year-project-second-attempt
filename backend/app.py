@@ -82,10 +82,10 @@ print("✅ Video consultation blueprint registered")
 
 # Register Housekeeping blueprints
 try:
-    from housekeeping.arrival.backend.controllers.arrival_controller import arrival_bp
-    from housekeeping.provider.backend.controllers.auth_controller import provider_auth_bp
-    from housekeeping.controllers.booking_controller import housekeeping_bp
-    from housekeeping.arrival.backend.controllers.ai_advisor_controller import ai_advisor_bp
+    from services.housekeeping.arrival.backend.controllers.arrival_controller import arrival_bp
+    from services.housekeeping.provider.backend.controllers.auth_controller import provider_auth_bp
+    from services.housekeeping.controllers.booking_controller import housekeeping_bp
+    from services.housekeeping.arrival.backend.controllers.ai_advisor_controller import ai_advisor_bp
     
     app.register_blueprint(arrival_bp, url_prefix='/api/arrival')
     app.register_blueprint(provider_auth_bp, url_prefix='/api/provider')
@@ -267,7 +267,7 @@ socketio = init_video_signaling(app)
 
 # Initialize Housekeeping Socket
 try:
-    from housekeeping.socket_handlers import init_housekeeping_socket
+    from services.housekeeping.socket_handlers import init_housekeeping_socket
     init_housekeeping_socket(socketio)
     print("✅ Housekeeping socket initialized")
 except Exception as e:
@@ -432,30 +432,40 @@ def get_worker_availability(worker_id):
     availability = availability_db.get_availability(worker_id, date)
     
     # Enrich availability with booking status from Housekeeping
-    # (Other services can also add their booking check here)
-    from housekeeping.services.booking_service import BookingService
-    hk_booking_service = BookingService()
-    
-    enriched = []
-    for slot in availability:
-        # Check for conflicts in housekeeping bookings
-        # status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
+    try:
+        from services.housekeeping.services.booking_service import BookingService
+        hk_booking_service = BookingService()
+        
+        enriched = []
+        # Open one connection for all checks
         conn = hk_booking_service.db.get_conn()
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT count(*) FROM bookings 
-            WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
-            AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
-        """, (worker_id, slot['date'], slot['time_slot']))
-        count = cursor.fetchone()[0]
+        
+        for slot in availability:
+            try:
+                # Check for conflicts in housekeeping bookings
+                cursor.execute("""
+                    SELECT count(*) FROM bookings 
+                    WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
+                    AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
+                """, (int(worker_id), str(slot['date']), str(slot['time_slot'])))
+                count = cursor.fetchone()[0]
+                slot['is_booked'] = count > 0
+            except Exception as e:
+                print(f"❌ Conflict check error for slot {slot}: {e}")
+                slot['is_booked'] = False
+            
+            enriched.append(slot)
+        
         conn.close()
-        
-        slot['is_booked'] = count > 0
-        enriched.append(slot)
-        
-    return jsonify({
-        "availability": enriched
-    }), 200
+        return jsonify({
+            "availability": enriched
+        }), 200
+    except Exception as e:
+        print(f"⚠️ Availability enrichment error: {e}")
+        return jsonify({
+            "availability": availability
+        }), 200
 
 
 @app.route("/worker/<int:worker_id>/availability", methods=["POST"])

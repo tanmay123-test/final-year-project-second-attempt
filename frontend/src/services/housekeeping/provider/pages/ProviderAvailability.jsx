@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../../frontend/src/context/AuthContext';
 import { workerService } from '../../../../frontend/src/services/api';
-import ProviderBottomNav from '../components/ProviderBottomNav';
 import { 
   ChevronLeft, Plus, Trash2, Clock, Loader2
 } from 'lucide-react';
@@ -52,8 +51,10 @@ const ProviderAvailability = () => {
       const slots = res.data.availability || [];
       // Sort slots by time
       const sortedSlots = slots.sort((a, b) => {
-        const parseTime = (str) => {
-            const parts = str.time_slot.split(' ');
+        const parseTime = (slotObj) => {
+            const timeStr = slotObj.time_slot;
+            if (!timeStr) return 0;
+            const parts = timeStr.split(' ');
             if (parts.length < 2) return 0;
             const [time, mod] = parts;
             let [h, m] = time.split(':').map(Number);
@@ -232,7 +233,6 @@ const ProviderAvailability = () => {
         </div>
       </div>
 
-      <ProviderBottomNav />
     </div>
   );
 };

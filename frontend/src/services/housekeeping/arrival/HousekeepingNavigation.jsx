@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutGrid, Calendar, Clock, Wallet, User, Briefcase } from 'lucide-react';
-import { styled } from '../../../../stitches.config';
+import { Home, Bot, Search, Calendar, User, Sparkles } from 'lucide-react';
+import { styled } from '../../../stitches.config';
 
 const NavContainer = styled('div', {
   position: 'fixed',
@@ -57,7 +57,7 @@ const Brand = styled('div', {
 });
 
 const BrandIcon = styled('div', {
-  width: '32px',
+  width: '32px', 
   height: '32px',
   background: 'linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%)',
   borderRadius: '10px',
@@ -125,23 +125,23 @@ const NavItem = styled('button', {
   },
 });
 
-const ProviderBottomNav = () => {
+const HousekeepingNavigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [
-    { icon: LayoutGrid, label: 'Dashboard', path: '/worker/housekeeping/dashboard' },
-    { icon: Calendar, label: 'Schedule', path: '/worker/housekeeping/schedule' },
-    { icon: Clock, label: 'Availability', path: '/worker/housekeeping/availability' },
-    { icon: Wallet, label: 'Earnings', path: '/worker/housekeeping/earnings' },
-    { icon: User, label: 'Profile', path: '/worker/housekeeping/profile' },
+    { icon: Home, label: 'Home', path: '/housekeeping/home' },
+    { icon: Bot, label: 'AI Care', path: '/housekeeping/ai-chat' },
+    { icon: Search, label: 'Explore', path: '/housekeeping/explore' },
+    { icon: Calendar, label: 'Bookings', path: '/housekeeping/bookings' },
+    { icon: User, label: 'Profile', path: '/housekeeping/profile' },
   ];
 
   return (
     <NavContainer>
-      <Brand onClick={() => navigate('/provide-service')}>
+      <Brand onClick={() => navigate('/services')}>
         <BrandIcon>
-          <Briefcase size={18} fill="white" />
+          <Sparkles size={20} fill="white" />
         </BrandIcon>
         ExpertEase
       </Brand>
@@ -162,4 +162,4 @@ const ProviderBottomNav = () => {
   );
 };
 
-export default ProviderBottomNav;
+export default HousekeepingNavigation;

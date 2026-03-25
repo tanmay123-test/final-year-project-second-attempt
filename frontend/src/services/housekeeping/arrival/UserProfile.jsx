@@ -2,7 +2,6 @@ import React from 'react';
 import { User, CreditCard, Bell, Shield, CircleHelp, LogOut, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import HousekeepingNavigation from '../../../components/HousekeepingNavigation';
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -22,7 +21,7 @@ const UserProfile = () => {
   ];
 
   return (
-    <div className="hk-page-container" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="hk-page-container" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{ backgroundColor: '#8E44AD', padding: '40px 20px 80px 20px', color: 'white' }}>
         <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>Profile</h1>
@@ -86,8 +85,6 @@ const UserProfile = () => {
           Log Out
         </button>
       </div>
-
-      <HousekeepingNavigation />
     </div>
   );
 };

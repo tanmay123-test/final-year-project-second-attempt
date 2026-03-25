@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, MoreVertical, ArrowRight, Loader2, XCircle } from 'lucide-react';
-import HousekeepingNavigation from '../../../components/HousekeepingNavigation';
 import api, { housekeepingService } from '../../../shared/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
@@ -109,7 +108,7 @@ const UserBookings = () => {
   if (loading) return <div style={{ padding: '20px', textAlign: 'center', color: '#8E44AD' }}>Loading bookings...</div>;
 
   return (
-    <div className="hk-page-container" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="hk-page-container" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
       <div style={{ padding: '20px', backgroundColor: 'white', position: 'sticky', top: 0, zIndex: 10, borderBottom: '2px solid #F3E5F5' }}>
         <h1 style={{ margin: '0 0 20px 0', fontSize: '24px', fontWeight: 'bold', color: '#8E44AD' }}>My Bookings</h1>
         
@@ -222,8 +221,6 @@ const UserBookings = () => {
         )}
       </div>
 
-      <HousekeepingNavigation />
-      
       {detailsBooking && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
           <div style={{ background: 'white', borderRadius: 16, width: '90%', maxWidth: 520, padding: 20, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>

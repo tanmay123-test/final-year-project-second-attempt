@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Bell, MapPin, Star, Clock, X } from 'lucide-react';
-import HousekeepingNavigation from '../../../components/HousekeepingNavigation';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../shared/api';
 import { useAuth } from '../../../context/AuthContext';
@@ -52,10 +51,10 @@ const UserHome = () => {
             setServices(mappedServices);
          }
          
-         if (response.data.top_cleaners) {
-            setTopCleaners(response.data.top_cleaners.map(c => ({
+         if (response.data.top_cleaners && Array.isArray(response.data.top_cleaners)) {
+            const mappedCleaners = response.data.top_cleaners.map(c => ({
               id: c.id,
-              name: c.name || c.full_name,
+              name: c.name || c.full_name || 'Anonymous Professional',
               role: c.role || c.specialization || 'Housekeeping Specialist',
               rating: c.rating || 4.8,
               exp: c.experience ? `${c.experience} yrs` : 'New',
@@ -63,7 +62,10 @@ const UserHome = () => {
               price: c.price || 500,
               color: '#8E44AD',
               is_online: c.is_online // Use backend status
-            })));
+            }));
+            setTopCleaners(mappedCleaners);
+         } else {
+            console.warn('No cleaners found in API response');
          }
        } catch (error) {
         console.error('Failed to fetch services', error);
@@ -85,12 +87,32 @@ const UserHome = () => {
     return () => clearInterval(interval);
   }, [debouncedSearchQuery, selectedSpecialization]);
 
-  // Filter Logic (Handled by Backend for cleaners, Client-side for services)
+  // Filter Logic
   const filteredServices = services.filter(service => 
     searchQuery === '' || service.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredCleaners = topCleaners; // Already filtered by backend
+  const filteredCleaners = topCleaners.filter(cleaner => {
+    // 1. Search Query Filter
+    if (debouncedSearchQuery) {
+        const query = debouncedSearchQuery.toLowerCase();
+        const matchesSearch = 
+            cleaner.name.toLowerCase().includes(query) ||
+            cleaner.role.toLowerCase().includes(query) ||
+            cleaner.location.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+    }
+
+    // 2. Specialization Filter
+    if (selectedSpecialization) {
+        const spec = selectedSpecialization.toLowerCase();
+        const role = cleaner.role.toLowerCase();
+        // Check if role contains specialization (e.g. "Deep Cleaning Specialist" contains "Deep Cleaning")
+        if (!role.includes(spec)) return false;
+    }
+
+    return true;
+  });
 
   const handleSpecializationClick = (specName) => {
     if (selectedSpecialization === specName) {
@@ -101,9 +123,9 @@ const UserHome = () => {
   };
 
   return (
-    <div className="hk-page-container" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="hk-page-container" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
       {/* Header Section */}
-      <div style={{ backgroundColor: '#8E44AD', padding: '20px 20px 40px 20px', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px', color: 'white' }}>
+      <div style={{ backgroundColor: '#8E44AD', padding: '20px 20px 40px 20px', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px', color: 'white', position: 'relative' }}>
         <div className="breadcrumbs" style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', marginBottom: '16px' }}>
           <span onClick={() => navigate('/services')} style={{ cursor: 'pointer' }}>Services</span> <span style={{ margin: '0 4px' }}>&gt;</span> <span style={{ color: 'white', fontWeight: '500' }}>Housekeeping</span>
         </div>
@@ -268,7 +290,6 @@ const UserHome = () => {
           )}
         </div>
       </div>
-      <HousekeepingNavigation />
     </div>
   );
 };

@@ -131,6 +131,10 @@ def list_services():
     worker_id = request.args.get('worker_id')
     services = booking_service.get_service_types(worker_id=worker_id)
     top_cleaners = booking_service.get_top_cleaners()
+    
+    # Log the count to debug
+    print(f"[API] Found {len(services)} services and {len(top_cleaners)} cleaners")
+    
     return jsonify({
         "services": services,
         "top_cleaners": top_cleaners

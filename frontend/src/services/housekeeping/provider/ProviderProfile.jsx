@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { User, Phone, Mail, MapPin, DollarSign, LogOut } from 'lucide-react';
 import api, { housekeepingService } from '../../../shared/api';
 import { useAuth } from '../../../context/AuthContext';
-import ProviderBottomNav from '../../../components/ProviderBottomNav';
 
 const ProviderProfile = () => {
   const navigate = useNavigate();
@@ -184,7 +183,6 @@ const ProviderProfile = () => {
         </button>
       </div>
 
-      <ProviderBottomNav />
     </div>
   );
 };

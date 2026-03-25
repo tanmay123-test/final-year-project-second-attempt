@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Sparkles, BarChart2, Bell, Calendar, Info, AlertTriangle, Trash2, Plus, CheckCircle, ToggleRight, ToggleLeft } from 'lucide-react';
-import HousekeepingNavigation from '../../../components/HousekeepingNavigation';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../shared/api';
 
@@ -156,7 +155,7 @@ const AIChat = () => {
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#8E44AD' }}>Loading AI Insights...</div>;
 
   return (
-    <div className="hk-page-container" style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', paddingBottom: '90px', fontFamily: "'Inter', sans-serif" }}>
+    <div className="hk-page-container" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
       
       {/* Header */}
       <div style={{ 
@@ -426,7 +425,6 @@ const AIChat = () => {
 
       </div>
 
-      <HousekeepingNavigation />
     </div>
   );
 };

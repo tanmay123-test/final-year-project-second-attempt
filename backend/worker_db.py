@@ -352,11 +352,21 @@ class WorkerDB:
         conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
-            cursor.execute("SELECT * FROM workers WHERE CONCAT(',', service, ',') LIKE %s AND status = 'approved'", (f'%,{service_type},%',))
-            return [self._row_to_dict(r) for r in cursor.fetchall()]
+            # Broad search for housekeeping or cleaning services
+            query = """
+                SELECT * FROM workers 
+                WHERE (service ILIKE %s OR specialization ILIKE %s OR service ILIKE %s OR specialization ILIKE %s)
+            """
+            pattern1 = f"%{service_type}%"
+            pattern2 = "%cleaning%"
+            cursor.execute(query, (pattern1, pattern1, pattern2, pattern2))
+            rows = cursor.fetchall()
+            workers = [self._row_to_dict(r) for r in rows]
+            print(f"[DEBUG] get_workers_by_service('{service_type}'): Found {len(workers)} workers")
+            return workers
         except Exception as e:
             conn.rollback()
-            print(f"DB Error: {e}")
+            print(f"❌ DB Error: {e}")
             return []
         finally:
             cursor.close()

@@ -3668,7 +3668,8 @@ def admin_menu():
         print("3. 💜 Freelance Workers")
         print("4. ⛽ Fuel Delivery Agents")
         print("5. 🚛 Tow Truck Operators")
-        print("6. 👋 Logout")
+        print("6. 🏠 Housekeeping Workers")
+        print("7. 👋 Logout")
 
         c = input("Choice: ").strip()
 

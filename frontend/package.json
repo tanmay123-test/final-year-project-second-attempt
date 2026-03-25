@@ -11,7 +11,9 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@stitches/react": "^1.2.8",
     "axios": "^1.13.5",
+    "framer-motion": "^12.38.0",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

@@ -41,6 +41,9 @@ def register_operator():
         operator_id = tow_truck_db.register_operator(data)
         
         if operator_id:
+            # Auto-approve for development testing
+            tow_truck_db.update_approval_status(operator_id, 'APPROVED')
+            
             # Also register in car_service_workers for unified admin management
             try:
                 car_service_worker_db.create_worker(

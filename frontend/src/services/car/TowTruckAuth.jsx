@@ -44,6 +44,11 @@ const TowTruckAuth = () => {
     setSuccess('');
     setLoading(true);
 
+    // Clear any existing tokens to avoid request interceptor interference
+    localStorage.removeItem('token');
+    localStorage.removeItem('workerToken');
+    localStorage.removeItem('automobileExpertToken');
+
     try {
       const endpoint = isLogin ? 'login' : 'register';
       
@@ -67,38 +72,33 @@ const TowTruckAuth = () => {
           };
 
       const response = await api.post(`/api/tow-truck/${endpoint}`, payload);
-
       const data = response.data;
 
-      if (data) {
+      if (data.success) {
         if (isLogin) {
-          const operatorData = data.operator || data.worker; // Handle both response formats
+          const operatorData = data.operator || data.worker;
           localStorage.setItem('workerToken', data.token);
           localStorage.setItem('workerData', JSON.stringify(operatorData));
           localStorage.setItem('workerId', operatorData.id.toString());
-          console.log('Login successful, storing data:', {
-            token: data.token,
-            operator: operatorData,
-            workerId: operatorData.id
-          });
+          
           setSuccess('Login successful! Redirecting...');
           setTimeout(() => {
-            console.log('Navigating to: /worker/car/tow-truck/home');
             navigate('/worker/car/tow-truck/home');
           }, 1500);
         } else {
-          setSuccess('Registration successful! Please wait for admin approval.');
+          setSuccess('Registration successful! You can now login.');
           setTimeout(() => {
             setIsLogin(true);
             setFormData({ ...formData, password: '', confirmPassword: '' });
           }, 3000);
         }
       } else {
-        setError(data.message || data.error || 'Something went wrong');
+        setError(data.error || 'Something went wrong');
       }
     } catch (error) {
       console.error('Auth error:', error);
-      setError('Network error. Please try again.');
+      const message = error.response?.data?.error || error.response?.data?.message || 'Network error. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }

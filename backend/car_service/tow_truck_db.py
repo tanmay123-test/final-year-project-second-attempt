@@ -150,5 +150,25 @@ class TowTruckDB:
             cursor.close()
             conn.close()
 
+    def update_approval_status(self, operator_id, status):
+        """Update operator approval status"""
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''
+                UPDATE tow_truck_operators 
+                SET approval_status = %s, updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            ''', (status, operator_id))
+            conn.commit()
+            return cursor.rowcount > 0
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
 # Create singleton instance
 tow_truck_db = TowTruckDB()
