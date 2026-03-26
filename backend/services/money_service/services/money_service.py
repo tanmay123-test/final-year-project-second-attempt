@@ -157,13 +157,11 @@ class MoneyService:
     def chat_with_ai(self, user_id, message):
         """Chat with AI financial assistant"""
         try:
-            # Get user context
-            user_data = self.model.get_user_financial_summary(user_id)
-            
-            # Simple AI response for now
-            response = f"I understand you're asking about: {message}. Based on your financial data, I can help you track expenses and manage your budget."
-            
-            return response
+            from ai.ai_chat_service import ai_chat_service
+            result = ai_chat_service.handle_user_chat(user_id, message)
+            if result['success']:
+                return result['ai_response']
+            return f"Sorry, I couldn't process that: {result.get('error', 'Unknown error')}"
         except Exception as e:
             raise Exception(f"Failed to process AI chat: {str(e)}")
     

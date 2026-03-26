@@ -76,6 +76,30 @@ print("✅ Freelance marketplace blueprint registered")
 app.register_blueprint(money_bp)
 print("✅ Money management blueprint registered")
 
+# Register loan analyzer blueprint
+try:
+    from services.money_service.loan_analyzer import create_loan_api
+    create_loan_api(app)
+    print("✅ Loan analyzer blueprint registered")
+except Exception as e:
+    print(f"⚠️ Could not register loan analyzer blueprint: {e}")
+
+# Register Goal Jar API
+try:
+    from services.money_service.goal_jar.goal_api import create_goal_api
+    create_goal_api(app)
+    print("✅ Goal Jar API registered")
+except Exception as e:
+    print(f"⚠️ Could not register Goal Jar API: {e}")
+
+# Register AI Coach API
+try:
+    from services.money_service.ai_coach_api import create_ai_coach_api
+    create_ai_coach_api(app)
+    print("✅ AI Coach API registered")
+except Exception as e:
+    print(f"⚠️ Could not register AI Coach API: {e}")
+
 # Register video consultation blueprint
 app.register_blueprint(video_bp)
 print("✅ Video consultation blueprint registered")
@@ -1855,7 +1879,15 @@ def upload_expert_file():
         return jsonify({"error": "Failed to upload file"}), 500
 
 
+# ================= GLOBAL ERROR HANDLER =================
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    print(traceback.format_exc())
+    return jsonify({"success": False, "error": str(e)}), 500
+
+
 # ================= RUN =================
 if __name__ == "__main__":
     # Use SocketIO for WebSocket support
-    socketio.run(app, debug=True, port=5000, host="0.0.0.0")
+    socketio.run(app, debug=True, port=5000, host="0.0.0.0", allow_unsafe_werkzeug=True)

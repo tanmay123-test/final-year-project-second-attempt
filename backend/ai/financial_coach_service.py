@@ -138,11 +138,11 @@ Provide helpful financial education and coaching insights:"""
             # Get portfolio data
             portfolio_data = self.portfolio_service.get_portfolio_with_current_prices(user_id)
             
-            # Get spending data (mock for now)
-            spending_data = self._get_mock_spending_data(user_id)
+            # Get spending data from transactions table
+            spending_data = self._get_real_spending_data(user_id)
             
-            # Get goals data (mock for now)
-            goals_data = self._get_mock_goals_data(user_id)
+            # Get goals data from goals table
+            goals_data = self._get_real_goals_data(user_id)
             
             return {
                 "portfolio": portfolio_data,
@@ -296,6 +296,43 @@ Goals Summary:
             print(f"Error formatting financial data: {str(e)}")
             return "Financial data unavailable."
     
+    def _get_real_spending_data(self, user_id: int) -> Dict[str, Any]:
+        """
+        Get real spending data from transactions table
+        """
+        try:
+            conn = sqlite3.connect('expertease.db')
+            cursor = conn.cursor()
+            
+            # Query transactions for last 30 days
+            cursor.execute("""
+                SELECT category, SUM(amount) as total 
+                FROM transactions 
+                WHERE user_id = ? AND date >= date('now', '-30 days') 
+                AND type = 'expense'
+                GROUP BY category
+            """, (user_id,))
+            
+            results = cursor.fetchall()
+            conn.close()
+            
+            # Format results
+            categories = {}
+            total_monthly = 0
+            for row in results:
+                categories[row[0]] = row[1]
+                total_monthly += row[1]
+            
+            return {
+                "total_monthly": total_monthly,
+                "categories": categories,
+                "trends": {}  # Could be enhanced with historical data
+            }
+            
+        except Exception as e:
+            print(f"Error getting spending data: {e}")
+            return {"total_monthly": 0, "categories": {}, "trends": {}}
+    
     def _get_mock_spending_data(self, user_id: int) -> Dict[str, Any]:
         """
         Get mock spending data for testing
@@ -316,6 +353,56 @@ Goals Summary:
                 "entertainment": "decreasing"
             }
         }
+    
+    def _get_real_goals_data(self, user_id: int) -> Dict[str, Any]:
+        """
+        Get real goals data from goals table
+        """
+        try:
+            conn = sqlite3.connect('expertease.db')
+            cursor = conn.cursor()
+            
+            # Check if goals table exists
+            cursor.execute("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='goals'
+            """)
+            goals_table_exists = cursor.fetchone()
+            
+            if not goals_table_exists:
+                conn.close()
+                return {"goals": []}
+            
+            # Query goals data
+            cursor.execute("""
+                SELECT id, name, target_amount, current_amount, 
+                       (current_amount / target_amount * 100) as progress,
+                       target_date, created_at
+                FROM goals 
+                WHERE user_id = ?
+                ORDER BY created_at DESC
+            """, (user_id,))
+            
+            results = cursor.fetchall()
+            conn.close()
+            
+            goals = []
+            for row in results:
+                goals.append({
+                    "id": row[0],
+                    "name": row[1],
+                    "target": row[2],
+                    "current": row[3],
+                    "progress": row[4],
+                    "deadline": row[5],
+                    "completed": row[3] >= row[2]
+                })
+            
+            return {"goals": goals}
+            
+        except Exception as e:
+            print(f"Error getting goals data: {e}")
+            return {"goals": []}
     
     def _get_mock_goals_data(self, user_id: int) -> Dict[str, Any]:
         """

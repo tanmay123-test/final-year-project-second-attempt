@@ -98,7 +98,10 @@ class Finny:
         print("=" * 50)
         
         total_spending = 0
-        for category, amount, count in summary:
+        for item in summary:
+            category = item['category']
+            amount = item['total']
+            count = item['count']
             print(f"📂 {category}: ₹{amount:.2f} ({count} transactions)")
             total_spending += amount
         
@@ -107,7 +110,9 @@ class Finny:
         
         # Simple pie chart representation
         print("\n📈 Spending Breakdown:")
-        for category, amount, count in summary:
+        for item in summary:
+            category = item['category']
+            amount = item['total']
             percentage = (amount / total_spending) * 100 if total_spending > 0 else 0
             bar_length = int(percentage / 2)  # Scale down for display
             bar = "█" * bar_length

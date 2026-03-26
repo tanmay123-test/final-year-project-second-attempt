@@ -2,6 +2,32 @@ import { moneyService } from '../../../shared/api';
 
 // Analytics API service
 export const analyticsApi = {
+  // Get monthly analytics from dedicated backend endpoint
+  getMonthlyAnalytics: async (months = 6) => {
+    try {
+      const response = await moneyService.getMonthlyAnalytics(months);
+      // Ensure the response has the expected structure
+      const data = response.data || {};
+      return { 
+        success: true, 
+        data: {
+          monthly_summary: data.monthly_summary || [],
+          top_categories: data.top_categories || []
+        }
+      };
+    } catch (error) {
+      console.error('Failed to fetch monthly analytics:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.error || error.message || 'Failed to fetch monthly analytics',
+        data: {
+          monthly_summary: [],
+          top_categories: []
+        }
+      };
+    }
+  },
+
   // Get comprehensive analytics data
   getAnalytics: async () => {
     try {

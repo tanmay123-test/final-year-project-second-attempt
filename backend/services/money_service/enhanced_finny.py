@@ -331,7 +331,10 @@ class EnhancedFinny:
         print("=" * 50)
         
         total_spending = 0
-        for category, amount, count in summary:
+        for item in summary:
+            category = item['category']
+            amount = item['total']
+            count = item['count']
             print(f"📂 {category.title()}: ₹{amount:.2f} ({count} transactions)")
             total_spending += amount
         
@@ -354,16 +357,18 @@ class EnhancedFinny:
         
         # Top category
         if summary:
-            top_category = max(summary, key=lambda x: x[1])
-            print(f"🎯 Top spending: {top_category[0].title()} (₹{top_category[1]:.2f})")
+            top_item = max(summary, key=lambda x: x['total'])
+            print(f"🎯 Top spending: {top_item['category'].title()} (₹{top_item['total']:.2f})")
             
             # Daily average for top category
-            daily_avg = top_category[1] / 30
-            print(f"📊 Daily {top_category[0]} average: ₹{daily_avg:.2f}")
+            daily_avg = top_item['total'] / 30
+            print(f"📊 Daily {top_item['category']} average: ₹{daily_avg:.2f}")
         
         # Visual breakdown
         print(f"\n📈 Spending Breakdown:")
-        for category, amount, count in summary:
+        for item in summary:
+            category = item['category']
+            amount = item['total']
             percentage = (amount / total_spending) * 100 if total_spending > 0 else 0
             bar_length = int(percentage / 2)
             bar = "█" * bar_length

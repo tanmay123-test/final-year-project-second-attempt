@@ -221,19 +221,28 @@ class PortfolioAIService:
         Returns:
             Current price
         """
-        # Mock prices - in real implementation, call stock API
-        mock_prices = {
-            'HDFCBANK': 1585.75,
-            'ICICIBANK': 987.65,
-            'RELIANCE': 2845.30,
-            'TCS': 3689.45,
-            'INFY': 1456.80,
-            'WIPRO': 445.80,
-            'SBIN': 600.0,
-            'TATAMOTORS': 400.0
-        }
-        
-        return mock_prices.get(stock_symbol.upper(), 1000.0)
+        # Get current price - in real implementation, call stock API
+        try:
+            from .stock_ai_service import stock_ai_service
+            # Try to get real price from stock service
+            price_result = stock_ai_service.get_stock_price(stock_symbol)
+            if price_result and price_result.get('success'):
+                return price_result.get('price', 1000.0)
+            else:
+                # Fallback to last known price from portfolio table
+                conn = sqlite3.connect(self.db_path)
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT purchase_price FROM portfolio 
+                    WHERE user_id = ? AND stock_symbol = ? 
+                    ORDER BY created_at DESC LIMIT 1
+                """, (user_id, stock_symbol))
+                result = cursor.fetchone()
+                conn.close()
+                return result[0] if result else 1000.0
+        except Exception as e:
+            print(f"Error getting stock price: {e}")
+            return 1000.0
     
     def _generate_portfolio_insights(self, holdings: List[Dict], total_value: float, total_return: float) -> List[str]:
         """

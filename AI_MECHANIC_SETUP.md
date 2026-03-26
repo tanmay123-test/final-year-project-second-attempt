@@ -85,7 +85,7 @@ Once working, you should see:
 - ✅ Car-specific diagnostic advice
 - ✅ Emergency warnings for serious issues
 
-## 📞 Quick Test Messages to Try
+##  📞 Quick Test Messages to Try
 
 - "My check engine light is on"
 - "My car won't start"

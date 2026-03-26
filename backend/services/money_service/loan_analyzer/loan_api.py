@@ -24,7 +24,6 @@ class LoanAPI:
             try:
                 data = request.get_json()
                 
-                # Validate required fields
                 required_fields = ['user_id', 'loan_amount', 'interest_rate', 'loan_tenure']
                 for field in required_fields:
                     if field not in data:
@@ -35,14 +34,26 @@ class LoanAPI:
                 interest_rate = float(data['interest_rate'])
                 loan_tenure = int(data['loan_tenure'])
                 
-                # Validate input values
+                # Optional financial profile (used for affordability/impact analysis)
+                monthly_income = float(data.get('monthly_income', 0))
+                monthly_fixed_expenses = float(data.get('monthly_fixed_expenses', 0))
+                
                 if loan_amount <= 0 or interest_rate < 0 or loan_tenure <= 0:
                     return jsonify({'error': 'Invalid input values'}), 400
                 
-                # Perform analysis
+                # Inject financial data into engine so it doesn't rely on empty DB
+                if monthly_income > 0:
+                    self.loan_engine._override_financial_data = {
+                        'monthly_income': monthly_income,
+                        'monthly_fixed_expenses': monthly_fixed_expenses,
+                        'disposable_income': monthly_income - monthly_fixed_expenses
+                    }
+                
                 analysis = self.loan_engine.analyze_loan(user_id, loan_amount, interest_rate, loan_tenure)
                 
-                # Return formatted response
+                # Clear override
+                self.loan_engine._override_financial_data = None
+                
                 return jsonify({
                     'success': True,
                     'data': {
@@ -72,6 +83,8 @@ class LoanAPI:
                 })
                 
             except Exception as e:
+                import traceback
+                print(f"Loan analyze error: {traceback.format_exc()}")
                 return jsonify({'error': str(e)}), 500
         
         @self.app.route('/api/loan/compare', methods=['POST'])
@@ -238,10 +251,24 @@ class LoanAPI:
                 history = self.loan_engine.get_loan_history(user_id)
                 comparison_history = self.loan_engine.get_comparison_history(user_id)
                 
+                # Normalize fields for frontend
+                for item in history:
+                    item['date'] = item.get('created_at', '')[:10] if item.get('created_at') else ''
+                    item['amount'] = item.get('loan_amount', 0)
+                    item['tenure'] = item.get('loan_tenure', 0)
+                    item['emi'] = item.get('monthly_emi', 0)
+                    item['dti'] = round(item.get('dti_ratio', 0), 1)
+                    item['risk_score'] = round(item.get('risk_score', 0))
+                    item['risk_level'] = (
+                        'High' if item['risk_score'] > 70 else
+                        'Medium' if item['risk_score'] > 40 else 'Low'
+                    )
+                
                 return jsonify({
                     'success': True,
                     'data': {
                         'loan_analyses': history,
+                        'analyses': history,  # alias for frontend compatibility
                         'comparisons': comparison_history
                     }
                 })

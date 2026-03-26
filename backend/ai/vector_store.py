@@ -29,17 +29,15 @@ class VectorStore:
         self.cache_timeout = 3600  # 1 hour cache
         self.documents = []
         
-        # Initialize sentence transformer
-        self.transformer = SentenceTransformer(model_name='all-MiniLM-L6-v2')
-        self.vectorizer = TfidfVectorizer(
-            model_name="all-MiniLM-L6-v2",
-            vector_size=self.vector_size
-        )
+        # Initialize sentence transformer for dense embeddings
+        self.transformer = SentenceTransformer('all-MiniLM-L6-v2')
+        # Initialize TfidfVectorizer for sparse fallback (no extra params)
+        self.vectorizer = TfidfVectorizer()
         
         # Initialize FAISS client
         self.httpx = httpx.Client(timeout=30.0)
     
-    async def initialize_vector_store(self):
+    def initialize_vector_store(self):
         """Initialize vector store with financial education documents"""
         try:
             # Create FAISS collection
@@ -52,7 +50,7 @@ class VectorStore:
                 "dimensions": self.vector_size
             }
             
-            response = await self.httpx.post(url, json=payload, headers=headers)
+            response = self.httpx.post(url, json=payload, headers=headers)
             
             if response.status_code == 200:
                 collection_id = response.json().get("id", "")
@@ -66,12 +64,13 @@ class VectorStore:
             print(f"❌ Error initializing vector store: {str(e)}")
             return False
     
-    async def add_documents_to_vector_store(self, documents: List[Dict[str, Any]], collection_id: Optional[str] = None):
+    def add_documents_to_vector_store(self, documents: List[Dict[str, Any]], collection_id: Optional[str] = None):
         """
         Add financial education documents to vector store
         """
         try:
             # Use specified collection or create default
+            response = self.httpx.get(f"{self.base_url}/v1/collections/financial_education")
             target_collection_id = collection_id or response.json().get("id")
             
             # Prepare documents for FAISS
@@ -96,7 +95,7 @@ class VectorStore:
                 "nest": True
             }
             
-            response = await self.httpx.post(url, json=payload, headers=headers)
+            response = self.httpx.post(url, json=payload, headers=headers)
             
             if response.status_code == 200:
                 print(f"✅ Added {len(faiss_documents)} documents to FAISS collection")
@@ -109,7 +108,7 @@ class VectorStore:
             print(f"❌ Error adding documents to vector store: {str(e)}")
             return False
     
-    async def search_knowledge(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+    def search_knowledge(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
         """
         Search financial knowledge using FAISS
         """
@@ -123,7 +122,7 @@ class VectorStore:
                 "filter": {"type": "document"}
             }
             
-            response = await self.httpx.post(url, json=payload, headers=headers)
+            response = self.httpx.post(url, json=payload, headers=headers)
             
             if response.status_code == 200:
                 search_results = response.json().get("results", [])
@@ -154,7 +153,7 @@ class VectorStore:
             url = f"{self.base_url}/v1/collections/default/documents/{doc_id}"
             headers = {"x-goog-api-key": self.api_key}
             
-            response = await self.httpx.get(url, headers=headers)
+            response = self.httpx.get(url, headers=headers)
             
             if response.status_code == 200:
                 data = response.json()
@@ -172,14 +171,16 @@ class VectorStore:
         """
         try:
             # Get embeddings for both texts
-            embeddings1 = self.vectorizer.encode([text1])
-            embeddings2 = self.vectorizer.encode([text2])
+            embeddings1 = self.transformer.encode([text1])
+            embeddings2 = self.transformer.encode([text2])
             
             # Calculate cosine similarity
-            if embeddings1.size == 0 or embeddings2.size() == 0:
+            if embeddings1.size == 0 or embeddings2.size == 0:
                 return 0.0
             
-            similarity = cosine_similarity(embeddings1[0], embeddings2[0])
+            e1 = embeddings1[0]
+            e2 = embeddings2[0]
+            similarity = float(np.dot(e1, e2) / (np.linalg.norm(e1) * np.linalg.norm(e2)))
             return similarity
             
         except Exception as e:
@@ -195,18 +196,15 @@ class VectorStore:
                 url = f"{self.base_url}/v1/collections/{collection_id}"
                 headers = {"x-goog-api-key": self.api_key}
                 
-                response = await self.httpx.get(url, headers=headers)
+                response = self.httpx.get(url, headers=headers)
                 
                 if response.status_code == 200:
                     data = response.json()
                     return data.get("document_count", 0)
                 else:
                     return 0
-                else:
-                    return 0
             else:
-                return 0
-                
+                return len(self.documents)
         except Exception as e:
             print(f"Error getting vector count: {str(e)}")
             return 0
@@ -219,7 +217,7 @@ class VectorStore:
             url = f"{self.base_url}/v1/collections"
             headers = {"x-goog-api-key": self.api_key}
             
-            response = await self.httpx.get(url, headers=headers)
+            response = self.httpx.get(url, headers=headers)
             
             if response.status_code == 200:
                 collections = response.json().get("collections", [])

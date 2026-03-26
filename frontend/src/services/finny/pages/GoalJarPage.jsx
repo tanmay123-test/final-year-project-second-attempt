@@ -44,7 +44,7 @@ const GoalJarPage = () => {
       setLoading(true);
       const userId = user?.user_id || user?.id;
       const response = await moneyService.getGoals(userId);
-      setGoals(response.data || []);
+      setGoals(response.data?.goals || response.data || []);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch goals:', err);

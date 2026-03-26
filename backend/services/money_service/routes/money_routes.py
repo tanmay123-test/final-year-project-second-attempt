@@ -42,9 +42,9 @@ def add_transaction():
             user_id=user_id,
             category=data.get('category'),
             amount=data.get('amount'),
-            description=data.get('description'),
+            description=data.get('description', ''),
             date=data.get('date'),
-            type=data.get('type', 'expense'),
+            transaction_type=data.get('type', 'expense'),
             merchant=data.get('merchant', '')
         )
         return jsonify({"success": True, "transaction_id": transaction_id}), 201
@@ -58,7 +58,19 @@ def get_transactions():
         return jsonify({"error": "Unauthorized"}), 401
     
     try:
-        transactions = money_service.get_transactions(user_id)
+        # Pass query params as filters
+        category   = request.args.get('category')
+        start_date = request.args.get('start_date')
+        end_date   = request.args.get('end_date')
+        limit      = request.args.get('limit', type=int)
+
+        transactions = money_service.get_transactions(
+            user_id,
+            limit=limit,
+            category=category,
+            start_date=start_date,
+            end_date=end_date
+        )
         return jsonify({"transactions": transactions}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400

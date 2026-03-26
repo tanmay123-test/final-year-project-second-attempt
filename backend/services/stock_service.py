@@ -150,9 +150,62 @@ class StockService:
                 "low_52w": 385.60,
                 "high_52w": 578.90,
                 "description": "Wipro Limited is an Indian multinational corporation that provides information technology, consulting and business process services. It is headquartered in Bangalore, Karnataka, India, and is one of the big four IT companies in India."
+            },
+            "ZOMATO": {
+                "symbol": "ZOMATO", "company_name": "Zomato Limited",
+                "price": 224.50, "change": 3.80, "change_percent": 1.72, "previous_close": 220.70,
+                "market_cap": 198450000000, "sector": "Consumer Discretionary",
+                "industry": "Internet & Food Delivery", "pe_ratio": 285.0, "pb_ratio": 12.4,
+                "roe": 4.2, "revenue_growth": 68.5, "net_margin": 1.8, "debt_to_equity": 0.05,
+                "beta": 1.4, "low_52w": 115.00, "high_52w": 267.00,
+                "description": "Zomato Limited is an Indian multinational restaurant aggregator and food delivery company providing information, menus, user-reviews of restaurants, and food delivery from partner restaurants."
+            },
+            "TATAMOTORS": {
+                "symbol": "TATAMOTORS", "company_name": "Tata Motors Limited",
+                "price": 780.25, "change": -12.40, "change_percent": -1.56, "previous_close": 792.65,
+                "market_cap": 289670000000, "sector": "Consumer Discretionary",
+                "industry": "Automobiles", "pe_ratio": 8.9, "pb_ratio": 2.8,
+                "roe": 32.1, "revenue_growth": 24.3, "net_margin": 5.6, "debt_to_equity": 1.2,
+                "beta": 1.5, "low_52w": 560.00, "high_52w": 1179.00,
+                "description": "Tata Motors Limited is an Indian multinational automotive company manufacturing cars, trucks, buses and military vehicles. It owns Jaguar Land Rover."
+            },
+            "PAYTM": {
+                "symbol": "PAYTM", "company_name": "One97 Communications (Paytm)",
+                "price": 340.00, "change": -5.50, "change_percent": -1.59, "previous_close": 345.50,
+                "market_cap": 21560000000, "sector": "Financials",
+                "industry": "Fintech / Digital Payments", "pe_ratio": 0, "pb_ratio": 1.8,
+                "roe": -18.5, "revenue_growth": 25.0, "net_margin": -12.0, "debt_to_equity": 0.1,
+                "beta": 1.6, "low_52w": 310.00, "high_52w": 998.00,
+                "description": "One97 Communications Limited operating as Paytm is an Indian fintech company specializing in digital payments, financial services, and e-commerce."
+            },
+            "NYKAA": {
+                "symbol": "NYKAA", "company_name": "FSN E-Commerce Ventures (Nykaa)",
+                "price": 168.00, "change": 2.30, "change_percent": 1.39, "previous_close": 165.70,
+                "market_cap": 48120000000, "sector": "Consumer Discretionary",
+                "industry": "E-Commerce / Beauty Retail", "pe_ratio": 420.0, "pb_ratio": 18.5,
+                "roe": 4.5, "revenue_growth": 22.0, "net_margin": 0.8, "debt_to_equity": 0.3,
+                "beta": 1.3, "low_52w": 130.00, "high_52w": 230.00,
+                "description": "FSN E-Commerce Ventures Limited operating as Nykaa is an Indian e-commerce company selling beauty, wellness and fashion products through online and offline channels."
+            },
+            "BAJFINANCE": {
+                "symbol": "BAJFINANCE", "company_name": "Bajaj Finance Limited",
+                "price": 6890.00, "change": 45.20, "change_percent": 0.66, "previous_close": 6844.80,
+                "market_cap": 426780000000, "sector": "Financials",
+                "industry": "Non-Banking Financial Company", "pe_ratio": 28.5, "pb_ratio": 5.2,
+                "roe": 22.8, "revenue_growth": 28.0, "net_margin": 24.5, "debt_to_equity": 3.8,
+                "beta": 1.3, "low_52w": 5488.00, "high_52w": 8192.00,
+                "description": "Bajaj Finance Limited is an Indian non-banking financial company and one of the largest consumer finance companies in India offering consumer loans, SME loans, and commercial loans."
+            },
+            "KOTAKBANK": {
+                "symbol": "KOTAKBANK", "company_name": "Kotak Mahindra Bank",
+                "price": 1745.00, "change": 12.30, "change_percent": 0.71, "previous_close": 1732.70,
+                "market_cap": 347890000000, "sector": "Financial Services",
+                "industry": "Banks", "pe_ratio": 19.8, "pb_ratio": 2.9,
+                "roe": 15.6, "revenue_growth": 18.2, "net_margin": 24.1, "debt_to_equity": 0.7,
+                "beta": 1.1, "low_52w": 1544.00, "high_52w": 2063.00,
+                "description": "Kotak Mahindra Bank is an Indian private sector bank headquartered in Mumbai. It offers banking products and financial services for corporate and retail customers."
             }
         }
-    
     async def get_stock_data(self, symbol: str) -> Dict[str, Any]:
         """
         Fetch comprehensive stock data for a given symbol

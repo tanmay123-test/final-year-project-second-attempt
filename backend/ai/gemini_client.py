@@ -8,6 +8,10 @@ import json
 import httpx
 from typing import Optional, Dict, Any
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 class GeminiClient:
     """
@@ -22,6 +26,13 @@ class GeminiClient:
             self.api_key = GEMINI_API_KEY
         except ImportError:
             self.api_key = os.getenv("GEMINI_API_KEY", "your_gemini_api_key_here")
+            
+        # Connectivity check on startup
+        if not self.api_key or self.api_key == "your_gemini_api_key_here":
+            print("⚠️ GEMINI_API_KEY not found in environment variables")
+            print("📝 Please set GEMINI_API_KEY in your .env file")
+        else:
+            print("✅ Gemini API key loaded successfully")
             
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
         self.model = "gemini-1.5-flash"  # Fast and efficient model
@@ -232,32 +243,69 @@ Provide a helpful educational response:"""
     
     def generate_response(self, message: str) -> str:
         """
-        Synchronous wrapper for generate_ai_response
-        
-        Args:
-            message: User message
-            
-        Returns:
-            AI response string
+        Synchronous Gemini call using httpx directly (no asyncio wrapping).
+        Safe to call from Flask request threads.
         """
         try:
-            import asyncio
-            # Check if there's already an event loop running
-            try:
-                loop = asyncio.get_running_loop()
-                # If there's already a loop running, create a new one in a thread
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(self._run_async, message)
-                    return future.result()
-            except RuntimeError:
-                # No loop running, create a new one
-                return asyncio.run(self.generate_ai_response(message))
+            # Build payload directly — do NOT use system_prompt.format() here
+            # because `message` may already be a fully-formed prompt containing { } chars
+            if '{user_message}' in self.system_prompt and len(message) < 500:
+                # Short conversational message — wrap in system prompt
+                full_prompt = self.system_prompt.format(user_message=message)
+            else:
+                # Already a full prompt (e.g. stock analysis prompt) — use as-is
+                full_prompt = message
+
+            url = f"{self.base_url}/models/{self.model}:generateContent"
+            headers = {
+                "Content-Type": "application/json",
+                "x-goog-api-key": self.api_key,
+            }
+            payload = {
+                "contents": [{"parts": [{"text": full_prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "topK": 40,
+                    "topP": 0.95,
+                    "maxOutputTokens": 1024,
+                },
+            }
+            with httpx.Client(timeout=45.0) as client:
+                response = client.post(url, headers=headers, json=payload)
+
+            if response.status_code == 200:
+                result = response.json()
+                candidates = result.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts:
+                        return self._clean_response(parts[0].get("text", ""))
+                print(f"Gemini empty candidates: {result}")
+                return "I apologize, but I couldn't generate a response. Please try rephrasing your question."
+
+            elif response.status_code == 400:
+                print(f"Gemini 400 error: {response.text[:300]}")
+                return "I apologize, but I couldn't process that request. Please try asking in a different way."
+
+            elif response.status_code == 429:
+                return "I'm receiving too many requests right now. Please wait a moment and try again."
+
+            else:
+                print(f"Gemini error {response.status_code}: {response.text[:300]}")
+                return "I'm experiencing technical difficulties. Please try again later."
+
+        except httpx.TimeoutException:
+            print("Gemini timeout")
+            return "The request timed out. Please try again."
+        except httpx.RequestError as e:
+            print(f"Gemini connection error: {e}")
+            return "I'm having trouble connecting to my services. Please try again later."
         except Exception as e:
-            return f"I apologize, but I couldn't process that request. Please try asking in a different way."
-    
+            print(f"Gemini generate_response error: {type(e).__name__}: {e}")
+            return "I encountered an unexpected error. Please try again."
+
     def _run_async(self, message: str) -> str:
-        """Helper method to run async function in thread"""
+        """Helper method to run async function in thread (kept for backward compat)"""
         import asyncio
         return asyncio.run(self.generate_ai_response(message))
 

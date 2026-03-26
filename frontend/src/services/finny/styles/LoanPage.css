@@ -20,6 +20,26 @@
   margin: 0 auto;
 }
 
+/* Smart Loan Analyzer Page Styles */
+.smart-loan-analyzer-page {
+  min-height: 100vh;
+  background-color: #F9FAFB;
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+/* Header Styles */
+.loan-header {
+  background: #0F172A;
+  padding: 16px 20px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
 .back-button {
   background: rgba(255, 255, 255, 0.1);
   border: none;
@@ -32,16 +52,1895 @@
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s;
+  margin-left: 8px;
 }
 
 .back-button:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
+.header-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-title-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+
 .header-title {
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
   margin: 0;
+  line-height: 1.2;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: #94A3B8;
+  margin: 2px 0 0 0;
+  line-height: 1.3;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.icon-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  background: #10B981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Loan Cards Container */
+.loan-cards-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Loan Card Styles */
+.loan-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.loan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.card-left {
+  flex-shrink: 0;
+}
+
+.card-icon-circle {
+  width: 44px;
+  height: 44px;
+  background: #EEF2FF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-center {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.card-subtitle {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.card-right {
+  flex-shrink: 0;
+}
+
+.card-badge {
+  background: #FEF3C7;
+  color: #D97706;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+
+/* Bottom Back Button */
+.bottom-back-button {
+  padding: 16px;
+  display: none; /* Hidden by default, shown on scroll */
+}
+
+.back-to-money-btn {
+  width: 100%;
+  background: #F1F5F9;
+  color: #0F172A;
+  border: none;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.back-to-money-btn:hover {
+  background: #E2E8F0;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #E2E8F0;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  z-index: 1000;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: background 0.2s;
+  min-width: 60px;
+}
+
+.nav-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.nav-item.active {
+  color: #F59E0B;
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: #F59E0B;
+  border-radius: 1px;
+}
+
+.nav-icon {
+  font-size: 20px;
+  color: #64748B;
+}
+
+.nav-label {
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.nav-item.active .nav-label {
+  color: #F59E0B;
+}
+
+/* Responsive Design */
+@media (max-width: 390px) {
+  .loan-header {
+    padding: 12px 16px;
+  }
+  
+  .header-title {
+    font-size: 16px;
+  }
+  
+  .header-subtitle {
+    font-size: 12px;
+  }
+  
+  .loan-cards-container {
+    padding: 12px;
+  }
+  
+  .loan-card {
+    padding: 12px;
+    gap: 12px;
+  }
+  
+  .card-title {
+    font-size: 15px;
+  }
+  
+  .card-subtitle {
+    font-size: 12px;
+  }
+  
+  .card-icon-circle {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .card-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+}
+
+/* Analyze Loan Page Styles */
+.analyze-loan-page {
+  min-height: 100vh;
+  background-color: #F8FAFC;
+  padding-bottom: 80px;
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+/* Form Card */
+.loan-form-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin: 16px;
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 16px;
+}
+
+.form-field {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  font-size: 12px;
+  color: #64748B;
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-prefix {
+  position: absolute;
+  left: 16px;
+  color: #64748B;
+  font-weight: 500;
+  z-index: 1;
+}
+
+.form-input {
+  background: #F1F5F9;
+  border: none;
+  border-radius: 12px;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  background: #E2E8F0;
+}
+
+.form-input.with-prefix {
+  padding-left: 40px;
+}
+
+.error-message {
+  background: #FEE2E2;
+  color: #DC2626;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  border: 1px solid #FCA5A5;
+}
+
+.submit-button {
+  width: 100%;
+  background: #0F4C6B;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.submit-button:hover {
+  background: #0E3A5A;
+}
+
+.submit-button:disabled {
+  background: #94A3B8;
+  cursor: not-allowed;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Results Container */
+.results-container {
+  padding: 16px;
+  padding-bottom: 100px;
+}
+
+.result-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+/* EMI Summary Card */
+.emi-summary {
+  background: #0F4C6B;
+  color: white;
+}
+
+.emi-label {
+  font-size: 14px;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.emi-amount {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.emi-details {
+  display: flex;
+  justify-content: space-between;
+}
+
+.emi-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.emi-detail span:first-child {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.emi-detail span:last-child {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Card Titles */
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+
+/* EMI Breakdown */
+.emi-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Affordability and DTI */
+.affordability-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ratio-value {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.ratio-value.red {
+  color: #EF4444;
+}
+
+.ratio-value.green {
+  color: #10B981;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #E5E7EB;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.red {
+  background: #EF4444;
+}
+
+.progress-fill.green {
+  background: #10B981;
+}
+
+.warning-text {
+  font-size: 13px;
+  color: #F59E0B;
+  line-height: 1.4;
+}
+
+.info-text {
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+/* Impact Simulation */
+.impact-table {
+  margin-bottom: 16px;
+}
+
+.impact-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.impact-row:last-child {
+  border-bottom: none;
+}
+
+.info-box {
+  background: #FEF3C7;
+  color: #92400E;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  border: 1px solid #FDE68A;
+}
+
+/* Risk Score */
+.risk-score-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.risk-details {
+  flex: 1;
+}
+
+.risk-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.risk-badge.low {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.risk-badge.medium {
+  background: #FED7AA;
+  color: #92400E;
+}
+
+.risk-badge.high {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.risk-recommendation {
+  font-size: 14px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+/* Recalculate Button */
+.recalculate-button {
+  width: 100%;
+  background: #F1F5F9;
+  color: #1F2937;
+  border: none;
+  border-radius: 16px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 16px;
+  margin-bottom: 20px;
+}
+
+.recalculate-button:hover {
+  background: #E2E8F0;
+}
+
+/* Compare Loans Page Styles */
+.compare-loans-page {
+  min-height: 100vh;
+  background-color: #F1F5F9;
+  padding-bottom: 80px;
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+.compare-form-section {
+  padding: 16px;
+}
+
+.loans-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.loan-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  padding: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.loan-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 12px;
+}
+
+.form-field {
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.field-label {
+  font-size: 11px;
+  color: #64748B;
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-prefix {
+  position: absolute;
+  left: 12px;
+  color: #64748B;
+  font-weight: 500;
+  z-index: 1;
+}
+
+.form-input {
+  background: #F1F5F9;
+  border: none;
+  border-radius: 10px;
+  height: 42px;
+  padding: 0 12px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  background: #E2E8F0;
+}
+
+.form-input.with-prefix {
+  padding-left: 40px;
+}
+
+.compare-button {
+  width: 100%;
+  background: #1E3A5F;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.compare-button:hover {
+  background: #1A3F5F;
+}
+
+.compare-button:disabled {
+  background: #94A3B8;
+  cursor: not-allowed;
+}
+
+/* Results Section */
+.results-section {
+  padding: 0 16px 16px;
+}
+
+.comparison-table {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.header-cell {
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.loan1-header {
+  color: #0F4C6B;
+  font-weight: 600;
+  text-align: center;
+}
+
+.loan2-header {
+  color: #0F4C6B;
+  font-weight: 600;
+  text-align: center;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.metric-cell {
+  font-size: 13px;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+}
+
+.value-cell {
+  font-size: 14px;
+  color: #374151;
+  text-align: right;
+  font-weight: 500;
+}
+
+.value-cell.better-value {
+  color: #10B981;
+  font-weight: 600;
+}
+
+/* Recommendation Card */
+.recommendation-card {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.recommendation-title {
+  color: #16A34A;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.recommendation-body {
+  margin-top: 8px;
+}
+
+.winner-text {
+  color: #1F2937;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.savings-text {
+  color: #64748B;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Loan Impact Page Styles */
+.loan-impact-page {
+  min-height: 100vh;
+  background-color: #F1F5F9;
+  padding-bottom: 80px;
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+.impact-form-section {
+  padding: 16px;
+}
+
+.impact-form-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+}
+
+.impact-form-card .form-field {
+  margin-bottom: 14px;
+}
+
+.impact-form-card .field-label {
+  font-size: 12px;
+  color: #64748B;
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 500;
+}
+
+.impact-form-card .form-input {
+  background: #F1F5F9;
+  border: none;
+  border-radius: 12px;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.2s;
+}
+
+.impact-form-card .form-input:focus {
+  outline: none;
+  background: #E2E8F0;
+}
+
+.impact-form-card .form-input.with-prefix {
+  padding-left: 50px;
+}
+
+.impact-form-card .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.impact-form-card .input-prefix {
+  position: absolute;
+  left: 16px;
+  color: #64748B;
+  font-weight: 500;
+  z-index: 1;
+}
+
+.simulate-button {
+  width: 100%;
+  background: #1E3A5F;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.simulate-button:hover {
+  background: #1A3F5F;
+}
+
+.simulate-button:disabled {
+  background: #94A3B8;
+  cursor: not-allowed;
+}
+
+/* Results Section */
+.results-section {
+  padding: 0 16px 16px;
+}
+
+/* Result Card 1 - Disposable Income Hero */
+.disposable-income-hero {
+  background: #1E3A5F;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.hero-label {
+  color: white;
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.hero-value {
+  color: white;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.hero-impact {
+  color: white;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+/* Result Card 2 - Breakdown Table */
+.breakdown-table {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.row-label {
+  color: #64748B;
+  font-size: 14px;
+}
+
+.row-value {
+  color: #1F2937;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Result Card 3 - Budget Warning */
+.budget-warning {
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid;
+}
+
+.warning-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.warning-icon {
+  font-size: 18px;
+}
+
+.warning-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.warning-subtitle {
+  font-size: 13px;
+  line-height: 1.4;
+  opacity: 0.8;
+}
+
+/* Early Repayment Page Styles */
+.early-repayment-page {
+  min-height: 100vh;
+  background-color: #F1F5F9;
+  padding-bottom: 80px;
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+.early-repayment-form-section {
+  padding: 16px;
+}
+
+.early-repayment-form-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+}
+
+.early-repayment-form-card .form-field {
+  margin-bottom: 14px;
+}
+
+.early-repayment-form-card .field-label {
+  font-size: 12px;
+  color: #64748B;
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 500;
+}
+
+.early-repayment-form-card .form-input {
+  background: #F1F5F9;
+  border: none;
+  border-radius: 12px;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.2s;
+}
+
+.early-repayment-form-card .form-input:focus {
+  outline: none;
+  background: #E2E8F0;
+}
+
+.early-repayment-form-card .form-input.with-prefix {
+  padding-left: 50px;
+}
+
+.early-repayment-form-card .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.early-repayment-form-card .input-prefix {
+  position: absolute;
+  left: 16px;
+  color: #64748B;
+  font-weight: 500;
+  z-index: 1;
+}
+
+/* Results Section */
+.results-section {
+  padding: 0 16px 16px;
+}
+
+/* Result Card 1 - Savings Summary */
+.savings-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.savings-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  text-align: center;
+}
+
+.savings-label {
+  color: #64748B;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.savings-value {
+  color: #10B981;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.savings-value.amount {
+  font-size: 24px;
+}
+
+/* Result Card 2 - Repayment Breakdown Table */
+.repayment-breakdown {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.repayment-breakdown .table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.repayment-breakdown .table-row:last-child {
+  border-bottom: none;
+}
+
+.repayment-breakdown .row-label {
+  color: #64748B;
+  font-size: 13px;
+}
+
+.repayment-breakdown .row-value {
+  color: #1F2937;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.repayment-breakdown .row-value.bold {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.repayment-breakdown .row-value.green {
+  color: #10B981;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Result Card 3 - Interest Comparison Bar Chart */
+.interest-comparison {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.chart-title {
+  color: #1F2937;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* Repayment Schedule Page Styles */
+.repayment-schedule-page {
+  min-height: 100vh;
+  background-color: #F1F5F9;
+  padding-bottom: 80px;
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+.repayment-schedule-form-section {
+  padding: 16px;
+}
+
+.repayment-schedule-form-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+}
+
+.repayment-schedule-form-card .form-field {
+  margin-bottom: 14px;
+}
+
+.repayment-schedule-form-card .field-label {
+  font-size: 12px;
+  color: #64748B;
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 500;
+}
+
+.repayment-schedule-form-card .form-input {
+  background: #F1F5F9;
+  border: none;
+  border-radius: 12px;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.2s;
+}
+
+.repayment-schedule-form-card .form-input:focus {
+  outline: none;
+  background: #E2E8F0;
+}
+
+.repayment-schedule-form-card .form-input.with-prefix {
+  padding-left: 50px;
+}
+
+.repayment-schedule-form-card .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.repayment-schedule-form-card .input-prefix {
+  position: absolute;
+  left: 16px;
+  color: #64748B;
+  font-weight: 500;
+  z-index: 1;
+}
+
+.generate-button {
+  width: 100%;
+  background: #1E3A5F;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.generate-button:hover {
+  background: #1A3F5F;
+}
+
+.generate-button:disabled {
+  background: #94A3B8;
+  cursor: not-allowed;
+}
+
+/* Results Section */
+.results-section {
+  padding: 0 16px 16px;
+}
+
+/* Summary Row */
+.summary-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.summary-chip {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  padding: 8px 12px;
+  text-align: center;
+  flex: 1;
+}
+
+.chip-label {
+  font-size: 10px;
+  color: #64748B;
+  margin-bottom: 4px;
+}
+
+.chip-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E3A5F;
+}
+
+/* Schedule Table */
+.schedule-table-container {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+  margin-bottom: 12px;
+}
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 400px;
+}
+
+.schedule-table thead {
+  background: #F8FAFC;
+}
+
+.schedule-table th {
+  padding: 10px 12px;
+  text-align: right;
+  font-size: 12px;
+  color: #64748B;
+  font-weight: 600;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.schedule-table th:first-child {
+  text-align: center;
+  min-width: 40px;
+}
+
+.schedule-table th:nth-child(2) {
+  min-width: 80px;
+}
+
+.schedule-table th:nth-child(3) {
+  min-width: 90px;
+  color: #0EA5E9;
+}
+
+.schedule-table th:nth-child(4) {
+  min-width: 80px;
+  color: #F59E0B;
+}
+
+.schedule-table th:nth-child(5) {
+  min-width: 90px;
+}
+
+.schedule-table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid #F1F5F9;
+  height: 40px;
+}
+
+.schedule-table tbody tr:nth-child(even) {
+  background: #FAFAFA;
+}
+
+.schedule-table tbody tr:hover {
+  background: #F8FAFC;
+}
+
+.month-cell {
+  text-align: center;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.emi-cell {
+  color: #1F2937;
+  font-weight: 500;
+}
+
+.principal-cell {
+  color: #0EA5E9;
+  font-weight: 500;
+}
+
+.interest-cell {
+  color: #F59E0B;
+  font-weight: 500;
+}
+
+.balance-cell {
+  color: #6B7280;
+}
+
+/* Custom scrollbar for horizontal scroll */
+.schedule-table-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.schedule-table-container::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 2px;
+}
+
+.schedule-table-container::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 2px;
+}
+
+.schedule-table-container::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Loan Risk Assessment Page Styles */
+.loan-risk-page {
+  min-height: 100vh;
+  background-color: #F1F5F9;
+  padding-bottom: 80px;
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+.loan-risk-form-section {
+  padding: 16px;
+}
+
+.loan-risk-form-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+}
+
+.loan-risk-form-card .form-field {
+  margin-bottom: 14px;
+}
+
+.loan-risk-form-card .field-label {
+  font-size: 12px;
+  color: #64748B;
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 500;
+}
+
+.loan-risk-form-card .form-input {
+  background: #F1F5F9;
+  border: none;
+  border-radius: 12px;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.2s;
+}
+
+.loan-risk-form-card .form-input:focus {
+  outline: none;
+  background: #E2E8F0;
+}
+
+.loan-risk-form-card .form-input.with-prefix {
+  padding-left: 50px;
+}
+
+.loan-risk-form-card .input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.loan-risk-form-card .input-prefix {
+  position: absolute;
+  left: 16px;
+  color: #64748B;
+  font-weight: 500;
+  z-index: 1;
+}
+
+.assess-button {
+  width: 100%;
+  background: #1E3A5F;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.assess-button:hover {
+  background: #1A3F5F;
+}
+
+.assess-button:disabled {
+  background: #94A3B8;
+  cursor: not-allowed;
+}
+
+/* Results Section */
+.results-section {
+  padding: 0 16px 16px;
+}
+
+/* Result Card 1 - Risk Score Ring */
+.risk-score-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 20px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.risk-ring-container {
+  flex-shrink: 0;
+}
+
+.risk-ring {
+  display: block;
+}
+
+.risk-ring-progress {
+  transition: stroke-dashoffset 0.5s ease-in-out;
+}
+
+.risk-score-text {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.risk-details {
+  flex: 1;
+}
+
+.risk-badge {
+  color: white;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+
+.risk-recommendation {
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.4;
+}
+
+/* Result Card 2 - 4 Metric Mini Cards */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.metric-label {
+  color: #64748B;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.metric-value:nth-child(3) {
+  font-size: 18px;
+}
+
+/* Loan History Page Styles */
+.loan-history-page {
+  min-height: 100vh;
+  background-color: #F1F5F9;
+  padding-bottom: 80px;
+  max-width: 390px;
+  margin: 0 auto;
+}
+
+/* Search Bar */
+.search-container {
+  margin: 16px 16px 8px 16px;
+}
+
+.search-input {
+  width: 100%;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #94A3B8;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #1E3A5F;
+  color: #1F2937;
+}
+
+.search-input::placeholder {
+  color: #94A3B8;
+}
+
+/* Error Banner */
+.error-banner {
+  margin: 0 16px 12px 16px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #DC2626;
+  font-size: 14px;
+}
+
+.retry-button {
+  background: #DC2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.retry-button:hover {
+  background: #B91C1C;
+}
+
+/* History List */
+.history-list {
+  padding: 0 16px 16px 16px;
+}
+
+/* History Cards */
+.history-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.history-date {
+  font-size: 12px;
+  color: #94A3B8;
+}
+
+.risk-badge {
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.loan-summary {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 6px 0;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stat-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #94A3B8;
+}
+
+.stat-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  min-height: 300px;
+}
+
+.empty-title {
+  font-size: 16px;
+  color: #94A3B8;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+.empty-subtitle {
+  font-size: 13px;
+  color: #CBD5E1;
+}
+
+/* Loading Skeletons */
+.skeleton {
+  background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.skeleton-date {
+  width: 80px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.skeleton-badge {
+  width: 50px;
+  height: 20px;
+  border-radius: 10px;
+}
+
+.skeleton-loan-summary {
+  width: 200px;
+  height: 20px;
+  border-radius: 6px;
+  margin: 6px 0;
+}
+
+.skeleton-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skeleton-stat {
+  flex: 1;
+  height: 32px;
+  border-radius: 6px;
+}
+
+/* Responsive Design */
+@media (max-width: 390px) {
+  .loan-history-page {
+    margin: 0;
+  }
+  
+  .search-container {
+    margin: 12px;
+  }
+  
+  .history-list {
+    padding: 0 12px 12px 12px;
+  }
+  
+  .stats-row {
+    gap: 8px;
+  }
+  
+  .stat-value {
+    font-size: 13px;
+  }
+  
+  .loan-summary {
+    font-size: 15px;
+  }
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  line-height: 1.2;
 }
 
 .header-subtitle {

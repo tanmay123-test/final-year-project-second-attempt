@@ -239,7 +239,10 @@ class UnifiedFinny:
         print("=" * 50)
         
         total_spending = 0
-        for category, amount, count in summary:
+        for item in summary:
+            category = item['category']
+            amount = item['total']
+            count = item['count']
             print(f"📂 {category.title()}: ₹{amount:.2f} ({count} transactions)")
             total_spending += amount
         
@@ -249,7 +252,9 @@ class UnifiedFinny:
         
         # Visual breakdown
         print(f"\n📈 Spending Breakdown:")
-        for category, amount, count in summary:
+        for item in summary:
+            category = item['category']
+            amount = item['total']
             percentage = (amount / total_spending) * 100 if total_spending > 0 else 0
             bar_length = int(percentage / 2)
             bar = "█" * bar_length

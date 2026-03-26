@@ -1,4 +1,4 @@
-// Natural Language Chat Parser for Finny
+ // Natural Language Chat Parser for Finny
 
 export const chatParser = {
   // Merchant to category mapping
@@ -60,11 +60,13 @@ export const chatParser = {
     let currentCategory = '';
     let currentAmount = 0;
     
+    const isNumber = (str) => !isNaN(str) && !isNaN(parseFloat(str));
+
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i].toLowerCase();
       
       // Check if it's a merchant name
-      const category = this.merchantCategoryMap[part];
+      const category = chatParser.merchantCategoryMap[part];
       if (category) {
         // Save previous transaction if exists
         if (currentMerchant && currentAmount > 0) {
@@ -81,11 +83,11 @@ export const chatParser = {
         currentAmount = 0;
       }
       // Check if it's a number (amount)
-      else if (this.isNumber(part)) {
+      else if (isNumber(part)) {
         currentAmount = parseFloat(part);
       }
       // If we have a merchant but no category yet, treat as merchant name
-      else if (currentMerchant && !currentCategory && !this.isNumber(part)) {
+      else if (currentMerchant && !currentCategory && !isNumber(part)) {
         currentMerchant = part;
       }
     }
@@ -110,7 +112,7 @@ export const chatParser = {
   // Get category from merchant name
   getCategory: (merchant) => {
     const normalizedMerchant = merchant.toLowerCase();
-    return this.merchantCategoryMap[normalizedMerchant] || 'Other';
+    return chatParser.merchantCategoryMap[normalizedMerchant] || 'Other';
   },
 
   // Format transactions for API

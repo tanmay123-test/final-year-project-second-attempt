@@ -1,0 +1,119 @@
+/* AI Coach Page Styles */
+
+/* Hide scrollbar for chips */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Typing indicator animations */
+@keyframes typing-dot-1 {
+  0%, 60%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  30% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+@keyframes typing-dot-2 {
+  0%, 60%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  30% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+@keyframes typing-dot-3 {
+  0%, 60%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  30% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+
+.animate-typing-dot-1 {
+  animation: typing-dot-1 1.4s infinite ease-in-out;
+}
+
+.animate-typing-dot-2 {
+  animation: typing-dot-2 1.4s infinite ease-in-out;
+  animation-delay: 0.2s;
+}
+
+.animate-typing-dot-3 {
+  animation: typing-dot-3 1.4s infinite ease-in-out;
+  animation-delay: 0.4s;
+}
+
+/* Message bubble animations */
+.message-bubble-enter {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Custom scrollbar for message list */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Chat input focus effects */
+.chat-input:focus {
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+/* Send button hover effects */
+.send-button:active {
+  transform: scale(0.95);
+}
+
+/* History panel animation */
+.history-panel-enter {
+  animation: fadeInScale 0.2s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

@@ -9,6 +9,10 @@ import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import asyncio
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 class NewsService:
     """
@@ -23,6 +27,14 @@ class NewsService:
         
         # Initialize HTTP client
         self.httpx = httpx.Client(timeout=30.0)
+        
+        # Check if API key is properly configured
+        if not self.api_key or self.api_key == "your_finnhub_api_key_here":
+            print("⚠️ FINNHUB_API_KEY not found in environment variables")
+            print("📝 Please set FINNHUB_API_KEY in your .env file")
+            print("📋 Using mock news data instead of real Finnhub API")
+        else:
+            print("✅ Finnhub API key loaded successfully")
     
     async def fetch_market_news(self, category: str = "general", limit: int = 10) -> List[Dict[str, Any]]:
         """
@@ -427,74 +439,59 @@ Provide a helpful news summary and analysis:"""
     
     def get_market_news(self) -> Dict[str, Any]:
         """
-        Get market news (synchronous version with fallback)
-        
-        Returns:
-            Dictionary with news data
+        Get market news synchronously using httpx directly (no asyncio).
+        Safe to call from Flask request threads.
         """
         try:
-            import asyncio
-            # Try to fetch real news
-            try:
-                news_data = asyncio.run(self.fetch_market_news("general", 5))
+            if not self.api_key or self.api_key == "your_finnhub_api_key_here":
+                return self._get_mock_news()
+
+            url = f"{self.base_url}/news"
+            params = {"category": "general", "token": self.api_key}
+
+            with httpx.Client(timeout=10.0) as client:
+                response = client.get(url, params=params)
+
+            if response.status_code == 200:
+                news_data = response.json()
                 if news_data:
+                    formatted = []
+                    for article in news_data[:5]:
+                        formatted.append({
+                            "headline": article.get("headline", ""),
+                            "title":    article.get("headline", ""),  # alias
+                            "source":   article.get("source", ""),
+                            "url":      article.get("url", ""),
+                            "summary":  article.get("summary", ""),
+                            "datetime": article.get("datetime", ""),
+                            "category": "general",
+                        })
                     return {
                         'success': True,
-                        'articles': news_data,
+                        'articles': formatted,
                         'timestamp': datetime.utcnow().isoformat()
                     }
-            except Exception as e:
-                print(f"Failed to fetch real news: {e}")
-            
-            # Fallback to mock news
+
+            print(f"Finnhub news returned {response.status_code}, using mock data")
             return self._get_mock_news()
-            
+
         except Exception as e:
-            return {
-                'success': False,
-                'error': f"Error fetching market news: {str(e)}"
-            }
+            print(f"get_market_news error: {e}")
+            return self._get_mock_news()
     
     def _get_mock_news(self) -> Dict[str, Any]:
         """Get mock market news when API fails"""
         mock_articles = [
-            {
-                "title": "Indian Markets End Higher on IT Sector Gains",
-                "source": "Financial Express",
-                "url": "https://www.financialexpress.com",
-                "summary": "Indian equity markets closed higher today led by gains in the IT sector, with Nifty IT index rising over 2%.",
-                "datetime": datetime.utcnow().isoformat()
-            },
-            {
-                "title": "HDFC Bank Reports Q3 Profit Growth",
-                "source": "Economic Times",
-                "url": "https://economictimes.indiatimes.com",
-                "summary": "HDFC Bank reported a 15% year-on-year growth in net profit for the third quarter, driven by strong loan growth.",
-                "datetime": datetime.utcnow().isoformat()
-            },
-            {
-                "title": "Reliance Industries Announces Green Energy Investment",
-                "source": "Business Standard",
-                "url": "https://www.business-standard.com",
-                "summary": "Reliance Industries announced a ₹75,000 crore investment in green energy projects over the next three years.",
-                "datetime": datetime.utcnow().isoformat()
-            },
-            {
-                "title": "IT Sector Shows Strong Performance in Q4",
-                "source": "Mint",
-                "url": "https://www.livemint.com",
-                "summary": "Indian IT companies reported strong Q4 results, with TCS and Infosys beating analyst expectations.",
-                "datetime": datetime.utcnow().isoformat()
-            },
-            {
-                "title": "Rupee Strengthens Against US Dollar",
-                "source": "Reuters",
-                "url": "https://www.reuters.com",
-                "summary": "The Indian rupee strengthened against the US dollar, supported by foreign fund inflows and positive market sentiment.",
-                "datetime": datetime.utcnow().isoformat()
-            }
+            {"headline": "Indian Markets End Higher on IT Sector Gains",       "source": "Financial Express", "summary": "Indian equity markets closed higher today led by gains in the IT sector, with Nifty IT index rising over 2%."},
+            {"headline": "HDFC Bank Reports Strong Quarterly Profit Growth",    "source": "Economic Times",   "summary": "HDFC Bank reported a 15% year-on-year growth in net profit, driven by strong loan growth and NIM expansion."},
+            {"headline": "Reliance Industries Announces Green Energy Push",     "source": "Business Standard","summary": "Reliance Industries announced a ₹75,000 crore investment in green energy projects over the next three years."},
+            {"headline": "TCS and Infosys Beat Q4 Analyst Expectations",        "source": "Mint",             "summary": "Indian IT majors reported strong Q4 results, with revenue growth driven by demand in BFSI and healthcare verticals."},
+            {"headline": "Rupee Strengthens on Foreign Fund Inflows",           "source": "Reuters",          "summary": "The Indian rupee strengthened against the US dollar, supported by foreign institutional investor inflows."},
         ]
-        
+        for a in mock_articles:
+            a["title"] = a["headline"]  # alias for compatibility
+            a["datetime"] = datetime.utcnow().isoformat()
+            a["category"] = "general"
         return {
             'success': True,
             'articles': mock_articles,

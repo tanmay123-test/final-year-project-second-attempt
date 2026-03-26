@@ -49,13 +49,15 @@ class AIChatService:
             chat_history_service.store_message(0, user_id, message, "user_message")
             
             # Detect message type and route to appropriate service
-            message_type = self._detect_message_type(message)
+            message_type = self._detect_intent(message)
             
             # Generate AI response based on message type
             if message_type == "stock_analysis":
                 ai_response = self._handle_stock_analysis(message)
             elif message_type == "portfolio_analysis":
                 ai_response = self._handle_portfolio_analysis(user_id, message)
+            elif message_type == "financial_coach":
+                ai_response = self._handle_financial_coach(user_id, message)
             elif message_type == "knowledge_query":
                 ai_response = self._handle_knowledge_query(message)
             elif message_type == "market_news":
@@ -80,6 +82,43 @@ class AIChatService:
                 'error': f"Error processing chat message: {str(e)}"
             }
     
+    def _detect_intent(self, message: str) -> str:
+        msg = message.lower().strip()
+        import re
+        stock_patterns = [
+            r'\b(analyze|analysis|check|look up|tell me about|explain)\b.*\b(stock|share|equity|nse|bse)\b',
+            r'\b(stock|share|equity)\b.*\b(of|for)\b',   # "stock of zomato"
+            r'\b(stock|share|price|performance)\b.*\b[a-z]{3,}\b',
+            r'\b(hdfc|reliance|tcs|infy|wipro|sbi|icici|tatamotors|zomato|paytm|nykaa|swiggy|ola|irctc|indigo|bajaj|kotak|axis|hul|itc|maruti|cipla|adani|ongc|ntpc|nestle|titan|dmart)\b',
+        ]
+        portfolio_patterns = [
+            r'\b(my portfolio|my investments|my holdings|my stocks)\b',
+            r'\b(portfolio|holdings|allocation|rebalance|diversif)\b',
+        ]
+        coach_patterns = [
+            r'\b(advice|suggest|recommend|should i|what should|help me|guide me)\b',
+            r'\b(goal|save|saving|budget|plan|retire|retirement)\b',
+        ]
+        news_patterns = [
+            r'\b(news|today|market update|latest|happening|trending)\b',
+            r'\b(market|sensex|nifty|dow|nasdaq)\b.*\b(today|now|current|live)\b',
+        ]
+        knowledge_patterns = [
+            r'\b(what is|what are|explain|define|how does|how do|tell me about|describe)\b',
+            r'\b(mutual fund|sip|etf|bond|derivative|option|future|ipo|dividend)\b',
+        ]
+        for p in stock_patterns:
+            if re.search(p, msg, re.IGNORECASE): return 'stock_analysis'
+        for p in portfolio_patterns:
+            if re.search(p, msg, re.IGNORECASE): return 'portfolio_analysis'
+        for p in coach_patterns:
+            if re.search(p, msg, re.IGNORECASE): return 'financial_coach'
+        for p in news_patterns:
+            if re.search(p, msg, re.IGNORECASE): return 'market_news'
+        for p in knowledge_patterns:
+            if re.search(p, msg, re.IGNORECASE): return 'knowledge_query'
+        return 'general_query'
+
     def _detect_message_type(self, message: str) -> str:
         """
         Detect the type of user message based on keywords
@@ -138,20 +177,45 @@ class AIChatService:
     def _handle_stock_analysis(self, message: str) -> str:
         """Handle stock analysis requests"""
         try:
-            # Extract stock symbol from message
             stock_symbol = self._extract_stock_symbol(message)
-            
+
             if stock_symbol:
-                # Use existing stock AI service (synchronous call)
                 analysis = stock_ai_service.generate_stock_analysis_sync(f"analyze stock {stock_symbol}")
-                
                 if analysis.get('success'):
                     return self._format_stock_response(analysis)
-                else:
-                    return f"I couldn't analyze {stock_symbol}. Please check the stock symbol and try again."
-            else:
-                return "Please specify a stock symbol for analysis. For example: 'Analyze HDFC Bank stock'"
-                
+                # Stock API failed — fall through to Gemini with company name
+
+            # Extract company name from message for Gemini fallback
+            import re
+            # Try to pull the company name out of the message
+            company_match = re.search(
+                r'(?:analyze|analysis|check|tell me about|explain|stock of|shares of)\s+([a-zA-Z0-9 &]+?)(?:\s+stock|\s+share|\s+equity|$)',
+                message, re.IGNORECASE
+            )
+            company_name = company_match.group(1).strip() if company_match else (stock_symbol or message)
+
+            prompt = f"""You are a financial education assistant.
+
+The user asked: "{message}"
+
+Provide an educational overview of {company_name} as a company. Include:
+- What the company does (business model)
+- Which sector/industry it operates in
+- Key facts about its market position
+- General financial characteristics if known
+- Any notable recent developments you're aware of
+
+Important rules:
+- Do NOT give investment advice
+- Do NOT say "buy", "sell", "hold", or "recommend"
+- Clearly state this is educational information only
+- If you don't have recent price data, say so and explain why general knowledge is still useful
+- Add a disclaimer at the end
+
+Keep the response clear and helpful for someone learning about this company."""
+
+            return gemini_client.generate_response(prompt)
+
         except Exception as e:
             return f"Error analyzing stock: {str(e)}"
     
@@ -168,6 +232,20 @@ class AIChatService:
                 
         except Exception as e:
             return f"Error analyzing portfolio: {str(e)}"
+    
+    def _handle_financial_coach(self, user_id: int, message: str) -> str:
+        """Handle financial coaching requests"""
+        try:
+            from .financial_coach_service import financial_coach_service
+            result = financial_coach_service.get_financial_advice(user_id, message)
+            
+            if result.get('success'):
+                return result.get('advice', 'I can help you with your financial planning.')
+            else:
+                return "I couldn't provide financial advice at the moment. Please try again."
+                
+        except Exception as e:
+            return f"Error providing financial advice: {str(e)}"
     
     def _handle_knowledge_query(self, message: str) -> str:
         """Handle knowledge and educational queries"""
@@ -312,59 +390,88 @@ This information is for educational purposes only and not financial advice.
             return f"Error generating response: {str(e)}"
     
     def _extract_stock_symbol(self, message: str) -> Optional[str]:
-        """Extract stock symbol from user message"""
         import re
-        
-        # Convert to uppercase for consistent processing
-        message_upper = message.upper()
-        
-        # Remove common words and clean up
-        words_to_remove = ['ANALYZE', 'STOCK', 'SHARES', 'OF', 'THE', 'PRICE', 'PERFORMANCE', 'INFORMATION', 'COMPANY', 'BANK', 'LIMITED']
-        cleaned_message = message_upper
-        
-        for word in words_to_remove:
-            cleaned_message = cleaned_message.replace(word, ' ').strip()
-        
-        # Look for exact company name matches first (higher priority)
-        company_mappings = {
-            'HDFC': 'HDFCBANK',
-            'HDFC BANK': 'HDFCBANK',
-            'ICICI': 'ICICIBANK', 
-            'ICICI BANK': 'ICICIBANK',
-            'STATE BANK': 'SBIN',
-            'SBI': 'SBIN',
-            'RELIANCE': 'RELIANCE',
-            'RELIANCE INDUSTRIES': 'RELIANCE',
-            'TATA MOTORS': 'TATAMOTORS',
-            'TATA MOTORS': 'TATAMOTORS',
-            'INFOSYS': 'INFY',
-            'TCS': 'TCS',
-            'WIPRO': 'WIPRO',
-            'APPLE': 'AAPL',
-            'TESLA': 'TSLA',
-            'GOOGLE': 'GOOGL',
-            'MICROSOFT': 'MSFT',
-            'AMAZON': 'AMZN'
+        # Expanded Indian + global company → NSE/BSE/NYSE symbol map
+        symbol_map = {
+            # Indian large caps
+            'hdfc': 'HDFCBANK', 'hdfc bank': 'HDFCBANK',
+            'icici': 'ICICIBANK', 'icici bank': 'ICICIBANK',
+            'sbi': 'SBIN', 'state bank': 'SBIN',
+            'reliance': 'RELIANCE', 'ril': 'RELIANCE',
+            'tcs': 'TCS', 'tata consultancy': 'TCS',
+            'infosys': 'INFY', 'infy': 'INFY',
+            'wipro': 'WIPRO',
+            'tatamotors': 'TATAMOTORS', 'tata motors': 'TATAMOTORS',
+            'bajaj': 'BAJFINANCE', 'bajaj finance': 'BAJFINANCE',
+            'kotak': 'KOTAKBANK', 'kotak bank': 'KOTAKBANK',
+            'axis bank': 'AXISBANK', 'axis': 'AXISBANK',
+            'hul': 'HINDUNILVR', 'hindustan unilever': 'HINDUNILVR',
+            'itc': 'ITC',
+            'maruti': 'MARUTI', 'maruti suzuki': 'MARUTI',
+            'sun pharma': 'SUNPHARMA', 'sun pharmaceutical': 'SUNPHARMA',
+            'dr reddy': 'DRREDDY', "dr. reddy": 'DRREDDY',
+            'cipla': 'CIPLA',
+            'adani': 'ADANIENT', 'adani enterprises': 'ADANIENT',
+            'adani ports': 'ADANIPORTS',
+            'adani green': 'ADANIGREEN',
+            'adani power': 'ADANIPOWER',
+            'ongc': 'ONGC',
+            'ntpc': 'NTPC',
+            'power grid': 'POWERGRID',
+            'bhel': 'BHEL',
+            'coal india': 'COALINDIA',
+            'hindalco': 'HINDALCO',
+            'jsw steel': 'JSWSTEEL', 'jsw': 'JSWSTEEL',
+            'tata steel': 'TATASTEEL',
+            'ultratech': 'ULTRACEMCO', 'ultratech cement': 'ULTRACEMCO',
+            'asian paints': 'ASIANPAINT',
+            'nestle': 'NESTLEIND',
+            'britannia': 'BRITANNIA',
+            'titan': 'TITAN',
+            'dmart': 'DMART', 'avenue supermarts': 'DMART',
+            'nykaa': 'NYKAA', 'fss': 'NYKAA',
+            'paytm': 'PAYTM', 'one97': 'PAYTM',
+            'zomato': 'ZOMATO',
+            'swiggy': 'SWIGGY',
+            'ola': 'OLA',
+            'policybazaar': 'POLICYBZR',
+            'freshworks': 'FRSH',
+            'indigo': 'INDIGO', 'interglobe': 'INDIGO',
+            'spicejet': 'SPICEJET',
+            'irctc': 'IRCTC',
+            'lti': 'LTIM', 'ltimindtree': 'LTIM',
+            'hcl': 'HCLTECH', 'hcl tech': 'HCLTECH',
+            'tech mahindra': 'TECHM',
+            'mphasis': 'MPHASIS',
+            'persistent': 'PERSISTENT',
+            'coforge': 'COFORGE',
+            # Global
+            'apple': 'AAPL',
+            'tesla': 'TSLA',
+            'google': 'GOOGL', 'alphabet': 'GOOGL',
+            'microsoft': 'MSFT',
+            'amazon': 'AMZN',
+            'meta': 'META', 'facebook': 'META',
+            'nvidia': 'NVDA',
+            'netflix': 'NFLX',
+            'uber': 'UBER',
+            'airbnb': 'ABNB',
+            'shopify': 'SHOP',
+            'paypal': 'PYPL',
+            'intel': 'INTC',
+            'amd': 'AMD',
+            'samsung': '005930.KS',
+            'toyota': 'TM',
         }
-        
-        # Check for exact company name matches (case-insensitive)
-        for company, symbol in company_mappings.items():
-            if company.lower() in cleaned_message.lower():
-                return symbol
-        
-        # Extract potential stock symbols (3-5 letter words, case-insensitive)
-        words = re.findall(r'\b[A-Za-z]{3,5}\b', cleaned_message)
-        
-        # Filter out common words that aren't stock symbols
-        filtered_words = []
-        for word in words:
-            upper_word = word.upper()
-            if upper_word not in words_to_remove and len(upper_word) >= 3:
-                filtered_words.append(upper_word)
-        
-        if filtered_words:
-            return filtered_words[0]  # Return first potential symbol
-        
+        msg_lower = message.lower()
+        # Sort by length descending so "hdfc bank" matches before "hdfc"
+        for name in sorted(symbol_map.keys(), key=len, reverse=True):
+            if name in msg_lower:
+                return symbol_map[name]
+        # Fallback: uppercase ticker in message (e.g. "ZOMATO", "AAPL")
+        match = re.search(r'\b([A-Z]{2,8})\b', message)
+        if match:
+            return match.group(1)
         return None
     
     def _format_stock_response(self, analysis: Dict[str, Any]) -> str:
@@ -448,12 +555,17 @@ This information is for educational purposes only and not financial advice.
             if not articles:
                 return "No market news available at the moment."
             
-            response = f"📰 Market News Update\n\n"
+            response = "📰 Market News Update\n\n"
             
-            for article in articles[:5]:  # Show top 5 articles
-                title = article.get('title', 'No title')
+            for article in articles[:5]:
+                # Finnhub uses 'headline', mock data uses 'title' — handle both
+                title = article.get('headline') or article.get('title') or ''
                 source = article.get('source', 'Unknown source')
-                response += f"• {title} ({source})\n"
+                summary = article.get('summary', '')
+                if title:
+                    response += f"• {title} ({source})\n"
+                    if summary:
+                        response += f"  {summary[:120]}...\n" if len(summary) > 120 else f"  {summary}\n"
             
             response += "\n💡 News summaries are for informational purposes only and not financial advice."
             response += "\n📰 Data provided by financial news APIs"

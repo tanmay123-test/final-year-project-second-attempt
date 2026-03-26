@@ -7,7 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10s timeout
+  timeout: 30000, // 30s timeout
 });
 
 // Event bus for non-component error handling
@@ -31,6 +31,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Error:', error.config?.url, error.message);
     let message = 'An unexpected error occurred';
     if (error.response) {
       // Server responded with error
@@ -154,7 +155,7 @@ export const moneyService = {
   setBudget: (data) => api.post('/api/money/budget', data),
   getBudgets: () => api.get('/api/money/budget'),
   createGoal: (data) => api.post('/api/goal/create', data),
-  getGoals: (userId) => api.get(`/api/goal/list?user_id=${userId}`),
+  getGoals: () => api.get('/api/goal/list'),
   addGoalSavings: (data) => api.post('/api/goal/add-savings', data),
   getMonthlyAnalytics: (months = 6) => api.get('/api/money/analytics/monthly', { params: { months } }),
   chatWithAI: (message) => api.post('/api/money/chat', { message }),

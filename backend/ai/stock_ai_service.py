@@ -436,9 +436,14 @@ Provide an educational comparison that helps the user understand the differences
         if "error" in stock_data and len(company_info) > 5:
             search_results = await self.stock_service.search_stocks(company_info)
             if search_results:
-                # Use the first result's symbol
+                # Use first result's symbol
                 first_symbol = search_results[0]["symbol"]
                 stock_data = await self.stock_service.get_stock_data(first_symbol)
+        
+        # Final fallback - if still no data, ask Gemini to describe company
+        if "error" in stock_data or not stock_data.get("price"):
+            fallback_prompt = f"Provide a general overview of {company_info} as a company, including what you know about their business model, market position, and key financial metrics. Add a clear disclaimer that this is general information and not investment advice."
+            return await self.gemini_client.generate_response(fallback_prompt)
         
         return stock_data
     
@@ -600,7 +605,9 @@ Provide an educational comparison that helps the user understand the differences
             "beta": format_number(stock_data.get("beta", 0)),
             "low_52w": format_number(stock_data.get("low_52w", 0)),
             "high_52w": format_number(stock_data.get("high_52w", 0)),
-            "description": stock_data.get("description", "No description available.")[:500] + "..." if len(stock_data.get("description", "")) > 500 else stock_data.get("description", "No description available.")
+            # Escape braces in description so .format() doesn't crash
+            "description": (stock_data.get("description", "No description available.")[:500]
+                           .replace("{", "(").replace("}", ")"))
         }
     
     def _format_search_results_for_prompt(self, search_results: List[Dict[str, Any]]) -> str:
@@ -677,30 +684,93 @@ Provide an educational comparison that helps the user understand the differences
     
     def generate_stock_analysis_sync(self, user_message: str) -> Dict[str, Any]:
         """
-        Synchronous wrapper for generate_stock_analysis
-        
-        Args:
-            user_message: User message about stock analysis
-            
-        Returns:
-            Dictionary with stock analysis results
+        Synchronous stock analysis — fetches data with httpx directly,
+        then calls gemini_client.generate_response (also sync).
+        Safe to call from Flask request threads.
         """
         try:
-            import asyncio
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            result = loop.run_until_complete(self.generate_stock_analysis(user_message))
-            loop.close()
-            return result
+            # Extract symbol from message
+            symbol_match = re.search(r'analyze stock\s+([A-Z0-9.]+)', user_message, re.IGNORECASE)
+            symbol = symbol_match.group(1).upper() if symbol_match else user_message.upper().strip()
+
+            # Try fallback data first (fast, no network)
+            stock_data = self.stock_service._get_fallback_data(symbol)
+
+            # If no fallback, try Finnhub synchronously
+            if not stock_data:
+                try:
+                    api_key = self.stock_service.api_key
+                    base_url = self.stock_service.base_url
+
+                    with httpx.Client(timeout=10.0) as client:
+                        quote_resp    = client.get(f"{base_url}/quote",          params={"symbol": symbol, "token": api_key})
+                        profile_resp  = client.get(f"{base_url}/stock/profile2", params={"symbol": symbol, "token": api_key})
+
+                    quote   = quote_resp.json()   if quote_resp.status_code   == 200 else {}
+                    profile = profile_resp.json() if profile_resp.status_code == 200 else {}
+
+                    price = quote.get("c", 0)
+                    if price and price > 0:
+                        stock_data = {
+                            "symbol":       symbol,
+                            "company_name": profile.get("name", symbol),
+                            "price":        price,
+                            "change":       quote.get("d", 0),
+                            "change_percent": quote.get("dp", 0),
+                            "previous_close": quote.get("pc", 0),
+                            "market_cap":   profile.get("marketCapitalization", 0),
+                            "sector":       profile.get("finnhubIndustry", "Unknown"),
+                            "industry":     profile.get("finnhubIndustry", "Unknown"),
+                            "description":  profile.get("description", ""),
+                            "pe_ratio": 0, "pb_ratio": 0, "roe": 0,
+                            "revenue_growth": 0, "net_margin": 0,
+                            "debt_to_equity": 0, "beta": 0,
+                            "low_52w": quote.get("l", 0),
+                            "high_52w": quote.get("h", 0),
+                            "data_source": "Finnhub API",
+                        }
+                except Exception as e:
+                    print(f"Finnhub sync fetch error: {e}")
+
+            if stock_data and not stock_data.get("error"):
+                # Build Gemini prompt with available data
+                try:
+                    formatted = self._format_stock_data_for_prompt(stock_data)
+                    prompt = self.stock_analysis_prompt.format(
+                        user_message=user_message, **formatted
+                    )
+                except (KeyError, ValueError) as fmt_err:
+                    print(f"Prompt format error: {fmt_err}")
+                    # Fall back to a simple prompt
+                    symbol = stock_data.get("symbol", "Unknown")
+                    company = stock_data.get("company_name", symbol)
+                    prompt = (f"Provide an educational overview of {company} ({symbol}) stock. "
+                              f"Include business model, sector, and key financial characteristics. "
+                              f"No investment advice. End with educational disclaimer.")
+                ai_text = self.gemini_client.generate_response(prompt)
+                return {
+                    "success": True,
+                    "analysis": ai_text,
+                    "stock_data": stock_data,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+
+            # No stock data at all — ask Gemini for general company info
+            prompt = f"""Provide an educational overview of the company or stock symbol "{symbol}".
+Include: what the company does, its sector, market position, and key financial characteristics if known.
+Rules: no investment advice, no buy/sell recommendations. End with an educational disclaimer."""
+            ai_text = self.gemini_client.generate_response(prompt)
+            return {
+                "success": True,
+                "analysis": ai_text,
+                "stock_data": {"symbol": symbol, "data_source": "Gemini AI (no live data)"},
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+
         except Exception as e:
             return {
                 "success": False,
                 "error": f"Error in stock analysis: {str(e)}",
-                "suggestions": [
-                    "Please try again with a different query",
-                    "Check if the company name is correct",
-                    "Try using the exact stock symbol"
-                ]
             }
 
 # Singleton instance for reuse
