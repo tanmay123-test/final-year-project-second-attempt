@@ -80,11 +80,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch news: {response.status_code}")
+                print(f"  Failed to fetch news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching market news: {str(e)}")
+            print(f"  Error fetching market news: {str(e)}")
             return []
     
     async def get_company_news(self, symbol: str, limit: int = 10) -> List[Dict[str, Any]]:
@@ -132,11 +132,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch company news: {response.status_code}")
+                print(f"  Failed to fetch company news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching company news: {str(e)}")
+            print(f"  Error fetching company news: {str(e)}")
             return []
     
     async def get_crypto_news(self, limit: int = 10) -> List[Dict[str, Any]]:
@@ -183,11 +183,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch crypto news: {response.status_code}")
+                print(f"  Failed to fetch crypto news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching crypto news: {str(e)}")
+            print(f"  Error fetching crypto news: {str(e)}")
             return []
     
     async def get_forex_news(self, limit: int = 10) -> List[Dict[str, Any]]:
@@ -234,11 +234,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch forex news: {response.status_code}")
+                print(f"  Failed to fetch forex news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching forex news: {str(e)}")
+            print(f"  Error fetching forex news: {str(e)}")
             return []
     
     async def get_merger_news(self, limit: int = 10) -> List[Dict[str, Any]]:
@@ -285,11 +285,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch merger news: {response.status_code}")
+                print(f"  Failed to fetch merger news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching merger news: {str(e)}")
+            print(f"  Error fetching merger news: {str(e)}")
             return []
     
     async def summarize_news(self, news_articles: List[Dict[str, Any]], user_query: str = "") -> Dict[str, Any]:
@@ -482,11 +482,41 @@ Provide a helpful news summary and analysis:"""
     def _get_mock_news(self) -> Dict[str, Any]:
         """Get mock market news when API fails"""
         mock_articles = [
-            {"headline": "Indian Markets End Higher on IT Sector Gains",       "source": "Financial Express", "summary": "Indian equity markets closed higher today led by gains in the IT sector, with Nifty IT index rising over 2%."},
-            {"headline": "HDFC Bank Reports Strong Quarterly Profit Growth",    "source": "Economic Times",   "summary": "HDFC Bank reported a 15% year-on-year growth in net profit, driven by strong loan growth and NIM expansion."},
-            {"headline": "Reliance Industries Announces Green Energy Push",     "source": "Business Standard","summary": "Reliance Industries announced a ₹75,000 crore investment in green energy projects over the next three years."},
-            {"headline": "TCS and Infosys Beat Q4 Analyst Expectations",        "source": "Mint",             "summary": "Indian IT majors reported strong Q4 results, with revenue growth driven by demand in BFSI and healthcare verticals."},
-            {"headline": "Rupee Strengthens on Foreign Fund Inflows",           "source": "Reuters",          "summary": "The Indian rupee strengthened against the US dollar, supported by foreign institutional investor inflows."},
+            {
+                "title": "Indian Markets End Higher on IT Sector Gains",
+                "source": "Financial Express",
+                "url": "https://www.financialexpress.com",
+                "summary": "Indian equity markets closed higher today led by gains in the IT sector, with Nifty IT index rising over 2%.",
+                "datetime": datetime.utcnow().isoformat()
+            },
+            {
+                "title": "HDFC Bank Reports Q3 Profit Growth",
+                "source": "Economic Times",
+                "url": "https://economictimes.indiatimes.com",
+                "summary": "HDFC Bank reported a 15% year-on-year growth in net profit for the third quarter, driven by strong loan growth.",
+                "datetime": datetime.utcnow().isoformat()
+            },
+            {
+                "title": "Reliance Industries Announces Green Energy Investment",
+                "source": "Business Standard",
+                "url": "https://www.business-standard.com",
+                "summary": "Reliance Industries announced a ₹75,000 crore investment in green energy projects over the next three years.",
+                "datetime": datetime.utcnow().isoformat()
+            },
+            {
+                "title": "IT Sector Shows Strong Performance in Q4",
+                "source": "Mint",
+                "url": "https://www.livemint.com",
+                "summary": "Indian IT companies reported strong Q4 results, with TCS and Infosys beating analyst expectations.",
+                "datetime": datetime.utcnow().isoformat()
+            },
+            {
+                "title": "Rupee Strengthens Against US Dollar",
+                "source": "Reuters",
+                "url": "https://www.reuters.com",
+                "summary": "The Indian rupee strengthened against the US dollar, supported by foreign fund inflows and positive market sentiment.",
+                "datetime": datetime.utcnow().isoformat()
+            }
         ]
         for a in mock_articles:
             a["title"] = a["headline"]  # alias for compatibility

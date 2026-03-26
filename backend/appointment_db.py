@@ -13,7 +13,7 @@ load_dotenv()
 class AppointmentDB:
 
     def __init__(self):
-        print("🔥 AppointmentDB LOADED")
+        print("  AppointmentDB LOADED")
         self.availability_db = AvailabilityDB()
         self.create_table()
 
@@ -107,10 +107,10 @@ class AppointmentDB:
             apt_id = cursor.fetchone()[0]
             conn.commit()
             
-            print(f"📹 Video consultation booked with ID: {apt_id}")
-            print(f"📅 Date: {today}")
-            print(f"⏰ Time: {default_time}")
-            print(f"🔗 Video Room: {video_room}")
+            print(f"  Video consultation booked with ID: {apt_id}")
+            print(f"  Date: {today}")
+            print(f"  Time: {default_time}")
+            print(f"  Video Room: {video_room}")
             
             return apt_id
         except Exception as e:
@@ -129,20 +129,20 @@ class AppointmentDB:
         Book clinic appointment with enhanced slot matching and logging
         Returns (success, result) where result is appointment_id or error message
         """
-        print(f"📅 Attempting clinic booking for user {user_id}, worker {worker_id}")
-        print(f"📅 Date: {date}, Time Slot: '{time_slot}'")
+        print(f"  Attempting clinic booking for user {user_id}, worker {worker_id}")
+        print(f"  Date: {date}, Time Slot: '{time_slot}'")
         
         # Normalize time slot
         time_slot = time_slot.strip()
-        print(f"📅 Normalized time slot: '{time_slot}'")
+        print(f"  Normalized time slot: '{time_slot}'")
 
         # Check availability with proper normalization
         slots = self.availability_db.get_availability(worker_id, date)
         if not slots:
-            print(f"❌ No availability found for worker {worker_id} on {date}")
+            print(f"  No availability found for worker {worker_id} on {date}")
             return False, "No availability found for this date"
 
-        print(f"📅 Available slots: {[s['time_slot'].strip() for s in slots]}")
+        print(f"  Available slots: {[s['time_slot'].strip() for s in slots]}")
         
         # Check if slot exists (with proper normalization)
         slot_found = False
@@ -153,7 +153,7 @@ class AppointmentDB:
                 break
         
         if not slot_found:
-            print(f"❌ Slot '{time_slot}' not found or already booked")
+            print(f"  Slot '{time_slot}' not found or already booked")
             return False, "Selected time slot is not available"
 
         load_dotenv()
@@ -168,7 +168,7 @@ class AppointmentDB:
             """, (worker_id, date, time_slot))
             
             if cursor.fetchone():
-                print(f"❌ Double booking detected for {date} at {time_slot}")
+                print(f"  Double booking detected for {date} at {time_slot}")
                 return False, "This slot has just been booked by another patient"
 
             # Book appointment
@@ -186,12 +186,12 @@ class AppointmentDB:
             self.availability_db.remove_availability(worker_id, date, time_slot)
             
             conn.commit()
-            print(f"✅ Clinic appointment booked with ID: {apt_id}")
+            print(f"  Clinic appointment booked with ID: {apt_id}")
             return True, apt_id
             
         except Exception as e:
             conn.rollback()
-            print(f"❌ Database error: {e}")
+            print(f"  Database error: {e}")
             return False, f"Database error: {str(e)}"
         finally:
             cursor.close()
@@ -336,10 +336,10 @@ class AppointmentDB:
 
             conn.commit()
             
-            print(f"🔧 Setting video details for appointment {appointment_id}")
-            print(f"🔗 Meeting Link: {meeting_link}")
-            print(f"🔐 Generated OTP: {otp}")
-            print(f"🏠 Video Room: {video_room}")
+            print(f"  Setting video details for appointment {appointment_id}")
+            print(f"  Meeting Link: {meeting_link}")
+            print(f"  Generated OTP: {otp}")
+            print(f"  Video Room: {video_room}")
             
             return meeting_link, otp, video_room
         except Exception as e:
@@ -358,7 +358,7 @@ class AppointmentDB:
         Verify doctor's OTP and mark consultation as started
         Returns True if OTP is correct, False otherwise
         """
-        print(f"🔐 Verifying OTP for appointment {appointment_id}")
+        print(f"  Verifying OTP for appointment {appointment_id}")
         
         load_dotenv()
         conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
@@ -368,7 +368,7 @@ class AppointmentDB:
             row = cursor.fetchone()
 
             if not row or row[0] != otp:
-                print(f"❌ OTP verification failed for appointment {appointment_id}")
+                print(f"  OTP verification failed for appointment {appointment_id}")
                 return False
 
             cursor.execute("""
@@ -378,7 +378,7 @@ class AppointmentDB:
             """, (appointment_id,))
 
             conn.commit()
-            print(f"✅ OTP verified successfully for appointment {appointment_id}")
+            print(f"  OTP verified successfully for appointment {appointment_id}")
             return True
         except Exception as e:
             conn.rollback()
@@ -396,7 +396,7 @@ class AppointmentDB:
         Start video session by verifying OTP and updating status
         Returns True if successful, False otherwise
         """
-        print(f"🎥 Starting video session for appointment {appointment_id}")
+        print(f"  Starting video session for appointment {appointment_id}")
         
         if self.verify_otp(appointment_id, otp):
             # Additional session setup if needed

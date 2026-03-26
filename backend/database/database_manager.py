@@ -42,7 +42,7 @@ class DatabaseManager:
         """Ensure all database files exist"""
         for db_name, db_path in self.databases.items():
             if not db_path.exists():
-                print(f"⚠️  Database {db_name} not found at {db_path}")
+                print(f"    Database {db_name} not found at {db_path}")
     
     @contextmanager
     def get_connection(self, db_type):
@@ -333,15 +333,15 @@ def authenticate_worker(email, password):
 
 if __name__ == "__main__":
     # Test database manager
-    print("🗄️ Testing Database Manager...")
+    print("   Testing Database Manager...")
     
     # Check database health
     health = db_manager.check_database_health()
-    print("\n📊 Database Health Status:")
+    print("\n  Database Health Status:")
     for db_name, status in health.items():
         print(f"  {db_name}: {status['status']}")
         if status['status'] == 'healthy':
             print(f"    Tables: {len(status['tables'])}")
             print(f"    Size: {status['size']} bytes")
     
-    print("\n✅ Database Manager is ready!")
+    print("\n  Database Manager is ready!")

@@ -37,6 +37,10 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
         navigate('/doctor/dashboard');
       } else if (serviceType === 'freelance') {
         navigate('/freelancer/dashboard');
+      } else if (serviceType === 'car') {
+        // For car service, redirect to service selection so they can choose their specific dashboard
+        // unless we have specific data in the response
+        navigate('/worker/car/services');
       } else {
         navigate('/worker/dashboard');
       }

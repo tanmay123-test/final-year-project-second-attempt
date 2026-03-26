@@ -427,13 +427,13 @@ def get_reputation_data(expert_id):
         # Generate badges based on performance
         badges = []
         if avg_rating >= 4.5:
-            badges.append("⭐ Top Rated")
+            badges.append("  Top Rated")
         if performance_stats.get('avg_response_time_minutes', 999) < 1:
-            badges.append("⚡ Fast Responder")
+            badges.append("  Fast Responder")
         if completed_consultations >= 50:
-            badges.append("📊 High Volume")
+            badges.append("  High Volume")
         if (completed_consultations / len(consultation_history) * 100) >= 90 if consultation_history else 0:
-            badges.append("🏆 Trusted Expert")
+            badges.append("  Trusted Expert")
         
         reputation = {
             'approval_status': True,  # Would check from database
@@ -497,9 +497,9 @@ def report_user():
         
         # Map CLI categories to backend format
         category_mapping = {
-            '👤 User Abuse': 'USER_ABUSE',
-            '🔧 Technical Issue': 'TECHNICAL_ISSUE', 
-            '📞 General Support': 'GENERAL_SUPPORT'
+            '  User Abuse': 'USER_ABUSE',
+            '  Technical Issue': 'TECHNICAL_ISSUE', 
+            '  General Support': 'GENERAL_SUPPORT'
         }
         
         category = data.get('category')

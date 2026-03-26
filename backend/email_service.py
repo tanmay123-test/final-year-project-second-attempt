@@ -23,13 +23,13 @@ def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
 def send_email(to_email, subject, body):
-    print("\n📨 EMAIL EVENT TRIGGERED")
+    print("\n  EMAIL EVENT TRIGGERED")
     print("To      :", to_email)
     print("Subject :", subject)
     print("Body    :", body)
 
     if not is_valid_email(to_email):
-        print(f"❌ Invalid email format: {to_email}")
+        print(f"  Invalid email format: {to_email}")
         return False
 
     try:
@@ -46,12 +46,12 @@ def send_email(to_email, subject, body):
         server.send_message(msg)
         server.quit()
 
-        print("✅ Email successfully sent via SMTP\n")
+        print("  Email successfully sent via SMTP\n")
         return True
 
     except Exception as e:
         # IMPORTANT: Do NOT crash app on email failure
-        print("⚠️ Email sending failed (continuing execution)")
+        print("   Email sending failed (continuing execution)")
         print("Reason:", str(e))
-        print("📧 Email content logged above for verification\n")
+        print("  Email content logged above for verification\n")
         return False

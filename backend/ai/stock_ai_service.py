@@ -501,8 +501,8 @@ Provide an educational comparison that helps the user understand the differences
 **{company_name} ({symbol}) - Educational Analysis**
 
 **Current Market Data:**
-- Current Price: ₹{price:.2f}
-- Daily Change: ₹{change:.2f} ({change_percent:.2f}%)
+- Current Price:  {price:.2f}
+- Daily Change:  {change:.2f} ({change_percent:.2f}%)
 - Sector: {sector}
 
 **Key Financial Metrics:**

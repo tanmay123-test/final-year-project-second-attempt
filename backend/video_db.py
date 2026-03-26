@@ -18,7 +18,7 @@ load_dotenv()
 class VideoConsultDB:
 
     def __init__(self):
-        print("🔥 VideoConsultDB LOADED")
+        print("  VideoConsultDB LOADED")
         self.create_table()
 
     def get_conn(self):

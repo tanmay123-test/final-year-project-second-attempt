@@ -80,7 +80,7 @@ def verify_otp(email, user_otp):
         conn.close()
         return False, f"Invalid OTP ({MAX_ATTEMPTS - attempts - 1} attempts left)"
 
-    # OTP correct → cleanup
+    # OTP correct   cleanup
     c.execute("DELETE FROM otps WHERE email=?", (email,))
     conn.commit()
     conn.close()

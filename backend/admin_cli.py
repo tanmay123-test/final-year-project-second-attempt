@@ -1384,14 +1384,14 @@ class AdminCLI:
             print(f"  Pending Transactions: {transaction_stats['pending_transactions']}")
             print()
             print("Revenue Overview:")
-            print(f"  Total Revenue: ₹{total_revenue:,.2f}")
-            print(f"  Platform Commission (20%): ₹{total_commission:,.2f}")
-            print(f"  Worker Earnings: ₹{total_worker_earnings:,.2f}")
-            print(f"  Subscription Revenue: ₹{subscription_stats['subscription_revenue'] or 0:,.2f}")
+            print(f"  Total Revenue:  {total_revenue:,.2f}")
+            print(f"  Platform Commission (20%):  {total_commission:,.2f}")
+            print(f"  Worker Earnings:  {total_worker_earnings:,.2f}")
+            print(f"  Subscription Revenue:  {subscription_stats['subscription_revenue'] or 0:,.2f}")
             print()
             print("Revenue by Service:")
             for service, revenue in revenue_by_service.items():
-                print(f"  {service}: ₹{revenue:,.2f}")
+                print(f"  {service}:  {revenue:,.2f}")
             
         except Exception as e:
             print(f"Error: {e}")
@@ -1718,11 +1718,11 @@ class AdminCLI:
             conn.close()
             
             print("Revenue Overview:")
-            print(f"  Appointment Revenue: ₹{total_revenue:,.2f}")
-            print(f"  Platform Commission (20%): ₹{total_commission:,.2f}")
-            print(f"  Worker Earnings: ₹{total_worker_earnings:,.2f}")
-            print(f"  Subscription Revenue: ₹{subscription_stats['subscription_revenue'] or 0:,.2f}")
-            print(f"  Total Platform Revenue: ₹{total_commission + (subscription_stats['subscription_revenue'] or 0):,.2f}")
+            print(f"  Appointment Revenue:  {total_revenue:,.2f}")
+            print(f"  Platform Commission (20%):  {total_commission:,.2f}")
+            print(f"  Worker Earnings:  {total_worker_earnings:,.2f}")
+            print(f"  Subscription Revenue:  {subscription_stats['subscription_revenue'] or 0:,.2f}")
+            print(f"  Total Platform Revenue:  {total_commission + (subscription_stats['subscription_revenue'] or 0):,.2f}")
             
         except Exception as e:
             print(f"Error: {e}")

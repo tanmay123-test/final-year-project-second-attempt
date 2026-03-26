@@ -8,7 +8,7 @@ class EMICalculator:
         """
         Calculate EMI using standard formula
         
-        EMI = P × r × (1 + r)^n / ((1 + r)^n - 1)
+        EMI = P   r   (1 + r)^n / ((1 + r)^n - 1)
         
         Where:
         P = Principal (loan amount)
@@ -64,22 +64,22 @@ class EMICalculator:
     @staticmethod
     def format_currency(amount):
         """Format amount as Indian currency"""
-        return f"₹{amount:,.2f}"
+        return f" {amount:,.2f}"
     
     @staticmethod
     def display_loan_summary(loan_details):
         """Display formatted loan summary"""
         print("\n" + "="*60)
-        print("💰 LOAN ANALYSIS SUMMARY")
+        print("  LOAN ANALYSIS SUMMARY")
         print("="*60)
-        print(f"📋 Loan Amount: {EMICalculator.format_currency(loan_details['loan_amount'])}")
-        print(f"💸 Interest Rate: {loan_details['interest_rate']:.2f}% per annum")
-        print(f"📅 Loan Tenure: {loan_details['loan_tenure']} months ({loan_details['loan_tenure']/12:.1f} years)")
+        print(f"  Loan Amount: {EMICalculator.format_currency(loan_details['loan_amount'])}")
+        print(f"  Interest Rate: {loan_details['interest_rate']:.2f}% per annum")
+        print(f"  Loan Tenure: {loan_details['loan_tenure']} months ({loan_details['loan_tenure']/12:.1f} years)")
         print("-" * 60)
-        print(f"💳 Monthly EMI: {EMICalculator.format_currency(loan_details['monthly_emi'])}")
-        print(f"💰 Total Interest: {EMICalculator.format_currency(loan_details['total_interest'])}")
-        print(f"💵 Total Repayment: {EMICalculator.format_currency(loan_details['total_repayment'])}")
-        print(f"📊 Interest as % of Principal: {loan_details['interest_percentage']:.2f}%")
+        print(f"  Monthly EMI: {EMICalculator.format_currency(loan_details['monthly_emi'])}")
+        print(f"  Total Interest: {EMICalculator.format_currency(loan_details['total_interest'])}")
+        print(f"  Total Repayment: {EMICalculator.format_currency(loan_details['total_repayment'])}")
+        print(f"  Interest as % of Principal: {loan_details['interest_percentage']:.2f}%")
         print("="*60)
     
     @staticmethod

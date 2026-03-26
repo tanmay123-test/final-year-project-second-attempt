@@ -34,16 +34,16 @@ class BudgetEngine:
             # Add status indicator
             if budget['percentage_used'] >= 100:
                 budget['status'] = 'EXCEEDED'
-                budget['status_color'] = '🔴'
+                budget['status_color'] = ' '
             elif budget['percentage_used'] >= 90:
                 budget['status'] = 'CRITICAL'
-                budget['status_color'] = '🟡'
+                budget['status_color'] = ' '
             elif budget['percentage_used'] >= 75:
                 budget['status'] = 'WARNING'
-                budget['status_color'] = '🟠'
+                budget['status_color'] = ' '
             else:
                 budget['status'] = 'SAFE'
-                budget['status_color'] = '🟢'
+                budget['status_color'] = ' '
         
         return {
             'budgets': budgets,
@@ -83,19 +83,19 @@ class BudgetEngine:
         if percentage >= 100:
             alerts.append({
                 'type': 'EXCEEDED',
-                'message': f"🚨 {budget['category']} budget exceeded by ₹{abs(remaining):.2f}!",
+                'message': f"  {budget['category']} budget exceeded by  {abs(remaining):.2f}!",
                 'severity': 'HIGH'
             })
         elif percentage >= 90:
             alerts.append({
                 'type': 'CRITICAL',
-                'message': f"⚠️ {budget['category']} budget at {percentage:.1f}% - only ₹{remaining:.2f} remaining!",
+                'message': f"   {budget['category']} budget at {percentage:.1f}% - only  {remaining:.2f} remaining!",
                 'severity': 'MEDIUM'
             })
         elif percentage >= 75:
             alerts.append({
                 'type': 'WARNING',
-                'message': f"💡 {budget['category']} budget at {percentage:.1f}%",
+                'message': f"  {budget['category']} budget at {percentage:.1f}%",
                 'severity': 'LOW'
             })
         
@@ -121,7 +121,7 @@ class BudgetEngine:
                     'remaining_budget': budget['remaining'],
                     'remaining_days': remaining_days,
                     'recommended_daily': daily_limit,
-                    'message': f"You should spend no more than ₹{daily_limit:.2f} per day to stay within your {budget['category']} budget."
+                    'message': f"You should spend no more than  {daily_limit:.2f} per day to stay within your {budget['category']} budget."
                 }
                 adjustments.append(adjustment)
         
@@ -141,61 +141,61 @@ class BudgetEngine:
         budget_status = self.get_budget_status(user_id)
         
         if not budget_status:
-            print("📭 No budgets set. Create a financial plan first!")
+            print("  No budgets set. Create a financial plan first!")
             return
         
         print(f"\n" + "="*70)
-        print(f"💰 BUDGET STATUS - {budget_status['month']} {budget_status['year']}")
+        print(f"  BUDGET STATUS - {budget_status['month']} {budget_status['year']}")
         print("="*70)
-        print(f"📅 Day {budget_status['days_passed']} of {budget_status['days_in_month']}")
+        print(f"  Day {budget_status['days_passed']} of {budget_status['days_in_month']}")
         
         for budget in budget_status['budgets']:
-            print(f"\n📂 {budget['category'].upper()}")
+            print(f"\n  {budget['category'].upper()}")
             print("-" * 40)
-            print(f"💰 Budget: ₹{budget['budget_amount']:,.2f}")
-            print(f"💸 Spent: ₹{budget['spent']:,.2f}")
-            print(f"📊 Remaining: ₹{budget['remaining']:,.2f}")
-            print(f"📈 Used: {budget['percentage_used']:.1f}%")
+            print(f"  Budget:  {budget['budget_amount']:,.2f}")
+            print(f"  Spent:  {budget['spent']:,.2f}")
+            print(f"  Remaining:  {budget['remaining']:,.2f}")
+            print(f"  Used: {budget['percentage_used']:.1f}%")
             
             # Progress bar
             bar_length = 20
             filled_length = min(int(budget['percentage_used'] / 5), bar_length)
             
             if budget['status'] == 'EXCEEDED':
-                bar = '🔴' * bar_length
+                bar = ' ' * bar_length
             elif budget['status'] == 'CRITICAL':
-                bar = '🟡' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             elif budget['status'] == 'WARNING':
-                bar = '🟠' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             else:
-                bar = '🟢' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             
             print(f"   {bar} {budget['status_color']} {budget['status']}")
             
             # Daily metrics
-            print(f"📅 Daily Average: ₹{budget['daily_average']:,.2f}")
+            print(f"  Daily Average:  {budget['daily_average']:,.2f}")
             if budget['recommended_daily'] > 0:
-                print(f"🎯 Recommended Daily: ₹{budget['recommended_daily']:,.2f}")
+                print(f"  Recommended Daily:  {budget['recommended_daily']:,.2f}")
     
     def display_dynamic_adjustments(self, user_id):
         """Display dynamic budget adjustments"""
         adjustments = self.get_dynamic_budget_adjustment(user_id)
         
         if not adjustments:
-            print("📭 No budget adjustments available")
+            print("  No budget adjustments available")
             return
         
         print(f"\n" + "="*70)
-        print("🎯 DYNAMIC BUDGET ADJUSTMENTS")
+        print("  DYNAMIC BUDGET ADJUSTMENTS")
         print("="*70)
         
         for adj in adjustments:
-            print(f"\n📂 {adj['category'].upper()}")
+            print(f"\n  {adj['category'].upper()}")
             print("-" * 40)
-            print(f"💰 Remaining Budget: ₹{adj['remaining_budget']:,.2f}")
-            print(f"📅 Remaining Days: {adj['remaining_days']}")
-            print(f"🎯 Recommended Daily: ₹{adj['recommended_daily']:,.2f}")
-            print(f"💡 {adj['message']}")
+            print(f"  Remaining Budget:  {adj['remaining_budget']:,.2f}")
+            print(f"  Remaining Days: {adj['remaining_days']}")
+            print(f"  Recommended Daily:  {adj['recommended_daily']:,.2f}")
+            print(f"  {adj['message']}")
     
     def integrate_with_finny_transaction(self, user_id, transaction_data):
         """Integrate with Finny transaction system"""
@@ -207,7 +207,7 @@ class BudgetEngine:
             
             if alerts:
                 print("\n" + "="*50)
-                print("🚨 BUDGET ALERTS")
+                print("  BUDGET ALERTS")
                 print("="*50)
                 for alert in alerts:
                     print(f"{alert['message']}")

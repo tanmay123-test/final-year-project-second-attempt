@@ -104,7 +104,7 @@ def plan_trip():
         }), 200
         
     except Exception as e:
-        print(f"❌ Error in trip planning API: {e}")
+        print(f"  Error in trip planning API: {e}")
         return jsonify({
             "error": "Internal server error while planning trip"
         }), 500
@@ -146,7 +146,7 @@ def validate_trip_request():
         return jsonify(validation), 200
         
     except Exception as e:
-        print(f"❌ Error in trip validation API: {e}")
+        print(f"  Error in trip validation API: {e}")
         return jsonify({
             "error": "Internal server error while validating trip"
         }), 500
@@ -169,7 +169,7 @@ def health_check():
             "version": "1.0.0"
         }), 200
     except Exception as e:
-        print(f"❌ Error in health check: {e}")
+        print(f"  Error in health check: {e}")
         return jsonify({
             "status": "unhealthy",
             "error": str(e)

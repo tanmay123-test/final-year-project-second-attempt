@@ -10,33 +10,33 @@ def show_car_home(user_id):
     car = car_profile_db.get_default_car(user_id)
     
     print("\n" + "="*50)
-    print("🚗 CAR SERVICE HOME")
+    print("  CAR SERVICE HOME")
     print("="*50)
-    print("\n🚨 PANIC EMERGENCY")
+    print("\n  PANIC EMERGENCY")
     print("----------------------------------------")
     print("Emergency Contact:")
     print(f"Name: {profile.get('emergency_contact_name', '')}")
     print(f"Phone: {profile.get('emergency_contact_phone', '')}")
     print("\nEmergency Services:")
-    print("1. 🚛 Tow Truck")
-    print("2. ⛽ Fuel Delivery")
-    print("3. 🔧 Mechanic Emergency")
+    print("1.   Tow Truck")
+    print("2.   Fuel Delivery")
+    print("3.   Mechanic Emergency")
     choice = input("\nSelect emergency option or press Enter to skip: ").strip()
     if choice == "1":
-        print("\n🚛 Tow Truck service selected...")
+        print("\n  Tow Truck service selected...")
         print("(This will use Smart Dispatch Engine later)")
     elif choice == "2":
-        print("\n⛽ Fuel Delivery service selected...")
+        print("\n  Fuel Delivery service selected...")
         from .fuel_delivery_user_cli import fuel_delivery_user_interface
         fuel_delivery_user_interface({'id': user_id})
     elif choice == "3":
-        print("\n🔧 Mechanic Emergency service selected...")
+        print("\n  Mechanic Emergency service selected...")
         print("(This will use Smart Dispatch Engine later)")
-    print("\n\n📍 LOCATION")
+    print("\n\n  LOCATION")
     print("----------------------------------------")
     print(f"City: {profile.get('city', '')}")
     print(f"Address: {profile.get('address', '')}")
-    print("\n\n🚗 DEFAULT CAR")
+    print("\n\n  DEFAULT CAR")
     print("----------------------------------------")
     if car:
         print(f"Brand: {car.get('brand', '')}")
@@ -47,18 +47,18 @@ def show_car_home(user_id):
     else:
         print("No cars found. Please add car first.")
     
-    print("\n\n📅 ACTIVE JOB")
+    print("\n\n  ACTIVE JOB")
     print("----------------------------------------")
     
     # Get active job
     active_job = booking_db.get_active_job(user_id)
     if active_job:
         status_emoji = {
-            'SEARCHING': '🔍',
-            'ACCEPTED': '✅',
-            'ARRIVING': '🚗',
-            'WORKING': '🔧'
-        }.get(active_job['status'], '📋')
+            'SEARCHING': ' ',
+            'ACCEPTED': ' ',
+            'ARRIVING': ' ',
+            'WORKING': ' '
+        }.get(active_job['status'], ' ')
         
         print(f"Job ID: {active_job['id']}")
         print(f"Issue: {active_job['issue']}")
@@ -67,11 +67,11 @@ def show_car_home(user_id):
         print(f"Created: {active_job['created_at']}")
         
         if active_job['status'] == 'ACCEPTED':
-            print(f"⏰ Accepted at: {active_job.get('accepted_at', 'Pending')}")
+            print(f"  Accepted at: {active_job.get('accepted_at', 'Pending')}")
         elif active_job['status'] == 'ARRIVING':
-            print(f"📍 Mechanic arriving in 15 minutes")
+            print(f"  Mechanic arriving in 15 minutes")
         elif active_job['status'] == 'WORKING':
-            print(f"🔧 Work in progress since {active_job.get('started_at', 'Pending')}")
+            print(f"  Work in progress since {active_job.get('started_at', 'Pending')}")
     else:
         print("No active jobs")
     

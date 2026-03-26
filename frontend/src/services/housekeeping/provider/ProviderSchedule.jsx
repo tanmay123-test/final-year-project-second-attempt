@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Clock, Check, X, Navigation, Play, Calendar } from 'lucide-react';
 import api, { housekeepingService } from '../../../shared/api';
-import ProviderBottomNav from '../../../components/ProviderBottomNav';
 import OtpModal from '../../../components/OtpModal';
 
 const ProviderSchedule = () => {
@@ -243,8 +242,6 @@ const ProviderSchedule = () => {
           )}
         </div>
       </div>
-
-      <ProviderBottomNav />
 
       {/* OTP Modal */}
       {otpModal.isOpen && (

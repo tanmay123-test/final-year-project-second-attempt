@@ -69,19 +69,21 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('worker_id', worker_id);
       localStorage.setItem('worker_email', email);
       if (token) {
-        localStorage.setItem('token', token); // Store worker token (reusing user token key might be tricky if user is also logged in?)
-        // Ideally we should distinguish, but current logic in api.js uses 'token' from localStorage.
-        // For now, let's assume one login at a time (User OR Worker).
+        localStorage.setItem('token', token); 
+        localStorage.setItem('workerToken', token); // For car service workers
       }
       
-      setWorker({
-        id: worker_id, // Normalize to id
+      const workerData = {
+        id: worker_id,
         worker_id,
         email,
         service,
         specialization,
         name
-      });
+      };
+      localStorage.setItem('workerData', JSON.stringify(workerData)); // For car service workers
+      
+      setWorker(workerData);
       return true;
     } catch (error) {
       console.error('Worker login failed:', error);

@@ -62,20 +62,20 @@ class BurnRateIndicator:
             # Add burn status
             if burn_rate >= 120:
                 burn_data['status'] = 'CRITICAL'
-                burn_data['status_color'] = '🔴'
-                burn_data['alert'] = '🚨 Critical burn rate! You\'re spending much faster than planned.'
+                burn_data['status_color'] = ' '
+                burn_data['alert'] = '  Critical burn rate! You\'re spending much faster than planned.'
             elif burn_rate >= 110:
                 burn_data['status'] = 'HIGH'
-                burn_data['status_color'] = '🟡'
-                burn_data['alert'] = '⚠️ High burn rate! You may exceed your budget.'
+                burn_data['status_color'] = ' '
+                burn_data['alert'] = '   High burn rate! You may exceed your budget.'
             elif burn_rate >= 90:
                 burn_data['status'] = 'NORMAL'
-                burn_data['status_color'] = '🟢'
-                burn_data['alert'] = '✅ Normal spending rate.'
+                burn_data['status_color'] = ' '
+                burn_data['alert'] = '  Normal spending rate.'
             else:
                 burn_data['status'] = 'LOW'
-                burn_data['status_color'] = '🔵'
-                burn_data['alert'] = '💡 Low spending rate - great job staying under budget!'
+                burn_data['status_color'] = ' '
+                burn_data['alert'] = '  Low spending rate - great job staying under budget!'
             
             burn_analysis.append(burn_data)
         
@@ -120,20 +120,20 @@ class BurnRateIndicator:
         # Determine overall status
         if overall_burn_rate >= 120:
             overall_status = 'CRITICAL'
-            overall_color = '🔴'
-            overall_message = '🚨 Critical! You\'re burning through your budget very quickly!'
+            overall_color = ' '
+            overall_message = '  Critical! You\'re burning through your budget very quickly!'
         elif overall_burn_rate >= 110:
             overall_status = 'HIGH'
-            overall_color = '🟡'
-            overall_message = '⚠️ High burn rate! Consider reducing spending.'
+            overall_color = ' '
+            overall_message = '   High burn rate! Consider reducing spending.'
         elif overall_burn_rate >= 90:
             overall_status = 'NORMAL'
-            overall_color = '🟢'
-            overall_message = '✅ Good spending pace - keep it up!'
+            overall_color = ' '
+            overall_message = '  Good spending pace - keep it up!'
         else:
             overall_status = 'LOW'
-            overall_color = '🔵'
-            overall_message = '💡 Excellent! You\'re spending slower than planned.'
+            overall_color = ' '
+            overall_message = '  Excellent! You\'re spending slower than planned.'
         
         return {
             'total_budget': total_budget,
@@ -157,22 +157,22 @@ class BurnRateIndicator:
         burn_data = self.calculate_burn_rate(user_id)
         
         if not burn_data:
-            print("📭 No budget data available for burn rate analysis")
+            print("  No budget data available for burn rate analysis")
             return
         
         print(f"\n" + "="*70)
-        print(f"🔥 BURN RATE ANALYSIS - {burn_data['month']} {burn_data['year']}")
+        print(f"  BURN RATE ANALYSIS - {burn_data['month']} {burn_data['year']}")
         print("="*70)
-        print(f"📅 Progress: Day {burn_data['days_passed']} of {burn_data['days_in_month']}")
+        print(f"  Progress: Day {burn_data['days_passed']} of {burn_data['days_in_month']}")
         
         for category in burn_data['burn_analysis']:
-            print(f"\n📂 {category['category'].upper()}")
+            print(f"\n  {category['category'].upper()}")
             print("-" * 50)
-            print(f"💰 Budget: ₹{category['budget_amount']:,.2f}")
-            print(f"💸 Spent: ₹{category['actual_spending']:,.2f}")
-            print(f"📊 Expected: ₹{category['expected_spending']:,.2f}")
-            print(f"🔥 Burn Rate: {category['burn_rate']:.1f}%")
-            print(f"🔮 Predicted: ₹{category['predicted_spending']:,.2f}")
+            print(f"  Budget:  {category['budget_amount']:,.2f}")
+            print(f"  Spent:  {category['actual_spending']:,.2f}")
+            print(f"  Expected:  {category['expected_spending']:,.2f}")
+            print(f"  Burn Rate: {category['burn_rate']:.1f}%")
+            print(f"  Predicted:  {category['predicted_spending']:,.2f}")
             
             # Burn rate visual
             burn_percentage = min(category['burn_rate'] / 2, 100)  # Scale to 100%
@@ -180,36 +180,36 @@ class BurnRateIndicator:
             filled_length = int(burn_percentage / 5)
             
             if category['status'] == 'CRITICAL':
-                bar = '🔴' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             elif category['status'] == 'HIGH':
-                bar = '🟡' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             elif category['status'] == 'NORMAL':
-                bar = '🟢' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             else:
-                bar = '🔵' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             
             print(f"   {bar} {category['status_color']} {category['burn_rate']:.1f}%")
             
             # Variance
             if category['variance'] > 0:
-                print(f"📈 Over Budget: ₹{category['variance']:,.2f} (+{category['variance_percentage']:.1f}%)")
+                print(f"  Over Budget:  {category['variance']:,.2f} (+{category['variance_percentage']:.1f}%)")
             elif category['variance'] < 0:
-                print(f"📉 Under Budget: ₹{abs(category['variance']):,.2f} ({category['variance_percentage']:.1f}%)")
+                print(f"  Under Budget:  {abs(category['variance']):,.2f} ({category['variance_percentage']:.1f}%)")
             else:
-                print(f"📊 On Track: No variance")
+                print(f"  On Track: No variance")
             
-            print(f"💡 {category['alert']}")
+            print(f"  {category['alert']}")
         
         # Overall summary
         overall = self.get_overall_burn_rate(user_id)
         if overall:
             print(f"\n" + "="*70)
-            print("📊 OVERALL BURN RATE SUMMARY")
+            print("  OVERALL BURN RATE SUMMARY")
             print("="*70)
-            print(f"💰 Total Budget: ₹{overall['total_budget']:,.2f}")
-            print(f"💸 Total Spent: ₹{overall['total_spent']:,.2f}")
-            print(f"🔥 Overall Burn Rate: {overall['overall_burn_rate']:.1f}%")
-            print(f"🔮 Predicted Total: ₹{overall['overall_predicted']:,.2f}")
+            print(f"  Total Budget:  {overall['total_budget']:,.2f}")
+            print(f"  Total Spent:  {overall['total_spent']:,.2f}")
+            print(f"  Overall Burn Rate: {overall['overall_burn_rate']:.1f}%")
+            print(f"  Predicted Total:  {overall['overall_predicted']:,.2f}")
             
             # Overall burn rate visual
             overall_percentage = min(overall['overall_burn_rate'] / 2, 100)
@@ -217,23 +217,23 @@ class BurnRateIndicator:
             filled_length = int(overall_percentage / 3.33)
             
             if overall['overall_status'] == 'CRITICAL':
-                bar = '🔴' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             elif overall['overall_status'] == 'HIGH':
-                bar = '🟡' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             elif overall['overall_status'] == 'NORMAL':
-                bar = '🟢' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             else:
-                bar = '🔵' * filled_length + '⚪' * (bar_length - filled_length)
+                bar = ' ' * filled_length + ' ' * (bar_length - filled_length)
             
             print(f"   {bar}")
             print(f"   {overall['overall_color']} {overall['overall_burn_rate']:.1f}% - {overall['overall_status']}")
             
             if overall['overall_variance'] > 0:
-                print(f"📈 Projected Over Budget: ₹{overall['overall_variance']:,.2f}")
+                print(f"  Projected Over Budget:  {overall['overall_variance']:,.2f}")
             elif overall['overall_variance'] < 0:
-                print(f"📉 Projected Under Budget: ₹{abs(overall['overall_variance']):,.2f}")
+                print(f"  Projected Under Budget:  {abs(overall['overall_variance']):,.2f}")
             
-            print(f"\n💡 {overall['overall_message']}")
+            print(f"\n  {overall['overall_message']}")
     
     def _get_days_in_month(self, month, year):
         """Get number of days in a month"""

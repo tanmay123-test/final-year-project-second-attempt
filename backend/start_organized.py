@@ -27,22 +27,22 @@ def create_app():
     
     # Register blueprints
     app.register_blueprint(auth_bp)
-    print("✅ Authentication blueprint registered (using organized database)")
+    print("  Authentication blueprint registered (using organized database)")
     
     app.register_blueprint(healthcare_bp)
-    print("✅ Healthcare blueprint registered (using organized database)")
+    print("  Healthcare blueprint registered (using organized database)")
     
     app.register_blueprint(housekeeping_bp)
-    print("✅ Housekeeping blueprint registered (using organized database)")
+    print("  Housekeeping blueprint registered (using organized database)")
     
     app.register_blueprint(car_service_bp)
-    print("✅ Car service blueprint registered (using organized database)")
+    print("  Car service blueprint registered (using organized database)")
     
     app.register_blueprint(worker_bp)
-    print("✅ Worker blueprint registered (using organized database)")
+    print("  Worker blueprint registered (using organized database)")
     
     app.register_blueprint(tow_bp)
-    print("✅ Tow truck blueprint registered (using organized database)")
+    print("  Tow truck blueprint registered (using organized database)")
     
     # Health check endpoint
     @app.route('/api/health', methods=['GET'])
@@ -92,13 +92,13 @@ def create_app():
     return app
 
 if __name__ == '__main__':
-    print("🚀 Starting Backend with Organized Database...")
-    print("📊 Database Manager: ✅ Initialized")
-    print("🏛️ Blueprints: ✅ Registered")
-    print("🔗 API Endpoints: ✅ Ready")
-    print("🌐 Server: http://127.0.0.1:5000")
-    print("📊 Health Check: http://127.0.0.1:5000/api/health")
-    print("📊 Database Status: http://127.0.0.1:5000/api/database/status")
+    print("  Starting Backend with Organized Database...")
+    print("  Database Manager:   Initialized")
+    print("   Blueprints:   Registered")
+    print("  API Endpoints:   Ready")
+    print("  Server: http://127.0.0.1:5000")
+    print("  Health Check: http://127.0.0.1:5000/api/health")
+    print("  Database Status: http://127.0.0.1:5000/api/database/status")
     print("\n" + "="*60)
     
     app = create_app()

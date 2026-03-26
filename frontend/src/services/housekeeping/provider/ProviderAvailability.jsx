@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { workerService } from '../../../shared/api';
-import ProviderBottomNav from '../../../components/ProviderBottomNav';
 import './ProviderAvailability.css';
 import { 
   ChevronLeft, Plus, Trash2, Clock, Loader2
@@ -233,7 +232,6 @@ const ProviderAvailability = () => {
         </div>
       </div>
 
-      <ProviderBottomNav />
     </div>
   );
 };

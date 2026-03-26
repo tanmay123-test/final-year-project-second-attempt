@@ -27,7 +27,7 @@ class SubscriptionService:
             current_plan = next((p for p in plans if p['id'] == current_sub['plan_id']), None)
             if current_plan:
                 is_upgrade = plan['price'] > current_plan['price']
-                print(f"🔄 Subscription upgrade: {current_plan['name']} → {plan['name']}")
+                print(f"  Subscription upgrade: {current_plan['name']}   {plan['name']}")
         
         # Create Razorpay order
         order_data = {

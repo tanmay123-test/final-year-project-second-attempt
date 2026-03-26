@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../../frontend/src/context/AuthContext';
 import { housekeepingService } from '../../../../frontend/src/services/api';
-import ProviderBottomNav from '../components/ProviderBottomNav';
 
 const DEFAULT_SIZES = ['Studio', '1 BHK', '2 BHK', '3 BHK', 'Villa'];
 
@@ -271,8 +270,6 @@ const ProviderPricing = () => {
           {message}
         </div>
       )}
-
-      <ProviderBottomNav />
     </div>
   );
 };

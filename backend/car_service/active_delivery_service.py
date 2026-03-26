@@ -129,8 +129,8 @@ class ActiveDeliveryService:
             quantity = delivery[6]
             
             # Calculate earnings
-            fuel_cost = quantity * 100  # ₹100 per liter
-            base_fee = 50  # ₹50 base fee
+            fuel_cost = quantity * 100  #  100 per liter
+            base_fee = 50  #  50 base fee
             emergency_fee = 0  # No emergency fee for normal delivery
             total_bill = fuel_cost + base_fee + emergency_fee
             agent_earning = total_bill * 0.70  # 70% commission

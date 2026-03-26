@@ -120,7 +120,7 @@ class PortfolioAIService:
             insights = self._generate_portfolio_insights(holdings_data, total_value, total_return)
             
             # Store insight
-            self._store_insight(user_id, f"Portfolio analysis completed. Total value: ₹{total_value:.2f}", "portfolio_analysis")
+            self._store_insight(user_id, f"Portfolio analysis completed. Total value:  {total_value:.2f}", "portfolio_analysis")
             
             conn.close()
             
@@ -167,7 +167,7 @@ class PortfolioAIService:
             conn.close()
             
             # Store insight
-            self._store_insight(user_id, f"Added {quantity} shares of {stock_symbol} at ₹{purchase_price}", "portfolio_add")
+            self._store_insight(user_id, f"Added {quantity} shares of {stock_symbol} at  {purchase_price}", "portfolio_add")
             
             return {
                 'success': True,
@@ -260,28 +260,28 @@ class PortfolioAIService:
         
         # Performance insights
         if total_return > 0:
-            insights.append(f"📈 Your portfolio is profitable with ₹{total_return:.2f} total return")
+            insights.append(f"  Your portfolio is profitable with  {total_return:.2f} total return")
         else:
-            insights.append(f"📉 Your portfolio has a loss of ₹{abs(total_return):.2f}")
+            insights.append(f"  Your portfolio has a loss of  {abs(total_return):.2f}")
         
         # Diversification insights
         if len(holdings) == 1:
-            insights.append("⚠️ Your portfolio is concentrated in a single stock. Consider diversifying.")
+            insights.append("   Your portfolio is concentrated in a single stock. Consider diversifying.")
         elif len(holdings) < 5:
-            insights.append("💡 Consider adding more stocks to improve diversification.")
+            insights.append("  Consider adding more stocks to improve diversification.")
         else:
-            insights.append("👍 Good diversification with multiple stocks.")
+            insights.append("  Good diversification with multiple stocks.")
         
         # Top performer
         if holdings:
             top_performer = max(holdings, key=lambda x: x['return_percent'])
             if top_performer['return_percent'] > 10:
-                insights.append(f"🏆 {top_performer['symbol']} is your best performer with {top_performer['return_percent']:.1f}% return")
+                insights.append(f"  {top_performer['symbol']} is your best performer with {top_performer['return_percent']:.1f}% return")
         
         # Risk warning
         total_return_percent = (total_return / (total_value - total_return)) * 100 if (total_value - total_return) > 0 else 0
         if abs(total_return_percent) > 20:
-            insights.append("⚠️ Your portfolio shows high volatility. Consider reviewing your risk tolerance.")
+            insights.append("   Your portfolio shows high volatility. Consider reviewing your risk tolerance.")
         
         return insights
     

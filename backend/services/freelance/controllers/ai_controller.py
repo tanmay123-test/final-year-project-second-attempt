@@ -32,8 +32,8 @@ class AIController:
             if not all([category, experience_level, description]):
                 return jsonify({"error": "Category, experienceLevel, and description are required"}), 400
 
-            system_prompt = "As a freelance market expert, suggest a budget range in INR (₹) for projects."
-            user_message = f"Suggest a budget range in INR (₹) for the following project:\nCategory: {category}\nExperience Level: {experience_level}\nDescription: {description}\n\nProvide the response in JSON format with 'minBudget', 'maxBudget', and 'currency' (INR)."
+            system_prompt = "As a freelance market expert, suggest a budget range in INR ( ) for projects."
+            user_message = f"Suggest a budget range in INR ( ) for the following project:\nCategory: {category}\nExperience Level: {experience_level}\nDescription: {description}\n\nProvide the response in JSON format with 'minBudget', 'maxBudget', and 'currency' (INR)."
             
             response = self.gemini_client.generate_response(user_message, system_prompt=system_prompt)
             
@@ -65,7 +65,7 @@ class AIController:
                 return jsonify({"error": "Title, description, and budget are required"}), 400
 
             system_prompt = "As a project manager, suggest 3-5 milestones for projects."
-            user_message = f"Suggest 3-5 milestones for the following project:\nTitle: {title}\nDescription: {description}\nTotal Budget: ₹{budget}\n\nProvide the response in JSON format as a list of objects with 'name' and 'amount' (sharing the total budget).\nExample: {{\"milestones\": [{{\"name\": \"Initial Design\", \"amount\": 5000}}, ...]}}"
+            user_message = f"Suggest 3-5 milestones for the following project:\nTitle: {title}\nDescription: {description}\nTotal Budget:  {budget}\n\nProvide the response in JSON format as a list of objects with 'name' and 'amount' (sharing the total budget).\nExample: {{\"milestones\": [{{\"name\": \"Initial Design\", \"amount\": 5000}}, ...]}}"
             
             response = self.gemini_client.generate_response(user_message, system_prompt=system_prompt)
             

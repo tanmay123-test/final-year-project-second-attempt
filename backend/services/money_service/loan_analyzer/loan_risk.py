@@ -45,13 +45,13 @@ class LoanRiskAnalyzer:
         
         if dti < 20:
             risk_level = "Safe"
-            risk_color = "🟢"
+            risk_color = " "
         elif dti <= 35:
             risk_level = "Moderate"
-            risk_color = "🟡"
+            risk_color = " "
         else:
             risk_level = "Risky"
-            risk_color = "🔴"
+            risk_color = " "
         
         return {
             'dti_percentage': dti,
@@ -154,13 +154,13 @@ class LoanRiskAnalyzer:
         # Risk classification
         if risk_score < 30:
             risk_level = "Low Risk"
-            risk_color = "🟢"
+            risk_color = " "
         elif risk_score < 60:
             risk_level = "Medium Risk"
-            risk_color = "🟡"
+            risk_color = " "
         else:
             risk_level = "High Risk"
-            risk_color = "🔴"
+            risk_color = " "
         
         return {
             'risk_score': risk_score,
@@ -190,46 +190,46 @@ class LoanRiskAnalyzer:
     @staticmethod
     def display_affordability_analysis(affordability):
         """Display affordability analysis"""
-        print(f"\n💰 AFFORDABILITY CHECK")
+        print(f"\n  AFFORDABILITY CHECK")
         print("-" * 40)
-        print(f"📊 EMI as % of Income: {affordability['emi_percentage']:.1f}%")
-        print(f"🎯 Safe Limit: {affordability['safe_limit']}%")
-        print(f"{'✅' if affordability['is_affordable'] else '❌'} Status: {'Affordable' if affordability['is_affordable'] else 'Not Affordable'}")
+        print(f"  EMI as % of Income: {affordability['emi_percentage']:.1f}%")
+        print(f"  Safe Limit: {affordability['safe_limit']}%")
+        print(f"{' ' if affordability['is_affordable'] else ' '} Status: {'Affordable' if affordability['is_affordable'] else 'Not Affordable'}")
         
         if not affordability['is_affordable']:
-            print(f"⚠️ Warning: {affordability['warning']}")
+            print(f"   Warning: {affordability['warning']}")
     
     @staticmethod
     def display_dti_analysis(dti_analysis):
         """Display DTI analysis"""
-        print(f"\n📊 DEBT-TO-INCOME RATIO ANALYSIS")
+        print(f"\n  DEBT-TO-INCOME RATIO ANALYSIS")
         print("-" * 40)
-        print(f"💳 DTI Ratio: {dti_analysis['dti_percentage']:.1f}%")
-        print(f"{'🟢' if dti_analysis['dti_percentage'] < 20 else '🟡' if dti_analysis['dti_percentage'] <= 35 else '🔴'} Risk Level: {dti_analysis['risk_level']}")
-        print(f"💡 Recommendation: {dti_analysis['recommendation']}")
+        print(f"  DTI Ratio: {dti_analysis['dti_percentage']:.1f}%")
+        print(f"{' ' if dti_analysis['dti_percentage'] < 20 else ' ' if dti_analysis['dti_percentage'] <= 35 else ' '} Risk Level: {dti_analysis['risk_level']}")
+        print(f"  Recommendation: {dti_analysis['recommendation']}")
     
     @staticmethod
     def display_impact_analysis(impact):
         """Display loan impact analysis"""
-        print(f"\n💸 LOAN IMPACT SIMULATION")
+        print(f"\n  LOAN IMPACT SIMULATION")
         print("-" * 40)
-        print(f"💰 Monthly Income: {EMICalculator.format_currency(impact['monthly_income'])}")
-        print(f"📊 Fixed Expenses: {EMICalculator.format_currency(impact['monthly_fixed_expenses'])}")
-        print(f"💵 Disposable Income: {EMICalculator.format_currency(impact['disposable_income'])}")
-        print(f"💳 Loan EMI: {EMICalculator.format_currency(impact['monthly_emi'])}")
-        print(f"{'✅' if impact['is_sustainable'] else '❌'} Remaining Balance: {EMICalculator.format_currency(impact['remaining_after_emi'])}")
-        print(f"📈 Impact on Disposable: {impact['impact_percentage']:.1f}%")
+        print(f"  Monthly Income: {EMICalculator.format_currency(impact['monthly_income'])}")
+        print(f"  Fixed Expenses: {EMICalculator.format_currency(impact['monthly_fixed_expenses'])}")
+        print(f"  Disposable Income: {EMICalculator.format_currency(impact['disposable_income'])}")
+        print(f"  Loan EMI: {EMICalculator.format_currency(impact['monthly_emi'])}")
+        print(f"{' ' if impact['is_sustainable'] else ' '} Remaining Balance: {EMICalculator.format_currency(impact['remaining_after_emi'])}")
+        print(f"  Impact on Disposable: {impact['impact_percentage']:.1f}%")
     
     @staticmethod
     def display_risk_analysis(risk_analysis):
         """Display comprehensive risk analysis"""
-        print(f"\n🎯 LOAN RISK SCORE")
+        print(f"\n  LOAN RISK SCORE")
         print("-" * 40)
-        print(f"{'🟢' if risk_analysis['risk_score'] < 30 else '🟡' if risk_analysis['risk_score'] < 60 else '🔴'} Risk Score: {risk_analysis['risk_score']:.1f}/100")
+        print(f"{' ' if risk_analysis['risk_score'] < 30 else ' ' if risk_analysis['risk_score'] < 60 else ' '} Risk Score: {risk_analysis['risk_score']:.1f}/100")
         print(f"Risk Level: {risk_analysis['risk_level']}")
-        print(f"💡 Recommendation: {risk_analysis['recommendation']}")
+        print(f"  Recommendation: {risk_analysis['recommendation']}")
         
-        print(f"\n📊 RISK FACTORS:")
+        print(f"\n  RISK FACTORS:")
         print(f"   DTI Component: {risk_analysis['factors']['dti_component']:.1f} points")
         print(f"   Disposable Component: {risk_analysis['factors']['disposable_component']:.1f} points")
         print(f"   Impact Component: {risk_analysis['factors']['impact_component']:.1f} points")

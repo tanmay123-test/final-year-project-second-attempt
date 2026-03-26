@@ -60,6 +60,8 @@ class CarServiceWorkerDB:
                     is_online BOOLEAN DEFAULT FALSE,
                     is_busy BOOLEAN DEFAULT FALSE,
                     service_radius INTEGER DEFAULT 10,
+                    bio TEXT,
+                    specialization TEXT,
                     current_city TEXT,
                     last_status_update TEXT,
                     cooldown_until TEXT,
@@ -602,6 +604,44 @@ class CarServiceWorkerDB:
                 ORDER BY created_at DESC
             """)
             return [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            raise
+        finally:
+            cursor.close()
+            conn.close()
+
+    def update_worker_profile(self, worker_id: int, data: Dict) -> bool:
+        """Update worker profile information"""
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor()
+        try:
+            # Fields that can be updated
+            allowed_fields = [
+                'name', 'phone', 'age', 'city', 'address', 
+                'experience', 'skills', 'bio', 'specialization',
+                'service_radius', 'profile_photo'
+            ]
+            
+            update_fields = []
+            params = []
+            
+            for field in allowed_fields:
+                if field in data:
+                    update_fields.append(f"{field} = %s")
+                    params.append(data[field])
+            
+            if not update_fields:
+                return False
+                
+            query = f"UPDATE car_service_workers SET {', '.join(update_fields)} WHERE id = %s"
+            params.append(worker_id)
+            
+            cursor.execute(query, tuple(params))
+            conn.commit()
+            return cursor.rowcount > 0
         except Exception as e:
             conn.rollback()
             print(f"DB Error: {e}")

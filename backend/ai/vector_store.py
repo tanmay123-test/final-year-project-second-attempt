@@ -54,14 +54,14 @@ class VectorStore:
             
             if response.status_code == 200:
                 collection_id = response.json().get("id", "")
-                print(f"✅ Created FAISS collection: {collection_id}")
+                print(f"  Created FAISS collection: {collection_id}")
                 return True
             else:
-                print(f"❌ Failed to create FAISS collection: {response.status_code}")
+                print(f"  Failed to create FAISS collection: {response.status_code}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Error initializing vector store: {str(e)}")
+            print(f"  Error initializing vector store: {str(e)}")
             return False
     
     def add_documents_to_vector_store(self, documents: List[Dict[str, Any]], collection_id: Optional[str] = None):
@@ -98,14 +98,14 @@ class VectorStore:
             response = self.httpx.post(url, json=payload, headers=headers)
             
             if response.status_code == 200:
-                print(f"✅ Added {len(faiss_documents)} documents to FAISS collection")
+                print(f"  Added {len(faiss_documents)} documents to FAISS collection")
                 return True
             else:
-                print(f"❌ Failed to add documents: {response.status_code}")
+                print(f"  Failed to add documents: {response.status_code}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Error adding documents to vector store: {str(e)}")
+            print(f"  Error adding documents to vector store: {str(e)}")
             return False
     
     def search_knowledge(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import api, { housekeepingService } from '../../../shared/api';
 import { useAuth } from '../../../context/AuthContext';
 import { housekeepingSocket } from '../../housekeepingSocket';
-import ProviderBottomNav from '../../../components/ProviderBottomNav';
 import OtpModal from '../../../components/OtpModal';
 
 const ProviderDashboard = () => {
@@ -483,8 +482,6 @@ const ProviderDashboard = () => {
           </div>
         )}
       </div>
-
-      <ProviderBottomNav />
 
       {/* OTP Modal */}
       {otpModal.isOpen && (

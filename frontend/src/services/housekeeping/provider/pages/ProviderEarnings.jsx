@@ -1,6 +1,6 @@
 import React from 'react';
-import { DollarSign, TrendingUp, Calendar } from 'lucide-react';
-import ProviderBottomNav from '../components/ProviderBottomNav';
+import { Wallet, TrendingUp, Calendar, ChevronRight } from 'lucide-react';
+import { useAuth } from '../../../../frontend/src/context/AuthContext';
 
 const ProviderEarnings = () => {
   const earnings = {
@@ -62,7 +62,6 @@ const ProviderEarnings = () => {
         </div>
       </div>
 
-      <ProviderBottomNav />
     </div>
   );
 };

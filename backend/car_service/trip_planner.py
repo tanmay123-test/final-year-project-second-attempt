@@ -43,17 +43,17 @@ class TripPlanner:
             if data and len(data) > 0:
                 lat = float(data[0]['lat'])
                 lon = float(data[0]['lon'])
-                print(f"📍 Found coordinates for '{place_name}': {lat}, {lon}")
+                print(f"  Found coordinates for '{place_name}': {lat}, {lon}")
                 return (lat, lon)
             else:
-                print(f"❌ Location not found: '{place_name}'")
+                print(f"  Location not found: '{place_name}'")
                 return None
                 
         except requests.exceptions.RequestException as e:
-            print(f"❌ Network error while getting coordinates for '{place_name}': {e}")
+            print(f"  Network error while getting coordinates for '{place_name}': {e}")
             return None
         except (ValueError, KeyError) as e:
-            print(f"❌ Error parsing coordinates for '{place_name}': {e}")
+            print(f"  Error parsing coordinates for '{place_name}': {e}")
             return None
     
     def get_route_distance_duration(self, start_coords: Tuple[float, float], 
@@ -86,8 +86,8 @@ class TripPlanner:
             response = requests.get(url, params=params, headers=headers, timeout=10)
             
             # Debug: Print the actual response
-            print(f"🔍 OSRM API Status: {response.status_code}")
-            print(f"🔍 OSRM Response: {response.text[:200]}...")
+            print(f"  OSRM API Status: {response.status_code}")
+            print(f"  OSRM Response: {response.text[:200]}...")
             
             response.raise_for_status()
             
@@ -95,8 +95,8 @@ class TripPlanner:
             try:
                 data = response.json()
             except ValueError as e:
-                print(f"❌ Invalid JSON response from OSRM: {e}")
-                print(f"🔍 Raw response: {response.text}")
+                print(f"  Invalid JSON response from OSRM: {e}")
+                print(f"  Raw response: {response.text}")
                 return None
             
             if data.get('routes') and len(data['routes']) > 0:
@@ -107,27 +107,27 @@ class TripPlanner:
                 distance_km = distance_meters / 1000  # Convert to km
                 duration_hours = duration_seconds / 3600  # Convert to hours
                 
-                print(f"🛣️ Route found: {distance_km:.2f} km, {duration_hours:.2f} hours")
+                print(f"   Route found: {distance_km:.2f} km, {duration_hours:.2f} hours")
                 
                 return {
                     'distance_km': distance_km,
                     'duration_hours': duration_hours
                 }
             else:
-                print("❌ No route found between the specified points")
-                print("🔄 Using fallback distance estimation...")
+                print("  No route found between the specified points")
+                print("  Using fallback distance estimation...")
                 return self._fallback_distance_calculation(start_coords, end_coords)
                 
         except requests.exceptions.RequestException as e:
-            print(f"❌ Network error while getting route: {e}")
-            print("🔄 Using fallback distance estimation...")
+            print(f"  Network error while getting route: {e}")
+            print("  Using fallback distance estimation...")
             
             # Fallback: Use haversine formula for straight-line distance
             # and apply a 1.3 factor for road distance
             return self._fallback_distance_calculation(start_coords, end_coords)
         except (ValueError, KeyError) as e:
-            print(f"❌ Error parsing route data: {e}")
-            print("🔄 Using fallback distance estimation...")
+            print(f"  Error parsing route data: {e}")
+            print("  Using fallback distance estimation...")
             return self._fallback_distance_calculation(start_coords, end_coords)
     
     def _fallback_distance_calculation(self, start_coords: Tuple[float, float], 
@@ -166,7 +166,7 @@ class TripPlanner:
         # Estimate duration (assuming average speed of 60 km/h)
         duration_hours = road_distance / 60
         
-        print(f"🔄 Fallback: Estimated {road_distance:.2f} km, {duration_hours:.2f} hours")
+        print(f"  Fallback: Estimated {road_distance:.2f} km, {duration_hours:.2f} hours")
         
         return {
             'distance_km': road_distance,
@@ -242,7 +242,7 @@ class TripPlanner:
         Returns:
             Complete trip plan dictionary or None if failed
         """
-        print(f"\n🚗 Planning trip from '{start}' to '{destination}'")
+        print(f"\n  Planning trip from '{start}' to '{destination}'")
         print("="*50)
         
         # Get coordinates
@@ -287,7 +287,7 @@ class TripPlanner:
             'end_coords': end_coords
         }
         
-        print(f"✅ Trip plan calculated successfully!")
+        print(f"  Trip plan calculated successfully!")
         return trip_plan
 
 

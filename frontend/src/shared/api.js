@@ -16,7 +16,8 @@ export const apiEvents = new EventTarget();
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    // Check for standard user token first, then worker token
+    const token = localStorage.getItem('token') || localStorage.getItem('workerToken') || localStorage.getItem('automobileExpertToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

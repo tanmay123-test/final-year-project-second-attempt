@@ -317,7 +317,7 @@ class AIGroupService:
             """, (group_id, self.ai_user_id, "ai_assistant", datetime.utcnow()))
             
             # Send welcome message
-            welcome_msg = "🤖 Hello! I'm your financial education assistant. I'm here to help explain financial concepts and answer your questions about investing and markets. Remember, I provide educational information only, not financial advice!"
+            welcome_msg = "  Hello! I'm your financial education assistant. I'm here to help explain financial concepts and answer your questions about investing and markets. Remember, I provide educational information only, not financial advice!"
             
             cursor.execute("""
             INSERT INTO group_messages (group_id, user_id, message, message_type, created_at)

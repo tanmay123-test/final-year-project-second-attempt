@@ -37,12 +37,12 @@ SAFETY_KEYWORDS = [
 def is_emergency(text: str) -> bool:
     text_lower = text.lower()
 
-    # 🛡️ Step 1 — Safety keyword backup
+    #    Step 1   Safety keyword backup
     for word in SAFETY_KEYWORDS:
         if word in text_lower:
             return True
 
-    # 🤖 Step 2 — Ask AI severity dynamically
+    #   Step 2   Ask AI severity dynamically
     try:
         prompt = f"""
 Is this a medical emergency?

@@ -12,7 +12,7 @@ def car_profile_screen(token):
     """Display and manage car service profile"""
     while True:
         print("\n" + "="*60)
-        print("👤 CAR SERVICE PROFILE")
+        print("  CAR SERVICE PROFILE")
         print("="*60)
         
         # Get current profile
@@ -22,15 +22,15 @@ def car_profile_screen(token):
                 profile = response.json()
                 display_profile(profile)
             else:
-                print("❌ Failed to load profile")
+                print("  Failed to load profile")
                 return
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"  Error: {e}")
             return
         
         print("\nOptions:")
-        print("1. ✏️ Edit Profile")
-        print("2. ⬅️ Back")
+        print("1.    Edit Profile")
+        print("2.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -39,16 +39,16 @@ def car_profile_screen(token):
         elif choice == "2":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def display_profile(profile):
     """Display user profile information"""
-    print("\n📍 LOCATION")
+    print("\n  LOCATION")
     print("-" * 30)
     print(f"City: {profile.get('city', 'Not set')}")
     print(f"Address: {profile.get('address', 'Not set')}")
     
-    print("\n🚨 EMERGENCY CONTACT")
+    print("\n  EMERGENCY CONTACT")
     print("-" * 30)
     print(f"Name: {profile.get('emergency_contact_name', 'Not set')}")
     print(f"Phone: {profile.get('emergency_contact_phone', 'Not set')}")
@@ -56,7 +56,7 @@ def display_profile(profile):
 def edit_profile(token):
     """Edit user profile information"""
     print("\n" + "="*60)
-    print("✏️ EDIT PROFILE")
+    print("   EDIT PROFILE")
     print("="*60)
     
     print("Leave blank to keep current value")
@@ -76,7 +76,7 @@ def edit_profile(token):
     
     # Validate inputs
     if not city or not address or not emergency_name or not emergency_phone:
-        print("❌ All fields are required")
+        print("  All fields are required")
         input("\nPress Enter to continue...")
         return
     
@@ -96,13 +96,13 @@ def edit_profile(token):
         )
         
         if response.status_code == 200:
-            print("✅ Profile updated successfully")
+            print("  Profile updated successfully")
         else:
-            print("❌ Failed to update profile")
+            print("  Failed to update profile")
             if response.status_code == 401:
-                print("❌ Please login again")
+                print("  Please login again")
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")

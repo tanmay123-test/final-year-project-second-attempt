@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Bell, MapPin, Star, Clock, X } from 'lucide-react';
-import HousekeepingNavigation from '../components/HousekeepingNavigation';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
@@ -101,7 +100,7 @@ const UserHome = () => {
   };
 
   return (
-    <div className="hk-page-container" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="hk-page-container" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
       {/* Header Section */}
       <div style={{ backgroundColor: '#8E44AD', padding: '20px 20px 40px 20px', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px', color: 'white' }}>
         <div className="breadcrumbs" style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', marginBottom: '16px' }}>

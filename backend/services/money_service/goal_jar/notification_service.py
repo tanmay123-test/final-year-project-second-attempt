@@ -65,7 +65,7 @@ class NotificationService:
             achievement_date = target_date
             self.goal_engine.schedule_goal_notification(
                 user_id, goal_id, 'goal_achievement',
-                f"🎉 Congratulations! You've achieved your goal '{goal['goal_name']}'! Total saved: ₹{goal['target_amount']:.2f}",
+                f"  Congratulations! You've achieved your goal '{goal['goal_name']}'! Total saved:  {goal['target_amount']:.2f}",
                 achievement_date.strftime('%Y-%m-%d')
             )
         
@@ -132,9 +132,9 @@ class NotificationService:
                         )
                         
                         if success:
-                            print(f"✅ Email sent to {user_email} for notification {notification['id']}")
+                            print(f"  Email sent to {user_email} for notification {notification['id']}")
                         else:
-                            print(f"❌ Failed to send email to {user_email}")
+                            print(f"  Failed to send email to {user_email}")
                     
                     # Mark as sent
                     self.goal_engine.mark_notification_sent(notification['id'])
@@ -163,14 +163,14 @@ class NotificationService:
                 # Urgent notification
                 self.goal_engine.schedule_goal_notification(
                     user_id, goal['id'], 'urgent_deadline',
-                    f"🔴 URGENT: Your goal '{goal['goal_name']}' deadline is in {days_remaining} days!",
+                    f"  URGENT: Your goal '{goal['goal_name']}' deadline is in {days_remaining} days!",
                     datetime.now().strftime('%Y-%m-%d')
                 )
             elif days_remaining <= 14:
                 # Warning notification
                 self.goal_engine.schedule_goal_notification(
                     user_id, goal['id'], 'deadline_warning',
-                    f"⚠️ Reminder: Your goal '{goal['goal_name']}' deadline is in {days_remaining} days.",
+                    f"   Reminder: Your goal '{goal['goal_name']}' deadline is in {days_remaining} days.",
                     datetime.now().strftime('%Y-%m-%d')
                 )
         
@@ -199,7 +199,7 @@ class NotificationService:
                 if progress >= milestone and progress < milestone + 5:  # Within 5% of milestone
                     self.goal_engine.schedule_goal_notification(
                         user_id, goal['id'], 'milestone',
-                        f"🎯 Great progress! You've reached {milestone}% of your goal '{goal['goal_name']}'!",
+                        f"  Great progress! You've reached {milestone}% of your goal '{goal['goal_name']}'!",
                         datetime.now().strftime('%Y-%m-%d')
                     )
         

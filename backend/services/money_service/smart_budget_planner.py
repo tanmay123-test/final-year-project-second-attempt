@@ -19,16 +19,16 @@ class SmartBudgetPlanner:
         """Main menu for Smart Budget Planner"""
         while True:
             print("\n" + "="*70)
-            print("🎯 SMART BUDGET PLANNER - U-PLAN FINANCIAL SYSTEM")
+            print("  SMART BUDGET PLANNER - U-PLAN FINANCIAL SYSTEM")
             print("="*70)
-            print("1. 📋 Create Financial Plan (U-Plan)")
-            print("2. 💰 Budget Status & Monitoring")
-            print("3. 🔥 Burn Rate Analysis")
-            print("4. 📊 Monthly Spending Report")
-            print("5. 🏆 Budget Gamification & Rewards")
-            print("6. 💵 Leftover Budget Management")
-            print("7. 📈 Dynamic Budget Adjustments")
-            print("8. ⬅️ Back to Money Service")
+            print("1.   Create Financial Plan (U-Plan)")
+            print("2.   Budget Status & Monitoring")
+            print("3.   Burn Rate Analysis")
+            print("4.   Monthly Spending Report")
+            print("5.   Budget Gamification & Rewards")
+            print("6.   Leftover Budget Management")
+            print("7.   Dynamic Budget Adjustments")
+            print("8.    Back to Money Service")
             
             choice = input("\nSelect option: ").strip()
             
@@ -49,7 +49,7 @@ class SmartBudgetPlanner:
             elif choice == "8":
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
             
             input("\nPress Enter to continue...")
     
@@ -59,17 +59,17 @@ class SmartBudgetPlanner:
         
         if result:
             plan, allocation, category_budgets = result
-            print(f"\n✅ Financial plan created successfully!")
-            print(f"💡 Your budgets are now active and being monitored")
+            print(f"\n  Financial plan created successfully!")
+            print(f"  Your budgets are now active and being monitored")
             
             # Show summary
             summary = self.uplan_engine.get_financial_plan_summary(user_id)
             if summary:
-                print(f"\n📊 Plan Summary:")
-                print(f"   💰 Monthly Income: ₹{summary['plan']['monthly_income']:,.2f}")
-                print(f"   💸 Fixed Expenses: ₹{summary['plan']['fixed_expenses_total']:,.2f}")
-                print(f"   💵 Disposable Income: ₹{summary['plan']['disposable_income']:,.2f}")
-                print(f"   🎯 Savings Target: ₹{summary['plan']['savings_target']:,.2f}")
+                print(f"\n  Plan Summary:")
+                print(f"     Monthly Income:  {summary['plan']['monthly_income']:,.2f}")
+                print(f"     Fixed Expenses:  {summary['plan']['fixed_expenses_total']:,.2f}")
+                print(f"     Disposable Income:  {summary['plan']['disposable_income']:,.2f}")
+                print(f"     Savings Target:  {summary['plan']['savings_target']:,.2f}")
     
     def _show_budget_status(self, user_id):
         """Show comprehensive budget status"""
@@ -83,7 +83,7 @@ class SmartBudgetPlanner:
         """Show monthly spending report"""
         # Ask for month/year
         current_date = datetime.now()
-        print(f"\n📅 Generate report for which month?")
+        print(f"\n  Generate report for which month?")
         print(f"Press Enter for current month ({current_date.strftime('%B %Y')})")
         
         month_input = input("Month (e.g., March): ").strip()
@@ -101,12 +101,12 @@ class SmartBudgetPlanner:
     def _manage_leftover_budgets(self, user_id):
         """Manage leftover budgets"""
         print(f"\n" + "="*50)
-        print("💵 LEFTOVER BUDGET MANAGEMENT")
+        print("  LEFTOVER BUDGET MANAGEMENT")
         print("="*50)
-        print("1. 📋 Check Monthly Leftovers")
-        print("2. 🎯 View Goal Jars")
-        print("3. 💡 Get Goal Suggestions")
-        print("4. ⬅️ Back")
+        print("1.   Check Monthly Leftovers")
+        print("2.   View Goal Jars")
+        print("3.   Get Goal Suggestions")
+        print("4.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -121,10 +121,10 @@ class SmartBudgetPlanner:
         """Manage goal jars"""
         self.leftover_manager.display_goal_jars(user_id)
         
-        print(f"\n🎯 GOAL JAR ACTIONS:")
+        print(f"\n  GOAL JAR ACTIONS:")
         print("1. Create New Goal Jar")
         print("2. Add Money to Goal Jar")
-        print("3. ⬅️ Back")
+        print("3.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -138,33 +138,33 @@ class SmartBudgetPlanner:
         goal_jars = self.leftover_manager.get_goal_jars_status(user_id)
         
         if not goal_jars:
-            print("📭 No goal jars found. Create one first!")
+            print("  No goal jars found. Create one first!")
             return
         
-        print(f"\n📋 Select Goal Jar:")
+        print(f"\n  Select Goal Jar:")
         for i, jar in enumerate(goal_jars, 1):
-            print(f"{i}. {jar['goal_name']} (₹{jar['current_amount']:,.2f}/₹{jar['target_amount']:,.2f})")
+            print(f"{i}. {jar['goal_name']} ( {jar['current_amount']:,.2f}/ {jar['target_amount']:,.2f})")
         
         try:
             choice = int(input("\nSelect goal jar: ")) - 1
             if 0 <= choice < len(goal_jars):
                 jar = goal_jars[choice]
                 try:
-                    amount = float(input(f"💰 Amount to add to {jar['goal_name']}: ₹"))
+                    amount = float(input(f"  Amount to add to {jar['goal_name']}:  "))
                     if amount > 0:
                         success = self.leftover_manager.db.update_goal_jar(user_id, jar['goal_name'], amount)
                         if success:
-                            print(f"✅ Added ₹{amount:.2f} to {jar['goal_name']}")
+                            print(f"  Added  {amount:.2f} to {jar['goal_name']}")
                         else:
-                            print("❌ Failed to add amount")
+                            print("  Failed to add amount")
                     else:
-                        print("❌ Amount must be greater than 0")
+                        print("  Amount must be greater than 0")
                 except ValueError:
-                    print("❌ Invalid amount")
+                    print("  Invalid amount")
             else:
-                print("❌ Invalid selection")
+                print("  Invalid selection")
         except ValueError:
-            print("❌ Invalid selection")
+            print("  Invalid selection")
     
     def _show_dynamic_adjustments(self, user_id):
         """Show dynamic budget adjustments"""

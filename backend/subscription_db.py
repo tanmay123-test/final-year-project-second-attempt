@@ -109,7 +109,7 @@ class SubscriptionDB:
         if not subscription:
             # For demo/testing: Allow booking even without subscription
             # In production, you might want to require doctors to have subscriptions
-            print(f"⚠️ Doctor {worker_id} has no subscription, allowing booking for demo")
+            print(f"   Doctor {worker_id} has no subscription, allowing booking for demo")
             return True, "Demo mode - No subscription required"
         
         max_appointments = subscription['max_appointments']

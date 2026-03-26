@@ -162,11 +162,18 @@ const BookingFlow = () => {
     setLoading(true);
     setError(null);
     try {
+      // Ensure date and time are set for instant booking if not picked
+      const finalFormData = { ...formData };
+      if (bookingType === 'instant') {
+          if (!finalFormData.date) finalFormData.date = new Date().toISOString().split('T')[0];
+          if (!finalFormData.time) finalFormData.time = 'Instant'; // Special marker for backend
+      }
+
       const res = await housekeepingService.checkAvailability({
         service_type: selectedService.name,
         worker_id: selectedWorker?.id,
         booking_type: bookingType,
-        ...formData
+        ...finalFormData
       });
       
       // If a worker is already selected, we don't need to fetch a list of recommended workers
@@ -376,18 +383,14 @@ const BookingFlow = () => {
              {/* Instant Card */}
             <div 
               className={`type-card ${bookingType === 'instant' ? 'active' : ''}`}
-              onClick={() => {
-                  if (selectedWorker && !selectedWorker.is_online) return;
-                  setBookingType('instant');
-              }}
+              onClick={() => setBookingType('instant')}
               style={{
                   flex: 1,
                   border: bookingType === 'instant' ? '2px solid #8E44AD' : '1px solid #E5E7EB',
                   borderRadius: '12px',
                   padding: '24px',
-                  cursor: (selectedWorker && !selectedWorker.is_online) ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   backgroundColor: bookingType === 'instant' ? '#F3E5F5' : 'white',
-                  opacity: (selectedWorker && !selectedWorker.is_online) ? 0.6 : 1,
                   textAlign: 'center',
                   transition: 'all 0.2s',
                   position: 'relative'
@@ -463,21 +466,18 @@ const BookingFlow = () => {
           </div>
 
           <button 
-             className="secondary-btn"
-             onClick={() => {
-                 setLoading(true);
-                 setTimeout(() => {
-                     setLoading(false);
-                     alert("Availability confirmed!");
-                 }, 800);
-             }}
+             className="primary-btn"
+             onClick={handleCheckAvailability}
+             disabled={loading || !formData.address}
              style={{
                  width: '100%',
                  marginBottom: '24px',
-                 justifyContent: 'center'
+                 justifyContent: 'center',
+                 height: '56px',
+                 fontSize: '1.1rem'
              }}
           >
-             Check Availability
+             {loading ? <Loader2 className="spinner" /> : 'Check Availability'}
           </button>
 
           <div className="form-actions">

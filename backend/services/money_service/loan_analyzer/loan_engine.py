@@ -227,24 +227,29 @@ class LoanEngine:
         """Get overall loan recommendation"""
         if not affordability['is_affordable']:
             return "❌ NOT RECOMMENDED: Loan EMI exceeds 30% of monthly income"
+
         if risk_analysis['risk_score'] > 70:
             return "⚠️ HIGH RISK: Consider reducing loan amount or improving financial position"
+
         if dti_analysis['dti_percentage'] > 35:
             return "⚠️ MODERATE RISK: Monitor debt levels carefully"
+
         if risk_analysis['risk_score'] < 30:
             return "✅ RECOMMENDED: Low risk loan within affordable limits"
-        return "🤔 CONDITIONAL: Proceed with caution and monitor finances"
 
+        return "🤔 CONDITIONAL: Proceed with caution and monitor finances"
     def display_comprehensive_analysis(self, analysis):
         """Display complete loan analysis"""
         print("\n" + "="*80)
-        print("🏦 COMPREHENSIVE LOAN ANALYSIS")
+        print("  COMPREHENSIVE LOAN ANALYSIS")
         print("="*80)
         EMICalculator.display_loan_summary(analysis['loan_details'])
         LoanRiskAnalyzer.display_affordability_analysis(analysis['affordability'])
         LoanRiskAnalyzer.display_dti_analysis(analysis['dti_analysis'])
         LoanRiskAnalyzer.display_impact_analysis(analysis['impact_analysis'])
         LoanRiskAnalyzer.display_risk_analysis(analysis['risk_analysis'])
+
+        # Overall Recommendation
         print(f"\n🎯 OVERALL RECOMMENDATION:")
         print("-" * 40)
         print(analysis['recommendation'])

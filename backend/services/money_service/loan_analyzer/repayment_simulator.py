@@ -178,7 +178,7 @@ class RepaymentSimulator:
     def display_loan_comparison(comparison):
         """Display loan comparison results"""
         print("\n" + "="*80)
-        print("📊 LOAN COMPARISON ANALYSIS")
+        print("  LOAN COMPARISON ANALYSIS")
         print("="*80)
         
         print(f"\n{'LOAN 1':^40} {'LOAN 2':^40}")
@@ -200,39 +200,39 @@ class RepaymentSimulator:
         print(f"{'Total: ' + EMICalculator.format_currency(loan1['total_repayment']):^40} {'Total: ' + EMICalculator.format_currency(loan2['total_repayment']):^40}")
         
         print("\n" + "="*80)
-        print(f"🏆 RECOMMENDATION: {comparison['recommendation']}")
-        print(f"💰 Total Savings: {EMICalculator.format_currency(comparison['savings'])}")
+        print(f"  RECOMMENDATION: {comparison['recommendation']}")
+        print(f"  Total Savings: {EMICalculator.format_currency(comparison['savings'])}")
         print("="*80)
     
     @staticmethod
     def display_early_repayment_analysis(analysis):
         """Display early repayment analysis"""
         print("\n" + "="*70)
-        print("⚡ EARLY REPAYMENT SIMULATION")
+        print("  EARLY REPAYMENT SIMULATION")
         print("="*70)
-        print(f"💳 Original EMI: {EMICalculator.format_currency(analysis['original_emi'])}")
-        print(f"💰 Extra Payment: {EMICalculator.format_currency(analysis['extra_payment'])}")
-        print(f"💳 New EMI: {EMICalculator.format_currency(analysis['new_emi'])}")
+        print(f"  Original EMI: {EMICalculator.format_currency(analysis['original_emi'])}")
+        print(f"  Extra Payment: {EMICalculator.format_currency(analysis['extra_payment'])}")
+        print(f"  New EMI: {EMICalculator.format_currency(analysis['new_emi'])}")
         print("-" * 70)
-        print(f"📅 Original Tenure: {analysis['new_tenure'] + analysis['months_saved']:.1f} months")
-        print(f"📅 New Tenure: {analysis['new_tenure']:.1f} months")
-        print(f"⏰ Months Saved: {analysis['months_saved']:.1f}")
+        print(f"  Original Tenure: {analysis['new_tenure'] + analysis['months_saved']:.1f} months")
+        print(f"  New Tenure: {analysis['new_tenure']:.1f} months")
+        print(f"  Months Saved: {analysis['months_saved']:.1f}")
         print("-" * 70)
-        print(f"💸 Original Interest: {EMICalculator.format_currency(analysis['original_interest'])}")
-        print(f"💸 New Interest: {EMICalculator.format_currency(analysis['new_interest'])}")
-        print(f"💰 Interest Saved: {EMICalculator.format_currency(analysis['interest_saved'])}")
-        print(f"🎉 Total Savings: {EMICalculator.format_currency(analysis['total_savings'])}")
+        print(f"  Original Interest: {EMICalculator.format_currency(analysis['original_interest'])}")
+        print(f"  New Interest: {EMICalculator.format_currency(analysis['new_interest'])}")
+        print(f"  Interest Saved: {EMICalculator.format_currency(analysis['interest_saved'])}")
+        print(f"  Total Savings: {EMICalculator.format_currency(analysis['total_savings'])}")
         print("="*70)
     
     @staticmethod
     def display_repayment_schedule(schedule, show_all=False):
         """Display repayment schedule"""
         if not schedule:
-            print("📭 No schedule available")
+            print("  No schedule available")
             return
         
         print("\n" + "="*80)
-        print("📋 REPAYMENT SCHEDULE")
+        print("  REPAYMENT SCHEDULE")
         print("="*80)
         print(f"{'Month':<8} {'Payment':<12} {'Principal':<12} {'Interest':<12} {'Balance':<12} {'Cumulative Interest':<18}")
         print("-" * 80)

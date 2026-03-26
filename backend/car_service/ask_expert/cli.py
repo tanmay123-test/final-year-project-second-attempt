@@ -8,7 +8,7 @@ def ask_expert_flow(token, user_id):
     headers = {"Authorization": f"Bearer {token}"}
     r = requests.get(f"{API}/api/car/expert/online-experts", headers=headers)
     if r.status_code != 200:
-        print("❌ Failed to load experts")
+        print("  Failed to load experts")
         return
     experts = r.json().get("experts", [])
     print("\nAVAILABLE AUTOMOBILE EXPERTS")
@@ -22,7 +22,7 @@ def ask_expert_flow(token, user_id):
         print(f"Rating: {e.get('rating',0)}")
     sel = input("\nSelect expert number: ").strip()
     if not sel.isdigit() or int(sel) < 1 or int(sel) > len(experts):
-        print("❌ Invalid selection")
+        print("  Invalid selection")
         return
     expert = experts[int(sel) - 1]
     expert_id = expert["id"]
@@ -32,17 +32,17 @@ def ask_expert_flow(token, user_id):
     use_files = False
     if img_path.lower() != "skip" and img_path != "":
         if not os.path.isfile(img_path):
-            print("❌ File does not exist, skipping image.")
+            print("  File does not exist, skipping image.")
         else:
             try:
                 files = {"images": open(img_path, "rb")}
                 use_files = True
             except Exception:
-                print("❌ Could not open file, skipping image.")
+                print("  Could not open file, skipping image.")
     print("\nDescribe your problem:")
     desc = input("> ").strip()
     if not desc:
-        print("❌ Problem description is required")
+        print("  Problem description is required")
         if files and use_files:
             files["images"].close()
         return
@@ -53,7 +53,7 @@ def ask_expert_flow(token, user_id):
     else:
         resp = requests.post(f"{API}/api/car/expert/request", headers=headers, json=data)
     if resp.status_code not in (200, 201):
-        print("❌ Failed to create expert request")
+        print("  Failed to create expert request")
         return
     request_id = resp.json().get("request_id")
     print("\nRequest sent successfully.")
@@ -73,11 +73,11 @@ def ask_expert_flow(token, user_id):
                     prefix = "You" if m.get("sender_type") == "USER" else "Expert"
                     print(f"{prefix}: {m.get('message','')}")
             else:
-                print("❌ Failed to load messages")
+                print("  Failed to load messages")
         elif choice == "2":
             msg = input("You: ").strip()
             if not msg:
-                print("❌ Message cannot be empty")
+                print("  Message cannot be empty")
                 continue
             pr = requests.post(
                 f"{API}/api/car/expert/message",
@@ -85,7 +85,7 @@ def ask_expert_flow(token, user_id):
                 json={"request_id": request_id, "message": msg},
             )
             if pr.status_code not in (200, 201):
-                print("❌ Failed to send message")
+                print("  Failed to send message")
         elif choice == "3":
             sr = requests.get(f"{API}/api/car/expert/request/{request_id}", headers=headers)
             if sr.status_code == 200:
@@ -96,9 +96,9 @@ def ask_expert_flow(token, user_id):
                 if req.get("status") == "COMPLETED":
                     print("Consultation completed")
             else:
-                print("❌ Failed to load request status")
+                print("  Failed to load request status")
         elif choice == "4":
             break
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 

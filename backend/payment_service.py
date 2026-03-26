@@ -134,7 +134,7 @@ class PaymentService:
         """
         # Skip Razorpay verification for test payments
         if razorpay_payment_id.startswith('test_payment_'):
-            print(f"⚠️ Skipping Razorpay verification for test payment: {razorpay_payment_id}")
+            print(f"   Skipping Razorpay verification for test payment: {razorpay_payment_id}")
             return True
             
         try:

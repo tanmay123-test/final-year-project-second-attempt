@@ -48,7 +48,7 @@ def get_performance():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get performance error: {e}")
+        print(f"  Get performance error: {e}")
         return jsonify({"error": "Failed to get performance"}), 500
 
 @performance_bp.route("/api/car/mechanic/report-incident", methods=["POST"])
@@ -101,7 +101,7 @@ def report_incident():
         }), 200
         
     except Exception as e:
-        print(f"❌ Report incident error: {e}")
+        print(f"  Report incident error: {e}")
         return jsonify({"error": "Failed to report incident"}), 500
 
 @performance_bp.route("/api/car/mechanic/panic-alert", methods=["POST"])
@@ -142,7 +142,7 @@ def panic_alert():
         }), 200
         
     except Exception as e:
-        print(f"❌ Panic alert error: {e}")
+        print(f"  Panic alert error: {e}")
         return jsonify({"error": "Failed to send panic alert"}), 500
 
 @performance_bp.route("/api/car/mechanic/safety-reports", methods=["GET"])
@@ -174,7 +174,7 @@ def get_safety_reports():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get safety reports error: {e}")
+        print(f"  Get safety reports error: {e}")
         return jsonify({"error": "Failed to get safety reports"}), 500
 
 @performance_bp.route("/api/car/mechanic/panic-alerts", methods=["GET"])
@@ -206,7 +206,7 @@ def get_panic_alerts():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get panic alerts error: {e}")
+        print(f"  Get panic alerts error: {e}")
         return jsonify({"error": "Failed to get panic alerts"}), 500
 
 # Admin endpoints for safety monitoring (simplified for demo)
@@ -243,7 +243,7 @@ def get_all_safety_reports():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get all safety reports error: {e}")
+        print(f"  Get all safety reports error: {e}")
         return jsonify({"error": "Failed to get safety reports"}), 500
 
 @performance_bp.route("/api/admin/panic-alerts", methods=["GET"])
@@ -279,7 +279,7 @@ def get_all_panic_alerts():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get all panic alerts error: {e}")
+        print(f"  Get all panic alerts error: {e}")
         return jsonify({"error": "Failed to get panic alerts"}), 500
 
 @performance_bp.route("/api/admin/resolve-panic/<int:alert_id>", methods=["POST"])
@@ -312,5 +312,5 @@ def resolve_panic_alert(alert_id):
             return jsonify({"error": "Failed to resolve panic alert"}), 500
         
     except Exception as e:
-        print(f"❌ Resolve panic alert error: {e}")
+        print(f"  Resolve panic alert error: {e}")
         return jsonify({"error": "Failed to resolve panic alert"}), 500

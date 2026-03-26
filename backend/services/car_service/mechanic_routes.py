@@ -61,7 +61,7 @@ def mechanic_signup():
         }), 201
         
     except Exception as e:
-        print(f"❌ Mechanic signup error: {e}")
+        print(f"  Mechanic signup error: {e}")
         return jsonify({"error": "Failed to create mechanic account"}), 500
 
 @mechanic_bp.route("/api/car/mechanic/login", methods=["POST"])
@@ -142,7 +142,7 @@ def mechanic_login():
         return jsonify({"error": "Invalid email or password"}), 401
         
     except Exception as e:
-        print(f"❌ Mechanic login error: {e}")
+        print(f"  Mechanic login error: {e}")
         return jsonify({"error": "Login failed"}), 500
 
 @mechanic_bp.route("/api/car/mechanic/status", methods=["PUT"])
@@ -194,7 +194,7 @@ def update_mechanic_status():
         return jsonify({"error": "Mechanic not found"}), 404
             
     except Exception as e:
-        print(f"❌ Update mechanic status error: {e}")
+        print(f"  Update mechanic status error: {e}")
         return jsonify({"error": "Failed to update status"}), 500
 
 @mechanic_bp.route("/api/car/mechanic/profile", methods=["GET"])
@@ -222,7 +222,7 @@ def get_mechanic_profile():
         return jsonify({"mechanic": mechanic_data}), 200
         
     except Exception as e:
-        print(f"❌ Get mechanic profile error: {e}")
+        print(f"  Get mechanic profile error: {e}")
         return jsonify({"error": "Failed to get profile"}), 500
 
 @mechanic_bp.route("/api/car/mechanics/online", methods=["GET"])
@@ -241,7 +241,7 @@ def get_online_mechanics():
         return jsonify({"mechanics": clean_mechanics}), 200
         
     except Exception as e:
-        print(f"❌ Get online mechanics error: {e}")
+        print(f"  Get online mechanics error: {e}")
         return jsonify({"error": "Failed to get online mechanics"}), 500
 
 # ===== STATUS MANAGEMENT ENDPOINTS =====
@@ -276,7 +276,7 @@ def go_online():
             return jsonify({"error": "Failed to go online"}), 500
             
     except Exception as e:
-        print(f"❌ Go online error: {e}")
+        print(f"  Go online error: {e}")
         return jsonify({"error": "Failed to update status"}), 500
 
 @mechanic_bp.route("/api/car/mechanic/go-offline", methods=["PUT"])
@@ -309,7 +309,7 @@ def go_offline():
             return jsonify({"error": "Failed to go offline"}), 500
             
     except Exception as e:
-        print(f"❌ Go offline error: {e}")
+        print(f"  Go offline error: {e}")
         return jsonify({"error": "Failed to update status"}), 500
 
 @mechanic_bp.route("/api/car/mechanic/set-busy", methods=["PUT"])
@@ -343,7 +343,7 @@ def set_busy():
             return jsonify({"error": "Failed to set busy status"}), 500
             
     except Exception as e:
-        print(f"❌ Set busy error: {e}")
+        print(f"  Set busy error: {e}")
         return jsonify({"error": "Failed to update status"}), 500
 
 @mechanic_bp.route("/api/car/mechanic/set-available", methods=["PUT"])
@@ -377,7 +377,7 @@ def set_available():
             return jsonify({"error": "Failed to set available status"}), 500
             
     except Exception as e:
-        print(f"❌ Set available error: {e}")
+        print(f"  Set available error: {e}")
         return jsonify({"error": "Failed to update status"}), 500
 
 @mechanic_bp.route("/api/car/mechanic/status", methods=["GET"])
@@ -412,7 +412,7 @@ def get_mechanic_status():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get mechanic status error: {e}")
+        print(f"  Get mechanic status error: {e}")
         return jsonify({"error": "Failed to get status"}), 500
 
 @mechanic_bp.route("/api/car/mechanics/available", methods=["GET"])
@@ -431,7 +431,7 @@ def get_available_mechanics():
         return jsonify({"mechanics": clean_mechanics}), 200
         
     except Exception as e:
-        print(f"❌ Get available mechanics error: {e}")
+        print(f"  Get available mechanics error: {e}")
         return jsonify({"error": "Failed to get available mechanics"}), 500
 
 # ===== ADDITIONAL FEATURES =====
@@ -474,7 +474,7 @@ def update_service_radius():
             return jsonify({"error": "Failed to update service radius"}), 500
             
     except Exception as e:
-        print(f"❌ Update service radius error: {e}")
+        print(f"  Update service radius error: {e}")
         return jsonify({"error": "Failed to update service radius"}), 500
 
 @mechanic_bp.route("/api/car/mechanic/location", methods=["PUT"])
@@ -513,7 +513,7 @@ def update_current_location():
             return jsonify({"error": "Failed to update location"}), 500
             
     except Exception as e:
-        print(f"❌ Update location error: {e}")
+        print(f"  Update location error: {e}")
         return jsonify({"error": "Failed to update location"}), 500
 
 # ===== WOW FEATURES =====
@@ -526,7 +526,7 @@ def get_high_demand_areas():
         return jsonify({"areas": areas}), 200
         
     except Exception as e:
-        print(f"❌ Get high demand areas error: {e}")
+        print(f"  Get high demand areas error: {e}")
         return jsonify({"error": "Failed to get demand data"}), 500
 
 @mechanic_bp.route("/api/car/mechanics/recommended-online-time", methods=["GET"])
@@ -537,5 +537,5 @@ def get_recommended_online_time():
         return jsonify(recommendation), 200
         
     except Exception as e:
-        print(f"❌ Get recommended online time error: {e}")
+        print(f"  Get recommended online time error: {e}")
         return jsonify({"error": "Failed to get recommendation"}), 500

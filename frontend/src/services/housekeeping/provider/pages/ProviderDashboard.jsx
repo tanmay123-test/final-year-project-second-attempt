@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import api, { housekeepingService } from '../../../../frontend/src/services/api';
 import { useAuth } from '../../../../frontend/src/context/AuthContext';
 import { housekeepingSocket } from '../../../../frontend/src/services/housekeepingSocket';
-import ProviderBottomNav from '../components/ProviderBottomNav';
 import OtpModal from '../components/OtpModal';
 
 const ProviderDashboard = () => {
@@ -214,9 +213,9 @@ const ProviderDashboard = () => {
   };
 
   return (
-    <div className="provider-dashboard" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div className="provider-dashboard" style={{ backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
       {/* Header with Gradient */}
-      <div style={{ background: 'linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%)', padding: '20px', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px', color: 'white', marginBottom: '20px' }}>
+      <div style={{ background: 'linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%)', padding: '20px', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px', color: 'white', marginBottom: '20px', position: 'relative' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>Worker Dashboard</h1>
@@ -486,8 +485,6 @@ const ProviderDashboard = () => {
           </div>
         )}
       </div>
-
-      <ProviderBottomNav />
 
       {/* OTP Modal */}
       {otpModal.isOpen && (

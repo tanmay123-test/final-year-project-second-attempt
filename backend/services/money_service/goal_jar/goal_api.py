@@ -165,7 +165,12 @@ class GoalAPI:
                 success = self.goal_engine.transfer_leftover_to_goal(
                     user_id, data['goal_id'], amount, data['source_category']
                 )
-                return jsonify({'success': success, 'data': {'message': f'Transferred ₹{amount:.2f}' if success else 'Transfer failed'}})
+                return jsonify({
+                    'success': success,
+                    'data': {
+                        'message': f'Transferred ₹{amount:.2f} from {data["source_category"]} to goal' if success else 'Transfer failed'
+                    }
+                })
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
 

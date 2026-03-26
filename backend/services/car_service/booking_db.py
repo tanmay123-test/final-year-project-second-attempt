@@ -189,7 +189,7 @@ class BookingDB:
             """, (status, notes, job_id))
         
         self.conn.commit()
-        print(f"✅ Job {job_id} status updated to: {status}")
+        print(f"  Job {job_id} status updated to: {status}")
     
     def get_completed_count_for_mechanic(self, mechanic_id: int) -> int:
         """Get completed jobs count for a mechanic"""

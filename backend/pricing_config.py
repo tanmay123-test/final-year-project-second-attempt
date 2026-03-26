@@ -92,7 +92,7 @@ DEFAULT_PRICING = {
 # Currency configuration
 CURRENCY_CONFIG = {
     "currency": "INR",
-    "symbol": "₹",
+    "symbol": " ",
     "decimal_places": 2,
     "thousand_separator": ",",
     "decimal_separator": "."
@@ -109,10 +109,10 @@ PLATFORM_COMMISSION = {
 
 # Worker default rates by service
 WORKER_DEFAULT_RATES = {
-    "housekeeping": 50.0,    # ₹50/hour
-    "healthcare": 200.0,      # ₹200/hour for doctors
-    "car_service": 150.0,    # ₹150/hour for mechanics
-    "freelance": 300.0,      # ₹300/hour average for freelancers
+    "housekeeping": 50.0,    #  50/hour
+    "healthcare": 200.0,      #  200/hour for doctors
+    "car_service": 150.0,    #  150/hour for mechanics
+    "freelance": 300.0,      #  300/hour average for freelancers
 }
 
 def get_default_pricing(service_type):
@@ -198,4 +198,4 @@ if __name__ == "__main__":
     # Test total calculation
     base_price = DEFAULT_PRICING['housekeeping']['services']['General Cleaning']
     total = calculate_total_amount('housekeeping', base_price, is_weekend=True)
-    print(f"General Cleaning (Weekend): {format_currency(base_price)} → {format_currency(total)}")
+    print(f"General Cleaning (Weekend): {format_currency(base_price)}   {format_currency(total)}")

@@ -13,7 +13,7 @@ from datetime import datetime
 def enhanced_migration():
     """Enhanced migration with better error handling"""
     
-    print("🔄 Starting Enhanced Database Migration...")
+    print("  Starting Enhanced Database Migration...")
     
     # Source databases (scattered)
     source_paths = {
@@ -77,7 +77,7 @@ def enhanced_migration():
 
 def migrate_users_enhanced(source_paths):
     """Enhanced user migration"""
-    print(f"\n👥 Enhanced User Migration...")
+    print(f"\n  Enhanced User Migration...")
     
     users_migrated = 0
     target_db = "backend/database/databases/users.db"
@@ -101,12 +101,12 @@ def migrate_users_enhanced(source_paths):
             try:
                 users_migrated += migrate_from_user_db(source_db, conn_target, cursor_target)
             except Exception as e:
-                print(f"  ⚠️  Error migrating from {source_db}: {e}")
+                print(f"      Error migrating from {source_db}: {e}")
     
     conn_target.commit()
     conn_target.close()
     
-    print(f"  ✅ Total users migrated: {users_migrated}")
+    print(f"    Total users migrated: {users_migrated}")
     return users_migrated
 
 def migrate_from_user_db(source_db, conn_target, cursor_target):
@@ -142,12 +142,12 @@ def migrate_from_user_db(source_db, conn_target, cursor_target):
                             users_migrated += 1
                             
                 except Exception as e:
-                    print(f"    ⚠️  Error migrating table {table_name}: {e}")
+                    print(f"        Error migrating table {table_name}: {e}")
         
         conn_source.close()
         
     except Exception as e:
-        print(f"  ⚠️  Error opening {source_db}: {e}")
+        print(f"      Error opening {source_db}: {e}")
     
     return users_migrated
 
@@ -174,13 +174,13 @@ def map_user_data(user_data, columns):
             return (email, password, name, phone, created_at, created_at)
         
     except Exception as e:
-        print(f"    ⚠️  Error mapping user data: {e}")
+        print(f"        Error mapping user data: {e}")
     
     return None
 
 def migrate_workers_enhanced(source_paths):
     """Enhanced worker migration"""
-    print(f"\n👷 Enhanced Worker Migration...")
+    print(f"\n  Enhanced Worker Migration...")
     
     workers_migrated = 0
     target_db = "backend/database/databases/workers.db"
@@ -206,12 +206,12 @@ def migrate_workers_enhanced(source_paths):
             try:
                 workers_migrated += migrate_from_worker_db(source_db, conn_target, cursor_target)
             except Exception as e:
-                print(f"  ⚠️  Error migrating from {source_db}: {e}")
+                print(f"      Error migrating from {source_db}: {e}")
     
     conn_target.commit()
     conn_target.close()
     
-    print(f"  ✅ Total workers migrated: {workers_migrated}")
+    print(f"    Total workers migrated: {workers_migrated}")
     return workers_migrated
 
 def migrate_from_worker_db(source_db, conn_target, cursor_target):
@@ -247,12 +247,12 @@ def migrate_from_worker_db(source_db, conn_target, cursor_target):
                             workers_migrated += 1
                             
                 except Exception as e:
-                    print(f"    ⚠️  Error migrating table {table_name}: {e}")
+                    print(f"        Error migrating table {table_name}: {e}")
         
         conn_source.close()
         
     except Exception as e:
-        print(f"  ⚠️  Error opening {source_db}: {e}")
+        print(f"      Error opening {source_db}: {e}")
     
     return workers_migrated
 
@@ -305,13 +305,13 @@ def map_worker_data(worker_data, columns, table_name):
             return (email, password, name, phone, service_type, worker_type, is_verified, is_active, created_at, created_at)
         
     except Exception as e:
-        print(f"    ⚠️  Error mapping worker data: {e}")
+        print(f"        Error mapping worker data: {e}")
     
     return None
 
 def migrate_service_data_enhanced(service_name, source_paths, target_base):
     """Enhanced service data migration"""
-    print(f"\n📋 Enhanced {service_name} Migration...")
+    print(f"\n  Enhanced {service_name} Migration...")
     
     records_migrated = 0
     target_db = target_base / f"{service_name}.db"
@@ -343,12 +343,12 @@ def migrate_service_data_enhanced(service_name, source_paths, target_base):
             try:
                 records_migrated += migrate_service_data_from_db(source_db, conn_target, cursor_target, service_name)
             except Exception as e:
-                print(f"  ⚠️  Error migrating from {source_db}: {e}")
+                print(f"      Error migrating from {source_db}: {e}")
     
     conn_target.commit()
     conn_target.close()
     
-    print(f"  ✅ Total {service_name} records migrated: {records_migrated}")
+    print(f"    Total {service_name} records migrated: {records_migrated}")
     return records_migrated
 
 def migrate_service_data_from_db(source_db, conn_target, cursor_target, service_name):
@@ -383,18 +383,18 @@ def migrate_service_data_from_db(source_db, conn_target, cursor_target, service_
                     records_migrated += 1
                     
             except Exception as e:
-                print(f"    ⚠️  Error migrating table {table_name}: {e}")
+                print(f"        Error migrating table {table_name}: {e}")
         
         conn_source.close()
         
     except Exception as e:
-        print(f"  ⚠️  Error opening {source_db}: {e}")
+        print(f"      Error opening {source_db}: {e}")
     
     return records_migrated
 
 def migrate_car_workers_enhanced(worker_type, source_paths, target_base):
     """Enhanced car service worker migration"""
-    print(f"\n🔧 Enhanced {worker_type} Migration...")
+    print(f"\n  Enhanced {worker_type} Migration...")
     
     records_migrated = 0
     target_db = target_base / "car_service_workers" / f"{worker_type}.db"
@@ -416,12 +416,12 @@ def migrate_car_workers_enhanced(worker_type, source_paths, target_base):
             try:
                 records_migrated += migrate_car_worker_data_from_db(source_db, conn_target, cursor_target, worker_type)
             except Exception as e:
-                print(f"  ⚠️  Error migrating from {source_db}: {e}")
+                print(f"      Error migrating from {source_db}: {e}")
     
     conn_target.commit()
     conn_target.close()
     
-    print(f"  ✅ Total {worker_type} records migrated: {records_migrated}")
+    print(f"    Total {worker_type} records migrated: {records_migrated}")
     return records_migrated
 
 def migrate_car_worker_data_from_db(source_db, conn_target, cursor_target, worker_type):
@@ -456,32 +456,32 @@ def migrate_car_worker_data_from_db(source_db, conn_target, cursor_target, worke
                     records_migrated += 1
                     
             except Exception as e:
-                print(f"    ⚠️  Error migrating table {table_name}: {e}")
+                print(f"        Error migrating table {table_name}: {e}")
         
         conn_source.close()
         
     except Exception as e:
-        print(f"  ⚠️  Error opening {source_db}: {e}")
+        print(f"      Error opening {source_db}: {e}")
     
     return records_migrated
 
 def print_migration_summary(stats):
     """Print migration summary"""
-    print(f"\n🎯 Enhanced Migration Summary:")
-    print(f"👥 Users: {stats['users']} migrated")
-    print(f"👷 Workers: {stats['workers']} migrated")
-    print(f"🏥 Healthcare: {stats['healthcare']} records migrated")
-    print(f"🏠 Housekeeping: {stats['housekeeping']} records migrated")
-    print(f"💼 Freelance: {stats['freelance']} records migrated")
-    print(f"💰 Money Management: {stats['money_management']} records migrated")
-    print(f"🚗 Car Service: {stats['car_service']} records migrated")
-    print(f"🔧 Mechanics: {stats['mechanics']} records migrated")
-    print(f"⛽ Fuel Delivery: {stats['fuel_delivery']} records migrated")
-    print(f"🚛 Tow Truck: {stats['tow_truck']} records migrated")
+    print(f"\n  Enhanced Migration Summary:")
+    print(f"  Users: {stats['users']} migrated")
+    print(f"  Workers: {stats['workers']} migrated")
+    print(f"  Healthcare: {stats['healthcare']} records migrated")
+    print(f"  Housekeeping: {stats['housekeeping']} records migrated")
+    print(f"  Freelance: {stats['freelance']} records migrated")
+    print(f"  Money Management: {stats['money_management']} records migrated")
+    print(f"  Car Service: {stats['car_service']} records migrated")
+    print(f"  Mechanics: {stats['mechanics']} records migrated")
+    print(f"  Fuel Delivery: {stats['fuel_delivery']} records migrated")
+    print(f"  Tow Truck: {stats['tow_truck']} records migrated")
     
     total = sum(stats.values())
-    print(f"\n✅ Total records migrated: {total}")
-    print("🎉 Enhanced migration completed successfully!")
+    print(f"\n  Total records migrated: {total}")
+    print("  Enhanced migration completed successfully!")
 
 if __name__ == "__main__":
     enhanced_migration()

@@ -7,16 +7,16 @@ def money_service_menu(user_id, role="user"):
     """
     while True:
         print("\n" + "="*60)
-        print("💰 MONEY SERVICE")
+        print("  MONEY SERVICE")
         print("="*60)
-        print(f"👤 Logged in as: {role.title()}")
+        print(f"  Logged in as: {role.title()}")
         print("-" * 60)
-        print("1. 💳 Unified Finny - Smart Transaction Tracker")
-        print("2. 📊 Smart Budget Planner")
-        print("3. 🏦 Smart Loan Analyzer")
-        print("4. 🏆 Goal Jar - Savings Tracker")
-        print("5. 🤖 AI Financial Assistant")
-        print("6. ⬅️ Back to Services")
+        print("1.   Unified Finny - Smart Transaction Tracker")
+        print("2.   Smart Budget Planner")
+        print("3.   Smart Loan Analyzer")
+        print("4.   Goal Jar - Savings Tracker")
+        print("5.   AI Financial Assistant")
+        print("6.    Back to Services")
         
         choice = input("\nSelect option: ").strip()
         
@@ -39,4 +39,4 @@ def money_service_menu(user_id, role="user"):
         elif choice == "6":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")

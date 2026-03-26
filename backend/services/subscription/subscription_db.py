@@ -98,7 +98,7 @@ class SubscriptionDB:
         """, plans)
         
         self.conn.commit()
-        print("✅ Default subscription plans inserted")
+        print("  Default subscription plans inserted")
     
     def assign_free_trial(self, worker_id: int) -> bool:
         """Assign free trial to a new worker"""
@@ -209,7 +209,7 @@ class SubscriptionDB:
                 SET status = 'ended', end_date = CURRENT_TIMESTAMP
                 WHERE worker_id = ? AND status = 'active'
             """, (worker_id,))
-            print(f"🔄 Ending previous subscription for upgrade")
+            print(f"  Ending previous subscription for upgrade")
         
         # Update new subscription with payment details
         cursor.execute("""

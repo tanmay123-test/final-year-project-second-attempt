@@ -204,42 +204,42 @@ def admin_logout():
 try:
     from .admin_healthcare import healthcare_admin_bp
     admin_bp.register_blueprint(healthcare_admin_bp, url_prefix='/healthcare')
-    print("✅ Healthcare admin blueprint registered")
+    print("  Healthcare admin blueprint registered")
 except ImportError as e:
-    print(f"⚠️ Could not register healthcare admin blueprint: {e}")
+    print(f"   Could not register healthcare admin blueprint: {e}")
 
 # Import other admin modules
 try:
     from .admin_users import users_admin_bp
     admin_bp.register_blueprint(users_admin_bp)
-    print("✅ Users admin blueprint registered")
+    print("  Users admin blueprint registered")
 except ImportError as e:
-    print(f"⚠️ Could not register users admin blueprint: {e}")
+    print(f"   Could not register users admin blueprint: {e}")
 
 try:
     from .admin_workers import workers_admin_bp
     admin_bp.register_blueprint(workers_admin_bp)
-    print("✅ Workers admin blueprint registered")
+    print("  Workers admin blueprint registered")
 except ImportError as e:
-    print(f"⚠️ Could not register workers admin blueprint: {e}")
+    print(f"   Could not register workers admin blueprint: {e}")
 
 try:
     from .admin_appointments import appointments_admin_bp
     admin_bp.register_blueprint(appointments_admin_bp)
-    print("✅ Appointments admin blueprint registered")
+    print("  Appointments admin blueprint registered")
 except ImportError as e:
-    print(f"⚠️ Could not register appointments admin blueprint: {e}")
+    print(f"   Could not register appointments admin blueprint: {e}")
 
 try:
     from .admin_payments import payments_admin_bp
     admin_bp.register_blueprint(payments_admin_bp)
-    print("✅ Payments admin blueprint registered")
+    print("  Payments admin blueprint registered")
 except ImportError as e:
-    print(f"⚠️ Could not register payments admin blueprint: {e}")
+    print(f"   Could not register payments admin blueprint: {e}")
 
 try:
     from .admin_settings import settings_admin_bp
     admin_bp.register_blueprint(settings_admin_bp)
-    print("✅ Settings admin blueprint registered")
+    print("  Settings admin blueprint registered")
 except ImportError as e:
-    print(f"⚠️ Could not register settings admin blueprint: {e}")
+    print(f"   Could not register settings admin blueprint: {e}")
