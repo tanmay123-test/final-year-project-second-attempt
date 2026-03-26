@@ -1,0 +1,219 @@
+/* Doctor Dashboard Styles */
+
+.doctor-dashboard-container {
+  min-height: 100vh;
+  background: #F5F3FF;
+  padding-bottom: 65px; /* Space for mobile bottom nav */
+}
+
+.doctor-dashboard-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Loading State */
+.doctor-dashboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #F5F3FF;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #7C3AED;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Stats Cards */
+.doctor-stats-card {
+  transition: all 0.2s ease;
+}
+
+.doctor-stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+/* Online Toggle Button */
+.online-toggle:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.05);
+}
+
+/* Appointment Cards */
+.appointment-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+}
+
+/* Schedule Section */
+.schedule-section {
+  transition: box-shadow 0.2s ease;
+}
+
+.schedule-section:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* Mobile Responsive */
+@media (max-width: 767px) {
+  .doctor-dashboard-content {
+    padding: 16px;
+  }
+  
+  .doctor-header {
+    padding: 24px 20px !important;
+  }
+  
+  .doctor-header h1 {
+    font-size: 24px !important;
+  }
+  
+  .doctor-stats-card {
+    padding: 16px !important;
+  }
+  
+  .doctor-stats-card .icon {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 20px !important;
+  }
+  
+  .doctor-stats-card .number {
+    font-size: 24px !important;
+  }
+  
+  .schedule-section {
+    padding: 20px 16px !important;
+  }
+}
+
+/* Tablet Responsive */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .doctor-dashboard-content {
+    padding: 24px;
+  }
+  
+  .doctor-header {
+    padding: 28px 24px !important;
+  }
+}
+
+/* Desktop Responsive */
+@media (min-width: 1024px) {
+  .doctor-dashboard-container {
+    padding-bottom: 0; /* No bottom nav on desktop */
+    padding-left: 260px; /* Space for sidebar */
+  }
+  
+  .doctor-dashboard-content {
+    padding: 32px;
+  }
+  
+  .doctor-header {
+    padding: 32px !important;
+  }
+  
+  .doctor-header h1 {
+    font-size: 32px !important;
+  }
+  
+  .doctor-stats-card {
+    padding: 20px !important;
+  }
+  
+  .schedule-section {
+    padding: 24px !important;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1200px) {
+  .doctor-dashboard-content {
+    max-width: 1200px;
+  }
+}
+
+/* Animation for page load */
+.doctor-dashboard-content > * {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.doctor-dashboard-content > *:nth-child(1) { animation-delay: 0.1s; }
+.doctor-dashboard-content > *:nth-child(2) { animation-delay: 0.2s; }
+.doctor-dashboard-content > *:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Status Badge Animations */
+.appointment-card .status-badge {
+  transition: all 0.2s ease;
+}
+
+.appointment-card:hover .status-badge {
+  transform: scale(1.05);
+}
+
+/* Navigation Active States */
+.doctor-bottom-nav .nav-tab.active {
+  color: #7C3AED !important;
+}
+
+.doctor-sidebar .sidebar-nav-item.active {
+  background: #EDE9FE !important;
+  color: #7C3AED !important;
+  border-left-color: #7C3AED !important;
+}
+
+/* Smooth transitions */
+.doctor-header,
+.doctor-stats-card,
+.appointment-card,
+.schedule-section {
+  transition: all 0.3s ease;
+}
+
+/* Focus states for accessibility */
+.online-toggle:focus,
+.nav-tab:focus,
+.sidebar-nav-item:focus {
+  outline: 2px solid #7C3AED;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .doctor-bottom-nav,
+  .doctor-sidebar,
+  .online-toggle {
+    display: none !important;
+  }
+  
+  .doctor-dashboard-container {
+    padding-left: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}

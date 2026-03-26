@@ -1,0 +1,141 @@
+/* ─── LAYOUT WRAPPER ─── */
+.hc-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f8f8f8;
+}
+
+/* ─── SIDEBAR ─── */
+.hc-sidebar {
+  width: 240px;
+  min-width: 240px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: white;
+  border-right: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+}
+
+.hc-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 20px 24px 20px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.hc-brand-icon {
+  font-size: 28px;
+}
+
+.hc-brand-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #7b2fbe;
+}
+
+.hc-sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hc-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  font-size: 15px;
+  font-weight: 500;
+  color: #666;
+  user-select: none;
+}
+
+.hc-sidebar-item:hover {
+  background: #f8f4ff;
+  color: #7b2fbe;
+}
+
+.hc-sidebar-item.active {
+  background: #f3eeff;
+  color: #7b2fbe;
+  font-weight: 700;
+}
+
+.hc-sidebar-icon {
+  font-size: 20px;
+}
+
+.hc-sidebar-label {
+  flex: 1;
+}
+
+.hc-active-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7b2fbe;
+}
+
+.hc-sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #f5f5f5;
+}
+
+.hc-sidebar-footer-text {
+  font-size: 11px;
+  color: #ccc;
+  text-align: center;
+}
+
+/* ─── MAIN CONTENT ─── */
+.hc-main-content {
+  flex: 1;
+  min-height: 100vh;
+  overflow-y: auto;
+  background: #f8f8f8;
+}
+
+/* Desktop: sidebar visible, bottom nav hidden */
+@media (min-width: 768px) {
+  .hc-layout {
+    padding-left: 240px;
+  }
+  .hc-sidebar {
+    display: flex;
+  }
+  .hc-main-content {
+    margin-left: 0;
+    padding-bottom: 0;
+  }
+  .healthcare-bottom-nav {
+    display: none !important;
+  }
+}
+
+/* Mobile: sidebar hidden, bottom nav shown */
+@media (max-width: 767px) {
+  .hc-layout {
+    padding-left: 0;
+    flex-direction: column;
+  }
+  .hc-sidebar {
+    display: none !important;
+  }
+  .hc-main-content {
+    margin-left: 0;
+    padding-bottom: 70px;
+  }
+}
+

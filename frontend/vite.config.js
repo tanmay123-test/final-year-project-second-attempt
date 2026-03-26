@@ -27,6 +27,34 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/healthcare': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/appointment': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/worker': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/user': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/login': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/signup': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/services': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
   },
 })

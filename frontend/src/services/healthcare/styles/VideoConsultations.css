@@ -1,0 +1,318 @@
+/* Video Consultations Page Styles */
+
+.video-consultations-page {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+  padding-bottom: 80px;
+}
+
+/* Header */
+.video-header {
+  background: linear-gradient(135deg, #7B2FBE 0%, #9B59B6 100%);
+  padding: 32px 20px 36px 20px;
+}
+
+.video-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.video-header-icon {
+  font-size: 22px;
+  color: white;
+}
+
+.video-header-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.video-header-subtitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+/* Content */
+.video-content {
+  padding: 20px 16px;
+}
+
+/* Loading State */
+.loading-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #7B2FBE;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Video Appointments List */
+.video-appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.video-appointment-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #f0f0f0;
+}
+
+.appointment-info {
+  margin-bottom: 16px;
+}
+
+.appointment-doctor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.doctor-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #e8d5f5;
+  color: #7B2FBE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.doctor-details h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 4px 0;
+}
+
+.doctor-details p {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+.appointment-time {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.time-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.time-value {
+  font-size: 14px;
+  color: #1a1a2e;
+  font-weight: 500;
+}
+
+.appointment-status {
+  margin-bottom: 8px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.accepted,
+.status-badge.confirmed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.completed {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+.status-badge.cancelled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Appointment Actions */
+.appointment-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.join-call-btn {
+  background: #7B2FBE;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.join-call-btn:hover {
+  background: #6c3db5;
+  transform: translateY(-1px);
+}
+
+.view-details-btn {
+  background: #f0f0f0;
+  color: #666;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: not-allowed;
+  flex: 1;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-state h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 8px 0;
+}
+
+.empty-state p {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 24px 0;
+  line-height: 1.4;
+}
+
+.book-consultation-btn {
+  background: #7B2FBE;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.book-consultation-btn:hover {
+  background: #6c3db5;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .video-header {
+    padding: 24px 16px 28px 16px;
+  }
+  
+  .video-header-title {
+    font-size: 20px;
+  }
+  
+  .video-content {
+    padding: 16px 12px;
+  }
+  
+  .video-appointment-card {
+    padding: 16px;
+  }
+  
+  .appointment-actions {
+    flex-direction: column;
+  }
+  
+  .join-call-btn,
+  .view-details-btn {
+    width: 100%;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .video-header {
+    padding: 40px 24px;
+  }
+  
+  .video-content {
+    padding: 24px 20px;
+  }
+  
+  .video-appointments-list {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .video-consultations-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px;
+    padding-bottom: 32px;
+  }
+  
+  .video-header {
+    border-radius: 16px;
+    margin: 0 0 24px 0;
+    padding: 40px 32px;
+  }
+  
+  .video-appointments-list {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  /* Hide bottom nav on desktop */
+  .video-consultations-page .healthcare-bottom-nav {
+    display: none;
+  }
+}

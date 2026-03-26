@@ -1,0 +1,127 @@
+.finny-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f8f8f8;
+}
+
+.finny-layout-sidebar {
+  width: 240px;
+  min-width: 240px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: #ffffff;
+  border-right: 1px solid #f0f0f0;
+  display: none;
+  flex-direction: column;
+  z-index: 100;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+}
+
+.finny-layout-sidebar-header {
+  padding: 28px 20px 24px 20px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.finny-layout-brand-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1f5f7a;
+  margin: 0;
+}
+
+.finny-layout-brand-subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.finny-layout-sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.finny-layout-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.finny-layout-sidebar-item:hover {
+  background: #f8f4ff;
+}
+
+.finny-layout-sidebar-item.active {
+  background: #fef9c3;
+}
+
+.finny-layout-sidebar-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  text-align: left;
+}
+
+.finny-layout-sidebar-item.active .finny-layout-sidebar-label {
+  color: #1f2937;
+}
+
+.finny-main-content {
+  flex: 1;
+  min-height: 100vh;
+  overflow-y: auto;
+  background: #f8f8f8;
+}
+
+/* Mobile: hide sidebar, keep bottom-nav visible */
+@media (max-width: 768px) {
+  .finny-main-content {
+    padding-bottom: 70px;
+  }
+  .finny-layout-sidebar {
+    display: none !important;
+  }
+}
+
+/* Desktop: show sidebar, hide all Finny bottom navigation variants */
+@media (min-width: 769px) {
+  .finny-layout {
+    padding-left: 240px;
+  }
+
+  .finny-layout-sidebar {
+    display: flex;
+  }
+
+  .finny-main-content {
+    padding-bottom: 0;
+  }
+
+  /* Hide any page-local Finny sidebar (those pages already render `.finny-sidebar`) */
+  .finny-main-content .finny-sidebar {
+    display: none !important;
+  }
+
+  /* Hide bottom nav in all page-local implementations */
+  .finny-main-content .finny-bottom-nav,
+  .finny-main-content .bottom-nav,
+  .finny-main-content .app-bottom-nav,
+  .finny-main-content .main-bottom-nav,
+  .finny-main-content [class*='bottom-nav'],
+  .finny-main-content [class*='BottomNav'] {
+    display: none !important;
+  }
+}
+

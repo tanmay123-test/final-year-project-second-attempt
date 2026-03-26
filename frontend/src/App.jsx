@@ -6,16 +6,21 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
-import DoctorSearch from './services/healthcare/DoctorSearch';
+import DoctorSearch from './services/healthcare/pages/DoctorSearch';
 import Booking from './pages/Booking';
 import WorkerLogin from './shared/WorkerLogin';
 import WorkerSignup from './shared/WorkerSignup';
 import WorkerDashboard from './pages/WorkerDashboard';
 import ServiceSelection from './shared/ServiceSelection';
 import DoctorLogin from './pages/DoctorLogin';
-import DoctorDashboard from './services/healthcare/DoctorDashboard';
 import DoctorAvailability from './pages/DoctorAvailability';
 import DoctorProfile from './services/healthcare/DoctorProfile';
+import HealthcareDashboard from './services/healthcare/pages/HealthcareDashboard';
+import AppointmentsPage from './services/healthcare/pages/AppointmentsPage';
+import AICareScreen from './services/healthcare/pages/AICareScreen';
+import HealthcareProfile from './services/healthcare/pages/HealthcareProfile';
+import MyCareScreen from './services/healthcare/pages/MyCareScreen';
+import VideoConsultationsPage from './services/healthcare/pages/VideoConsultationsPage';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -82,6 +87,10 @@ import EarlyRepaymentPage from './services/finny/pages/EarlyRepaymentPage';
 import RepaymentSchedulePage from './services/finny/pages/RepaymentSchedulePage';
 import LoanRiskPage from './services/finny/pages/LoanRiskPage';
 import LoanHistoryPage from './services/finny/pages/LoanHistoryPage';
+import FinnySidebarLayout from './services/finny/components/FinnySidebarLayout';
+
+// Healthcare Doctor Dashboard
+import DoctorDashboard from './services/healthcare/pages/DoctorDashboard';
 
 // Car Services Worker Auth
 import WorkerServiceSelection from './services/car/WorkerServiceSelection';
@@ -256,31 +265,31 @@ const App = () => {
             <Route path="/profile" element={<div style={{padding: '2rem'}}><h2>Profile Page</h2><p>Coming Soon</p></div>} />
             
             {/* Finny Smart Transaction Tracker Routes */}
-            <Route path="/finny" element={<ProtectedRoute><FinnyHomeScreen /></ProtectedRoute>} />
-            <Route path="/finny/quick" element={<ProtectedRoute><QuickModePage /></ProtectedRoute>} />
-            <Route path="/finny/summary" element={<ProtectedRoute><SummaryPage /></ProtectedRoute>} />
-            <Route path="/finny/analytics" element={<ProtectedRoute><AnalyticsDashboardPage /></ProtectedRoute>} />
-            <Route path="/finny/chat" element={<ProtectedRoute><ChatModePage /></ProtectedRoute>} />
-            <Route path="/finny/budget" element={<ProtectedRoute><SmartBudgetPlannerPage /></ProtectedRoute>} />
-            <Route path="/finny/budget/create-plan" element={<ProtectedRoute><CreateFinancialPlanPage /></ProtectedRoute>} />
-            <Route path="/finny/budget/status" element={<ProtectedRoute><BudgetStatusPage /></ProtectedRoute>} />
-            <Route path="/finny/budget/burn-rate" element={<ProtectedRoute><BurnRatePage /></ProtectedRoute>} />
-            <Route path="/finny/budget/report" element={<ProtectedRoute><MonthlyReportPage /></ProtectedRoute>} />
-            <Route path="/finny/budget/gamification" element={<ProtectedRoute><BudgetGamificationPage /></ProtectedRoute>} />
-            <Route path="/finny/budget/leftover" element={<ProtectedRoute><LeftoverManagementPage /></ProtectedRoute>} />
-            <Route path="/finny/loan" element={<ProtectedRoute><SmartLoanAnalyzerPage /></ProtectedRoute>} />
-            <Route path="/finny/loan/analyze" element={<ProtectedRoute><AnalyzeLoanPage /></ProtectedRoute>} />
-            <Route path="/finny/loan/compare" element={<ProtectedRoute><CompareLoansPage /></ProtectedRoute>} />
-            <Route path="/finny/loan/impact" element={<ProtectedRoute><LoanImpactPage /></ProtectedRoute>} />
-            <Route path="/finny/loan/early-repayment" element={<ProtectedRoute><EarlyRepaymentPage /></ProtectedRoute>} />
-            <Route path="/finny/loan/schedule" element={<ProtectedRoute><RepaymentSchedulePage /></ProtectedRoute>} />
-            <Route path="/finny/loan/risk" element={<ProtectedRoute><LoanRiskPage /></ProtectedRoute>} />
-            <Route path="/finny/loan/history" element={<ProtectedRoute><LoanHistoryPage /></ProtectedRoute>} />
-            <Route path="/finny/goals" element={<ProtectedRoute><GoalJarPage /></ProtectedRoute>} />
-            <Route path="/finny/goal-jar" element={<ProtectedRoute><GoalJarPage /></ProtectedRoute>} />
-            <Route path="/finny/goal-jar/:goalId" element={<ProtectedRoute><GoalJarDetailPage /></ProtectedRoute>} />
-            <Route path="/finny/coach" element={<ProtectedRoute><ChatFinancialAssistantPage /></ProtectedRoute>} />
-            <Route path="/finny/ai-coach" element={<ProtectedRoute><AiCoachPage /></ProtectedRoute>} />
+            <Route path="/finny" element={<ProtectedRoute><FinnySidebarLayout><FinnyHomeScreen /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/quick" element={<ProtectedRoute><FinnySidebarLayout><QuickModePage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/summary" element={<ProtectedRoute><FinnySidebarLayout><SummaryPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/analytics" element={<ProtectedRoute><FinnySidebarLayout><AnalyticsDashboardPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/chat" element={<ProtectedRoute><FinnySidebarLayout><ChatModePage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/budget" element={<ProtectedRoute><FinnySidebarLayout><SmartBudgetPlannerPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/budget/create-plan" element={<ProtectedRoute><FinnySidebarLayout><CreateFinancialPlanPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/budget/status" element={<ProtectedRoute><FinnySidebarLayout><BudgetStatusPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/budget/burn-rate" element={<ProtectedRoute><FinnySidebarLayout><BurnRatePage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/budget/report" element={<ProtectedRoute><FinnySidebarLayout><MonthlyReportPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/budget/gamification" element={<ProtectedRoute><FinnySidebarLayout><BudgetGamificationPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/budget/leftover" element={<ProtectedRoute><FinnySidebarLayout><LeftoverManagementPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/loan" element={<ProtectedRoute><FinnySidebarLayout><SmartLoanAnalyzerPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/loan/analyze" element={<ProtectedRoute><FinnySidebarLayout><AnalyzeLoanPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/loan/compare" element={<ProtectedRoute><FinnySidebarLayout><CompareLoansPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/loan/impact" element={<ProtectedRoute><FinnySidebarLayout><LoanImpactPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/loan/early-repayment" element={<ProtectedRoute><FinnySidebarLayout><EarlyRepaymentPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/loan/schedule" element={<ProtectedRoute><FinnySidebarLayout><RepaymentSchedulePage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/loan/risk" element={<ProtectedRoute><FinnySidebarLayout><LoanRiskPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/loan/history" element={<ProtectedRoute><FinnySidebarLayout><LoanHistoryPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/goals" element={<ProtectedRoute><FinnySidebarLayout><GoalJarPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/goal-jar" element={<ProtectedRoute><FinnySidebarLayout><GoalJarPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/goal-jar/:goalId" element={<ProtectedRoute><FinnySidebarLayout><GoalJarDetailPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/coach" element={<ProtectedRoute><FinnySidebarLayout><ChatFinancialAssistantPage /></FinnySidebarLayout></ProtectedRoute>} />
+            <Route path="/finny/ai-coach" element={<ProtectedRoute><FinnySidebarLayout><AiCoachPage /></FinnySidebarLayout></ProtectedRoute>} />
           </Route>
 
           {/* Housekeeping Arrival Routes */}
@@ -314,6 +323,22 @@ const App = () => {
           <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />
           <Route path="/freelance/project/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
 
+          {/* Healthcare User Routes */}
+          <Route path="/healthcare/home" element={<ProtectedRoute><HealthcareDashboard /></ProtectedRoute>} />
+          <Route path="/healthcare/explore" element={<ProtectedRoute><DoctorSearch /></ProtectedRoute>} />
+          <Route path="/healthcare/appointments" element={<ProtectedRoute><AppointmentsPage /></ProtectedRoute>} />
+          <Route path="/healthcare/ai-care" element={<ProtectedRoute><AICareScreen /></ProtectedRoute>} />
+          <Route path="/healthcare/my-care" element={<ProtectedRoute><MyCareScreen /></ProtectedRoute>} />
+          <Route path="/healthcare/video-consultations" element={<ProtectedRoute><VideoConsultationsPage /></ProtectedRoute>} />
+          <Route path="/healthcare/profile" element={<ProtectedRoute><HealthcareProfile /></ProtectedRoute>} />
+          
+          {/* Healthcare Doctor Routes */}
+          <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+          <Route path="/doctor/availability" element={<DoctorDashboard />} />
+          <Route path="/doctor/requests" element={<DoctorDashboard />} />
+          <Route path="/doctor/appointments" element={<DoctorDashboard />} />
+          <Route path="/doctor/profile" element={<DoctorDashboard />} />
+          
           {/* Healthcare */}
           <Route path="/worker/healthcare/login" element={<DoctorLogin />} />
           <Route path="/worker/healthcare/signup" element={<WorkerSignup serviceType="healthcare" />} />

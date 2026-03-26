@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService, workerService } from '../shared/api';
+import { authService, workerService, doctorService } from '../shared/api';
 
 export const AuthContext = createContext();
 
@@ -61,12 +61,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const workerLogin = async (email, password) => {
+  const workerLogin = async (email, password, serviceType = 'general') => {
     try {
-      const response = await workerService.login({ email, password });
-      const { worker_id, service, specialization, token, name } = response.data;
+      let response;
       
-      localStorage.setItem('worker_id', worker_id);
+      // Use doctor-specific login for healthcare workers
+      if (serviceType === 'healthcare') {
+        response = await doctorService.login({ email, password });
+      } else {
+        response = await workerService.login({ email, password });
+      }
+      
+      const { worker_id, doctor_id, service, specialization, token, name } = response.data;
+      
+      // Handle different ID naming conventions
+      const actualWorkerId = worker_id || doctor_id;
+      
+      localStorage.setItem('worker_id', actualWorkerId);
       localStorage.setItem('worker_email', email);
       if (token) {
         localStorage.setItem('token', token); 
@@ -74,8 +85,8 @@ export const AuthProvider = ({ children }) => {
       }
       
       const workerData = {
-        id: worker_id,
-        worker_id,
+        id: actualWorkerId,
+        worker_id: actualWorkerId,
         email,
         service,
         specialization,

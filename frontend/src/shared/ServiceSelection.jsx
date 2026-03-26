@@ -99,7 +99,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
                   
                   // For user mode, redirect to login first for all services except healthcare
                   if (service.id === 'healthcare') {
-                    navigate('/doctors');
+                    navigate('/healthcare/home');
                     return;
                   }
                   if (service.id === 'housekeeping') {

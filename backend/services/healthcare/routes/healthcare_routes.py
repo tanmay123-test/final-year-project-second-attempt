@@ -6,6 +6,7 @@ Provides API endpoints for healthcare service
 from flask import Blueprint, request, jsonify
 from database.database_manager import db_manager
 from auth_utils import generate_token, verify_token
+from services.healthcare.ai_engine import analyze_symptoms_conversational
 
 # Create blueprint
 healthcare_bp = Blueprint('healthcare', __name__)
@@ -267,6 +268,105 @@ def get_doctor_availability(doctor_id):
         return jsonify({
             "success": False,
             "message": f"Failed to get availability: {str(e)}"
+        }), 500
+
+# AI Care Route - True AI-driven analysis
+@healthcare_bp.route('/api/healthcare/ai-care', methods=['POST'])
+def ai_care_analysis():
+    """AI-driven symptom analysis using Gemini"""
+    try:
+        # Verify token
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({
+                "success": False,
+                "message": "Authentication required"
+            }), 401
+        
+        token = auth_header.split(' ')[1]
+        user_data = verify_token(token)
+        if not user_data:
+            return jsonify({
+                "success": False,
+                "message": "Invalid token"
+            }), 401
+        
+        data = request.get_json()
+        message = data.get("message", "")
+        conversation_history = data.get("conversation_history", [])
+        user_id = data.get("user_id", user_data.get("user_id"))
+        
+        if not message.strip():
+            return jsonify({
+                "success": False,
+                "message": "Message is required"
+            }), 400
+        
+        # Analyze symptoms with AI
+        ai_result = analyze_symptoms_conversational(message, user_id, conversation_history)
+        
+        if ai_result.get("stage") == "final":
+            # Get specializations from AI result
+            specializations = ai_result.get("specializations", ["General Physician"])
+            
+            # Fetch doctors dynamically from database
+            suggested_doctors = []
+            for spec in specializations:
+                doctors = db_manager.get_workers_by_service_and_specialization('healthcare', spec)
+                if doctors:
+                    # Filter only doctors and rank by rating/experience
+                    doctor_list = [doc for doc in doctors if doc.get('worker_type') == 'doctor']
+                    
+                    # Rank doctors by rating (desc) then experience (desc)
+                    ranked_doctors = sorted(
+                        doctor_list,
+                        key=lambda x: (
+                            float(x.get('rating', 0)) or 0,
+                            int(x.get('experience', 0)) or 0
+                        ),
+                        reverse=True
+                    )
+                    
+                    suggested_doctors.extend(ranked_doctors[:3])  # Top 3 per specialization
+            
+            # Remove duplicates (same doctor ID)
+            unique_doctors = {}
+            for doc in suggested_doctors:
+                if doc.get('id') not in unique_doctors:
+                    unique_doctors[doc.get('id')] = doc
+            
+            final_doctors = list(unique_doctors.values())[:5]  # Max 5 doctors
+            
+            return jsonify({
+                "success": True,
+                "response": ai_result.get("advice", ""),
+                "stage": ai_result.get("stage", "final"),
+                "severity": ai_result.get("severity", "medium"),
+                "first_aid": ai_result.get("first_aid", ""),
+                "otc_medicines": ai_result.get("otc_medicines", ""),
+                "suggested_doctors": final_doctors,
+                "specializations": specializations,
+                "reasoning": ai_result.get("reasoning", ""),
+                "follow_up": ai_result.get("follow_up", ""),
+                "detected_language": ai_result.get("detected_language", "english")
+            }), 200
+        else:
+            # Triage stage - return AI question
+            return jsonify({
+                "success": True,
+                "response": ai_result.get("advice", ""),
+                "stage": ai_result.get("stage", "triage"),
+                "question": ai_result.get("question", ""),
+                "suggested_doctors": [],
+                "specializations": [],
+                "detected_language": ai_result.get("detected_language", "english")
+            }), 200
+            
+    except Exception as e:
+        print(f"AI Care analysis error: {e}")
+        return jsonify({
+            "success": False,
+            "message": f"AI analysis failed: {str(e)}"
         }), 500
 
 # Health check endpoint

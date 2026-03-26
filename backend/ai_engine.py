@@ -90,6 +90,7 @@ class AIEngine:
                 "symptoms": all_symptoms,
                 "severity": severity,
                 "specialist": specialist,
+                "specializations": [specialist],
                 "advice": self.get_advice(all_symptoms, severity),
                 "first_aid": self.get_first_aid(all_symptoms),
                 "otc_medicines": self.get_medicines(all_symptoms),

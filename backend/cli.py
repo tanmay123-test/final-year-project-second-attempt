@@ -1968,7 +1968,7 @@ def healthcare_worker_signup():
         data = r.json()
         print("\n  Worker registered successfully")
         print("  Worker ID:", data["worker_id"])
-        print("  Status: Pending approval (2 3 hours)")
+        print("  Status: Approved (Ready to work immediately)")
         print("  Documents will be uploaded via App/UI later")
     else:
         try:
@@ -1979,7 +1979,7 @@ def healthcare_worker_signup():
 
 
 def worker_login():
-    print("\n  Worker Login (After Approval)")
+    print("\n  Worker Login")
     email = input("Email: ").strip()
 
     r = requests.post(f"{API}/worker/login", json={"email": email})
@@ -3871,6 +3871,275 @@ def admin_worker_details_view():
             print(f"Aadhaar: {w.get('aadhaar_number')}")
     else:
         print("  Worker not found")
+    input("\nPress Enter...")
+
+def healthcare_admin_menu():
+    """Healthcare worker admin management"""
+    while True:
+        print("\n" + "="*60)
+        print("  HEALTHCARE WORKER ADMIN")
+        print("="*60)
+        print("1.   Pending Workers")
+        print("2.   Approved Workers")
+        print("3.   Worker Details")
+        print("4.   Approve Worker")
+        print("5.   Reject Worker")
+        print("6.   Suspend Worker")
+        print("7.   Healthcare Users")
+        print("8.   Appointments")
+        print("9.    Back")
+        
+        choice = input("\nSelect option: ").strip()
+        
+        if choice == "1":
+            healthcare_pending_workers()
+        elif choice == "2":
+            healthcare_approved_workers()
+        elif choice == "3":
+            healthcare_worker_details()
+        elif choice == "4":
+            healthcare_approve_worker()
+        elif choice == "5":
+            healthcare_reject_worker()
+        elif choice == "6":
+            healthcare_suspend_worker()
+        elif choice == "7":
+            healthcare_users()
+        elif choice == "8":
+            healthcare_appointments()
+        elif choice == "9":
+            return
+        else:
+            print("  Invalid choice")
+            time.sleep(1)
+
+def healthcare_pending_workers():
+    """Show pending healthcare workers"""
+    print("\n" + "="*60)
+    print("  PENDING HEALTHCARE WORKERS")
+    print("="*60)
+    
+    try:
+        response = requests.get(f"{API}/healthcare/workers/pending")
+        
+        if response.status_code == 200:
+            workers = response.json()
+            
+            if not workers:
+                print("  No pending healthcare workers found")
+                return
+            
+            for i, worker in enumerate(workers, 1):
+                print(f"\n{i}. {worker.get('name', 'N/A')}")
+                print(f"   Email: {worker.get('email', 'N/A')}")
+                print(f"   Specialization: {worker.get('specialization', 'N/A')}")
+                print(f"   Experience: {worker.get('experience_years', 'N/A')} years")
+                print(f"   Applied: {worker.get('created_at', 'N/A')}")
+        else:
+            print(f"  Failed to fetch pending workers: {response.text}")
+    except Exception as e:
+        print(f"  Error: {str(e)}")
+    
+    input("\nPress Enter...")
+
+def healthcare_approved_workers():
+    """Show approved healthcare workers"""
+    print("\n" + "="*60)
+    print("  APPROVED HEALTHCARE WORKERS")
+    print("="*60)
+    
+    try:
+        response = requests.get(f"{API}/healthcare/workers/approved")
+        
+        if response.status_code == 200:
+            workers = response.json()
+            
+            if not workers:
+                print("  No approved healthcare workers found")
+                return
+            
+            for i, worker in enumerate(workers, 1):
+                print(f"\n{i}. {worker.get('name', 'N/A')}")
+                print(f"   Email: {worker.get('email', 'N/A')}")
+                print(f"   Specialization: {worker.get('specialization', 'N/A')}")
+                print(f"   Rating: {worker.get('rating', 'N/A')}")
+                print(f"   Status: {worker.get('status', 'N/A')}")
+        else:
+            print(f"  Failed to fetch approved workers: {response.text}")
+    except Exception as e:
+        print(f"  Error: {str(e)}")
+    
+    input("\nPress Enter...")
+
+def healthcare_worker_details():
+    """Get details of a specific healthcare worker"""
+    print("\n" + "="*60)
+    print("  HEALTHCARE WORKER DETAILS")
+    print("="*60)
+    
+    worker_id = input("Enter Worker ID: ").strip()
+    
+    if not worker_id:
+        print("  Worker ID is required")
+        return
+    
+    try:
+        response = requests.get(f"{API}/healthcare/workers/{worker_id}")
+        
+        if response.status_code == 200:
+            worker = response.json()
+            print(f"\nName: {worker.get('name', 'N/A')}")
+            print(f"Email: {worker.get('email', 'N/A')}")
+            print(f"Phone: {worker.get('phone', 'N/A')}")
+            print(f"Specialization: {worker.get('specialization', 'N/A')}")
+            print(f"Experience: {worker.get('experience_years', 'N/A')} years")
+            print(f"Rating: {worker.get('rating', 'N/A')}")
+            print(f"Status: {worker.get('status', 'N/A')}")
+            print(f"Verified: {worker.get('is_verified', 'N/A')}")
+            print(f"Created: {worker.get('created_at', 'N/A')}")
+        else:
+            print(f"  Worker not found: {response.text}")
+    except Exception as e:
+        print(f"  Error: {str(e)}")
+    
+    input("\nPress Enter...")
+
+def healthcare_approve_worker():
+    """Approve a pending healthcare worker"""
+    print("\n" + "="*60)
+    print("  APPROVE HEALTHCARE WORKER")
+    print("="*60)
+    
+    worker_id = input("Enter Worker ID to approve: ").strip()
+    
+    if not worker_id:
+        print("  Worker ID is required")
+        return
+    
+    try:
+        response = requests.post(f"{API}/healthcare/workers/approve/{worker_id}")
+        
+        if response.status_code == 200:
+            print("  Worker approved successfully!")
+        else:
+            print(f"  Failed to approve worker: {response.text}")
+    except Exception as e:
+        print(f"  Error: {str(e)}")
+    
+    input("\nPress Enter...")
+
+def healthcare_reject_worker():
+    """Reject a pending healthcare worker"""
+    print("\n" + "="*60)
+    print("  REJECT HEALTHCARE WORKER")
+    print("="*60)
+    
+    worker_id = input("Enter Worker ID to reject: ").strip()
+    reason = input("Rejection reason: ").strip()
+    
+    if not worker_id:
+        print("  Worker ID is required")
+        return
+    
+    try:
+        response = requests.post(
+            f"{API}/healthcare/workers/reject/{worker_id}",
+            json={"reason": reason}
+        )
+        
+        if response.status_code == 200:
+            print("  Worker rejected successfully!")
+        else:
+            print(f"  Failed to reject worker: {response.text}")
+    except Exception as e:
+        print(f"  Error: {str(e)}")
+    
+    input("\nPress Enter...")
+
+def healthcare_suspend_worker():
+    """Suspend an approved healthcare worker"""
+    print("\n" + "="*60)
+    print("  SUSPEND HEALTHCARE WORKER")
+    print("="*60)
+    
+    worker_id = input("Enter Worker ID to suspend: ").strip()
+    reason = input("Suspension reason: ").strip()
+    
+    if not worker_id:
+        print("  Worker ID is required")
+        return
+    
+    try:
+        response = requests.post(
+            f"{API}/healthcare/workers/suspend/{worker_id}",
+            json={"reason": reason}
+        )
+        
+        if response.status_code == 200:
+            print("  Worker suspended successfully!")
+        else:
+            print(f"  Failed to suspend worker: {response.text}")
+    except Exception as e:
+        print(f"  Error: {str(e)}")
+    
+    input("\nPress Enter...")
+
+def healthcare_users():
+    """Show healthcare users"""
+    print("\n" + "="*60)
+    print("  HEALTHCARE USERS")
+    print("="*60)
+    
+    try:
+        response = requests.get(f"{API}/healthcare/users")
+        
+        if response.status_code == 200:
+            users = response.json()
+            
+            if not users:
+                print("  No healthcare users found")
+                return
+            
+            for i, user in enumerate(users, 1):
+                print(f"\n{i}. {user.get('name', 'N/A')}")
+                print(f"   Email: {user.get('email', 'N/A')}")
+                print(f"   Status: {user.get('status', 'N/A')}")
+                print(f"   Joined: {user.get('created_at', 'N/A')}")
+        else:
+            print(f"  Failed to fetch users: {response.text}")
+    except Exception as e:
+        print(f"  Error: {str(e)}")
+    
+    input("\nPress Enter...")
+
+def healthcare_appointments():
+    """Show healthcare appointments"""
+    print("\n" + "="*60)
+    print("  HEALTHCARE APPOINTMENTS")
+    print("="*60)
+    
+    try:
+        response = requests.get(f"{API}/healthcare/appointments")
+        
+        if response.status_code == 200:
+            appointments = response.json()
+            
+            if not appointments:
+                print("  No healthcare appointments found")
+                return
+            
+            for i, apt in enumerate(appointments, 1):
+                print(f"\n{i}. Appointment #{apt.get('id', 'N/A')}")
+                print(f"   User: {apt.get('user_name', 'N/A')}")
+                print(f"   Doctor: {apt.get('doctor_name', 'N/A')}")
+                print(f"   Date: {apt.get('appointment_date', 'N/A')}")
+                print(f"   Status: {apt.get('status', 'N/A')}")
+                print(f"   Fee: ₹{apt.get('fee', 'N/A')}")
+        else:
+            print(f"  Failed to fetch appointments: {response.text}")
+    except Exception as e:
+        print(f"  Error: {str(e)}")
+    
     input("\nPress Enter...")
 
 def fuel_delivery_admin_menu():

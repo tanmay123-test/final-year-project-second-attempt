@@ -30,7 +30,7 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
     setError('');
     setLoading(true);
     try {
-      await workerLogin(email, password);
+      await workerLogin(email, password, serviceType);
       if (serviceType === 'housekeeping') {
         navigate('/worker/housekeeping/dashboard');
       } else if (serviceType === 'healthcare') {

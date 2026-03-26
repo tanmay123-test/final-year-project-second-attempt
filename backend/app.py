@@ -664,7 +664,12 @@ def worker_login():
         return jsonify({"error": "Invalid email or password"}), 404
 
     wid, status, svc, spec, name = w
-    if status != "approved":
+    
+    # Auto-approve healthcare workers, but keep approval for other services
+    if svc == "healthcare":
+        # Auto-approve healthcare workers
+        status = "approved"
+    elif status != "approved":
         return jsonify({"error": "Not approved"}), 403
 
     # Generate token for worker
@@ -1006,99 +1011,99 @@ def worker_video_appointments():
     conn.close()
     return jsonify(rows)
 
-# ================= AI CARE - CONVERSATIONAL TRIAGE =================
-from ai_engine import AIEngine, get_session_info, reset_session
+# ================= AI CARE - TRUE AI-DRIVEN SYSTEM =================
+from services.healthcare.ai_engine import analyze_symptoms_conversational
+
+# ================= DOCTOR DASHBOARD ROUTES =================
+try:
+    from services.healthcare.doctor_routes import doctor_bp
+    app.register_blueprint(doctor_bp)
+    print("  Doctor dashboard blueprint registered")
+except ImportError as e:
+    print(f"   Could not register doctor dashboard blueprint: {e}")
 
 @app.route("/healthcare/ai-care", methods=["POST"])
 def ai_care():
-    data = request.json
-    symptoms = data.get("symptoms")
-    user_id = data.get("user_id", "default")
-    action = data.get("action", "chat")  # chat, reset, info
-
-    if not symptoms and action != "reset" and action != "info":
-        return jsonify({"error": "Symptoms required"}), 400
-
-    #   Handle session actions
-    if action == "reset":
-        reset_session(user_id)
-        return jsonify({"message": "Session reset for new conversation"}), 200
-    
-    if action == "info":
-        session_info = get_session_info(user_id)
-        return jsonify(session_info), 200
-
-    #   Step 1   Analyze with conversational AI
-    ai_engine = AIEngine()
-    ai_result = ai_engine.analyze_symptoms(symptoms, user_id)
-    
-    stage = ai_result.get("stage", "triage")
-    
-    #   Step 2   Handle emergency
-    if stage == "final" and ai_result.get("severity") == "emergency":
+    """True AI-driven healthcare analysis using Gemini"""
+    try:
+        data = request.json
+        message = data.get("message", "")
+        conversation_history = data.get("conversation_history", [])
+        user_id = data.get("user_id", "default")
+        
+        if not message.strip():
+            return jsonify({
+                "success": False,
+                "message": "Message is required"
+            }), 400
+        
+        # Analyze with true AI (Gemini-powered)
+        ai_result = analyze_symptoms_conversational(message, user_id, conversation_history)
+        
+        if ai_result.get("stage") == "final":
+            # Get specializations from AI result
+            specializations = ai_result.get("specializations", ["General Physician"])
+            
+            # Fetch doctors dynamically from database
+            from database.database_manager import db_manager
+            suggested_doctors = []
+            for spec in specializations:
+                doctors = db_manager.get_workers_by_service_and_specialization('healthcare', spec)
+                if doctors:
+                    # Filter only doctors and rank by rating/experience
+                    doctor_list = [doc for doc in doctors if doc.get('worker_type') == 'doctor']
+                    
+                    # Rank doctors by rating (desc) then experience (desc)
+                    ranked_doctors = sorted(
+                        doctor_list,
+                        key=lambda x: (
+                            float(x.get('rating', 0)) or 0,
+                            int(x.get('experience', 0)) or 0
+                        ),
+                        reverse=True
+                    )
+                    
+                    suggested_doctors.extend(ranked_doctors[:3])  # Top 3 per specialization
+            
+            # Remove duplicates and limit to 5
+            unique_doctors = {}
+            for doc in suggested_doctors:
+                if doc.get('id') not in unique_doctors:
+                    unique_doctors[doc.get('id')] = doc
+            
+            final_doctors = list(unique_doctors.values())[:5]
+            
+            return jsonify({
+                "success": True,
+                "response": ai_result.get("advice", ""),
+                "stage": ai_result.get("stage", "final"),
+                "severity": ai_result.get("severity", "medium"),
+                "first_aid": ai_result.get("first_aid", ""),
+                "otc_medicines": ai_result.get("otc_medicines", ""),
+                "suggested_doctors": final_doctors,
+                "specializations": specializations,
+                "reasoning": ai_result.get("reasoning", ""),
+                "follow_up": ai_result.get("follow_up", ""),
+                "detected_language": ai_result.get("detected_language", "english")
+            }), 200
+        else:
+            # Triage stage - return AI question
+            return jsonify({
+                "success": True,
+                "response": ai_result.get("advice", ""),
+                "stage": ai_result.get("stage", "triage"),
+                "question": ai_result.get("question", ""),
+                "suggested_doctors": [],
+                "specializations": [],
+                "detected_language": ai_result.get("detected_language", "english")
+            }), 200
+            
+    except Exception as e:
+        print(f"AI Care error: {e}")
         return jsonify({
-            "stage": "final",
-            "message": ai_result.get("advice", ""),
-            "severity": ai_result.get("severity", "emergency"),
-            "first_aid": ai_result.get("first_aid", ""),
-            "otc_medicines": ai_result.get("otc_medicines", ""),
-            "when_to_visit_doctor": ai_result.get("when_to_visit_doctor", ""),
-            "question": "",
-            "suggested_specializations": ["Emergency Care"],
-            "suggested_doctors": []
-        }), 200
-
-    #   Step 3   Triage stage - just return question
-    if stage == "triage":
-        return jsonify({
-            "stage": "triage",
-            "question": ai_result.get("question", ""),
-            "message": "",
-            "severity": "",
-            "first_aid": "",
-            "otc_medicines": "",
-            "when_to_visit_doctor": "",
-            "suggested_specializations": [],
-            "suggested_doctors": []
-        }), 200
-
-    # Step 4   Final stage - full analysis + doctor matching
-    specializations = ai_result.get("specializations", ["General Physician"])
-    
-    # Fetch doctors from DB based on specializations
-    suggested_doctors = []
-    for spec in specializations:
-        doctors = worker_db.get_workers_by_specialization(spec)
-        if doctors:
-            suggested_doctors.extend(doctors)
-
-    # Remove duplicates
-    unique_docs = {doc["id"]: doc for doc in suggested_doctors}.values()
-
-    # Smart Doctor Ranking
-    def rank_score(doc):
-        rating = float(doc.get("rating", 0)) or 0
-        experience = int(doc.get("experience", 0)) or 0
-        return (rating * 2) + (experience * 0.5)
-
-    # Sort doctors by score (highest first)
-    ranked_doctors = sorted(unique_docs, key=rank_score, reverse=True)
-
-    # Return TOP 5 best doctors
-    top_doctors = list(ranked_doctors)[:5]
-
-    #   Step 5   Return comprehensive AI response
-    return jsonify({
-        "stage": "final",
-        "message": ai_result.get("advice", ""),
-        "severity": ai_result.get("severity", "medium"),
-        "first_aid": ai_result.get("first_aid", ""),
-        "otc_medicines": ai_result.get("otc_medicines", ""),
-        "when_to_visit_doctor": ai_result.get("when_to_visit_doctor", ""),
-        "question": "",
-        "suggested_specializations": specializations,
-        "suggested_doctors": top_doctors
-    }), 200
+            "success": False,
+            "message": f"AI analysis failed: {str(e)}"
+        }), 500
 
 # ================= AI MECHANIC - CAR DIAGNOSTIC AI =================
 @app.route("/api/ai/mechanic-diagnosis", methods=["POST"])

@@ -1,0 +1,258 @@
+/* My Care Screen Styles */
+
+.my-care-screen {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+  padding-bottom: 80px; /* Space for bottom nav */
+}
+
+/* Header Section */
+.my-care-header {
+  background: linear-gradient(135deg, #7B2FBE 0%, #9B59B6 100%);
+  padding: 32px 20px 36px 20px;
+}
+
+.my-care-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.my-care-header-icon {
+  font-size: 22px;
+  color: white;
+}
+
+.my-care-header-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.my-care-header-subtitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+  margin-top: 4px;
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+/* Menu Container */
+.my-care-menu-container {
+  background: white;
+  border-radius: 16px;
+  margin: 20px 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+}
+
+/* Menu Items */
+.my-care-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.my-care-menu-item:hover {
+  background: #faf8ff;
+}
+
+.my-care-menu-item:active {
+  background: #f3eeff;
+}
+
+/* Icon Box */
+.menu-icon-box {
+  width: 52px;
+  height: 52px;
+  background: #f3eeff;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #7B2FBE;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.menu-icon {
+  font-size: 24px;
+}
+
+/* Appointment Badge */
+.appointment-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #7B2FBE;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  z-index: 1;
+}
+
+/* Menu Item Content */
+.menu-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-item-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 3px;
+  line-height: 1.2;
+}
+
+.menu-item-subtitle {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Arrow */
+.menu-item-arrow {
+  color: #bbbbbb;
+  font-size: 20px;
+  flex-shrink: 0;
+  font-weight: 300;
+}
+
+/* Divider */
+.menu-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 0 16px;
+}
+
+/* Responsive Design */
+
+/* Mobile (max-width: 480px) - Default styles above */
+
+/* Tablet (481px–768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .my-care-header {
+    padding: 40px 24px;
+  }
+  
+  .my-care-menu-container {
+    max-width: 500px;
+    margin: 20px auto;
+  }
+  
+  .my-care-header-title {
+    font-size: 24px;
+  }
+  
+  .my-care-header-subtitle {
+    font-size: 15px;
+  }
+  
+  .menu-item-title {
+    font-size: 17px;
+  }
+  
+  .menu-item-subtitle {
+    font-size: 14px;
+  }
+}
+
+/* Desktop (769px+) */
+@media (min-width: 768px) {
+  .my-care-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px;
+    padding-bottom: 32px;
+  }
+
+  .my-care-header {
+    border-radius: 16px;
+    margin-bottom: 24px;
+    padding: 32px;
+  }
+
+  .my-care-menu-container {
+    margin: 0;
+  }
+
+  .my-care-menu-item {
+    padding: 24px 20px;
+  }
+
+  .menu-icon-box {
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+  }
+
+  .menu-item-title {
+    font-size: 17px;
+  }
+
+  .menu-item-subtitle {
+    font-size: 14px;
+  }
+}
+
+/* Large Desktop (1200px+) */
+@media (min-width: 1200px) {
+  .my-care-page {
+    max-width: 900px;
+  }
+}
+
+/* Animation and Transitions */
+.my-care-menu-item {
+  transform: translateX(0);
+  transition: all 0.2s ease;
+}
+
+.my-care-menu-item:hover {
+  transform: translateX(2px);
+}
+
+.appointment-badge {
+  animation: badge-pulse 2s infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Focus states for accessibility */
+.my-care-menu-item:focus {
+  outline: 2px solid #7B2FBE;
+  outline-offset: 2px;
+}
+
+/* Loading state for badge */
+.appointment-badge.loading {
+  background: #999;
+  animation: none;
+}
+
+/* Intentionally no dark-mode override:
+   Healthcare screens use the same white/purple theme everywhere. */

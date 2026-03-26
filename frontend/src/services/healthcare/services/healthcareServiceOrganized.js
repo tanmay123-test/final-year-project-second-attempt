@@ -5,21 +5,15 @@
 
 import { healthcareAPI, userAuthAPI, apiUtils } from '../../organizedApi.js';
 
-console.log('[CLI] Healthcare service initialized (using organized database)');
-
 // Get specializations
 export const getSpecializations = async () => {
-  console.log('[CLI] Fetching specializations from organized database...');
-  
   try {
     const response = await healthcareAPI.getSpecializations();
-    console.log('[CLI] Specializations fetched:', response.data.length, 'items');
     return response.data;
   } catch (error) {
     console.error('[CLI] Error fetching specializations:', error);
     
     // Return mock data for development
-    console.log('[CLI] Using mock specializations data');
     return [
       { id: 1, name: 'General', icon: 'stethoscope' },
       { id: 2, name: 'Cardiology', icon: 'heart' },
@@ -32,11 +26,8 @@ export const getSpecializations = async () => {
 
 // Get top doctors using organized database
 export const getTopDoctors = async () => {
-  console.log('[CLI] Fetching top doctors from organized database...');
-  
   try {
     const response = await healthcareAPI.getDoctors({ is_verified: true, limit: 10 });
-    console.log('[CLI] Top doctors fetched:', response.data.workers.length, 'items');
     
     // Transform data to match expected format
     return response.data.workers.map(worker => ({
@@ -55,7 +46,6 @@ export const getTopDoctors = async () => {
     console.error('[CLI] Error fetching top doctors:', error);
     
     // Return mock data for development
-    console.log('[CLI] Using mock doctors data');
     return [
       {
         id: 1,
@@ -99,8 +89,6 @@ export const getTopDoctors = async () => {
 
 // Book appointment using organized database
 export const bookAppointment = async (doctorId, appointmentData) => {
-  console.log('[CLI] Booking appointment for doctor:', doctorId);
-  
   try {
     const bookingData = {
       worker_id: doctorId,
@@ -114,7 +102,6 @@ export const bookAppointment = async (doctorId, appointmentData) => {
     };
     
     const response = await healthcareAPI.createAppointment(bookingData);
-    console.log('[CLI] Appointment booked successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('[CLI] Error booking appointment:', error);
@@ -124,8 +111,6 @@ export const bookAppointment = async (doctorId, appointmentData) => {
 
 // Get user appointments
 export const getUserAppointments = async () => {
-  console.log('[CLI] Fetching user appointments from organized database...');
-  
   try {
     const user = apiUtils.getCurrentUser();
     if (!user) {
@@ -133,7 +118,6 @@ export const getUserAppointments = async () => {
     }
     
     const response = await healthcareAPI.getAppointments({ user_id: user.id });
-    console.log('[CLI] User appointments fetched:', response.data.length, 'items');
     return response.data;
   } catch (error) {
     console.error('[CLI] Error fetching user appointments:', error);
@@ -143,8 +127,6 @@ export const getUserAppointments = async () => {
 
 // Get doctor availability
 export const getDoctorAvailability = async (doctorId) => {
-  console.log('[CLI] Fetching doctor availability from organized database...');
-  
   try {
     // This would be implemented as a separate endpoint
     // For now, return mock availability
@@ -165,11 +147,8 @@ export const getDoctorAvailability = async (doctorId) => {
 
 // Cancel appointment
 export const cancelAppointment = async (appointmentId) => {
-  console.log('[CLI] Cancelling appointment:', appointmentId);
-  
   try {
     const response = await healthcareAPI.updateAppointment(appointmentId, { status: 'cancelled' });
-    console.log('[CLI] Appointment cancelled successfully');
     return response.data;
   } catch (error) {
     console.error('[CLI] Error cancelling appointment:', error);
@@ -179,14 +158,11 @@ export const cancelAppointment = async (appointmentId) => {
 
 // Rate doctor/service
 export const rateService = async (bookingId, rating, review) => {
-  console.log('[CLI] Rating service:', bookingId, rating);
-  
   try {
     const response = await api.post(`/api/reviews/healthcare/${bookingId}`, {
       rating,
       review_text: review
     });
-    console.log('[CLI] Service rated successfully');
     return response.data;
   } catch (error) {
     console.error('[CLI] Error rating service:', error);
@@ -196,8 +172,6 @@ export const rateService = async (bookingId, rating, review) => {
 
 // Get doctor by specialization
 export const getDoctorsBySpecialization = async (specialization) => {
-  console.log('[CLI] Fetching doctors by specialization:', specialization);
-  
   try {
     const response = await healthcareAPI.getDoctors({ 
       specialization: specialization,
@@ -224,8 +198,6 @@ export const getDoctorsBySpecialization = async (specialization) => {
 
 // Search doctors
 export const searchDoctors = async (query) => {
-  console.log('[CLI] Searching doctors:', query);
-  
   try {
     const response = await healthcareAPI.getDoctors({ 
       search: query,
@@ -252,11 +224,8 @@ export const searchDoctors = async (query) => {
 
 // Get healthcare statistics
 export const getHealthcareStatistics = async () => {
-  console.log('[CLI] Fetching healthcare statistics...');
-  
   try {
     const response = await api.get('/api/statistics/healthcare');
-    console.log('[CLI] Healthcare statistics fetched');
     return response.data.statistics;
   } catch (error) {
     console.error('[CLI] Error fetching healthcare statistics:', error);

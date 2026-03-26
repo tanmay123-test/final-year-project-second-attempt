@@ -89,6 +89,10 @@ export const workerService = {
 };
 
 export const doctorService = {
+  // Auth
+  login: (credentials) => api.post('/doctor/login', credentials),
+  
+  // Doctor Info
   getAllDoctors: () => api.get('/healthcare/doctors'),
   getSpecializations: () => api.get('/healthcare/specializations'),
   getDoctorsBySpecialization: (spec) => api.get(`/healthcare/doctors/${spec}`),

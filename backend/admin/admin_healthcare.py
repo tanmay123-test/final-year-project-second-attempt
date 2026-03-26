@@ -22,12 +22,6 @@ user_db = UserDB()
 appt_db = AppointmentDB()
 subscription_db = SubscriptionDB()
 
-def get_db_connection():
-    """Get database connection for admin operations"""
-    conn = sqlite3.connect('expertease.db')
-    conn.row_factory = sqlite3.Row
-    return conn
-
 # ================= TRUST & SAFETY - WORKER VERIFICATION =================
 
 @healthcare_admin_bp.route('/workers/pending', methods=['GET'])

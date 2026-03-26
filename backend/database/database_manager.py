@@ -165,6 +165,22 @@ class DatabaseManager:
         """Get all workers for a specific service"""
         return self.get_worker(service_type=service_type)
     
+    def get_workers_by_service_and_specialization(self, service_type, specialization):
+        """Get workers by service type and specialization"""
+        db_name = service_type
+        with self.get_connection(db_name) as conn:
+            cursor = conn.cursor()
+            
+            # Query workers by service type and specialization
+            cursor.execute('''
+                SELECT * FROM workers 
+                WHERE service_type = ? AND specialization = ? AND worker_type = 'doctor'
+                ORDER BY rating DESC, experience DESC
+            ''', (service_type, specialization))
+            
+            workers = [dict(row) for row in cursor.fetchall()]
+            return workers
+    
     # Service-Specific Methods
     def create_booking(self, service_type, user_id, worker_id, booking_data):
         """Create booking for any service"""

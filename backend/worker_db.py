@@ -124,17 +124,18 @@ class WorkerDB:
 
             hashed_pw = None
             # Use default hourly rate if not provided
-            if hourly_rate is None:
-                hourly_rate = get_worker_default_rate(service)
             
             if password:
                 hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode('utf-8')
                 
+            # Auto-approve healthcare workers
+            status = "approved" if service == "healthcare" else "pending"
+            
             cursor.execute("""
-                INSERT INTO workers (full_name, email, phone, service, specialization, experience, clinic_location, license_number, password, aadhaar_number, id_proof_url, skills, hourly_rate, bio)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO workers (full_name, email, phone, service, specialization, experience, clinic_location, license_number, password, aadhaar_number, id_proof_url, skills, hourly_rate, bio, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
-            """, (full_name, email, phone, service, specialization, int(experience or 0), clinic_location or "", license_number, hashed_pw, aadhaar, id_proof, skills, hourly_rate, bio))
+            """, (full_name, email, phone, service, specialization, int(experience or 0), clinic_location or "", license_number, hashed_pw, aadhaar, id_proof, skills, hourly_rate, bio, status))
             worker_id = cursor.fetchone()['id']
             conn.commit()
             return worker_id
@@ -273,7 +274,7 @@ class WorkerDB:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
             if service_type:
-                cursor.execute("SELECT * FROM workers WHERE status = 'pending' AND CONCAT(',', service, ',') LIKE %s", (f'%,{service_type},%',))
+                cursor.execute("SELECT * FROM workers WHERE status = 'pending' AND service_type = %s", (service_type,))
             else:
                 cursor.execute("SELECT * FROM workers WHERE status = 'pending'")
             rows = cursor.fetchall()
