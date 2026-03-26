@@ -3920,10 +3920,11 @@ def healthcare_pending_workers():
     print("="*60)
     
     try:
-        response = requests.get(f"{API}/healthcare/workers/pending")
+        response = requests.get(f"{API}/admin/healthcare/workers/pending")
         
         if response.status_code == 200:
-            workers = response.json()
+            data = response.json()
+            workers = data.get('workers', [])
             
             if not workers:
                 print("  No pending healthcare workers found")
@@ -3949,10 +3950,11 @@ def healthcare_approved_workers():
     print("="*60)
     
     try:
-        response = requests.get(f"{API}/healthcare/workers/approved")
+        response = requests.get(f"{API}/admin/healthcare/workers/approved")
         
         if response.status_code == 200:
-            workers = response.json()
+            data = response.json()
+            workers = data.get('workers', [])
             
             if not workers:
                 print("  No approved healthcare workers found")
@@ -3984,7 +3986,7 @@ def healthcare_worker_details():
         return
     
     try:
-        response = requests.get(f"{API}/healthcare/workers/{worker_id}")
+        response = requests.get(f"{API}/admin/healthcare/workers/{worker_id}")
         
         if response.status_code == 200:
             worker = response.json()
@@ -4017,7 +4019,7 @@ def healthcare_approve_worker():
         return
     
     try:
-        response = requests.post(f"{API}/healthcare/workers/approve/{worker_id}")
+        response = requests.post(f"{API}/admin/healthcare/workers/approve/{worker_id}")
         
         if response.status_code == 200:
             print("  Worker approved successfully!")
@@ -4043,7 +4045,7 @@ def healthcare_reject_worker():
     
     try:
         response = requests.post(
-            f"{API}/healthcare/workers/reject/{worker_id}",
+            f"{API}/admin/healthcare/workers/reject/{worker_id}",
             json={"reason": reason}
         )
         
@@ -4071,7 +4073,7 @@ def healthcare_suspend_worker():
     
     try:
         response = requests.post(
-            f"{API}/healthcare/workers/suspend/{worker_id}",
+            f"{API}/admin/healthcare/workers/suspend/{worker_id}",
             json={"reason": reason}
         )
         
@@ -4091,10 +4093,11 @@ def healthcare_users():
     print("="*60)
     
     try:
-        response = requests.get(f"{API}/healthcare/users")
+        response = requests.get(f"{API}/admin/healthcare/users")
         
         if response.status_code == 200:
-            users = response.json()
+            data = response.json()
+            users = data.get('users', [])
             
             if not users:
                 print("  No healthcare users found")
@@ -4119,10 +4122,11 @@ def healthcare_appointments():
     print("="*60)
     
     try:
-        response = requests.get(f"{API}/healthcare/appointments")
+        response = requests.get(f"{API}/admin/healthcare/appointments")
         
         if response.status_code == 200:
-            appointments = response.json()
+            data = response.json()
+            appointments = data.get('appointments', [])
             
             if not appointments:
                 print("  No healthcare appointments found")

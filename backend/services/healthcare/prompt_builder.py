@@ -57,8 +57,40 @@ MULTILINGUAL HANDLING:
 
 Remember: You are providing initial guidance, not definitive diagnosis. Always recommend professional consultation for serious conditions."""
     
+    def build_headache_prompt(self, symptoms):
+        """Build specialized prompt for headache analysis"""
+        return f"""Analyze the following headache symptoms and provide detailed medical advice:
+
+Symptoms: {symptoms}
+
+Please provide a comprehensive analysis focusing on:
+1. Type of headache (tension, migraine, cluster, sinus, etc.)
+2. Possible causes and triggers
+3. Immediate relief measures
+4. When to seek emergency care
+5. Recommended specialist (Neurologist for complex cases)
+6. Preventive measures
+
+Respond in JSON format:
+{{
+    "advice": "Detailed advice about headache type, causes, and management",
+    "severity": "low|medium|high|emergency",
+    "first_aid": "Immediate steps for headache relief",
+    "otc_medicines": "Recommended over-the-counter medications with alternatives",
+    "specializations": ["Neurologist", "General Physician"],
+    "reasoning": "Why this type of headache and specialist recommendation",
+    "follow_up": "When to see doctor and what to expect"
+}}
+
+Important: Consider red flags like:
+- Sudden severe headache ("thunderclap")
+- Headache with fever, stiff neck
+- Headache after head injury
+- Headache with vision changes or confusion
+- Worst headache of your life
+"""
+    
     def build_analysis_prompt(self, symptoms, conversation_history=None):
-        """Build dynamic prompt for symptom analysis"""
         prompt = f"""{self.system_prompt}
 
 USER SYMPTOMS: "{symptoms}"

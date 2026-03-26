@@ -24,7 +24,7 @@ class AIEngine:
             
             if self.gemini_api_key and self.gemini_api_key != 'YOUR_GEMINI_API_KEY':
                 genai.configure(api_key=self.gemini_api_key)
-                self.model = genai.GenerativeModel('gemini-pro')
+                self.model = genai.GenerativeModel('gemini-1.5-flash')
                 print("✅ Gemini AI initialized successfully")
             else:
                 print("⚠️ Gemini API key not configured, using fallback mode")
@@ -125,16 +125,23 @@ class AIEngine:
             symptoms_lower = translated_symptoms.lower()
             is_emergency = any(keyword in symptoms_lower for keyword in emergency_keywords)
             
-            # Step 3: Build appropriate prompt
+            # Step 3: Check for headache specifically
+            is_headache = any(keyword in symptoms_lower for keyword in [
+                "headache", "head pain", "migraine", "head ache", "headache pain"
+            ])
+            
+            # Step 4: Build appropriate prompt
             if is_emergency:
                 analysis_prompt = prompt_builder.build_emergency_prompt(translated_symptoms)
+            elif is_headache:
+                analysis_prompt = prompt_builder.build_headache_prompt(translated_symptoms)
             else:
                 analysis_prompt = prompt_builder.build_analysis_prompt(
                     translated_symptoms, 
                     conversation_history
                 )
             
-            # Step 4: Get AI response
+            # Step 5: Get AI response
             if self.model:
                 try:
                     response = self.model.generate_content(analysis_prompt)
@@ -158,15 +165,16 @@ class AIEngine:
                     
                 except Exception as e:
                     print(f"Gemini analysis failed: {e}")
+                    # Fall through to fallback
             
-            # Fallback to basic analysis if Gemini fails
-            return self._fallback_analysis(translated_symptoms, detected_language)
+            # Fallback to rule-based analysis if Gemini fails
+            return self._fallback_analysis(translated_symptoms, is_headache, is_emergency, detected_language)
             
         except Exception as e:
-            print(f"AI Engine error: {e}")
-            return self._fallback_analysis(symptoms, "english")
+            print(f"Analysis failed: {e}")
+            return self._fallback_analysis(symptoms, False, False, "english")
     
-    def _fallback_analysis(self, symptoms, detected_language="english"):
+    def _fallback_analysis(self, symptoms, is_headache, is_emergency, detected_language="english"):
         """Fallback analysis when AI is unavailable"""
         symptoms_lower = symptoms.lower()
         
