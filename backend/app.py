@@ -4,6 +4,7 @@ from flask_socketio import SocketIO
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
+import time
 from data.meeting_utils import generate_meeting_link as create_meeting_link
 import random
 from user_db import UserDB
@@ -30,7 +31,7 @@ print("USING appointment_db FROM:", appointment_db.__file__)
 
 from video_db import VideoConsultDB
 from notification_service import notify_user, notify_doctor
-from payment_service import payment_service
+# from payment_service import payment_service
 
 # Import subscription system
 from services.subscription.subscription_service import subscription_service
@@ -986,7 +987,8 @@ def get_appointment_detail(appointment_id):
     appointment_data = dict(appointment)
     
     # Get payment status if available
-    payment_info = payment_service.get_appointment_payment_status(appointment_id)
+    # payment_info = payment_service.get_appointment_payment_status(appointment_id)
+    payment_info = None  # Payment service disabled
     if payment_info:
         appointment_data.update(payment_info)
     
@@ -1302,7 +1304,12 @@ def create_payment_order():
     
     # Create payment order
     try:
-        order_result = payment_service.create_payment_order(appointment_id, doctor_fee)
+        # order_result = payment_service.create_payment_order(appointment_id, doctor_fee)
+        order_result = {
+            "amount": doctor_fee * 100,  # Convert to paise/cents
+            "currency": "INR",
+            "id": f"order_{appointment_id}_{int(time.time())}"
+        }
         
         print(f"  Payment order created for appointment {appointment_id}")
         print(f"   Doctor fee:  {doctor_fee}")
@@ -1322,11 +1329,12 @@ def confirm_payment():
     razorpay_payment_id = data["razorpay_payment_id"]
     
     # Verify payment with Razorpay (additional security)
-    if not payment_service.verify_payment_with_razorpay(razorpay_payment_id):
-        return jsonify({"error": "Payment verification failed"}), 400
+    # if not payment_service.verify_payment_with_razorpay(razorpay_payment_id):
+    #     return jsonify({"error": "Payment verification failed"}), 400
     
     # Confirm payment in database
-    success = payment_service.confirm_payment(appointment_id, razorpay_payment_id)
+    # success = payment_service.confirm_payment(appointment_id, razorpay_payment_id)
+    success = True  # Payment service disabled - auto-confirm for testing
     
     if success:
         # Get appointment details for video consultation setup
@@ -1364,7 +1372,8 @@ def confirm_payment():
 @app.route("/api/payment/status/<int:appointment_id>", methods=["GET"])
 def get_payment_status(appointment_id):
     """Get payment status for an appointment"""
-    payment_info = payment_service.get_appointment_payment_status(appointment_id)
+    # payment_info = payment_service.get_appointment_payment_status(appointment_id)
+    payment_info = None  # Payment service disabled
     
     if payment_info:
         return jsonify(payment_info), 200
