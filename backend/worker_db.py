@@ -2,6 +2,7 @@
 Worker/Doctor database for healthcare professionals.
 """
 import os
+import sqlite3
 import psycopg2
 import psycopg2.extras
 import bcrypt
@@ -9,59 +10,137 @@ import re
 from dotenv import load_dotenv
 from pricing_config import get_worker_default_rate
 
-load_dotenv()
+load_dotenv('.env.local')  # Load local config first
+load_dotenv()  # Then load regular .env
 
 class WorkerDB:
     def __init__(self):
+        self.use_postgres = os.environ.get('DATABASE_URL') and not os.environ.get('USE_SQLITE', '').lower() == 'true'
         self.create_table()
 
     def get_conn(self):
-        load_dotenv()
-        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        if self.use_postgres:
+            try:
+                return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='prefer')
+            except Exception as e:
+                print(f"PostgreSQL connection failed: {e}")
+                print("Falling back to SQLite...")
+                self.use_postgres = False
+                return self.get_sqlite_conn()
+        else:
+            return self.get_sqlite_conn()
+
+    def get_sqlite_conn(self):
+        db_path = os.environ.get('DATABASE_PATH', './data')
+        if not os.path.exists(db_path):
+            os.makedirs(db_path, exist_ok=True)
+        
+        return sqlite3.connect(os.path.join(db_path, 'workers.db'))
 
     def create_table(self):
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        if self.use_postgres:
+            conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='prefer')
+            cursor = conn.cursor()
+            try:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS workers (
+                        id SERIAL PRIMARY KEY,
+                        full_name TEXT NOT NULL,
+                        email TEXT UNIQUE NOT NULL,
+                        phone TEXT,
+                        service TEXT,
+                        specialization TEXT,
+                        bio TEXT,
+                        experience_years INTEGER,
+                        education TEXT,
+                        license_number TEXT,
+                        address TEXT,
+                        city TEXT,
+                        state TEXT,
+                        pincode TEXT,
+                        pricing_model TEXT,
+                        hourly_rate DECIMAL,
+                        consultation_fee DECIMAL,
+                        availability TEXT,
+                        languages TEXT,
+                        profile_image TEXT,
+                        is_verified BOOLEAN DEFAULT FALSE,
+                        rating DECIMAL DEFAULT 0.0,
+                        total_reviews INTEGER DEFAULT 0,
+                        status TEXT DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                conn.commit()
+            except Exception as e:
+                print(f"PostgreSQL table creation failed: {e}")
+                print("Falling back to SQLite...")
+                self.use_postgres = False
+                conn.close()
+                self.create_sqlite_table()
+                return
+            finally:
+                conn.close()
+        else:
+            self.create_sqlite_table()
+
+    def create_sqlite_table(self):
+        conn = self.get_sqlite_conn()
         cursor = conn.cursor()
-        try:
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS workers (
-                    id SERIAL PRIMARY KEY,
-                    full_name TEXT NOT NULL,
-                    email TEXT UNIQUE NOT NULL,
-                    phone TEXT,
-                    service TEXT DEFAULT 'healthcare',
-                    specialization TEXT,
-                    experience INTEGER DEFAULT 0,
-                    clinic_location TEXT,
-                    rating FLOAT DEFAULT 0,
-                    photo_url TEXT,
-                    status TEXT DEFAULT 'pending',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    license_number TEXT,
-                    password TEXT,
-                    wallet_balance FLOAT DEFAULT 0.0,
-                    aadhaar_number TEXT,
-                    id_proof_url TEXT,
-                    skills TEXT,
-                    portfolio_url TEXT,
-                    bio TEXT,
-                    hourly_rate FLOAT
-                )
-            """)
-            conn.commit()
-        except Exception as e:
-            conn.rollback()
-            print(f"DB Error: {e}")
-            raise
-        finally:
-            cursor.close()
-            conn.close()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS workers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                full_name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                phone TEXT,
+                service TEXT,
+                specialization TEXT,
+                bio TEXT,
+                experience_years INTEGER,
+                education TEXT,
+                license_number TEXT,
+                address TEXT,
+                city TEXT,
+                state TEXT,
+                pincode TEXT,
+                pricing_model TEXT,
+                hourly_rate REAL,
+                consultation_fee REAL,
+                availability TEXT,
+                languages TEXT,
+                profile_image TEXT,
+                is_verified BOOLEAN DEFAULT 0,
+                rating REAL DEFAULT 0.0,
+                total_reviews INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
+        conn.close()
 
     def _row_to_dict(self, row):
         if row is None:
             return None
-        d = dict(row)
+        
+        if self.use_postgres:
+            # PostgreSQL returns dict-like rows
+            d = dict(row)
+        else:
+            # SQLite returns tuples, need to get column names
+            if hasattr(row, 'keys'):
+                d = dict(zip(row.keys(), row))
+            else:
+                # Fallback for older SQLite versions
+                columns = ['id', 'full_name', 'email', 'phone', 'service', 'specialization', 
+                          'bio', 'experience_years', 'education', 'license_number', 'address',
+                          'city', 'state', 'pincode', 'pricing_model', 'hourly_rate',
+                          'consultation_fee', 'availability', 'languages', 'profile_image',
+                          'is_verified', 'rating', 'total_reviews', 'status', 'created_at', 'updated_at']
+                d = dict(zip(columns, row)) if len(row) == len(columns) else {}
+        
         if isinstance(d, dict):
             d["name"] = d.get("full_name") or d.get("name", "")
         return d

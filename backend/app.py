@@ -267,25 +267,17 @@ except Exception as e:
 # Register Tow Truck blueprint
 try:
     from car_service.tow_truck_routes import tow_truck_bp
+    # CORS must be applied BEFORE registration
+    CORS(tow_truck_bp, origins=["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"])
     app.register_blueprint(tow_truck_bp, url_prefix='/api/tow-truck')
     
     # NEW TOW TRUCK BLUEPRINT
     from car_service.tow_truck.routes import tow_bp
     app.register_blueprint(tow_bp)
     
-    # Add specific CORS for tow truck blueprint
-    CORS(tow_truck_bp, origins=["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"])
     print("  Tow Truck blueprint registered")
 except Exception as e:
     print(f"   Could not register Tow Truck blueprint: {e}")
-
-# Register Truck Operator blueprint
-try:
-    from car_service.truck_operator_routes import truck_operator_bp
-    app.register_blueprint(truck_operator_bp)
-    print("  Truck operator routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register truck operator routes blueprint: {e}")
 
 # Initialize WebSocket signaling server
 socketio = init_video_signaling(app)

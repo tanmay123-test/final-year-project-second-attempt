@@ -60,29 +60,20 @@ const CarServiceSetup = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // First setup user profile
-      const profileData = {
+      // The backend setup-profile endpoint expects BOTH profile and car data in one request
+      const setupData = {
         city: formData.city,
         address: formData.address,
         emergency_contact_name: formData.emergency_contact_name,
-        emergency_contact_phone: formData.emergency_contact_phone
-      };
-      
-      await api.post('/api/car/setup-profile', profileData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      // Then add the car
-      const carData = {
+        emergency_contact_phone: formData.emergency_contact_phone,
         brand: formData.brand,
         model: formData.model,
         year: formData.year,
         fuel_type: formData.fuel_type,
-        registration_number: formData.registration_number,
-        is_default: formData.is_default
+        registration_number: formData.registration_number
       };
       
-      await api.post('/api/car/add-car', carData, {
+      await api.post('/api/car/setup-profile', setupData, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
