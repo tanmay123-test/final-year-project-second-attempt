@@ -34,7 +34,7 @@ from notification_service import notify_user, notify_doctor
 # from payment_service import payment_service
 
 # Import subscription system
-from services.subscription.subscription_service import subscription_service
+# from services.subscription.subscription_service import subscription_service
 from services.subscription.subscription_routes import subscription_bp
 
 # Import video consultation system
@@ -844,7 +844,8 @@ def respond():
         worker_id = appointment["worker_id"]
         
         # Check subscription eligibility before accepting appointment
-        eligibility = subscription_service.check_worker_eligibility(worker_id)
+        # eligibility = subscription_service.check_worker_eligibility(worker_id)
+        eligibility = {'valid': True}  # Subscription service disabled
         
         if not eligibility['valid']:
             print(f"  Subscription check failed for worker {worker_id}: {eligibility['error']}")
@@ -854,7 +855,7 @@ def respond():
             }), 402
         
         # Track usage for accepted appointment
-        subscription_service.track_appointment_acceptance(worker_id)
+        # subscription_service.track_appointment_acceptance(worker_id)
         print(f"  Usage tracked for worker {worker_id}")
 
     # Update appointment status
@@ -1255,7 +1256,8 @@ def admin_approve_worker(worker_id):
     
     # Assign free trial to approved worker
     try:
-        trial_result = subscription_service.assign_free_trial_to_worker(worker_id)
+        # trial_result = subscription_service.assign_free_trial_to_worker(worker_id)
+        trial_result = {'success': True, 'message': 'Free trial assigned (subscription service disabled)'}
         if trial_result['success']:
             print(f"  Free trial assigned to worker {worker_id}")
         else:

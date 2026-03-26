@@ -1,4 +1,4 @@
-import razorpay
+# import razorpay
 import os
 from datetime import datetime, timedelta
 from .subscription_db import subscription_db
@@ -8,7 +8,8 @@ from config import RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET
 
 class SubscriptionService:
     def __init__(self):
-        self.client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        # self.client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        pass
     
     def create_subscription_order(self, worker_id: int, plan_id: int) -> dict:
         """Create Razorpay order for subscription"""
