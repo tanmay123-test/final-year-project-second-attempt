@@ -29,7 +29,7 @@ const DoctorDashboard = () => {
       setLoading(true);
 
       // Fetch dashboard stats
-      const statsResponse = await fetch('http://localhost:5000/doctor/dashboard-stats', {
+      const statsResponse = await fetch(`${import.meta.env.VITE_API_URL}/doctor/dashboard-stats`, {
         headers: {
           'Authorization': `Bearer ${doctorToken}`,
           'Content-Type': 'application/json'
@@ -42,7 +42,7 @@ const DoctorDashboard = () => {
       }
 
       // Fetch today's schedule
-      const scheduleResponse = await fetch('http://localhost:5000/doctor/todays-schedule', {
+      const scheduleResponse = await fetch(`${import.meta.env.VITE_API_URL}/doctor/todays-schedule`, {
         headers: {
           'Authorization': `Bearer ${doctorToken}`,
           'Content-Type': 'application/json'
@@ -75,7 +75,7 @@ const DoctorDashboard = () => {
       // Optimistic update
       setIsOnline(newStatus);
 
-      const response = await fetch('http://localhost:5000/doctor/toggle-online', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/doctor/toggle-online`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${doctorToken}`,

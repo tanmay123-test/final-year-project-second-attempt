@@ -881,7 +881,7 @@ const FuelDeliveryHomepage = () => {
   useEffect(() => {
     fetchData();
 
-    const socket = io('http://localhost:5000');
+    const socket = io(import.meta.env.VITE_API_URL);
     socket.emit('join_room', { worker_id: agentId, worker_type: 'fuel_delivery' });
 
     socket.on('new_fuel_request', (request) => {

@@ -14,7 +14,7 @@ class FreelanceSocketService {
     }
 
     return new Promise((resolve, reject) => {
-      this.socket = io('http://localhost:5000', {
+      this.socket = io(import.meta.env.VITE_API_URL, {
         transports: ['websocket', 'polling'],
         withCredentials: true
       });

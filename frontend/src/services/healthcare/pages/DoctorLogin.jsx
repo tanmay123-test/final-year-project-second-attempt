@@ -19,7 +19,7 @@ const DoctorLogin = () => {
 
   const checkBackendStatus = async () => {
     try {
-      const response = await fetch('http://localhost:5000/');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/`);
       if (response.ok) {
         setBackendStatus('✅ Backend is running');
       } else {
@@ -45,7 +45,7 @@ const DoctorLogin = () => {
     console.log('Attempting login with:', { email: formData.email, password: '***' });
 
     try {
-      const response = await fetch('http://localhost:5000/doctor/login', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/doctor/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

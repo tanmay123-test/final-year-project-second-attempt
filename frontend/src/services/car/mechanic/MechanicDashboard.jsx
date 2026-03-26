@@ -510,7 +510,7 @@ const MechanicDashboard = () => {
   useEffect(() => {
     fetchData();
 
-    const socket = io('http://localhost:5000');
+    const socket = io(import.meta.env.VITE_API_URL);
     socket.emit('join_room', { worker_id: workerId, worker_type: 'mechanic' });
 
     socket.on('new_job_request', (job) => {

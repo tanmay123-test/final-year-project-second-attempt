@@ -23,7 +23,7 @@ const useDoctorAuth = () => {
 
   const fetchDoctorInfo = async (token) => {
     try {
-      const response = await fetch('http://localhost:5000/doctor/profile', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/doctor/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
