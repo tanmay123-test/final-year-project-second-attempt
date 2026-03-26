@@ -30,13 +30,32 @@
 }
 
 .hc-brand-icon {
-  font-size: 28px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 10px rgba(142, 68, 173, 0.2);
+  transition: all 0.3s ease;
+}
+
+.hc-brand-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 15px rgba(142, 68, 173, 0.3);
 }
 
 .hc-brand-text {
   font-size: 18px;
   font-weight: 700;
-  color: #7b2fbe;
+  color: #8E44AD;
+  transition: all 0.3s ease;
+}
+
+.hc-sidebar-brand:hover .hc-brand-text {
+  color: #7B3F99;
 }
 
 .hc-sidebar-nav {
@@ -54,23 +73,35 @@
   padding: 12px 16px;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   position: relative;
   font-size: 15px;
   font-weight: 500;
-  color: #666;
+  color: #6B7280;
   user-select: none;
 }
 
 .hc-sidebar-item:hover {
-  background: #f8f4ff;
-  color: #7b2fbe;
+  background: #F3F4F6;
+  color: #8E44AD;
+  transform: translateX(2px);
 }
 
 .hc-sidebar-item.active {
-  background: #f3eeff;
-  color: #7b2fbe;
+  background: #8E44AD;
+  color: white;
   font-weight: 700;
+  box-shadow: 0 4px 12px rgba(142, 68, 173, 0.2);
+}
+
+.hc-sidebar-item.active .hc-sidebar-icon {
+  color: white;
+}
+
+.hc-sidebar-icon {
+  color: #6B7280;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .hc-sidebar-icon {

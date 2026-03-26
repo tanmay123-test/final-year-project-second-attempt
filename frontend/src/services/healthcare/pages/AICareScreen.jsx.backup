@@ -17,6 +17,7 @@ const AICareScreen = () => {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [showEmergencyAlert, setShowEmergencyAlert] = useState(false);
   const messagesEndRef = useRef(null);
+  const token = localStorage.getItem('doctorToken') || localStorage.getItem('token');
 
   const symptoms = [
     '🤕 Headache', '🌡️ Fever', '🤧 Cough', '💔 Chest Pain', 
@@ -131,23 +132,89 @@ const AICareScreen = () => {
     setIsLoading(true);
     
     try {
-      // Simulate AI response for now (perfect demo)
-      setTimeout(() => {
-        const aiResponse = generateAIResponse(userMsg);
-        setMessages(prev => [...prev, aiResponse]);
-        setIsTyping(false);
-        setIsLoading(false);
-        
-        // Speak the response
-        if (voiceEnabled && aiResponse.content) {
-          speakResponse(aiResponse.content);
-        }
-        
-        // Show emergency alert if needed
-        if (aiResponse.severity === 'emergency') {
-          setShowEmergencyAlert(true);
-        }
-      }, 1500);
+      // Use the AI Care test server (port 5001)
+      const url = 'http://localhost:5001/healthcare/ai-care';
+      
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMsg,
+          user_id: user?.id || user?.user_id || user?.userId || 'default',
+          conversation_history: [...messages, userMessage].map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || errData.error || `Server error ${res.status}`);
+      }
+
+      const data = await res.json();
+      setIsTyping(false);
+      
+      console.log('AI Care Response:', data); // Debug log
+
+      // Check if response is successful
+      if (!data.success) {
+        throw new Error(data.message || 'AI analysis failed');
+      }
+
+      // Format the response text with all medical information
+      let responseText = data.response || 'I could not generate a response. Please try again.';
+      
+      // Add additional medical information to the response
+      if (data.severity) {
+        responseText += `\n\n**Severity:** ${data.severity}`;
+      }
+      if (data.first_aid) {
+        responseText += `\n\n**First Aid:** ${data.first_aid}`;
+      }
+      if (data.otc_medicines) {
+        responseText += `\n\n**Medicines:** ${data.otc_medicines}`;
+      }
+      if (data.specializations && data.specializations.length > 0) {
+        responseText += `\n\n**Recommended Specialist:** ${data.specializations.join(', ')}`;
+      }
+      if (data.follow_up) {
+        responseText += `\n\n**Follow-up:** ${data.follow_up}`;
+      }
+      
+      const aiMessage = {
+        role: 'assistant',
+        content: responseText,
+        stage: data.stage || 'final',
+        severity: data.severity || 'low',
+        doctors: data.suggested_doctors || [],
+        specializations: data.specializations || [],
+        firstAid: data.first_aid || '',
+        otcMedicines: data.otc_medicines || '',
+        visitTiming: data.follow_up || '',
+        reasoning: data.reasoning || '',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+      
+      // SPEAK: response (clean text for speech)
+      if (voiceEnabled && responseText) {
+        const cleanText = responseText
+          .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove bold markdown
+          .replace(/\n\n+/g, '. ')          // Convert multiple newlines to periods
+          .replace(/\n/g, ', ')             // Convert single newlines to commas
+          .trim();
+        speakResponse(cleanText);
+      }
+      
+      // Show emergency banner if severity is emergency
+      if (data.severity === 'emergency') {
+        setShowEmergencyAlert(true);
+      }
       
     } catch (err) {
       setIsTyping(false);
@@ -157,132 +224,14 @@ const AICareScreen = () => {
         content: 'Sorry, I could not connect to the health assistant. Please try again.',
         timestamp: new Date()
       }]);
+    } finally {
       setIsLoading(false);
+      setIsTyping(false);
     }
-  };
-
-  // Generate AI response based on symptoms
-  const generateAIResponse = (userMessage) => {
-    const message = userMessage.toLowerCase();
-    
-    // Headache analysis
-    if (message.includes('headache') || message.includes('head pain')) {
-      return {
-        role: 'assistant',
-        content: `Based on your symptoms of headache, here's my analysis:
-
-**Severity:** Medium
-**Type:** Likely tension headache
-
-**Immediate Relief:**
-• Rest in a quiet, dark room
-• Apply cold compress to forehead
-• Stay hydrated with water
-• Take over-the-counter pain reliever if needed
-
-**Recommended Specialist:** Neurologist
-
-**When to See Doctor:**
-• If headache persists more than 3 days
-• If accompanied by fever or stiff neck
-• If vision changes occur
-• If it's the worst headache of your life
-
-**Follow-up:** Monitor symptoms and seek medical attention if they worsen.`,
-        severity: 'medium',
-        doctors: [
-          {
-            id: 1,
-            name: 'Dr. Test Neurologist',
-            specialization: 'Neurologist',
-            experience: 10,
-            rating: 4.8,
-            clinic_location: 'Test Hospital'
-          }
-        ],
-        specializations: ['Neurologist'],
-        firstAid: 'Rest in quiet room, cold compress, stay hydrated',
-        otcMedicines: 'Paracetamol, Ibuprofen',
-        visitTiming: 'If persists more than 3 days or worsens',
-        reasoning: 'Headache symptoms suggest neurological evaluation',
-        timestamp: new Date()
-      };
-    }
-    
-    // Emergency symptoms
-    if (message.includes('severe') || message.includes('emergency') || message.includes('chest pain')) {
-      return {
-        role: 'assistant',
-        content: `⚠️ **EMERGENCY WARNING** ⚠️
-
-Based on your symptoms, this may require immediate medical attention.
-
-**Severity:** EMERGENCY
-
-**Immediate Actions:**
-• Call emergency services: 112
-• Go to nearest emergency room
-• Do not drive yourself if severe symptoms
-
-**This could be:**
-• Medical emergency requiring immediate attention
-• Serious condition that needs urgent evaluation
-
-**DO NOT WAIT** - Seek immediate medical help now!`,
-        severity: 'emergency',
-        doctors: [],
-        specializations: ['Emergency Medicine'],
-        firstAid: 'Call emergency services immediately',
-        otcMedicines: 'None - seek emergency care',
-        visitTiming: 'IMMEDIATE - EMERGENCY',
-        reasoning: 'Severe symptoms require emergency evaluation',
-        timestamp: new Date()
-      };
-    }
-    
-    // Default response
-    return {
-      role: 'assistant',
-      content: `I understand you're experiencing: "${userMessage}"
-
-**Analysis:** Your symptoms need proper medical evaluation.
-
-**Recommendations:**
-• Rest and monitor symptoms
-• Stay hydrated
-• Avoid strenuous activity
-• Note any changes in symptoms
-
-**Suggested Specialist:** General Physician
-
-**When to See Doctor:**
-• If symptoms persist more than 2 days
-• If symptoms worsen
-• If you develop new symptoms
-
-**Follow-up:** Consult healthcare provider for proper diagnosis and treatment.`,
-      severity: 'medium',
-      doctors: [
-        {
-          id: 2,
-          name: 'Dr. Test Physician',
-          specialization: 'General Physician',
-          experience: 8,
-          rating: 4.5,
-          clinic_location: 'Test Clinic'
-        }
-      ],
-      specializations: ['General Physician'],
-      firstAid: 'Rest, hydrate, monitor symptoms',
-      otcMedicines: 'Consult pharmacist',
-      visitTiming: 'If persists more than 2 days',
-      reasoning: 'General medical evaluation recommended',
-      timestamp: new Date()
-    };
   };
 
   const handleSymptomClick = (symptom) => {
-    // Remove emoji for cleaner input
+    // Remove emoji for cleaner API call
     const cleanSymptom = symptom.replace(/[^\w\s]/g, '').trim();
     setInputValue(cleanSymptom);
     handleSendMessage(cleanSymptom);
@@ -395,20 +344,20 @@ Based on your symptoms, this may require immediate medical attention.
                     </div>
                   </div>
                 ))}
-                
+
                 {isTyping && (
                   <div className="message assistant">
                     <div className="ai-icon-indicator">🤖</div>
                     <div className="message-bubble">
                       <div className="typing-indicator">
-                        <span></span>
-                        <span></span>
-                        <span></span>
+                        <span className="typing-dot"></span>
+                        <span className="typing-dot"></span>
+                        <span className="typing-dot"></span>
                       </div>
                     </div>
                   </div>
                 )}
-                
+
                 <div ref={messagesEndRef} />
               </div>
             )}
@@ -419,14 +368,14 @@ Based on your symptoms, this may require immediate medical attention.
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(inputValue)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Describe your symptoms..."
               className="ai-input-field"
               disabled={isLoading}
             />
             <button
               className="ai-send-btn"
-              onClick={() => handleSendMessage(inputValue)}
+              onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || isLoading}
             >
               ➤

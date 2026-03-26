@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Healthcare Provider Login Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            background: #8E44AD; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600;
+        }
+        .success { color: #059669; }
+        .error { color: #DC2626; }
+        .test-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success-bg { background: #d4edda; color: #155724; }
+        .error-bg { background: #f8d7da; color: #721c24; }
+        .warning-bg { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 Healthcare Provider Login Test</h1>
+        <p>Test the healthcare provider login functionality</p>
+
+        <div class="section">
+            <h3>🔧 Backend Connection Test</h3>
+            <button onclick="testBackendConnection()">Test Backend Connection</button>
+            <div id="backendStatus"></div>
+        </div>
+
+        <div class="section">
+            <h3>🔑 Login Test</h3>
+            <div class="test-form">
+                <input type="email" id="testEmail" placeholder="Email" value="doctor@expertease.com">
+                <input type="password" id="testPassword" placeholder="Password" value="doctor123">
+                <button onclick="testLogin()">Test Login</button>
+            </div>
+            <div id="loginStatus"></div>
+        </div>
+
+        <div class="section">
+            <h3>📋 Test Information</h3>
+            <ul>
+                <li><strong>Test Email:</strong> doctor@expertease.com</li>
+                <li><strong>Test Password:</strong> doctor123</li>
+                <li><strong>Backend URL:</strong> http://localhost:5000/doctor/login</li>
+                <li><strong>Frontend Route:</strong> /worker/healthcare/login</li>
+                <li><strong>Success Redirect:</strong> /healthcare/home</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>🚀 Quick Actions</h3>
+            <button onclick="goToLogin()">Go to Login Page</button>
+            <button onclick="goToHealthcare()">Go to Healthcare Home</button>
+            <button onclick="clearStorage()">Clear Storage</button>
+            <div id="actionStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testBackendConnection() {
+            const status = document.getElementById('backendStatus');
+            status.innerHTML = '<div class="status warning-bg">Testing backend connection...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/');
+                if (response.ok) {
+                    status.innerHTML = '<div class="status success-bg">✅ Backend is running and accessible!</div>';
+                } else {
+                    status.innerHTML = '<div class="status error-bg">⚠️ Backend responded but may have issues</div>';
+                }
+            } catch (error) {
+                status.innerHTML = '<div class="status error-bg">❌ Backend is not running! Please start the backend server on localhost:5000</div>';
+            }
+        }
+
+        async function testLogin() {
+            const status = document.getElementById('loginStatus');
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            status.innerHTML = '<div class="status warning-bg">Testing login...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/doctor/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    status.innerHTML = `
+                        <div class="status success-bg">
+                            ✅ Login Successful!<br>
+                            Token: ${data.token.substring(0, 20)}...<br>
+                            Doctor ID: ${data.doctor_id}<br>
+                            Name: ${data.name}<br>
+                            Service: ${data.service}
+                        </div>
+                    `;
+                    
+                    // Store in localStorage for testing
+                    localStorage.setItem('doctorToken', data.token);
+                    localStorage.setItem('doctorInfo', JSON.stringify({
+                        id: data.doctor_id,
+                        name: data.name,
+                        service: data.service,
+                        specialization: data.specialization
+                    }));
+                } else {
+                    status.innerHTML = `<div class="status error-bg">❌ Login Failed: ${data.error}</div>`;
+                }
+            } catch (error) {
+                status.innerHTML = `<div class="status error-bg">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+
+        function goToLogin() {
+            const status = document.getElementById('actionStatus');
+            status.innerHTML = '<div class="status warning-bg">Redirecting to login page...</div>';
+            setTimeout(() => {
+                window.open('/worker/healthcare/login', '_blank');
+            }, 1000);
+        }
+
+        function goToHealthcare() {
+            const status = document.getElementById('actionStatus');
+            status.innerHTML = '<div class="status warning-bg">Redirecting to healthcare home...</div>';
+            setTimeout(() => {
+                window.open('/healthcare/home', '_blank');
+            }, 1000);
+        }
+
+        function clearStorage() {
+            localStorage.removeItem('doctorToken');
+            localStorage.removeItem('doctorInfo');
+            document.getElementById('actionStatus').innerHTML = '<div class="status success-bg">✅ Storage cleared</div>';
+        }
+
+        // Auto-test backend on page load
+        window.onload = () => {
+            testBackendConnection();
+        };
+    </script>
+</body>
+</html>
