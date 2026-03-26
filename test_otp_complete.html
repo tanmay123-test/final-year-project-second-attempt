@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test OTP Complete Job</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; background: #8E44AD; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        .info { background: #e3f2fd; color: #1976d2; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Housekeeping OTP Complete Job</h1>
+    
+    <div class="section">
+        <h3>Step 1: Start Job (Generate OTP)</h3>
+        <div>
+            <label>Booking ID: </label>
+            <input type="number" id="bookingId" value="1" placeholder="Enter booking ID">
+        </div>
+        <button onclick="testStartJob()">1. Start Job (Generate OTP)</button>
+        <button onclick="testGetBookings()">Check My Bookings</button>
+        <div id="startResult"></div>
+    </div>
+    
+    <div class="section">
+        <h3>Step 2: Complete Job with OTP</h3>
+        <div>
+            <label>Enter 6-digit OTP: </label>
+            <input type="text" id="otpInput" placeholder="123456" maxlength="6" style="width: 80px;">
+        </div>
+        <button onclick="testCompleteJob()">2. Complete Job with OTP</button>
+        <div id="completeResult"></div>
+    </div>
+    
+    <div class="section">
+        <h3>All Results</h3>
+        <button onclick="clearResults()">Clear All Results</button>
+        <div id="allResults"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let generatedOTP = null;
+        
+        function getAuthHeaders() {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'X-Worker-ID': localStorage.getItem('workerId') || '1'
+            };
+        }
+        
+        async function testStartJob() {
+            const bookingId = document.getElementById('bookingId').value;
+            if (!bookingId) {
+                addResult('Please enter a booking ID', 'error', 'startResult');
+                return;
+            }
+            
+            addResult(`🚀 Starting job for booking ${bookingId}...`, 'info', 'startResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/housekeeping/worker/start-job`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        booking_id: parseInt(bookingId)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Job started!`, 'success', 'startResult');
+                    if (data.otp) {
+                        generatedOTP = data.otp;
+                        addResult(`🔢 Generated OTP: ${data.otp}`, 'success', 'startResult');
+                        document.getElementById('otpInput').value = data.otp;
+                    }
+                    addResult(`📱 OTP sent to user's device`, 'info', 'startResult');
+                } else {
+                    addResult(`❌ Error: ${data.error}`, 'error', 'startResult');
+                }
+            } catch (error) {
+                addResult(`💥 Network Error: ${error.message}`, 'error', 'startResult');
+            }
+        }
+        
+        async function testCompleteJob() {
+            const bookingId = document.getElementById('bookingId').value;
+            const otp = document.getElementById('otpInput').value;
+            
+            if (!bookingId || !otp) {
+                addResult('Please enter booking ID and OTP', 'error', 'completeResult');
+                return;
+            }
+            
+            if (otp.length !== 6) {
+                addResult('OTP must be 6 digits', 'error', 'completeResult');
+                return;
+            }
+            
+            addResult(`🔐 Completing job with OTP: ${otp}...`, 'info', 'completeResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/housekeeping/worker/complete-job`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        booking_id: parseInt(bookingId),
+                        otp: otp
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Job completed successfully!`, 'success', 'completeResult');
+                    addResult(`🎉 Payment processed and user notified`, 'success', 'completeResult');
+                } else {
+                    addResult(`❌ Error: ${data.error}`, 'error', 'completeResult');
+                }
+            } catch (error) {
+                addResult(`💥 Network Error: ${error.message}`, 'error', 'completeResult');
+            }
+        }
+        
+        async function testGetBookings() {
+            addResult('📋 Fetching worker bookings...', 'info', 'startResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/housekeeping/my-bookings`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Found ${data.bookings?.length || 0} bookings`, 'success', 'startResult');
+                    
+                    if (data.bookings && data.bookings.length > 0) {
+                        data.bookings.forEach((booking, index) => {
+                            const status = booking.status || 'UNKNOWN';
+                            const statusIcon = status === 'ACCEPTED' ? '⏳' : 
+                                             status === 'IN_PROGRESS' ? '🔄' : 
+                                             status === 'COMPLETED' ? '✅' : '❓';
+                            addResult(`${index + 1}. ID: ${booking.id} ${statusIcon} Status: ${status}`, 'info', 'startResult');
+                        });
+                    }
+                } else {
+                    addResult(`❌ Error: ${data.error}`, 'error', 'startResult');
+                }
+            } catch (error) {
+                addResult(`💥 Network Error: ${error.message}`, 'error', 'startResult');
+            }
+        }
+        
+        function addResult(message, type = 'info', targetId = 'allResults') {
+            const targetDiv = document.getElementById(targetId);
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong><br>${message}`;
+            targetDiv.appendChild(div);
+            
+            // Also add to all results if not already there
+            if (targetId !== 'allResults') {
+                const allResultsDiv = document.getElementById('allResults');
+                const allDiv = div.cloneNode(true);
+                allResultsDiv.appendChild(allDiv);
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('startResult').innerHTML = '';
+            document.getElementById('completeResult').innerHTML = '';
+            document.getElementById('allResults').innerHTML = '';
+        }
+        
+        // Check authentication on load
+        window.onload = function() {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            if (!token) {
+                addResult('⚠️ No auth token found. Please login to housekeeping provider site first.', 'error');
+            } else {
+                addResult('✅ Auth token found - Ready to test!', 'success');
+            }
+        };
+    </script>
+</body>
+</html>

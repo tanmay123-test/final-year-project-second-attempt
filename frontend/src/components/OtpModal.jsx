@@ -41,10 +41,14 @@ const OtpModal = ({ isOpen, onClose, onSubmit, bookingId }) => {
     setLoading(true);
     setError(null);
     try {
+      console.log('Submitting OTP:', otpValue, 'for booking:', bookingId);
       await onSubmit(bookingId, otpValue);
-      // Reset and close is handled by parent on success, or we do it here
+      console.log('OTP submission successful');
+      // Reset and close is handled by parent on success
     } catch (err) {
-      setError(err.message || 'Verification failed. Please try again.');
+      console.error('OTP submission error:', err);
+      const errorMessage = err.message || 'Verification failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

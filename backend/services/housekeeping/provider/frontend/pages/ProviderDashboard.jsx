@@ -80,10 +80,13 @@ const ProviderDashboard = () => {
 
   const fetchStatus = async () => {
       try {
+          console.log("[DEBUG] Fetching worker status...");
           const response = await housekeepingService.getWorkerStatus();
+          console.log("[DEBUG] Worker status response:", response.data);
           setIsOnline(response.data.is_online);
       } catch (error) {
           console.error('Failed to fetch status', error);
+          console.error('Error details:', error.response?.data || error.message);
       }
   };
 
@@ -148,12 +151,18 @@ const ProviderDashboard = () => {
 
   const toggleOnline = async () => {
       const newState = !isOnline;
+      console.log(`[DEBUG] Toggling worker status from ${isOnline} to ${newState}`);
       setIsOnline(newState);
       try {
-          await housekeepingService.setWorkerStatus(newState);
+          console.log(`[DEBUG] Calling setWorkerStatus with:`, newState);
+          const response = await housekeepingService.setWorkerStatus(newState);
+          console.log(`[DEBUG] setWorkerStatus response:`, response);
+          alert(`Status updated to ${newState ? 'Online' : 'Offline'} successfully!`);
       } catch (error) {
           console.error('Failed to update status', error);
+          console.error('Error details:', error.response?.data || error.message);
           setIsOnline(!newState); // Revert on error
+          alert(`Failed to update status: ${error.response?.data?.error || error.message}`);
       }
   };
 

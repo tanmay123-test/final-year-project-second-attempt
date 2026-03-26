@@ -17,19 +17,25 @@ import {
   User,
   MoreHorizontal,
   File,
-  Download
+  Download,
+  MessageCircle
 } from 'lucide-react';
 import api from '../../../shared/api';
+import { useAuth } from '../../../context/AuthContext';
+import RealTimeChat from '../components/RealTimeChat';
 import '../styles/FreelancerDashboard.css';
 
 const FreelancerWork = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeMainTab, setActiveMainTab] = useState('active');
   const [activeNavTab, setActiveNavTab] = useState('work');
   const [activeWork, setActiveWork] = useState([]);
   const [directBookings, setDirectBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeProjectId, setActiveProjectId] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
   const [messages, setMessages] = useState([]);
   const [deliverables, setDeliverables] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -65,14 +71,38 @@ const FreelancerWork = () => {
         api.get('/api/freelancer/bookings/direct')
       ]);
       
+      let allActiveWork = [];
+      
       if (workRes.data.success) {
         setActiveWork(workRes.data.work);
-        if (workRes.data.work.length > 0 && !activeProjectId) {
-          setActiveProjectId(workRes.data.work[0].id || workRes.data.work[0].project_id);
-        }
+        allActiveWork = [...workRes.data.work];
       }
+      
       if (bookingsRes.data.success) {
-        setDirectBookings(bookingsRes.data.bookings.filter(b => b.status === 'ACCEPTED' || b.status === 'COMPLETED'));
+        const acceptedBookings = bookingsRes.data.bookings.filter(b => b.status === 'ACCEPTED');
+        setDirectBookings([...acceptedBookings, ...bookingsRes.data.bookings.filter(b => b.status === 'COMPLETED')]);
+        
+        // Add accepted direct bookings to active work
+        const bookingWork = acceptedBookings.map(booking => ({
+          ...booking,
+          id: booking.project_id,
+          project_id: booking.project_id,
+          title: booking.project_title,
+          description: booking.description || 'Direct booking project',
+          status: 'IN_PROGRESS',
+          milestones: booking.milestones || [],
+          client_id: booking.client_id,
+          freelancer_id: booking.freelancer_id
+        }));
+        
+        allActiveWork = [...allActiveWork, ...bookingWork];
+      }
+      
+      // Update active work with combined projects
+      setActiveWork(allActiveWork);
+      
+      if (allActiveWork.length > 0 && !activeProjectId) {
+        setActiveProjectId(allActiveWork[0].id || allActiveWork[0].project_id);
       }
     } catch (error) {
       console.error('Error fetching work data:', error);
@@ -356,34 +386,58 @@ const FreelancerWork = () => {
                   </div>
                 </div>
 
-                {/* Messages Card */}
+                {/* Real-time Chat Card */}
                 <div className="messages-card-v2">
                   <div className="messages-header-v2">
-                    <h3>Messages</h3>
-                  </div>
-                  <div className="messages-body-v2">
-                    {messages.map((msg, idx) => (
-                      <div key={idx} className={`msg-wrapper-v2 ${msg.sender_id === activeProject.freelancer_id ? 'sent' : 'received'}`}>
-                        <div className="msg-bubble-v2">
-                          <p>{msg.message}</p>
-                          <span className="msg-time-v2">
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <form onSubmit={handleSendMessage} className="msg-input-v2">
-                    <input 
-                      type="text" 
-                      placeholder="Type a message..." 
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                    />
-                    <button type="submit" className="send-btn-v2">
-                      <Send size={18} />
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <MessageCircle size={18} />
+                      Project Chat
+                    </h3>
+                    <button 
+                      className="btn-outline-v2"
+                      onClick={() => setShowChat(!showChat)}
+                      style={{ fontSize: '0.85rem', padding: '6px 12px' }}
+                    >
+                      {showChat ? 'Hide' : 'Expand'}
                     </button>
-                  </form>
+                  </div>
+                  
+                  {showChat ? (
+                    <div style={{ height: '400px', marginTop: '1rem' }}>
+                      <RealTimeChat 
+                        projectId={activeProject.project_id}
+                        currentUserId={user?.user_id}
+                        projectTitle={activeProject.title}
+                      />
+                    </div>
+                  ) : (
+                    <div className="messages-body-v2">
+                      {messages.map((msg, idx) => (
+                        <div key={idx} className={`msg-wrapper-v2 ${msg.sender_id === activeProject.freelancer_id ? 'sent' : 'received'}`}>
+                          <div className="msg-bubble-v2">
+                            <p>{msg.message}</p>
+                            <span className="msg-time-v2">
+                              {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {!showChat && (
+                    <form onSubmit={handleSendMessage} className="msg-input-v2">
+                      <input 
+                        type="text" 
+                        placeholder="Type a message..." 
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                      />
+                      <button type="submit" className="send-btn-v2">
+                        <Send size={18} />
+                      </button>
+                    </form>
+                  )}
                 </div>
               </div>
             </div>
@@ -426,7 +480,17 @@ const FreelancerWork = () => {
                           </div>
                           
                           {booking.status === 'ACCEPTED' ? (
-                            <button className="view-work-btn-v2">View Work</button>
+                            <button 
+                              className="view-work-btn-v2"
+                              onClick={() => {
+                                // Set the active project to this booking's project
+                                setActiveProjectId(booking.project_id);
+                                // Switch to the active work tab
+                                setActiveMainTab('active');
+                              }}
+                            >
+                              View Work
+                            </button>
                           ) : (
                             <span className="payment-released-v2">Payment released ✓</span>
                           )}

@@ -43,6 +43,7 @@ from routes.video_routes import video_bp
 
 # Import freelance system
 from services.freelance.routes.freelance_routes import freelance_bp
+from services.freelance.socket_handlers import handle_freelance_socket_events
 
 # Import money management system
 from services.money_service.routes.money_routes import money_bp
@@ -296,6 +297,13 @@ try:
     print("  Housekeeping socket initialized")
 except Exception as e:
     print(f"   Could not initialize housekeeping socket: {e}")
+
+# Initialize Freelance Socket
+try:
+    handle_freelance_socket_events(socketio)
+    print("  Freelance socket initialized")
+except Exception as e:
+    print(f"   Could not initialize freelance socket: {e}")
 
 # ================= DATABASE =================
 user_db = UserDB()

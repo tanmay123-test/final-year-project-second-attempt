@@ -91,8 +91,19 @@ const ProviderDashboard = () => {
       setDebugInfo(prev => ({ ...prev, fetchStatus: 'loading' }));
       console.log("Fetching worker bookings...");
       const response = await housekeepingService.getUserBookings();
-      console.log("Raw worker bookings:", response.data);
+      console.log("Raw worker bookings response:", response);
+      
+      if (!response.data || !response.data.bookings) {
+        console.warn("No bookings data in response");
+        setRequests([]);
+        setUpcomingJobs([]);
+        setActiveJobs([]);
+        setDebugInfo(prev => ({ ...prev, fetchStatus: 'success', bookingsCount: 0, filteredCount: 0 }));
+        return;
+      }
+      
       const allBookings = response.data.bookings || [];
+      console.log("Processed bookings:", allBookings);
       
       // Filter requests (Assigned/Requested to me but not yet accepted)
       const pending = allBookings.filter(b => {
@@ -102,27 +113,22 @@ const ProviderDashboard = () => {
       
       const upcoming = allBookings.filter(b => (b.status || '').toUpperCase() === 'ACCEPTED');
       const active = allBookings.filter(b => (b.status || '').toUpperCase() === 'IN_PROGRESS');
-
-      console.log("Pending requests:", pending);
       
+      console.log("Filtered - Pending:", pending.length, "Upcoming:", upcoming.length, "Active:", active.length);
+      
+      setRequests(pending);
+      setUpcomingJobs(upcoming);
+      setActiveJobs(active);
       setDebugInfo(prev => ({ 
         ...prev, 
+        fetchStatus: 'success', 
         bookingsCount: allBookings.length, 
-        filteredCount: pending.length,
-        fetchStatus: 'success'
+        filteredCount: pending.length + upcoming.length + active.length 
       }));
-
+      
       const mapJob = (job) => {
-          let image = '🧹';
-          const serviceType = job.service_type || job.service || 'General Cleaning';
-          
-          if (serviceType && typeof serviceType === 'string') {
-              const lower = serviceType.toLowerCase();
-              if (lower.includes('kitchen')) image = '🍳';
-              else if (lower.includes('bathroom')) image = '🚽';
-              else if (lower.includes('sofa')) image = '🛋️';
-              else if (lower.includes('deep')) image = '✨';
-          }
+          const serviceType = job.service_type || 'Deep Cleaning';
+          const image = 'https://cdn-icons-png.flaticon.com/512/2988/2988895.png';
           
           return {
               ...job,
@@ -141,7 +147,17 @@ const ProviderDashboard = () => {
       // Real implementation would aggregate from transaction history
     } catch (error) {
       console.error('Failed to fetch bookings', error);
-      setRequests([]); 
+      setDebugInfo(prev => ({ 
+        ...prev, 
+        fetchStatus: 'error', 
+        error: error.message || 'Unknown error',
+        bookingsCount: 0, 
+        filteredCount: 0 
+      }));
+      // Set empty arrays to prevent UI crashes
+      setRequests([]);
+      setUpcomingJobs([]);
+      setActiveJobs([]);
     }
   };
 
@@ -183,12 +199,23 @@ const ProviderDashboard = () => {
     if (processingId) return;
     setProcessingId(id);
     try {
-      await housekeepingService.startJob(id);
-      fetchBookings();
+      console.log('Starting job for booking:', id);
+      const response = await housekeepingService.startJob(id);
+      console.log('Start job response:', response);
+      
+      // Fetch bookings after successful start
+      try {
+        await fetchBookings();
+      } catch (fetchError) {
+        console.error('Error fetching bookings after start:', fetchError);
+        // Don't fail the whole operation if fetch fails
+      }
+      
       alert('Job started! OTP sent to user.');
     } catch (error) {
       console.error('Failed to start job', error);
-      alert('Failed to start job. Please try again.');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to start job. Please try again.';
+      alert(`❌ ${errorMessage}`);
     } finally {
       setProcessingId(null);
     }
@@ -200,12 +227,24 @@ const ProviderDashboard = () => {
 
   const handleOtpSubmit = async (bookingId, otp) => {
     try {
-        await housekeepingService.completeJob(bookingId, otp);
+        console.log('Submitting OTP for booking:', bookingId, 'OTP:', otp);
+        const response = await housekeepingService.completeJob(bookingId, otp);
+        console.log('Complete job response:', response);
+        
         setOtpModal({ isOpen: false, bookingId: null });
-        fetchBookings();
+        
+        // Fetch bookings after successful completion
+        try {
+            await fetchBookings();
+        } catch (fetchError) {
+            console.error('Error fetching bookings after completion:', fetchError);
+        }
+        
         alert('Job completed successfully! 🎉');
     } catch (error) {
-        throw new Error(error.response?.data?.error || 'Verification failed');
+        console.error('Failed to complete job', error);
+        const errorMessage = error.response?.data?.error || error.message || 'Verification failed';
+        throw new Error(errorMessage);
     }
   };
 

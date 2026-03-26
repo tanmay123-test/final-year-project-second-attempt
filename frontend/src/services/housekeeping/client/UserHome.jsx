@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, MapPin, Star, Clock, X } from 'lucide-react';
+import { Search, Bell, MapPin, Star, Clock, X, Home, Bot, Calendar, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../services/api';
 import { useAuth } from '../../../context/AuthContext';
+import HousekeepingNavigation from '../components/HousekeepingNavigation';
 
 const UserHome = () => {
   const navigate = useNavigate();
@@ -139,7 +140,132 @@ const UserHome = () => {
         </div>
       </div>
 
-      <div style={{ padding: '0 20px', marginTop: '-30px' }}>
+      {/* Perfect Navigation Tabs */}
+      <div style={{ 
+        backgroundColor: 'white', 
+        margin: '0 20px', 
+        borderRadius: '16px', 
+        padding: '8px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+        marginBottom: '20px'
+      }}>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            onClick={() => navigate('/housekeeping/home')}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: '#8E44AD',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+          >
+            <Home size={18} />
+            Home
+          </button>
+          <button
+            onClick={() => navigate('/housekeeping/ai-chat')}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              color: '#6B7280',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#F3F4F6';
+              e.target.style.color = '#8E44AD';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = '#6B7280';
+            }}
+          >
+            <Bot size={18} />
+            AI Care
+          </button>
+          <button
+            onClick={() => navigate('/housekeeping/bookings')}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              color: '#6B7280',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#F3F4F6';
+              e.target.style.color = '#8E44AD';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = '#6B7280';
+            }}
+          >
+            <Calendar size={18} />
+            Bookings
+          </button>
+          <button
+            onClick={() => navigate('/housekeeping/profile')}
+            style={{
+              flex: 1,
+              padding: '12px 16px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: 'transparent',
+              color: '#6B7280',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#F3F4F6';
+              e.target.style.color = '#8E44AD';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.color = '#6B7280';
+            }}
+          >
+            <User size={18} />
+            Profile
+          </button>
+        </div>
+      </div>
+
+      <div style={{ padding: '0 20px', marginTop: '0px' }}>
         
         {/* Specializations */}
         <div style={{ marginBottom: '24px' }}>

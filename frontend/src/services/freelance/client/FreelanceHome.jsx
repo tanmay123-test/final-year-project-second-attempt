@@ -43,6 +43,26 @@ const FreelanceHome = () => {
     fetchFeaturedFreelancers();
   }, [searchParams]);
 
+  // Handle booking from profile page
+  useEffect(() => {
+    const location = window.location;
+    if (location.state?.bookFreelancer) {
+      const freelancer = location.state.bookFreelancer;
+      console.log('Booking freelancer from profile:', freelancer);
+      
+      // Switch to find tab and trigger booking
+      handleTabChange('find');
+      
+      // Small delay to ensure FindFreelancers component is mounted
+      setTimeout(() => {
+        handleBookNow(freelancer);
+      }, 100);
+      
+      // Clear the state to prevent re-triggering
+      window.history.replaceState({}, document.title, location.pathname);
+    }
+  }, []);
+
   const handleTabChange = (tab, extraParams = {}) => {
     setIsTransitioning(true);
     // Use a small timeout to ensure clean unmounting/mounting and prevent flickering
@@ -94,17 +114,39 @@ const FreelanceHome = () => {
     e.preventDefault();
     setBookingLoading(true);
     try {
-      await api.post('/api/freelance/bookings', {
+      console.log('Submitting direct booking:', {
         freelancer_id: selectedWorker.id,
         ...bookingData
       });
-      alert('Direct booking request sent! You can track it in the Projects tab.');
-      setShowBookingModal(false);
-      // Redirect to projects tab with direct sub-tab selected
-      handleTabChange('projects', { sub: 'direct' });
+      
+      const response = await api.post('/api/freelance/bookings', {
+        freelancer_id: selectedWorker.id,
+        title: bookingData.title,
+        description: bookingData.description,
+        amount: parseFloat(bookingData.amount),
+        deadline: bookingData.deadline
+      });
+      
+      console.log('Direct booking response:', response.data);
+      
+      if (response.data.success || response.data.booking_id) {
+        alert('✅ Direct booking request sent successfully! The freelancer will be notified and you can track this request in your Projects tab.');
+        setShowBookingModal(false);
+        setBookingData({
+          title: '',
+          description: '',
+          amount: '',
+          deadline: ''
+        });
+        // Redirect to projects tab with direct sub-tab selected
+        handleTabChange('projects', { sub: 'direct' });
+      } else {
+        throw new Error('Booking creation failed');
+      }
     } catch (error) {
       console.error('Error creating direct booking:', error);
-      alert(error.response?.data?.error || 'Failed to create booking');
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create booking. Please try again.';
+      alert(`❌ ${errorMessage}`);
     } finally {
       setBookingLoading(false);
     }
@@ -285,7 +327,7 @@ const FreelanceHome = () => {
       {/* Desktop Top Navigation (Visible on all tabs) */}
       <header className="freelance-top-nav desktop-only">
         <div className="nav-container">
-          <div className="nav-left" onClick={() => handleTabChange('home')} style={{cursor:'pointer'}}>
+          <div className="nav-left" onClick={() => navigate('/freelance/home')} style={{cursor:'pointer'}}>
             <span className="brand-name">FreelanceHub</span>
           </div>
           

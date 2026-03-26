@@ -13,12 +13,12 @@ import {
   ChevronDown
 } from 'lucide-react';
 import api from '../../../shared/api';
+import { useNavigate } from 'react-router-dom';
 import '../styles/FreelanceHome.css';
 
 const FindFreelancers = ({ onBook, initialQuery = '' }) => {
   const [workers, setWorkers] = useState([]);
   const [skills, setSkills] = useState([]);
-  const [selectedSkills, setSelectedSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [sortBy, setSortBy] = useState('Best Match');
@@ -29,6 +29,16 @@ const FindFreelancers = ({ onBook, initialQuery = '' }) => {
     experience: 'Any level',
     availability: 'Any'
   });
+
+  const navigate = useNavigate();
+
+  const handleViewProfile = (worker) => {
+    console.log('Viewing profile for:', worker);
+    // Navigate to freelancer profile page
+    navigate(`/freelance/freelancer/${worker.id || worker.worker_id}`, {
+      state: { freelancer: worker }
+    });
+  };
 
   const categories = ['All', 'Web Development', 'App Development', 'UI/UX Design', 'Content Writing', 'Digital Marketing'];
   const experienceLevels = ['Any level', 'Entry Level', 'Intermediate', 'Expert'];
@@ -251,7 +261,13 @@ const FindFreelancers = ({ onBook, initialQuery = '' }) => {
                     <div className="worker-info-v3">
                       <div className="name-row-v3">
                         <div className="name-spec-v3">
-                          <h3>{worker.full_name}</h3>
+                          <h3 
+                            style={{ cursor: 'pointer', color: '#667eea' }}
+                            onClick={() => handleViewProfile(worker)}
+                            title="Click to view profile"
+                          >
+                            {worker.full_name}
+                          </h3>
                           <p>{worker.specialization || 'Freelancer'} • {worker.clinic_location || 'Remote'}</p>
                         </div>
                         <div className="price-tag-v3">
@@ -282,7 +298,12 @@ const FindFreelancers = ({ onBook, initialQuery = '' }) => {
                       </div>
 
                       <div className="card-actions-v3">
-                        <button className="btn-secondary-v3">View Profile</button>
+                        <button 
+                          className="btn-secondary-v3"
+                          onClick={() => handleViewProfile(worker)}
+                        >
+                          View Profile
+                        </button>
                         <button className="btn-primary-v3" onClick={() => onBook(worker)}>
                           Book Now
                         </button>

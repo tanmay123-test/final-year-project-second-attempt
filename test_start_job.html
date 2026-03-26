@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Start Job</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #8E44AD; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .result { margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Housekeeping Start Job</h1>
+    
+    <div>
+        <label>Booking ID: </label>
+        <input type="number" id="bookingId" value="1" placeholder="Enter booking ID">
+    </div>
+    
+    <button onclick="testStartJob()">Test Start Job</button>
+    <button onclick="testGetBookings()">Get My Bookings</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        
+        // Get auth token from localStorage (assuming it's stored there)
+        function getAuthHeaders() {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'X-Worker-ID': localStorage.getItem('workerId') || '1'
+            };
+        }
+        
+        async function testStartJob() {
+            const bookingId = document.getElementById('bookingId').value;
+            const resultsDiv = document.getElementById('results');
+            
+            if (!bookingId) {
+                addResult('Please enter a booking ID', 'error');
+                return;
+            }
+            
+            addResult(`🚀 Testing Start Job for booking ${bookingId}...`, 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/housekeeping/worker/start-job`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        booking_id: parseInt(bookingId)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Success: ${data.message}`, 'success');
+                    if (data.otp) {
+                        addResult(`🔢 Generated OTP: ${data.otp}`, 'success');
+                    }
+                } else {
+                    addResult(`❌ Error (${response.status}): ${data.error || 'Unknown error'}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`💥 Network Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetBookings() {
+            addResult('📋 Fetching worker bookings...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/housekeeping/my-bookings`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Found ${data.bookings?.length || 0} bookings`, 'success');
+                    
+                    if (data.bookings && data.bookings.length > 0) {
+                        addResult('📋 Bookings:', 'info');
+                        data.bookings.forEach((booking, index) => {
+                            addResult(`${index + 1}. ID: ${booking.id}, Status: ${booking.status}, Service: ${booking.service_type || 'N/A'}`, 'info');
+                        });
+                    }
+                } else {
+                    addResult(`❌ Error fetching bookings: ${data.error || 'Unknown error'}`, 'error');
+                }
+                
+            } catch (error) {
+                addResult(`💥 Network Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong><br>${message}`;
+            resultsDiv.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Check authentication on load
+        window.onload = function() {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            if (!token) {
+                addResult('⚠️ No auth token found. You may need to login first.', 'error');
+                addResult('💡 Try logging into the housekeeping provider site first, then return here.', 'info');
+            } else {
+                addResult('✅ Auth token found', 'success');
+            }
+        };
+    </script>
+</body>
+</html>
