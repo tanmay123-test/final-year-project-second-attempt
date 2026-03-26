@@ -7,7 +7,7 @@ TOKEN = None
 WORKER_ID = None
 
 def worker_signup():
-    print("\n👷 Worker Signup")
+    print("\n  Worker Signup")
     name = input("Name: ").strip()
     username = input("Username: ").strip()
     password = input("Password: ").strip()
@@ -20,18 +20,18 @@ def worker_signup():
     cursor = auth_db.conn.cursor()
     cursor.execute("SELECT id FROM workers WHERE username=? OR email=?", (username, email))
     if cursor.fetchone():
-        print("❌ Username or email already exists")
+        print("  Username or email already exists")
         return
     
     # Create worker
     worker_id = auth_db.create_worker(name, username, password, email, service_type)
-    print(f"✅ Worker account created successfully!")
-    print(f"🆔 Worker ID: {worker_id}")
-    print("📧 Please verify your email (simulation)")
+    print(f"  Worker account created successfully!")
+    print(f"  Worker ID: {worker_id}")
+    print("  Please verify your email (simulation)")
 
 def worker_login():
     global TOKEN, WORKER_ID
-    print("\n🔐 Worker Login")
+    print("\n  Worker Login")
     username = input("Username: ").strip()
     password = input("Password: ").strip()
     
@@ -41,24 +41,24 @@ def worker_login():
     if worker_data:
         TOKEN = auth_db.generate_token(worker_data)
         WORKER_ID = worker_data['id']
-        print(f"✅ {message}")
-        print(f"👷 Welcome, {worker_data['username']}!")
-        print(f"🔧 Service Type: {worker_data.get('service_type', 'Not specified')}")
+        print(f"  {message}")
+        print(f"  Welcome, {worker_data['username']}!")
+        print(f"  Service Type: {worker_data.get('service_type', 'Not specified')}")
         return True
     else:
-        print(f"❌ {message}")
+        print(f"  {message}")
         return False
 
 def worker_menu():
     """Main worker menu - show services first"""
     while True:
         print("\n" + "="*50)
-        print("👷 WORKER MENU")
+        print("  WORKER MENU")
         print("="*50)
-        print("1. 📝 Signup")
-        print("2. 🔐 Login")
-        print("3. 🌐 Browse Services")
-        print("4. ⬅️ Back to Main Menu")
+        print("1.   Signup")
+        print("2.   Login")
+        print("3.   Browse Services")
+        print("4.    Back to Main Menu")
         
         choice = input("\nSelect option: ").strip()
         
@@ -72,4 +72,4 @@ def worker_menu():
         elif choice == "4":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")

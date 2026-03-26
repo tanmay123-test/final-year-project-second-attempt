@@ -207,7 +207,7 @@ class GoalEngine:
                     'monthly_contribution': contribution,
                     'months_required': months_required,
                     'years_required': months_required / 12,
-                    'description': f"₹{contribution:.0f}/month"
+                    'description': f" {contribution:.0f}/month"
                 })
         
         return timelines

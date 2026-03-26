@@ -143,7 +143,7 @@ class BookingService:
                 worker_slots_map[row['worker_id']].append(self._normalize_time(row['time_slot']))
             conn.close()
         except Exception as e:
-            print(f"❌ Batch availability fetch error: {e}")
+            print(f"  Batch availability fetch error: {e}")
 
         # 4. Batch Fetch Bookings (SQLite)
         bookings_map = {} # (worker_id, time) -> count
@@ -160,7 +160,7 @@ class BookingService:
                 bookings_map[key] = bookings_map.get(key, 0) + 1
             conn.close()
         except Exception as e:
-            print(f"❌ Batch bookings fetch error: {e}")
+            print(f"  Batch bookings fetch error: {e}")
 
         # 5. Aggregate Slots
         all_potential_slots = set(standard_slots)
@@ -240,7 +240,7 @@ class BookingService:
                 worker_slots_map[row['worker_id']].append(self._normalize_time(row['time_slot']))
             conn.close()
         except Exception as e:
-            print(f"❌ check_availability batch slots error: {e}")
+            print(f"  check_availability batch slots error: {e}")
 
         # 3. Batch Fetch Bookings
         bookings_map = {}
@@ -256,7 +256,7 @@ class BookingService:
                 bookings_map[row[0]] = True
             conn.close()
         except Exception as e:
-            print(f"❌ check_availability batch bookings error: {e}")
+            print(f"  check_availability batch bookings error: {e}")
 
         available_workers = []
         for worker in candidates:

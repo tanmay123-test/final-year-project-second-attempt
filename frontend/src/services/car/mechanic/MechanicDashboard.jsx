@@ -17,14 +17,19 @@ import {
   LogOut, 
   Search, 
   Bell, 
-  Wrench, 
-  ClipboardList, 
   Star, 
-  Car, 
-  User as UserIcon, 
-  Package, 
-  FileEdit, 
-  Plus, 
+  CheckCircle2, 
+  Zap, 
+  ArrowRight,
+  Plus,
+  Clock,
+  MapPin,
+  Car as CarIcon,
+  Wrench,
+  ClipboardList,
+  User as UserIcon,
+  Package,
+  FileEdit,
   CheckCircle,
   X,
   ChevronRight
@@ -444,12 +449,19 @@ const timeAgo = (date) => {
 
 const MechanicDashboard = () => {
   const navigate = useNavigate();
-  const [workerProfile, setWorkerProfile] = useState(null);
+  const [isOnline, setIsOnline] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [workerProfile, setWorkerProfile] = useState({
+    name: 'Loading...',
+    role: 'Mechanic',
+    avatar: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&q=80&w=100'
+  });
+  const [earnings, setEarnings] = useState({
+    today_jobs: 0,
+    this_week: 0
+  });
   const [pendingJobs, setPendingJobs] = useState([]);
   const [activeJob, setActiveJob] = useState(null);
-  const [earnings, setEarnings] = useState({});
-  const [isOnline, setIsOnline] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -467,8 +479,8 @@ const MechanicDashboard = () => {
       return;
     }
 
-    setLoading(true);
     try {
+      setLoading(true);
       const headers = { Authorization: `Bearer ${token}` };
       
       const [profileRes, pendingRes, earningsRes, activeRes, statsRes] = await Promise.all([
@@ -479,11 +491,14 @@ const MechanicDashboard = () => {
         api.get('/api/car/mechanic/stats', { headers }).catch(() => ({ data: { stats: {} } }))
       ]);
 
-      setWorkerProfile(profileRes.data.mechanic);
+      if (profileRes.data.mechanic) {
+        setWorkerProfile(profileRes.data.mechanic);
+        setIsOnline(profileRes.data.mechanic.is_online);
+      }
       setPendingJobs(pendingRes.data.pending_jobs || []);
       setEarnings(earningsRes.data.earnings || {});
       setActiveJob(activeRes?.data?.active_job || null);
-      setIsOnline(profileRes.data.mechanic?.is_online);
+
     } catch (err) {
       setError('Failed to load dashboard data');
       console.error(err);
@@ -557,7 +572,7 @@ const MechanicDashboard = () => {
     try {
       // Backend requires photos and OTP for real completion, 
       // but for this UI we'll try to just mark it as complete
-      await api.post('/api/car/mechanic/complete-job', {
+      await api.post('/api/car/mechanic/job/complete', {
         job_id: activeJob.id
       }, { headers: { Authorization: `Bearer ${token}` } });
       
@@ -630,10 +645,10 @@ const MechanicDashboard = () => {
           </SidebarProfile>
           
           <NavItem active><LayoutDashboard size={20} /> Dashboard</NavItem>
-          <NavItem><ListChecks size={20} /> Jobs Queue</NavItem>
-          <NavItem><Wallet size={20} /> Earnings</NavItem>
-          <NavItem><History size={20} /> History</NavItem>
-          <NavItem><Settings size={20} /> Settings</NavItem>
+          <NavItem onClick={() => navigate('/worker/car/mechanic/jobs-queue')}><ListChecks size={20} /> Jobs Queue</NavItem>
+          <NavItem onClick={() => navigate('/worker/car/mechanic/earnings')}><Wallet size={20} /> Earnings</NavItem>
+          <NavItem onClick={() => navigate('/worker/car/mechanic/history')}><History size={20} /> History</NavItem>
+          <NavItem onClick={() => navigate('/worker/car/mechanic/settings')}><Settings size={20} /> Settings</NavItem>
           
           <NavItem css={{ marginTop: 'auto' }}><HelpCircle size={20} /> Support</NavItem>
           <NavItem logout onClick={handleLogout}><LogOut size={20} /> Logout</NavItem>
@@ -868,20 +883,20 @@ const MechanicDashboard = () => {
       </LayoutBody>
 
       <MobileNav>
-        <NavItem active style={{ flexDirection: 'column', padding: '8px' }}>
+        <NavItem active style={{ flexDirection: 'column', padding: '8px' }} onClick={() => navigate('/worker/car/mechanic/dashboard')}>
           <LayoutDashboard size={20} />
           <span style={{ fontSize: '10px' }}>Dashboard</span>
         </NavItem>
-        <NavItem style={{ flexDirection: 'column', padding: '8px' }}>
+        <NavItem style={{ flexDirection: 'column', padding: '8px' }} onClick={() => navigate('/worker/car/mechanic/jobs-queue')}>
           <ListChecks size={20} />
           <span style={{ fontSize: '10px' }}>Queue</span>
         </NavItem>
         <FAB><Plus size={24} /></FAB>
-        <NavItem style={{ flexDirection: 'column', padding: '8px' }}>
+        <NavItem style={{ flexDirection: 'column', padding: '8px' }} onClick={() => navigate('/worker/car/mechanic/earnings')}>
           <Wallet size={20} />
           <span style={{ fontSize: '10px' }}>Earnings</span>
         </NavItem>
-        <NavItem style={{ flexDirection: 'column', padding: '8px' }}>
+        <NavItem style={{ flexDirection: 'column', padding: '8px' }} onClick={() => navigate('/worker/car/mechanic/settings')}>
           <Settings size={20} />
           <span style={{ fontSize: '10px' }}>Settings</span>
         </NavItem>

@@ -44,7 +44,7 @@ class TripService:
             errors.append("Mileage seems too high (maximum 100 km/liter)")
         
         if fuel_price > 500:  # Reasonable upper limit for India
-            errors.append("Fuel price seems too high (maximum ₹500/liter)")
+            errors.append("Fuel price seems too high (maximum  500/liter)")
         
         return {
             "valid": len(errors) == 0,
@@ -67,9 +67,9 @@ class TripService:
         # Validate input
         validation = self.validate_trip_request(start, destination, mileage, fuel_price)
         if not validation["valid"]:
-            print("❌ Validation errors:")
+            print("  Validation errors:")
             for error in validation["errors"]:
-                print(f"   • {error}")
+                print(f"     {error}")
             return None
         
         # Plan the trip
@@ -77,7 +77,7 @@ class TripService:
             trip_plan = self.planner.plan_trip(start, destination, mileage, fuel_price)
             return trip_plan
         except Exception as e:
-            print(f"❌ Error planning trip: {e}")
+            print(f"  Error planning trip: {e}")
             return None
     
     def format_trip_plan_for_display(self, trip_plan: Dict) -> str:
@@ -91,34 +91,34 @@ class TripService:
             Formatted string for display
         """
         if not trip_plan:
-            return "❌ No trip plan available"
+            return "  No trip plan available"
         
         formatted = []
         formatted.append("\n" + "="*60)
-        formatted.append("🚗 AI TRIP PLANNER - YOUR JOURNEY PLAN")
+        formatted.append("  AI TRIP PLANNER - YOUR JOURNEY PLAN")
         formatted.append("="*60)
-        formatted.append(f"📍 From: {trip_plan['start']}")
-        formatted.append(f"🎯 To: {trip_plan['destination']}")
+        formatted.append(f"  From: {trip_plan['start']}")
+        formatted.append(f"  To: {trip_plan['destination']}")
         formatted.append("")
-        formatted.append("📊 JOURNEY DETAILS:")
-        formatted.append(f"   🛣️  Distance: {trip_plan['distance_km']} km")
-        formatted.append(f"   ⏱️  ETA: {trip_plan['duration_hours']} hours")
+        formatted.append("  JOURNEY DETAILS:")
+        formatted.append(f"       Distance: {trip_plan['distance_km']} km")
+        formatted.append(f"       ETA: {trip_plan['duration_hours']} hours")
         formatted.append("")
-        formatted.append("💰 COST BREAKDOWN:")
-        formatted.append(f"   ⛽ Fuel needed: {trip_plan['fuel_needed']} liters")
-        formatted.append(f"   💸 Fuel cost: ₹{trip_plan['fuel_cost']}")
-        formatted.append(f"   🛣️  Estimated toll: ₹{trip_plan['toll_cost']}")
-        formatted.append(f"   💳 Total cost: ₹{trip_plan['total_cost']}")
+        formatted.append("  COST BREAKDOWN:")
+        formatted.append(f"     Fuel needed: {trip_plan['fuel_needed']} liters")
+        formatted.append(f"     Fuel cost:  {trip_plan['fuel_cost']}")
+        formatted.append(f"       Estimated toll:  {trip_plan['toll_cost']}")
+        formatted.append(f"     Total cost:  {trip_plan['total_cost']}")
         formatted.append("")
-        formatted.append("📋 TRIP CHECKLIST:")
+        formatted.append("  TRIP CHECKLIST:")
         for i, item in enumerate(trip_plan['checklist'], 1):
             formatted.append(f"   {i}. {item}")
         formatted.append("")
-        formatted.append("🚗 VEHICLE INFO:")
-        formatted.append(f"   ⛽ Mileage: {trip_plan['mileage']} km/liter")
-        formatted.append(f"   💵 Fuel price: ₹{trip_plan['fuel_price']}/liter")
+        formatted.append("  VEHICLE INFO:")
+        formatted.append(f"     Mileage: {trip_plan['mileage']} km/liter")
+        formatted.append(f"     Fuel price:  {trip_plan['fuel_price']}/liter")
         formatted.append("")
-        formatted.append("🌟 Have a safe and pleasant journey!")
+        formatted.append("  Have a safe and pleasant journey!")
         formatted.append("="*60)
         
         return "\n".join(formatted)
@@ -137,10 +137,10 @@ class TripService:
             return {}
         
         return {
-            "route": f"{trip_plan['start']} → {trip_plan['destination']}",
+            "route": f"{trip_plan['start']}   {trip_plan['destination']}",
             "distance": f"{trip_plan['distance_km']} km",
             "duration": f"{trip_plan['duration_hours']} hours",
-            "total_cost": f"₹{trip_plan['total_cost']}",
+            "total_cost": f" {trip_plan['total_cost']}",
             "fuel_needed": f"{trip_plan['fuel_needed']} liters"
         }
 

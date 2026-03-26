@@ -204,7 +204,7 @@ class GoalAPI:
                 return jsonify({
                     'success': success,
                     'data': {
-                        'message': f'Transferred ₹{amount:.2f} from {source_category} to goal' if success else 'Transfer failed'
+                        'message': f'Transferred  {amount:.2f} from {source_category} to goal' if success else 'Transfer failed'
                     }
                 })
                 

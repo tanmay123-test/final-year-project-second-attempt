@@ -616,7 +616,7 @@ PROJECT DETAILS
 ---------------
 Title: {title}
 Client: {client_name}
-Budget: ₹{amount}
+Budget:  {amount}
 Deadline: {deadline or 'Flexible'}
 
 DESCRIPTION
@@ -717,7 +717,7 @@ This is an update regarding your direct booking request for '{title}'.
 
 STATUS: {status}
 FREELANCER: {worker_name}
-BUDGET: ₹{amount}
+BUDGET:  {amount}
 
 {f"EXCITING NEWS! {worker_name} has ACCEPTED your request. You can now manage this project in your 'My Projects' tab." if status == 'ACCEPTED' else f"Unfortunately, {worker_name} has DECLINED this request. You can browse other talented freelancers to find the perfect match for your project."}
 
@@ -737,7 +737,7 @@ Hello {worker_name},
 This email confirms that you have {status.lower()} the direct booking request from {client_name}.
 
 PROJECT: {title}
-BUDGET: ₹{amount}
+BUDGET:  {amount}
 
 {f"You can now find this project in your 'My Work' dashboard. Good luck!" if status == 'ACCEPTED' else "The client has been notified of your decision. Your availability status remains unchanged."}
 

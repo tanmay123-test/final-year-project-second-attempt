@@ -142,7 +142,7 @@ def get_mechanic_jobs():
         return jsonify({"jobs": formatted_jobs}), 200
         
     except Exception as e:
-        print(f"❌ Get mechanic jobs error: {e}")
+        print(f"  Get mechanic jobs error: {e}")
         return jsonify({"error": "Failed to get jobs"}), 500
 
 @dispatch_bp.route("/api/car/mechanic/job/accept", methods=["POST"])
@@ -185,7 +185,7 @@ def accept_job():
         }), 200
         
     except Exception as e:
-        print(f"❌ Accept job error: {e}")
+        print(f"  Accept job error: {e}")
         return jsonify({"error": "Failed to accept job"}), 500
 
 @dispatch_bp.route("/api/car/mechanic/job/reject", methods=["POST"])
@@ -226,7 +226,7 @@ def reject_job():
         }), 200
         
     except Exception as e:
-        print(f"❌ Reject job error: {e}")
+        print(f"  Reject job error: {e}")
         return jsonify({"error": "Failed to reject job"}), 500
 
 @dispatch_bp.route("/api/car/mechanic/job/complete", methods=["POST"])
@@ -269,7 +269,7 @@ def complete_job():
         }), 200
         
     except Exception as e:
-        print(f"❌ Complete job error: {e}")
+        print(f"  Complete job error: {e}")
         return jsonify({"error": "Failed to complete job"}), 500
 
 @dispatch_bp.route("/api/car/mechanic/job/statistics", methods=["GET"])
@@ -298,7 +298,7 @@ def get_job_statistics():
         return jsonify({"statistics": stats}), 200
         
     except Exception as e:
-        print(f"❌ Get job statistics error: {e}")
+        print(f"  Get job statistics error: {e}")
         return jsonify({"error": "Failed to get statistics"}), 500
 
 @dispatch_bp.route("/api/car/dispatch/assign-job", methods=["POST"])
@@ -354,7 +354,7 @@ def assign_job():
             return jsonify({"error": "No available mechanics"}), 404
         
     except Exception as e:
-        print(f"❌ Assign job error: {e}")
+        print(f"  Assign job error: {e}")
         return jsonify({"error": "Failed to assign job"}), 500
 
 @dispatch_bp.route("/api/car/dispatch/check-expired", methods=["POST"])
@@ -368,5 +368,5 @@ def check_expired_jobs():
         }), 200
         
     except Exception as e:
-        print(f"❌ Check expired jobs error: {e}")
+        print(f"  Check expired jobs error: {e}")
         return jsonify({"error": "Failed to check expired jobs"}), 500

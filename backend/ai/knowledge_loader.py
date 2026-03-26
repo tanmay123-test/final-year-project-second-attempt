@@ -54,7 +54,7 @@ class KnowledgeLoader:
             all_content = []
             
             for source in self.sources:
-                print(f"📚 Loading from {source['name']}...")
+                print(f"  Loading from {source['name']}...")
                 
                 try:
                     # Fetch main content
@@ -82,17 +82,17 @@ class KnowledgeLoader:
                             })
                         
                     except Exception as e:
-                        print(f"❌ Error loading from {source['name']}: {str(e)}")
+                        print(f"  Error loading from {source['name']}: {str(e)}")
                     continue
                 
                 except Exception as e:
-                    print(f"❌ Critical error loading {source['name']}: {str(e)}")
+                    print(f"  Critical error loading {source['name']}: {str(e)}")
                     continue
             
             return all_content
             
         except Exception as e:
-            print(f"❌ Critical error loading financial education content: {str(e)}")
+            print(f"  Critical error loading financial education content: {str(e)}")
             return []
     
     def load_investing_guides() -> List[Dict[str, Any]]:
@@ -122,7 +122,7 @@ class KnowledgeLoader:
                 return guides
                 
             except Exception as e:
-                print(f"❌ Error loading investing guides: {str(e)}")
+                print(f"  Error loading investing guides: {str(e)}")
                 return []
     
     def load_mutual_fund_data() -> List[Dict[str, Any]]:
@@ -135,7 +135,7 @@ class KnowledgeLoader:
                 return data.get("data", [])
                 
             except Exception as e:
-                print(f"❌ Error loading mutual fund data: {str(e)}")
+                print(f"  Error loading mutual fund data: {str(e)}")
                 return []
     
     def _extract_categories(self, article) -> List[str]:
@@ -158,7 +158,7 @@ class KnowledgeLoader:
                 return data.get("data", [])
                 
             except Exception as e:
-                print(f"❌ Error loading ETF data: {str(e)}")
+                print(f"  Error loading ETF data: {str(e)}")
                 return []
     
     def load_stock_data() -> List[Dict[str, Any]]:

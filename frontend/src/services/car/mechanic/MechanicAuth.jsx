@@ -193,21 +193,31 @@ const MechanicAuth = () => {
             phone: formData.phone,
             experience: formData.experience_years,
             skills: formData.specialization,
-            age: 25, // Default for now, as it's required by backend
-            city: 'Mumbai', // Default for now
+            age: 25,
+            city: 'Mumbai',
             address: 'Service Radius: ' + formData.service_radius + 'km'
           };
 
+      console.log(`Attempting ${activeTab} at ${endpoint}...`);
       const response = await api.post(endpoint, payload);
       const data = response.data;
 
-      localStorage.setItem('workerToken', data.token);
-      localStorage.setItem('workerId', String(data.mechanic?.id || data.mechanic_id));
-      localStorage.setItem('workerData', JSON.stringify(data.mechanic));
-      
-      navigate('/worker/car/mechanic/dashboard');
+      if (activeTab === 'login') {
+        if (!data.token) {
+          throw new Error('No token received from server');
+        }
+        localStorage.setItem('workerToken', data.token);
+        localStorage.setItem('workerId', String(data.mechanic?.id || data.mechanic_id));
+        localStorage.setItem('workerData', JSON.stringify(data.mechanic));
+        navigate('/worker/car/mechanic/dashboard');
+      } else {
+        setError(data.message || 'Account created! Please wait for approval.');
+        setActiveTab('login');
+      }
     } catch (err) {
-      setError(err.response?.data?.error || 'Authentication failed. Please try again.');
+      console.error('Auth error detail:', err);
+      const errorMessage = err.response?.data?.error || err.message || 'Authentication failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

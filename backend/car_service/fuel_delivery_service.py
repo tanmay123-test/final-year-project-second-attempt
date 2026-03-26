@@ -317,7 +317,7 @@ class FuelDeliveryService:
                         if worker:
                             car_service_worker_db.update_worker_status(worker['id'], 'APPROVED')
                 except Exception as e:
-                    print(f"⚠️ Unified worker sync error: {e}")
+                    print(f"   Unified worker sync error: {e}")
                 
                 return {'success': True, 'message': 'Agent approved successfully'}
             else:
@@ -340,7 +340,7 @@ class FuelDeliveryService:
                         if worker:
                             car_service_worker_db.update_worker_status(worker['id'], 'REJECTED')
                 except Exception as e:
-                    print(f"⚠️ Unified worker sync error: {e}")
+                    print(f"   Unified worker sync error: {e}")
                 
                 return {'success': True, 'message': 'Agent rejected successfully'}
             else:
@@ -361,7 +361,7 @@ class FuelDeliveryService:
             
             # Validate state transitions
             if not self._is_valid_status_transition(current_status, new_status):
-                return {'success': False, 'error': f'Invalid status transition: {current_status} → {new_status}'}
+                return {'success': False, 'error': f'Invalid status transition: {current_status}   {new_status}'}
             
             # If going online, perform validations
             if new_status == 'ONLINE_AVAILABLE':
@@ -493,7 +493,7 @@ class FuelDeliveryService:
             # Determine demand level
             if waiting_requests > available_agents * 2:
                 insights['demand_level'] = 'HIGH'
-                insights['demand_message'] = f'High fuel demand in {region} – {waiting_requests} requests waiting'
+                insights['demand_message'] = f'High fuel demand in {region}   {waiting_requests} requests waiting'
             elif waiting_requests > available_agents:
                 insights['demand_level'] = 'MODERATE'
                 insights['demand_message'] = f'Moderate fuel demand in {region}'
@@ -501,7 +501,7 @@ class FuelDeliveryService:
                 insights['demand_message'] = f'Normal fuel demand in {region}'
             
             # Smart suggestion (simplified)
-            insights['suggestion'] = 'Peak demand expected between 6 PM – 9 PM'
+            insights['suggestion'] = 'Peak demand expected between 6 PM   9 PM'
             
             return {'success': True, 'insights': insights}
             

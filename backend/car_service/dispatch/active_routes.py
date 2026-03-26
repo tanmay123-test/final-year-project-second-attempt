@@ -57,7 +57,7 @@ def get_active_job():
             return jsonify({"active_job": None, "message": "No active job"}), 200
         
     except Exception as e:
-        print(f"❌ Get active job error: {e}")
+        print(f"  Get active job error: {e}")
         return jsonify({"error": "Failed to get active job"}), 500
 
 @active_bp.route("/api/car/mechanic/mark-arrived", methods=["POST"])
@@ -101,7 +101,7 @@ def mark_arrived():
             return jsonify({"error": "Failed to mark arrived"}), 500
         
     except Exception as e:
-        print(f"❌ Mark arrived error: {e}")
+        print(f"  Mark arrived error: {e}")
         return jsonify({"error": "Failed to mark arrived"}), 500
 
 @active_bp.route("/api/car/mechanic/start-job", methods=["POST"])
@@ -154,7 +154,7 @@ def start_job():
             return jsonify({"error": "Failed to start job"}), 500
         
     except Exception as e:
-        print(f"❌ Start job error: {e}")
+        print(f"  Start job error: {e}")
         return jsonify({"error": "Failed to start job"}), 500
 
 @active_bp.route("/api/car/mechanic/upload-before", methods=["POST"])
@@ -216,7 +216,7 @@ def upload_before_photo():
             return jsonify({"error": "Invalid file type"}), 400
         
     except Exception as e:
-        print(f"❌ Upload before photo error: {e}")
+        print(f"  Upload before photo error: {e}")
         return jsonify({"error": "Failed to upload photo"}), 500
 
 @active_bp.route("/api/car/mechanic/upload-after", methods=["POST"])
@@ -278,7 +278,7 @@ def upload_after_photo():
             return jsonify({"error": "Invalid file type"}), 400
         
     except Exception as e:
-        print(f"❌ Upload after photo error: {e}")
+        print(f"  Upload after photo error: {e}")
         return jsonify({"error": "Failed to upload photo"}), 500
 
 @active_bp.route("/api/car/mechanic/complete-job", methods=["POST"])
@@ -374,7 +374,7 @@ def complete_job():
             return jsonify({"error": "Failed to complete job"}), 500
         
     except Exception as e:
-        print(f"❌ Complete job error: {e}")
+        print(f"  Complete job error: {e}")
         return jsonify({"error": "Failed to complete job"}), 500
 
 @active_bp.route("/uploads/job_proofs/<filename>", methods=["GET"])
@@ -383,5 +383,5 @@ def get_job_proof(filename):
     try:
         return send_from_directory(UPLOAD_FOLDER, filename)
     except Exception as e:
-        print(f"❌ Serve file error: {e}")
+        print(f"  Serve file error: {e}")
         return jsonify({"error": "File not found"}), 404

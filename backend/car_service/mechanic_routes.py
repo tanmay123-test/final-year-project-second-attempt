@@ -570,15 +570,15 @@ def mechanic_login():
 
         
 
-        print(f"🔍 Login attempt for email: {email}")
+        print(f"  Login attempt for email: {email}")
 
-        print(f"🔍 Mechanic found: {mechanic is not None}")
+        print(f"  Mechanic found: {mechanic is not None}")
 
         if mechanic:
 
-            print(f"🔍 Mechanic status: {mechanic.get('status')}")
+            print(f"  Mechanic status: {mechanic.get('status')}")
 
-            print(f"🔍 Mechanic data: {mechanic}")
+            print(f"  Mechanic data: {mechanic}")
 
         
 
@@ -586,29 +586,29 @@ def mechanic_login():
 
         if not mechanic:
 
-            print(f"🔍 Trying worker database...")
+            print(f"  Trying worker database...")
 
             from car_service.worker_db import worker_db
 
             worker = worker_db.verify_worker_by_email(email, password)
 
-            print(f"🔍 Worker found: {worker is not None}")
+            print(f"  Worker found: {worker is not None}")
 
             if worker:
 
-                print(f"🔍 Worker status: {worker.get('status')}")
+                print(f"  Worker status: {worker.get('status')}")
 
-                print(f"🔍 Worker data: {worker}")
+                print(f"  Worker data: {worker}")
 
                 if worker.get("role") == "Mechanic":
 
-                    print(f"🔍 Found mechanic in worker DB")
+                    print(f"  Found mechanic in worker DB")
 
                     # Check if approved
 
                     if worker.get("status") != "APPROVED":
 
-                        print(f"🔍 Blocking login - worker status not approved: {worker.get('status')}")
+                        print(f"  Blocking login - worker status not approved: {worker.get('status')}")
 
                         return jsonify({
 
@@ -622,7 +622,7 @@ def mechanic_login():
 
                     else:
 
-                        print(f"🔍 Worker approved - allowing login")
+                        print(f"  Worker approved - allowing login")
 
                         # Convert worker to mechanic format
 
@@ -652,7 +652,7 @@ def mechanic_login():
 
         if mechanic.get('status') != 'APPROVED':
 
-            print(f"🔍 Blocking login - status not approved: {mechanic.get('status')}")
+            print(f"  Blocking login - status not approved: {mechanic.get('status')}")
 
             return jsonify({
 
@@ -713,7 +713,7 @@ def mechanic_login():
 
     except Exception as e:
 
-        print(f"❌ Mechanic login error: {e}")
+        print(f"  Mechanic login error: {e}")
 
         return jsonify({"error": "Login failed"}), 500
 
@@ -817,7 +817,7 @@ def update_mechanic_status():
 
     except Exception as e:
 
-        print(f"❌ Update mechanic status error: {e}")
+        print(f"  Update mechanic status error: {e}")
 
         return jsonify({"error": "Failed to update status"}), 500
 
@@ -873,7 +873,7 @@ def get_mechanic_profile():
 
     except Exception as e:
 
-        print(f"❌ Get mechanic profile error: {e}")
+        print(f"  Get mechanic profile error: {e}")
 
         return jsonify({"error": "Failed to get profile"}), 500
 
@@ -911,7 +911,7 @@ def get_online_mechanics():
 
     except Exception as e:
 
-        print(f"❌ Get online mechanics error: {e}")
+        print(f"  Get online mechanics error: {e}")
 
         return jsonify({"error": "Failed to get online mechanics"}), 500
 
@@ -981,7 +981,7 @@ def go_online():
 
     except Exception as e:
 
-        print(f"❌ Go online error: {e}")
+        print(f"  Go online error: {e}")
 
         return jsonify({"error": "Failed to update status"}), 500
 
@@ -1047,7 +1047,7 @@ def go_offline():
 
     except Exception as e:
 
-        print(f"❌ Go offline error: {e}")
+        print(f"  Go offline error: {e}")
 
         return jsonify({"error": "Failed to update status"}), 500
 
@@ -1115,7 +1115,7 @@ def set_busy():
 
     except Exception as e:
 
-        print(f"❌ Set busy error: {e}")
+        print(f"  Set busy error: {e}")
 
         return jsonify({"error": "Failed to update status"}), 500
 
@@ -1183,7 +1183,7 @@ def set_available():
 
     except Exception as e:
 
-        print(f"❌ Set available error: {e}")
+        print(f"  Set available error: {e}")
 
         return jsonify({"error": "Failed to update status"}), 500
 
@@ -1253,7 +1253,7 @@ def get_mechanic_status():
 
     except Exception as e:
 
-        print(f"❌ Get mechanic status error: {e}")
+        print(f"  Get mechanic status error: {e}")
 
         return jsonify({"error": "Failed to get status"}), 500
 
@@ -1291,7 +1291,7 @@ def get_available_mechanics():
 
     except Exception as e:
 
-        print(f"❌ Get available mechanics error: {e}")
+        print(f"  Get available mechanics error: {e}")
 
         return jsonify({"error": "Failed to get available mechanics"}), 500
 
@@ -1377,7 +1377,7 @@ def update_service_radius():
 
     except Exception as e:
 
-        print(f"❌ Update service radius error: {e}")
+        print(f"  Update service radius error: {e}")
 
         return jsonify({"error": "Failed to update service radius"}), 500
 
@@ -1455,7 +1455,7 @@ def update_current_location():
 
     except Exception as e:
 
-        print(f"❌ Update location error: {e}")
+        print(f"  Update location error: {e}")
 
         return jsonify({"error": "Failed to update location"}), 500
 
@@ -1481,7 +1481,7 @@ def get_high_demand_areas():
 
     except Exception as e:
 
-        print(f"❌ Get high demand areas error: {e}")
+        print(f"  Get high demand areas error: {e}")
 
         return jsonify({"error": "Failed to get demand data"}), 500
 
@@ -1503,167 +1503,104 @@ def get_recommended_online_time():
 
     except Exception as e:
 
-        print(f"❌ Get recommended online time error: {e}")
+        print(f"  Get recommended online time error: {e}")
 
         return jsonify({"error": "Failed to get recommendation"}), 500
 
 
 
 @mechanic_bp.route("/api/car/mechanic/jobs", methods=["GET"])
-
 def get_mechanic_jobs():
-
-    """Get mechanic's job requests (for CLI)"""
-
+    """Get mechanic's job requests"""
     try:
-
         # Get current mechanic from auth token
-
         auth = request.headers.get("Authorization")
-
         if not auth or not auth.startswith("Bearer "):
-
             return jsonify({"error": "Unauthorized"}), 401
-
         token = auth.split(" ")[1]
-
         username = verify_token(token)
-
         if not username:
-
             return jsonify({"error": "Invalid token"}), 401
-
             
-
         # Try to find mechanic in multiple databases
-
         mechanic = None
-
         mechanic_id = None
-
         
-
-        # First try car_service_worker_db (main worker database)
-
+        # 1. Try mechanic_db (main car service mechanic database)
         try:
-
-            from car_service.car_service_worker_db import car_service_worker_db
-
-            worker = car_service_worker_db.get_all_workers()
-
-            for w in worker:
-
-                if w.get('email') == username:
-
-                    mechanic = w
-
-                    mechanic_id = w.get('id')
-
-                    break
-
-        except:
-
-            pass
-
+            mechanic = mechanic_db.get_mechanic_by_email(username)
+            if mechanic:
+                mechanic_id = mechanic.get('id')
+                print(f"  Found mechanic in mechanic_db: {mechanic_id}")
+        except Exception as e:
+            print(f"  Error checking mechanic_db: {e}")
             
-
-        # If not found, try worker_db (fallback)
-
+        # 2. Try car_service_worker_db (unified worker database)
         if not mechanic:
-
             try:
-
-                from car_service.worker_db import worker_db
-
-                worker = worker_db.verify_worker_by_email(username, None)
-
-                if worker:
-
-                    mechanic = worker
-
-                    mechanic_id = worker.get('id')
-
-            except:
-
-                pass
-
-                
-
-        if not mechanic:
-
-            return jsonify({"error": "Mechanic not found"}), 404
-
+                from car_service.car_service_worker_db import car_service_worker_db
+                worker = car_service_worker_db.get_all_workers()
+                for w in worker:
+                    if w.get('email') == username:
+                        mechanic = w
+                        mechanic_id = w.get('id')
+                        print(f"  Found mechanic in car_service_worker_db: {mechanic_id}")
+                        break
+            except Exception as e:
+                print(f"  Error checking car_service_worker_db: {e}")
             
-
+        # 3. If not found, try worker_db (fallback)
+        if not mechanic:
+            try:
+                from worker_db import WorkerDB
+                worker_db = WorkerDB()
+                worker = worker_db.get_worker_by_email(username)
+                if worker:
+                    mechanic = worker
+                    mechanic_id = worker.get('id')
+                    print(f"  Found mechanic in worker_db: {mechanic_id}")
+            except Exception as e:
+                print(f"  Error checking worker_db: {e}")
+                
+        if not mechanic_id:
+            return jsonify({"error": "Mechanic profile not found. Please log in again."}), 404
+            
         # Get job requests for this mechanic from BOTH databases
-
         from car_service.job_requests_db import job_requests_db
-
         from car_service.booking_db import booking_db
-
         
-
-        # Try job_requests.db first (ASSIGNED jobs)
-
-        assigned_jobs = job_requests_db.get_pending_jobs(mechanic_id)
-
+        # Try job_requests.db first (ASSIGNED jobs via dispatch)
+        assigned_jobs = []
+        try:
+            assigned_jobs = job_requests_db.get_pending_jobs(mechanic_id)
+        except Exception as e:
+            print(f"  Error fetching assigned jobs: {e}")
         
-
-        # Also check car_jobs.db for SEARCHING jobs
-
-        cursor = booking_db.get_conn()
-
-        cursor.execute("""
-
-            SELECT * FROM mechanic_jobs 
-
-            WHERE mechanic_id = ? AND status IN ('SEARCHING', 'ACCEPTED')
-
-            ORDER BY created_at DESC
-
-        """, (mechanic_id,))
-
-        searching_jobs = [dict(row) for row in cursor.fetchall()]
-
-        cursor.close()
-
+        # Also check mechanic_jobs table (Direct bookings)
+        searching_jobs = []
+        try:
+            searching_jobs = booking_db.get_mechanic_jobs(mechanic_id)
+        except Exception as e:
+            print(f"  Error fetching direct jobs: {e}")
         
-
         # Combine both lists
-
         all_jobs = assigned_jobs + searching_jobs
-
         
-
-        print(f"🔧 Found {len(assigned_jobs)} assigned jobs + {len(searching_jobs)} searching jobs = {len(all_jobs)} total")
-
+        print(f"  Found {len(assigned_jobs)} assigned jobs + {len(searching_jobs)} direct jobs = {len(all_jobs)} total")
         
-
         return jsonify({
-
             "success": True,
-
             "jobs": all_jobs,
-
             "count": len(all_jobs),
-
             "assigned_count": len(assigned_jobs),
-
             "searching_count": len(searching_jobs)
-
         }), 200
-
         
-
     except Exception as e:
-
-        print(f"❌ Get mechanic jobs error: {e}")
-
+        print(f"  Get mechanic jobs error: {e}")
         import traceback
-
         traceback.print_exc()
-
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 
@@ -1709,7 +1646,7 @@ def book_mechanic():
 
         
 
-        print(f"🔧 Booking attempt: user_id={user_id}, mechanic_id={mechanic_id}, type={booking_type}")
+        print(f"  Booking attempt: user_id={user_id}, mechanic_id={mechanic_id}, type={booking_type}")
 
         
 
@@ -1726,57 +1663,73 @@ def book_mechanic():
         
 
         # Verify mechanic exists and is available
-
         from car_service.car_service_worker_db import car_service_worker_db
-
-        mechanic = car_service_worker_db.get_worker_by_id(mechanic_id)
-
+        
+        # Try finding mechanic in all potential databases
+        mechanic = None
+        
+        # 1. Try mechanic_db
+        try:
+            mechanic = mechanic_db.get_mechanic_by_id(mechanic_id)
+            if mechanic:
+                print(f"  Found mechanic in mechanic_db: {mechanic_id}")
+        except:
+            pass
+            
+        # 2. Try car_service_worker_db
         if not mechanic:
-
+            try:
+                mechanic = car_service_worker_db.get_worker_by_id(mechanic_id)
+                if mechanic:
+                    print(f"  Found mechanic in car_service_worker_db: {mechanic_id}")
+            except:
+                pass
+                
+        # 3. Try worker_db
+        if not mechanic:
+            try:
+                from worker_db import WorkerDB
+                worker_db = WorkerDB()
+                mechanic = worker_db.get_worker_by_id(mechanic_id)
+                if mechanic:
+                    print(f"  Found mechanic in worker_db: {mechanic_id}")
+            except:
+                pass
+                
+        if not mechanic:
             return jsonify({"error": "Mechanic not found"}), 404
-
         
-
-        print(f"🔧 Mechanic found: {mechanic.get('name', 'Unknown')}, status: {mechanic.get('status', 'Unknown')}")
-
+        print(f"  Mechanic found: {mechanic.get('name', 'Unknown')}, status: {mechanic.get('status', 'Unknown')}")
         
-
         # Create booking using booking_db
-
         from car_service.booking_db import booking_db
-
         job_id = booking_db.create_job(
-
             user_id=user_id,
-
             mechanic_id=mechanic_id,
-
             car_id=default_car['id'],
-
             issue=issue_description,
-
             estimated_cost=None
-
         )
-
         
-
-        print(f"🔧 Job created with ID: {job_id}")
-
+        print(f"  Job created with ID: {job_id}")
         
-
         # Update mechanic status based on booking type
-
         if booking_type == 'instant':
-
             # For instant booking, set mechanic to busy immediately
-
-            success = car_service_worker_db.set_busy(mechanic_id)
-
-            print(f"🔧 Mechanic set to busy: {success}")
-
+            # Try setting busy in both potential databases
+            try:
+                car_service_worker_db.set_busy(mechanic_id)
+            except:
+                pass
+                
+            try:
+                # Assuming mechanic_db might have set_busy too, if not we'll just skip
+                if hasattr(mechanic_db, 'set_busy'):
+                    mechanic_db.set_busy(mechanic_id)
+            except:
+                pass
+                
             # Update job status to ACCEPTED
-
             booking_db.update_job_status(job_id, "ACCEPTED", "Instant booking accepted")
 
         else:
@@ -1801,7 +1754,7 @@ def book_mechanic():
 
     except Exception as e:
 
-        print(f"❌ Book mechanic error: {e}")
+        print(f"  Book mechanic error: {e}")
 
         import traceback
 

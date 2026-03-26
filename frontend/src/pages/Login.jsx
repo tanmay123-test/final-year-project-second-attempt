@@ -194,7 +194,11 @@ const Login = () => {
 
           Don't have an account? <Link to="/signup">Sign Up</Link>
 
-          <div style={{ marginTop: '1rem' }}>
+          <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+
+            <Link to="/provide-service" style={{ fontSize: '0.9rem', color: '#4d41df', fontWeight: '600' }}>
+              Are you a Service Provider? Join here
+            </Link>
 
             <Link to="/" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>
 

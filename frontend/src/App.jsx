@@ -86,6 +86,10 @@ import AutomobileExpertReputation from './services/car/AutomobileExpertReputatio
 import AutomobileExpertReportUser from './services/car/AutomobileExpertReportUser';
 import AutomobileExpertQueueStatus from './services/car/AutomobileExpertQueueStatus';
 import MechanicJobs from './services/car/MechanicJobs';
+import MechanicJobsQueue from './services/car/mechanic/MechanicJobsQueue';
+import MechanicEarnings from './services/car/mechanic/MechanicEarnings';
+import MechanicSettings from './services/car/mechanic/MechanicSettings';
+import MechanicHistory from './services/car/mechanic/MechanicHistory';
 import MechanicActiveJobs from './services/car/MechanicActiveJobs';
 import MechanicPerformance from './services/car/MechanicPerformance';
 import MechanicSlots from './services/car/MechanicSlots';
@@ -93,7 +97,6 @@ import MechanicProfile from './services/car/MechanicProfile';
 import MechanicDetails from './services/car/MechanicDetails';
 import MechanicPayments from './services/car/MechanicPayments';
 import MechanicAnalytics from './services/car/MechanicAnalytics';
-import MechanicSettings from './services/car/MechanicSettings';
 import MechanicSupport from './services/car/MechanicSupport';
 
 // Fuel Delivery Components
@@ -257,9 +260,9 @@ const App = () => {
             <Route path="/housekeeping/booking/create" element={<BookingFlow />} />
           </Route>
 
-          {/* Service Selection (Authentication Required) */}
+          {/* Service Selection */}
           <Route path="/services" element={<ProtectedRoute><ServiceSelection /></ProtectedRoute>} />
-          <Route path="/provide-service" element={<ProtectedRoute><ServiceSelection mode="worker" /></ProtectedRoute>} />
+          <Route path="/provide-service" element={<ServiceSelection mode="worker" />} />
           
           {/* Car Service User Routes */}
           <Route element={<ProtectedRoute><CarServiceUserLayout /></ProtectedRoute>}>
@@ -278,9 +281,6 @@ const App = () => {
           <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />
           <Route path="/freelance/project/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
 
-          {/* Worker Routes - Service Specific */}
-          <Route path="/provide-service" element={<ProtectedRoute><ServiceSelection mode="worker" /></ProtectedRoute>} />
-          
           {/* Healthcare */}
           <Route path="/worker/healthcare/login" element={<DoctorLogin />} />
           <Route path="/worker/healthcare/signup" element={<WorkerSignup serviceType="healthcare" />} />
@@ -391,6 +391,14 @@ const App = () => {
             } 
           />
           <Route 
+            path="/worker/car/mechanic/jobs-queue" 
+            element={
+              <ProtectedWorkerRoute>
+                <MechanicJobsQueue />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
             path="/worker/car/mechanic/active-jobs" 
             element={
               <ProtectedWorkerRoute>
@@ -439,10 +447,26 @@ const App = () => {
             } 
           />
           <Route 
+            path="/worker/car/mechanic/earnings" 
+            element={
+              <ProtectedWorkerRoute>
+                <MechanicEarnings />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
             path="/worker/car/mechanic/analytics" 
             element={
               <ProtectedWorkerRoute>
                 <MechanicAnalytics />
+              </ProtectedWorkerRoute>
+            } 
+          />
+          <Route 
+            path="/worker/car/mechanic/history" 
+            element={
+              <ProtectedWorkerRoute>
+                <MechanicHistory />
               </ProtectedWorkerRoute>
             } 
           />

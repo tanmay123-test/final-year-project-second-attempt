@@ -108,17 +108,23 @@ class BookingDB:
                         job['brand'] = car_info.get('brand', 'Unknown')
                         job['model'] = car_info.get('model', 'Unknown')
                         job['registration_number'] = car_info.get('registration_number', 'Unknown')
+                        job['car_model'] = f"{job['brand']} {job['model']}"
                         job['car_info'] = car_info  # Add full car info for display
                     else:
                         job['brand'] = "Unknown"
                         job['model'] = "Unknown"
                         job['registration_number'] = "Unknown"
+                        job['car_model'] = "Unknown Vehicle"
                         job['car_info'] = None
                 except:
                     job['brand'] = "Unknown"
                     job['model'] = "Unknown"
                     job['registration_number'] = "Unknown"
+                    job['car_model'] = "Unknown Vehicle"
                     job['car_info'] = None
+                
+                # Add UI helper fields
+                job['service_type'] = 'Mechanic' if 'issue' in job else 'Service'
                     
                 jobs.append(job)
             return jobs
@@ -187,6 +193,69 @@ class BookingDB:
             cursor.close()
             conn.close()
     
+    def get_mechanic_jobs(self, mechanic_id: int) -> List[Dict]:
+        """Get all jobs assigned to a mechanic"""
+        load_dotenv()
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("""
+                SELECT mj.*
+                FROM mechanic_jobs mj
+                WHERE mj.mechanic_id = %s AND mj.status IN ('SEARCHING', 'ACCEPTED', 'ARRIVING', 'WORKING')
+                ORDER BY mj.created_at DESC
+            """, (mechanic_id,))
+            
+            jobs = []
+            for row in cursor.fetchall():
+                job = dict(row)
+                
+                # Get user name and city
+                try:
+                    from user_db import UserDB
+                    user_db = UserDB()
+                    user = user_db.get_user_by_id(job['user_id'])
+                    if user:
+                        job['user_name'] = user.get('name') or user.get('username')
+                        # Get user city from car_profile_db
+                        from car_service.car_profile_db import car_profile_db
+                        profile = car_profile_db.get_car_profile(job['user_id'])
+                        job['user_city'] = profile.get('city', 'Local Area') if profile else 'Local Area'
+                    else:
+                        job['user_name'] = f"User {job['user_id']}"
+                        job['user_city'] = 'Local Area'
+                except:
+                    job['user_name'] = f"User {job['user_id']}"
+                    job['user_city'] = 'Local Area'
+                
+                # Get car data
+                try:
+                    from car_service.car_profile_db import car_profile_db
+                    car_info = car_profile_db.get_car_by_id(job['car_id'])
+                    if car_info:
+                        job['brand'] = car_info.get('brand', 'Unknown')
+                        job['model'] = car_info.get('model', 'Unknown')
+                        job['registration_number'] = car_info.get('registration_number', 'Unknown')
+                        job['car_model'] = f"{job['brand']} {job['model']}"
+                    else:
+                        job['car_model'] = "Unknown Vehicle"
+                except:
+                    job['car_model'] = "Unknown Vehicle"
+                
+                # Add UI helper fields
+                job['estimated_earning'] = job.get('estimated_cost') or 450
+                job['distance_km'] = 0.5 # Default distance
+                job['issue_type'] = 'Mechanic Service'
+                    
+                jobs.append(job)
+            return jobs
+        except Exception as e:
+            print(f"DB Error: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+
     def update_job_status(self, job_id: int, status: str, notes: str = None):
         """Update job status"""
         load_dotenv()
@@ -226,7 +295,7 @@ class BookingDB:
                 """, (status, notes, job_id))
             
             conn.commit()
-            print(f"✅ Job {job_id} status updated to: {status}")
+            print(f"  Job {job_id} status updated to: {status}")
         except Exception as e:
             conn.rollback()
             print(f"DB Error: {e}")

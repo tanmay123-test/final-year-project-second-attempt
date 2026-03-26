@@ -336,7 +336,7 @@ def calculate_distance(pickup: str, drop: str) -> float:
 
 def format_currency(amount: float) -> str:
     """Format currency amount"""
-    return f"₹{amount:.2f}"
+    return f" {amount:.2f}"
 
 def format_time(time_str: str) -> str:
     """Format time string"""

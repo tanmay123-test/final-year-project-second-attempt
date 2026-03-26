@@ -25,7 +25,7 @@ class BudgetGamification:
             existing_reward = self._check_existing_reward(user_id, "Budget Master", month, year)
             if not existing_reward:
                 self.db.add_reward(user_id, "Budget Master", f"Stayed within all budgets for {month} {year}")
-                return True, f"🏆 Budget Master achieved for {month} {year}!"
+                return True, f"  Budget Master achieved for {month} {year}!"
         
         return False, "Keep working to stay within all budgets"
     
@@ -51,10 +51,10 @@ class BudgetGamification:
             # Check if reward already given this month
             existing_reward = self._check_existing_reward(user_id, "Savings Hero", month, year)
             if not existing_reward:
-                self.db.add_reward(user_id, "Savings Hero", f"Saved ₹{actual_savings:.2f} in {month} {year}")
-                return True, f"🦸‍♂️ Savings Hero achieved! Saved ₹{actual_savings:.2f} in {month} {year}"
+                self.db.add_reward(user_id, "Savings Hero", f"Saved  {actual_savings:.2f} in {month} {year}")
+                return True, f"     Savings Hero achieved! Saved  {actual_savings:.2f} in {month} {year}"
         
-        return False, f"Save ₹{5000 - actual_savings:.2f} more to qualify for Savings Hero"
+        return False, f"Save  {5000 - actual_savings:.2f} more to qualify for Savings Hero"
     
     def check_discipline_streak_reward(self, user_id):
         """Check if user has a 7-day transaction logging streak"""
@@ -84,7 +84,7 @@ class BudgetGamification:
             existing_reward = self._check_existing_reward(user_id, "Discipline Streak", None, None)
             if not existing_reward:
                 self.db.add_reward(user_id, "Discipline Streak", "Logged transactions for 7 consecutive days")
-                return True, "🔥 Discipline Streak achieved! 7 days of consistent tracking!"
+                return True, "  Discipline Streak achieved! 7 days of consistent tracking!"
         
         return False, f"Keep logging! Current streak: {consecutive_days} days"
     
@@ -122,7 +122,7 @@ class BudgetGamification:
                 existing_reward = self._check_existing_reward(user_id, "Consistency Champion", month, year)
                 if not existing_reward:
                     self.db.add_reward(user_id, "Consistency Champion", f"Maintained consistent spending in {month} {year}")
-                    return True, "🎯 Consistency Champion achieved! Great spending consistency!"
+                    return True, "  Consistency Champion achieved! Great spending consistency!"
         
         return False, "Maintain steady spending patterns to earn this reward"
     
@@ -147,64 +147,64 @@ class BudgetGamification:
     def display_reward_dashboard(self, user_id):
         """Display comprehensive reward dashboard"""
         print(f"\n" + "="*70)
-        print("🏆 BUDGET GAMIFICATION DASHBOARD")
+        print("  BUDGET GAMIFICATION DASHBOARD")
         print("="*70)
         
         # Check potential rewards
-        print(f"\n🎯 POTENTIAL REWARDS")
+        print(f"\n  POTENTIAL REWARDS")
         print("-" * 50)
         
         # Budget Master
         achieved, message = self.check_budget_master_reward(user_id)
-        status = "✅ ACHIEVED" if achieved else "🎯 IN PROGRESS"
-        print(f"🏆 Budget Master: {status}")
+        status = "  ACHIEVED" if achieved else "  IN PROGRESS"
+        print(f"  Budget Master: {status}")
         if not achieved:
-            print(f"   💡 {message}")
+            print(f"     {message}")
         
         # Savings Hero
         achieved, message = self.check_savings_hero_reward(user_id)
-        status = "✅ ACHIEVED" if achieved else "🎯 IN PROGRESS"
-        print(f"🦸‍♂️ Savings Hero: {status}")
+        status = "  ACHIEVED" if achieved else "  IN PROGRESS"
+        print(f"     Savings Hero: {status}")
         if not achieved:
-            print(f"   💡 {message}")
+            print(f"     {message}")
         
         # Discipline Streak
         achieved, message = self.check_discipline_streak_reward(user_id)
-        status = "✅ ACHIEVED" if achieved else "🎯 IN PROGRESS"
-        print(f"🔥 Discipline Streak: {status}")
+        status = "  ACHIEVED" if achieved else "  IN PROGRESS"
+        print(f"  Discipline Streak: {status}")
         if not achieved:
-            print(f"   💡 {message}")
+            print(f"     {message}")
         
         # Consistency Champion
         achieved, message = self.check_consistency_champion_reward(user_id)
-        status = "✅ ACHIEVED" if achieved else "🎯 IN PROGRESS"
-        print(f"🎯 Consistency Champion: {status}")
+        status = "  ACHIEVED" if achieved else "  IN PROGRESS"
+        print(f"  Consistency Champion: {status}")
         if not achieved:
-            print(f"   💡 {message}")
+            print(f"     {message}")
         
         # Display earned rewards
         rewards_data = self.get_user_rewards(user_id)
         
-        print(f"\n🏅 EARNED REWARDS")
+        print(f"\n  EARNED REWARDS")
         print("-" * 50)
-        print(f"🎊 Total Rewards Earned: {rewards_data['total_rewards']}")
+        print(f"  Total Rewards Earned: {rewards_data['total_rewards']}")
         
         if rewards_data['reward_summary']:
             for reward_type, rewards in rewards_data['reward_summary'].items():
                 print(f"\n{self._get_reward_icon(reward_type)} {reward_type} ({len(rewards)} times)")
                 for reward in rewards[-3:]:  # Show last 3
                     date_achieved = datetime.strptime(reward['achieved_at'], '%Y-%m-%d %H:%M:%S').strftime('%b %d, %Y')
-                    print(f"   📅 {date_achieved}: {reward['description']}")
+                    print(f"     {date_achieved}: {reward['description']}")
         else:
-            print("📭 No rewards earned yet. Start tracking to earn rewards!")
+            print("  No rewards earned yet. Start tracking to earn rewards!")
         
         # Reward progress tips
-        print(f"\n💡 REWARD TIPS")
+        print(f"\n  REWARD TIPS")
         print("-" * 50)
-        print("🏆 Budget Master: Stay within all category budgets for a month")
-        print("🦸‍♂️ Savings Hero: Save at least ₹5,000 in one month")
-        print("🔥 Discipline Streak: Log transactions for 7 consecutive days")
-        print("🎯 Consistency Champion: Maintain steady spending patterns")
+        print("  Budget Master: Stay within all category budgets for a month")
+        print("     Savings Hero: Save at least  5,000 in one month")
+        print("  Discipline Streak: Log transactions for 7 consecutive days")
+        print("  Consistency Champion: Maintain steady spending patterns")
     
     def _check_existing_reward(self, user_id, reward_type, month, year):
         """Check if reward already exists for given period"""
@@ -234,12 +234,12 @@ class BudgetGamification:
     def _get_reward_icon(self, reward_type):
         """Get icon for reward type"""
         icons = {
-            'Budget Master': '🏆',
-            'Savings Hero': '🦸‍♂️',
-            'Discipline Streak': '🔥',
-            'Consistency Champion': '🎯'
+            'Budget Master': ' ',
+            'Savings Hero': '    ',
+            'Discipline Streak': ' ',
+            'Consistency Champion': ' '
         }
-        return icons.get(reward_type, '🏅')
+        return icons.get(reward_type, ' ')
     
     def _get_days_in_month(self, month, year):
         """Get number of days in a month"""

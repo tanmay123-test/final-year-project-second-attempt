@@ -7,27 +7,27 @@ class GoalJar:
 
     def create_goal(self, user_id):
         print("\n" + "="*50)
-        print("🏆 GOAL JAR - CREATE SAVINGS GOAL")
+        print("  GOAL JAR - CREATE SAVINGS GOAL")
         print("="*50)
         
         goal_name = input("Goal Name (e.g., Buy Bike, Vacation, Emergency Fund): ").strip()
         if not goal_name:
-            print("❌ Goal name is required")
+            print("  Goal name is required")
             return False
         
         try:
-            target_amount = float(input("Target Amount (₹): ").strip())
+            target_amount = float(input("Target Amount ( ): ").strip())
             if target_amount <= 0:
-                print("❌ Target amount must be positive")
+                print("  Target amount must be positive")
                 return False
                 
-            monthly_saving = float(input("Monthly Saving (₹): ").strip())
+            monthly_saving = float(input("Monthly Saving ( ): ").strip())
             if monthly_saving <= 0:
-                print("❌ Monthly saving must be positive")
+                print("  Monthly saving must be positive")
                 return False
                 
         except ValueError:
-            print("❌ Invalid amount")
+            print("  Invalid amount")
             return False
         
         # Calculate estimated time to reach goal
@@ -37,25 +37,25 @@ class GoalJar:
         # Create goal
         goal_id = self.db.create_goal_jar(user_id, goal_name, target_amount, monthly_saving)
         
-        print(f"\n✅ Goal created successfully!")
-        print(f"🏆 Goal ID: {goal_id}")
-        print(f"🎯 Goal: {goal_name}")
-        print(f"💰 Target: ₹{target_amount:,.2f}")
-        print(f"💵 Monthly Saving: ₹{monthly_saving:,.2f}")
-        print(f"📅 Estimated Time: {months_needed:.1f} months ({years_needed:.1f} years)")
+        print(f"\n  Goal created successfully!")
+        print(f"  Goal ID: {goal_id}")
+        print(f"  Goal: {goal_name}")
+        print(f"  Target:  {target_amount:,.2f}")
+        print(f"  Monthly Saving:  {monthly_saving:,.2f}")
+        print(f"  Estimated Time: {months_needed:.1f} months ({years_needed:.1f} years)")
         
         return True
 
     def view_goals(self, user_id):
         print("\n" + "="*50)
-        print("🏆 GOAL JAR - MY SAVINGS GOALS")
+        print("  GOAL JAR - MY SAVINGS GOALS")
         print("="*50)
         
         goals = self.db.get_goal_jars(user_id)
         
         if not goals:
-            print("📭 No savings goals found")
-            print("💡 Create your first goal!")
+            print("  No savings goals found")
+            print("  Create your first goal!")
             return
         
         print(f"\nActive Goals: {len(goals)}\n")
@@ -74,41 +74,41 @@ class GoalJar:
             
             # Status
             if progress_percentage >= 100:
-                status = "🎉 COMPLETED!"
+                status = "  COMPLETED!"
             elif progress_percentage >= 75:
-                status = "🔥 Almost there!"
+                status = "  Almost there!"
             elif progress_percentage >= 50:
-                status = "💪 Halfway there!"
+                status = "  Halfway there!"
             elif progress_percentage >= 25:
-                status = "📈 Good progress!"
+                status = "  Good progress!"
             else:
-                status = "🌱 Just started"
+                status = "  Just started"
             
             print(f"[{idx}] {goal_name}")
-            print(f"    💰 Progress: ₹{current_amount:,.2f} / ₹{target_amount:,.2f}")
-            print(f"    📊 {progress_percentage:.1f}% Complete {status}")
+            print(f"      Progress:  {current_amount:,.2f} /  {target_amount:,.2f}")
+            print(f"      {progress_percentage:.1f}% Complete {status}")
             
             # Progress bar
             bar_length = 20
             filled_length = int((progress_percentage / 100) * bar_length)
-            bar = "█" * filled_length + "░" * (bar_length - filled_length)
+            bar = " " * filled_length + " " * (bar_length - filled_length)
             print(f"    [{bar}]")
             
-            print(f"    💵 Remaining: ₹{remaining_amount:,.2f}")
+            print(f"      Remaining:  {remaining_amount:,.2f}")
             if months_remaining != float('inf'):
-                print(f"    📅 {months_remaining:.1f} months remaining at current rate")
-            print(f"    💸 Monthly saving: ₹{monthly_saving:,.2f}")
+                print(f"      {months_remaining:.1f} months remaining at current rate")
+            print(f"      Monthly saving:  {monthly_saving:,.2f}")
             print("-" * 40)
 
     def add_to_goal(self, user_id):
         print("\n" + "="*50)
-        print("➕ GOAL JAR - ADD TO GOAL")
+        print("  GOAL JAR - ADD TO GOAL")
         print("="*50)
         
         goals = self.db.get_goal_jars(user_id)
         
         if not goals:
-            print("📭 No goals found. Create a goal first!")
+            print("  No goals found. Create a goal first!")
             return False
         
         print("Select a goal to add to:")
@@ -116,21 +116,21 @@ class GoalJar:
             goal_name = goal[2]
             current_amount = goal[4]
             target_amount = goal[3]
-            print(f"[{idx}] {goal_name} (₹{current_amount:.2f} / ₹{target_amount:.2f})")
+            print(f"[{idx}] {goal_name} ( {current_amount:.2f} /  {target_amount:.2f})")
         
         try:
             choice = int(input("\nSelect goal: ").strip())
             if choice < 1 or choice > len(goals):
-                print("❌ Invalid choice")
+                print("  Invalid choice")
                 return False
                 
-            amount = float(input("Amount to add (₹): ").strip())
+            amount = float(input("Amount to add ( ): ").strip())
             if amount <= 0:
-                print("❌ Amount must be positive")
+                print("  Amount must be positive")
                 return False
                 
         except ValueError:
-            print("❌ Invalid input")
+            print("  Invalid input")
             return False
         
         selected_goal = goals[choice - 1]
@@ -140,26 +140,26 @@ class GoalJar:
         # Update goal
         self.db.update_goal_jar(goal_id, amount)
         
-        print(f"\n✅ Added ₹{amount:.2f} to '{goal_name}'")
+        print(f"\n  Added  {amount:.2f} to '{goal_name}'")
         
         # Show updated progress
         updated_goals = self.db.get_goal_jars(user_id)
         updated_goal = next(g for g in updated_goals if g[0] == goal_id)
         
         new_progress = (updated_goal[4] / updated_goal[3]) * 100
-        print(f"📊 New Progress: {new_progress:.1f}% (₹{updated_goal[4]:.2f} / ₹{updated_goal[3]:.2f})")
+        print(f"  New Progress: {new_progress:.1f}% ( {updated_goal[4]:.2f} /  {updated_goal[3]:.2f})")
         
         return True
 
     def show_menu(self, user_id):
         while True:
             print("\n" + "="*50)
-            print("🏆 GOAL JAR - SAVINGS TRACKER")
+            print("  GOAL JAR - SAVINGS TRACKER")
             print("="*50)
-            print("1. 🎯 Create Goal")
-            print("2. 📋 View Goals")
-            print("3. ➕ Add to Goal")
-            print("4. ⬅️ Back to Money Service")
+            print("1.   Create Goal")
+            print("2.   View Goals")
+            print("3.   Add to Goal")
+            print("4.    Back to Money Service")
             
             choice = input("\nSelect option: ").strip()
             
@@ -172,6 +172,6 @@ class GoalJar:
             elif choice == "4":
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
             
             input("\nPress Enter to continue...")

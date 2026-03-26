@@ -111,7 +111,7 @@ def worker_signup():
         }), 201
         
     except Exception as e:
-        print(f"❌ Worker signup error: {e}")
+        print(f"  Worker signup error: {e}")
         return jsonify({"error": "Failed to create worker account"}), 500
 
 @worker_bp.route("/api/car/worker/login", methods=["POST"])
@@ -168,7 +168,7 @@ def worker_login():
             conn.close()
         
     except Exception as e:
-        print(f"❌ Worker login error: {e}")
+        print(f"  Worker login error: {e}")
         return jsonify({"error": "Login failed"}), 500
 
 @worker_bp.route("/api/car/worker/profile", methods=["GET"])
@@ -196,7 +196,7 @@ def get_worker_profile():
         return jsonify({"worker": worker_data}), 200
         
     except Exception as e:
-        print(f"❌ Get worker profile error: {e}")
+        print(f"  Get worker profile error: {e}")
         return jsonify({"error": "Failed to get profile"}), 500
 
 @worker_bp.route("/api/car/worker/status", methods=["PUT"])
@@ -219,7 +219,7 @@ def update_worker_status():
             return jsonify({"error": "Worker not found"}), 404
             
     except Exception as e:
-        print(f"❌ Update worker status error: {e}")
+        print(f"  Update worker status error: {e}")
         return jsonify({"error": "Failed to update status"}), 500
 
 @worker_bp.route("/api/car/workers/pending", methods=["GET"])
@@ -238,7 +238,7 @@ def get_pending_workers():
         return jsonify({"workers": clean_workers}), 200
         
     except Exception as e:
-        print(f"❌ Get pending workers error: {e}")
+        print(f"  Get pending workers error: {e}")
         return jsonify({"error": "Failed to get pending workers"}), 500
 
 @worker_bp.route("/api/car/workers/approved", methods=["GET"])
@@ -257,5 +257,5 @@ def get_approved_workers():
         return jsonify({"workers": clean_workers}), 200
         
     except Exception as e:
-        print(f"❌ Get approved workers error: {e}")
+        print(f"  Get approved workers error: {e}")
         return jsonify({"error": "Failed to get approved workers"}), 500

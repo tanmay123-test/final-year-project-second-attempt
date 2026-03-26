@@ -28,7 +28,7 @@ class AIEngine:
             if keyword in symptoms_lower:
                 return {
                     "stage": "emergency",
-                    "message": "🚨 MEDICAL EMERGENCY DETECTED\nVisit nearest hospital immediately",
+                    "message": "  MEDICAL EMERGENCY DETECTED\nVisit nearest hospital immediately",
                     "severity": "severe",
                     "emergency": True
                 }
@@ -211,9 +211,9 @@ def speak(text):
         engine.say(text)
         engine.runAndWait()
     except ImportError:
-        print(f"🔊 {text}")
+        print(f"  {text}")
     except Exception as e:
-        print(f"🔊 {text}")
+        print(f"  {text}")
 
 
 def get_voice_input():
@@ -222,12 +222,12 @@ def get_voice_input():
         import speech_recognition as sr
         r = sr.Recognizer()
         with sr.Microphone() as source:
-            print("🎤 Listening...")
+            print("  Listening...")
             audio = r.listen(source)
         text = r.recognize_google(audio)
         return text
     except ImportError:
         return ""
     except Exception as e:
-        print("❌ Voice input failed")
+        print("  Voice input failed")
         return ""

@@ -71,7 +71,7 @@ def send_email_notification(to_email, subject, body):
             logging.info(f"Duplicate email suppressed to: {to_email}")
             return True # Pretend it was sent
 
-    print(f"📧 Attempting to send email to {to_email}")
+    print(f"  Attempting to send email to {to_email}")
     logging.info(f"Attempting to send generic email to: {to_email}")
     try:
         success = send_email(to_email, subject, body)
@@ -85,14 +85,14 @@ def send_email_notification(to_email, subject, body):
             if len(_email_cache) > 1000:
                 _email_cache.clear()
                 
-            print(f"✅ Email sent successfully to {to_email}")
+            print(f"  Email sent successfully to {to_email}")
             logging.info(f"Successfully sent generic email to: {to_email}")
             return True
         else:
-            print(f"❌ Email sending failed to {to_email}")
+            print(f"  Email sending failed to {to_email}")
             logging.error(f"Failed to send generic email to: {to_email}")
             return False
     except Exception as e:
-        print(f"❌ Email sending failed to {to_email}: {e}")
+        print(f"  Email sending failed to {to_email}: {e}")
         logging.error(f"Exception sending generic email to {to_email}: {e}")
         return False

@@ -21,27 +21,27 @@ class LoanAnalyzer:
 
     def analyze_loan(self, user_id):
         print("\n" + "="*50)
-        print("🏦 SMART LOAN ANALYZER - EMI CALCULATOR")
+        print("  SMART LOAN ANALYZER - EMI CALCULATOR")
         print("="*50)
         
         try:
-            loan_amount = float(input("Loan Amount (₹): ").strip())
+            loan_amount = float(input("Loan Amount ( ): ").strip())
             if loan_amount <= 0:
-                print("❌ Loan amount must be positive")
+                print("  Loan amount must be positive")
                 return False
                 
             interest_rate = float(input("Annual Interest Rate (%): ").strip())
             if interest_rate < 0:
-                print("❌ Interest rate cannot be negative")
+                print("  Interest rate cannot be negative")
                 return False
                 
             tenure_months = int(input("Tenure (months): ").strip())
             if tenure_months <= 0:
-                print("❌ Tenure must be positive")
+                print("  Tenure must be positive")
                 return False
                 
         except ValueError:
-            print("❌ Invalid input")
+            print("  Invalid input")
             return False
         
         # Calculate EMI
@@ -57,23 +57,23 @@ class LoanAnalyzer:
         
         # Display results
         print("\n" + "="*50)
-        print("📊 LOAN ANALYSIS RESULTS")
+        print("  LOAN ANALYSIS RESULTS")
         print("="*50)
-        print(f"💰 Loan Amount: ₹{loan_amount:,.2f}")
-        print(f"📈 Interest Rate: {interest_rate}% per annum")
-        print(f"📅 Tenure: {tenure_months} months ({tenure_months/12:.1f} years)")
+        print(f"  Loan Amount:  {loan_amount:,.2f}")
+        print(f"  Interest Rate: {interest_rate}% per annum")
+        print(f"  Tenure: {tenure_months} months ({tenure_months/12:.1f} years)")
         print("-" * 50)
-        print(f"📅 Monthly EMI: ₹{monthly_emi:,.2f}")
-        print(f"💸 Total Interest: ₹{total_interest:,.2f}")
-        print(f"💰 Total Payment: ₹{total_payment:,.2f}")
+        print(f"  Monthly EMI:  {monthly_emi:,.2f}")
+        print(f"  Total Interest:  {total_interest:,.2f}")
+        print(f"  Total Payment:  {total_payment:,.2f}")
         print("-" * 50)
         
         # Additional insights
         interest_percentage = (total_interest / loan_amount) * 100
-        print(f"📊 Interest as % of Principal: {interest_percentage:.1f}%")
+        print(f"  Interest as % of Principal: {interest_percentage:.1f}%")
         
         # Monthly payment breakdown for first 6 months
-        print(f"\n📈 Payment Schedule (First 6 months):")
+        print(f"\n  Payment Schedule (First 6 months):")
         print("-" * 50)
         remaining_principal = loan_amount
         monthly_rate = interest_rate / 12 / 100
@@ -83,39 +83,39 @@ class LoanAnalyzer:
             principal_payment = monthly_emi - interest_payment
             remaining_principal -= principal_payment
             
-            print(f"Month {month:2d}: Principal ₹{principal_payment:,.2f} | Interest ₹{interest_payment:,.2f} | Balance ₹{remaining_principal:,.2f}")
+            print(f"Month {month:2d}: Principal  {principal_payment:,.2f} | Interest  {interest_payment:,.2f} | Balance  {remaining_principal:,.2f}")
         
         return True
 
     def view_loan_history(self, user_id):
         print("\n" + "="*50)
-        print("📋 LOAN ANALYSIS HISTORY")
+        print("  LOAN ANALYSIS HISTORY")
         print("="*50)
         
         history = self.db.get_loan_history(user_id)
         
         if not history:
-            print("📭 No previous loan calculations found")
+            print("  No previous loan calculations found")
             return
         
         print(f"\nPrevious Calculations: {len(history)}\n")
         
         for idx, calc in enumerate(history, 1):
             print(f"[{idx}] Loan Analysis from {calc[8]}")
-            print(f"    💰 Amount: ₹{calc[2]:,.2f}")
-            print(f"    📈 Rate: {calc[3]}% | Tenure: {calc[4]} months")
-            print(f"    📅 EMI: ₹{calc[5]:,.2f}")
-            print(f"    💸 Total Interest: ₹{calc[6]:,.2f}")
+            print(f"      Amount:  {calc[2]:,.2f}")
+            print(f"      Rate: {calc[3]}% | Tenure: {calc[4]} months")
+            print(f"      EMI:  {calc[5]:,.2f}")
+            print(f"      Total Interest:  {calc[6]:,.2f}")
             print("-" * 40)
 
     def show_menu(self, user_id):
         while True:
             print("\n" + "="*50)
-            print("🏦 SMART LOAN ANALYZER")
+            print("  SMART LOAN ANALYZER")
             print("="*50)
-            print("1. 🧮 Calculate EMI")
-            print("2. 📋 View History")
-            print("3. ⬅️ Back to Money Service")
+            print("1.   Calculate EMI")
+            print("2.   View History")
+            print("3.    Back to Money Service")
             
             choice = input("\nSelect option: ").strip()
             
@@ -126,6 +126,6 @@ class LoanAnalyzer:
             elif choice == "3":
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
             
             input("\nPress Enter to continue...")

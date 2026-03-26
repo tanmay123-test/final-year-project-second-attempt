@@ -45,7 +45,7 @@ def get_earnings():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get earnings error: {e}")
+        print(f"  Get earnings error: {e}")
         return jsonify({"error": "Failed to get earnings"}), 500
 
 @earnings_bp.route("/api/car/mechanic/earnings/history", methods=["GET"])
@@ -81,7 +81,7 @@ def get_earnings_history():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get earnings history error: {e}")
+        print(f"  Get earnings history error: {e}")
         return jsonify({"error": "Failed to get earnings history"}), 500
 
 @earnings_bp.route("/api/car/mechanic/stats", methods=["GET"])
@@ -112,7 +112,7 @@ def get_mechanic_stats():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get mechanic stats error: {e}")
+        print(f"  Get mechanic stats error: {e}")
         return jsonify({"error": "Failed to get mechanic stats"}), 500
 
 @earnings_bp.route("/api/car/mechanic/fairness-insights", methods=["GET"])
@@ -143,7 +143,7 @@ def get_fairness_insights():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get fairness insights error: {e}")
+        print(f"  Get fairness insights error: {e}")
         return jsonify({"error": "Failed to get fairness insights"}), 500
 
 @earnings_bp.route("/api/car/mechanic/bonus-calculation", methods=["POST"])
@@ -181,7 +181,7 @@ def calculate_bonus():
         }), 200
         
     except Exception as e:
-        print(f"❌ Calculate bonus error: {e}")
+        print(f"  Calculate bonus error: {e}")
         return jsonify({"error": "Failed to calculate bonus"}), 500
 
 @earnings_bp.route("/api/car/mechanic/commission-info", methods=["GET"])
@@ -253,5 +253,5 @@ def get_commission_info():
         }), 200
         
     except Exception as e:
-        print(f"❌ Get commission info error: {e}")
+        print(f"  Get commission info error: {e}")
         return jsonify({"error": "Failed to get commission info"}), 500

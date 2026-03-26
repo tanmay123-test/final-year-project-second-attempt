@@ -13,23 +13,23 @@ API = "http://127.0.0.1:5000"
 def unified_mechanic_signup():
     """Unified mechanic signup process"""
     print("\n" + "="*60)
-    print("🔧 MECHANIC SIGNUP")
+    print("  MECHANIC SIGNUP")
     print("="*60)
     
     try:
         # Basic info
-        name = input("👤 Enter full name: ").strip()
-        email = input("📧 Enter email: ").strip()
-        phone = input("📱 Enter phone: ").strip()
-        password = input("🔒 Enter password: ").strip()
-        age = input("🎂 Enter age: ").strip()
-        city = input("🏙️ Enter city: ").strip()
-        address = input("📍 Enter address: ").strip()
-        experience = input("💼 Enter experience (years): ").strip()
-        skills = input("🔧 Enter skills (comma separated): ").strip()
+        name = input("  Enter full name: ").strip()
+        email = input("  Enter email: ").strip()
+        phone = input("  Enter phone: ").strip()
+        password = input("  Enter password: ").strip()
+        age = input("  Enter age: ").strip()
+        city = input("   Enter city: ").strip()
+        address = input("  Enter address: ").strip()
+        experience = input("  Enter experience (years): ").strip()
+        skills = input("  Enter skills (comma separated): ").strip()
         
         # Document paths
-        print("\n📄 Document Uploads")
+        print("\n  Document Uploads")
         print("Enter file paths for required documents:")
         
         profile_photo = input("Profile photo filename: ").strip()
@@ -38,18 +38,18 @@ def unified_mechanic_signup():
         certificate = input("Certificate filename (optional): ").strip() or None
         
         # Security declaration
-        print("\n🔒 SECURITY DECLARATION")
+        print("\n  SECURITY DECLARATION")
         print("I confirm all documents are valid and I agree to platform policies")
         print("(Type YES in any case: yes, YES, Yes)")
         confirm = input("Type YES to continue: ").strip()
         
         if confirm.upper() != "YES":
-            print("❌ Security declaration not accepted. Signup cancelled.")
+            print("  Security declaration not accepted. Signup cancelled.")
             return
         
         # Validation
         if not all([name, email, phone, password, age, city, address, experience, skills]):
-            print("❌ All required fields must be filled")
+            print("  All required fields must be filled")
             return
         
         # Prepare data
@@ -86,36 +86,36 @@ def unified_mechanic_signup():
         
         if response.status_code == 201:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Signup successful!')}")
-            print(f"📋 Worker ID: {result.get('worker_id')}")
+            print(f"\n  {result.get('message', 'Signup successful!')}")
+            print(f"  Worker ID: {result.get('worker_id')}")
             print("\n" + "="*60)
-            print("⏳ APPROVAL STATUS")
+            print("  APPROVAL STATUS")
             print("="*60)
-            print("📝 Your account has been submitted for admin review")
-            print("⏱️  Expected approval time: 2-24 hours")
-            print("📧 You will receive a notification once approved")
-            print("🔐 After approval, you can login and access your dashboard")
-            print("\n📞 For urgent inquiries, contact support")
+            print("  Your account has been submitted for admin review")
+            print("    Expected approval time: 2-24 hours")
+            print("  You will receive a notification once approved")
+            print("  After approval, you can login and access your dashboard")
+            print("\n  For urgent inquiries, contact support")
             print("="*60)
         else:
             error = response.json().get("error", "Signup failed")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
     except Exception as e:
-        print(f"❌ Signup error: {e}")
+        print(f"  Signup error: {e}")
 
 def unified_mechanic_login():
     """Unified mechanic login process"""
     print("\n" + "="*50)
-    print("🔐 MECHANIC LOGIN")
+    print("  MECHANIC LOGIN")
     print("="*50)
     
     try:
-        email = input("📧 Enter email: ").strip()
-        password = input("🔒 Enter password: ").strip()
+        email = input("  Enter email: ").strip()
+        password = input("  Enter password: ").strip()
         
         if not email or not password:
-            print("❌ Email and password are required")
+            print("  Email and password are required")
             return
         
         # Call unified API
@@ -129,59 +129,59 @@ def unified_mechanic_login():
             worker = result.get("worker", {})
             token = result.get("token")
             
-            print(f"\n✅ Login successful!")
-            print(f"👤 Welcome, {worker.get('name', 'Mechanic')}!")
-            print(f"🎯 Role: {worker.get('role', 'Unknown')}")
-            print(f"🏙️ City: {worker.get('city', 'Unknown')}")
-            print(f"💼 Experience: {worker.get('experience', 0)} years")
+            print(f"\n  Login successful!")
+            print(f"  Welcome, {worker.get('name', 'Mechanic')}!")
+            print(f"  Role: {worker.get('role', 'Unknown')}")
+            print(f"   City: {worker.get('city', 'Unknown')}")
+            print(f"  Experience: {worker.get('experience', 0)} years")
             
             # Open mechanic dashboard
             unified_mechanic_dashboard(worker, token)
                 
         elif response.status_code == 401:
-            print("❌ Invalid email or password")
+            print("  Invalid email or password")
         elif response.status_code == 403:
             result = response.json()
             status = result.get("status", "PENDING")
             print("\n" + "="*60)
-            print("⏳ ACCOUNT PENDING APPROVAL")
+            print("  ACCOUNT PENDING APPROVAL")
             print("="*60)
-            print("📝 Your account is still under admin review")
-            print("⏱️  Expected approval time: 2-24 hours")
-            print("📧 You will receive a notification once approved")
-            print("📊 Current status: " + status)
-            print("\n🔐 Please try logging in again after approval")
-            print("📞 For urgent inquiries, contact support")
+            print("  Your account is still under admin review")
+            print("    Expected approval time: 2-24 hours")
+            print("  You will receive a notification once approved")
+            print("  Current status: " + status)
+            print("\n  Please try logging in again after approval")
+            print("  For urgent inquiries, contact support")
             print("="*60)
         else:
             error = response.json().get("error", "Login failed")
-            print(f"❌ {error}")
+            print(f"  {error}")
             
     except Exception as e:
-        print(f"❌ Login error: {e}")
+        print(f"  Login error: {e}")
 
 def unified_mechanic_dashboard(worker, token):
     """Unified mechanic dashboard menu"""
     while True:
         print("\n" + "="*60)
-        print("🔧 MECHANIC DASHBOARD")
+        print("  MECHANIC DASHBOARD")
         print("="*60)
-        print(f"👤 {worker.get('name')}")
-        print(f"📧 {worker.get('email')}")
-        print(f"📱 {worker.get('phone')}")
-        print(f"🏙️ {worker.get('city')}")
-        print(f"💼 Experience: {worker.get('experience', 0)} years")
-        print(f"🔧 Skills: {worker.get('skills', 'N/A')}")
-        print(f"🟢 Status: {'ONLINE' if worker.get('is_online', 0) else 'OFFLINE'}")
+        print(f"  {worker.get('name')}")
+        print(f"  {worker.get('email')}")
+        print(f"  {worker.get('phone')}")
+        print(f"   {worker.get('city')}")
+        print(f"  Experience: {worker.get('experience', 0)} years")
+        print(f"  Skills: {worker.get('skills', 'N/A')}")
+        print(f"  Status: {'ONLINE' if worker.get('is_online', 0) else 'OFFLINE'}")
         
         print("\nOptions:")
-        print("1. 🟢 Go Online / Offline")
-        print("2. 📋 Job Requests (Transparent Queue)")
-        print("3. 🔧 Active Jobs")
-        print("4. 💰 Earnings & Fairness Insights")
-        print("5. 📊 Performance, Safety & Support")
-        print("6. � Manage Available Slots")
-        print("7. � Logout")
+        print("1.   Go Online / Offline")
+        print("2.   Job Requests (Transparent Queue)")
+        print("3.   Active Jobs")
+        print("4.   Earnings & Fairness Insights")
+        print("5.   Performance, Safety & Support")
+        print("6.   Manage Available Slots")
+        print("7.   Logout")
         
         choice = input("\nSelect option: ").strip()
         
@@ -198,10 +198,10 @@ def unified_mechanic_dashboard(worker, token):
         if choice == "6":
             manage_available_slots(worker, token)
         elif choice == "7":
-            print("👋 Logged out successfully")
+            print("  Logged out successfully")
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def toggle_online_status(worker, token):
     """Toggle mechanic online/offline status"""
@@ -249,18 +249,18 @@ def mechanic_status_control(worker, token):
                 service_radius = result.get("service_radius", 10)
                 current_city = result.get("city", "Not set")
                 
-                print(f"\n📊 Current Status:")
+                print(f"\n  Current Status:")
                 print(f"   Status: {status}")
-                print(f"   Online: {'✅' if is_online else '❌'}")
-                print(f"   Busy: {'✅' if is_busy else '❌'}")
+                print(f"   Online: {' ' if is_online else ' '}")
+                print(f"   Busy: {' ' if is_busy else ' '}")
                 print(f"   Service Radius: {service_radius} km")
                 print(f"   Current City: {current_city}")
                 
             else:
-                print("❌ Failed to get status")
+                print("  Failed to get status")
                 
         except Exception as e:
-            print(f"❌ Status check error: {e}")
+            print(f"  Status check error: {e}")
 
         print("\nOptions:")
         print("1. Go Online")
@@ -285,7 +285,7 @@ def mechanic_status_control(worker, token):
         elif choice == "6":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def go_online(worker, token):
     """Set mechanic to ONLINE status"""
@@ -296,19 +296,19 @@ def go_online(worker, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Status updated')}")
+            print(f"\n  {result.get('message', 'Status updated')}")
             # Update local worker data
             worker['is_online'] = 1
             worker['is_busy'] = 0
             worker['last_status_update'] = datetime.now().isoformat()
         else:
             error = response.json().get("error", "Failed to go online")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Go online error: {e}")
+        print(f"  Go online error: {e}")
         input("\nPress Enter to continue...")
 
 def go_offline(worker, token):
@@ -320,19 +320,19 @@ def go_offline(worker, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Status updated')}")
+            print(f"\n  {result.get('message', 'Status updated')}")
             # Update local worker data
             worker['is_online'] = 0
             worker['is_busy'] = 0
             worker['last_status_update'] = datetime.now().isoformat()
         else:
             error = response.json().get("error", "Failed to go offline")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Go offline error: {e}")
+        print(f"  Go offline error: {e}")
         input("\nPress Enter to continue...")
 
 def update_service_radius(worker, token):
@@ -342,16 +342,16 @@ def update_service_radius(worker, token):
         new_radius = input(f"\nCurrent service radius: {current_radius} km\nNew service radius (km): ").strip()
         
         if not new_radius:
-            print("❌ Service radius cannot be empty")
+            print("  Service radius cannot be empty")
             return
         
         try:
             new_radius = int(new_radius)
             if new_radius < 1 or new_radius > 50:
-                print("❌ Service radius must be between 1 and 50 km")
+                print("  Service radius must be between 1 and 50 km")
                 return
         except ValueError:
-            print("❌ Invalid radius value")
+            print("  Invalid radius value")
             return
         
         response = requests.put(f"{API}/api/car/service/worker/availability",
@@ -360,17 +360,17 @@ def update_service_radius(worker, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Service radius updated')}")
+            print(f"\n  {result.get('message', 'Service radius updated')}")
             # Update local worker data
             worker['service_radius'] = new_radius
         else:
             error = response.json().get("error", "Failed to update service radius")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Service radius update error: {e}")
+        print(f"  Service radius update error: {e}")
         input("\nPress Enter to continue...")
 
 def update_current_location(worker, token):
@@ -380,7 +380,7 @@ def update_current_location(worker, token):
         new_city = input(f"\nCurrent city: {current_city}\nNew working city: ").strip()
         
         if not new_city:
-            print("❌ City cannot be empty")
+            print("  City cannot be empty")
             return
         
         response = requests.put(f"{API}/api/car/service/worker/availability",
@@ -389,17 +389,17 @@ def update_current_location(worker, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Location updated')}")
+            print(f"\n  {result.get('message', 'Location updated')}")
             # Update local worker data
             worker['current_city'] = new_city
         else:
             error = response.json().get("error", "Failed to update location")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Location update error: {e}")
+        print(f"  Location update error: {e}")
         input("\nPress Enter to continue...")
 
 def view_current_status(worker, token):
@@ -418,11 +418,11 @@ def view_current_status(worker, token):
             last_update = result.get("last_status_update", "Never")
             cooldown_until = result.get("cooldown_until", "None")
             
-            print(f"\n📊 CURRENT STATUS")
+            print(f"\n  CURRENT STATUS")
             print("=" * 40)
             print(f"   Status: {status}")
-            print(f"   Online: {'✅' if is_online else '❌'}")
-            print(f"   Busy: {'✅' if is_busy else '❌'}")
+            print(f"   Online: {' ' if is_online else ' '}")
+            print(f"   Busy: {' ' if is_busy else ' '}")
             print(f"   Service Radius: {service_radius} km")
             print(f"   Current City: {current_city}")
             print(f"   Last Update: {last_update}")
@@ -431,12 +431,12 @@ def view_current_status(worker, token):
             print("=" * 40)
             
         else:
-            print("❌ Failed to get current status")
+            print("  Failed to get current status")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Status view error: {e}")
+        print(f"  Status view error: {e}")
         input("\nPress Enter to continue...")
 
 def job_completed(worker, token):
@@ -511,31 +511,31 @@ def job_requests_queue(worker, token):
             jobs = data.get("jobs", [])
             
             print("\n" + "="*60)
-            print("📋 JOB REQUESTS")
+            print("  JOB REQUESTS")
             print("="*60)
             
             if not jobs:
-                print("📭 No pending job requests")
-                print("💡 Go online to receive job requests")
+                print("  No pending job requests")
+                print("  Go online to receive job requests")
                 input("\nPress Enter to continue...")
                 return
             
             # Display jobs
             for i, job in enumerate(jobs, 1):
-                print(f"\n{'🚨' if job['priority'] == 'EMERGENCY' else '📝'} Request ID: {job['id']}")
-                print(f"👤 User: {job['user_name']}")
-                print(f"� Email: {job['user_email']}")
-                print(f"📱 Phone: {job['user_phone']}")
-                print(f"� Car: {job['car_model']}")
-                print(f"🔧 Issue: {job['issue']}")
-                print(f"🏙️ City: {job['user_city']}")
-                print(f"📏 Distance: {job['distance_km']:.1f} km")
-                print(f"⏱️ ETA: {job['eta_minutes']} minutes")
-                print(f"💰 Estimated earning: ₹{job['estimated_earning']:.0f}")
-                print(f"🎯 Priority: {job['priority']}")
+                print(f"\n{' ' if job['priority'] == 'EMERGENCY' else ' '} Request ID: {job['id']}")
+                print(f"  User: {job['user_name']}")
+                print(f"  Email: {job['user_email']}")
+                print(f"  Phone: {job['user_phone']}")
+                print(f"  Car: {job['car_model']}")
+                print(f"  Issue: {job['issue']}")
+                print(f"   City: {job['user_city']}")
+                print(f"  Distance: {job['distance_km']:.1f} km")
+                print(f"   ETA: {job['eta_minutes']} minutes")
+                print(f"  Estimated earning:  {job['estimated_earning']:.0f}")
+                print(f"  Priority: {job['priority']}")
                 
                 if job['assignment_reason']:
-                    print(f"📋 Assignment reason:")
+                    print(f"  Assignment reason:")
                     print(f"   {job['assignment_reason']}")
                 
                 if i < len(jobs):
@@ -550,35 +550,35 @@ def job_requests_queue(worker, token):
                 handle_multiple_jobs(jobs, token)
                 
         else:
-            print("❌ Failed to get job requests")
+            print("  Failed to get job requests")
             input("\nPress Enter to continue...")
             
     except Exception as e:
-        print(f"❌ Job requests error: {e}")
+        print(f"  Job requests error: {e}")
         input("\nPress Enter to continue...")
 
 def handle_single_job(job, token):
     """Handle actions for a single job"""
-    print(f"\n{'🚨' if job['priority'] == 'EMERGENCY' else '📝'} Job Request: {job['id']}")
+    print(f"\n{' ' if job['priority'] == 'EMERGENCY' else ' '} Job Request: {job['id']}")
     print("="*50)
-    print(f"👤 User: {job['user_name']}")
-    print(f"📧 Email: {job['user_email']}")
-    print(f"📱 Phone: {job['user_phone']}")
-    print(f"🚗 Car: {job['car_model']}")
-    print(f"🔧 Issue: {job['issue']}")
-    print(f"📏 Distance: {job['distance_km']:.1f} km")
-    print(f"⏱️ ETA: {job['eta_minutes']} minutes")
-    print(f"💰 Estimated earning: ₹{job['estimated_earning']:.0f}")
-    print(f"🎯 Priority: {job['priority']}")
+    print(f"  User: {job['user_name']}")
+    print(f"  Email: {job['user_email']}")
+    print(f"  Phone: {job['user_phone']}")
+    print(f"  Car: {job['car_model']}")
+    print(f"  Issue: {job['issue']}")
+    print(f"  Distance: {job['distance_km']:.1f} km")
+    print(f"   ETA: {job['eta_minutes']} minutes")
+    print(f"  Estimated earning:  {job['estimated_earning']:.0f}")
+    print(f"  Priority: {job['priority']}")
     
     if job['assignment_reason']:
-        print(f"📋 Assignment reason:")
+        print(f"  Assignment reason:")
         print(f"   {job['assignment_reason']}")
     
     print("\nOptions:")
-    print("1. ✅ Accept")
-    print("2. ❌ Reject")
-    print("3. ⬅️ Back")
+    print("1.   Accept")
+    print("2.   Reject")
+    print("3.    Back")
     
     choice = input("\nSelect option: ").strip()
     
@@ -589,15 +589,15 @@ def handle_single_job(job, token):
     elif choice == "3":
         return
     else:
-        print("❌ Invalid choice")
+        print("  Invalid choice")
 
 def handle_multiple_jobs(jobs, token):
     """Handle actions for multiple jobs"""
     print("\nOptions:")
-    print("1. ✅ Accept Job")
-    print("2. ❌ Reject Job")
-    print("3. 📋 View Job Details")
-    print("4. ⬅️ Back")
+    print("1.   Accept Job")
+    print("2.   Reject Job")
+    print("3.   View Job Details")
+    print("4.    Back")
     
     choice = input("\nSelect option: ").strip()
     
@@ -610,9 +610,9 @@ def handle_multiple_jobs(jobs, token):
             if job:
                 accept_job(job['id'], token)
             else:
-                print("❌ Job not found")
+                print("  Job not found")
         else:
-            print("❌ Invalid Job ID")
+            print("  Invalid Job ID")
     
     elif choice == "2":
         job_id = input("Enter Job ID to reject: ").strip()
@@ -623,9 +623,9 @@ def handle_multiple_jobs(jobs, token):
             if job:
                 reject_job(job['id'], token)
             else:
-                print("❌ Job not found")
+                print("  Job not found")
         else:
-            print("❌ Invalid Job ID")
+            print("  Invalid Job ID")
     
     elif choice == "3":
         job_id = input("Enter Job ID to view: ").strip()
@@ -636,32 +636,32 @@ def handle_multiple_jobs(jobs, token):
             if job:
                 view_job_details(job)
             else:
-                print("❌ Job not found")
+                print("  Job not found")
         else:
-            print("❌ Invalid Job ID")
+            print("  Invalid Job ID")
     
     elif choice == "4":
         return
     else:
-        print("❌ Invalid choice")
+        print("  Invalid choice")
 
 def view_job_details(job):
     """View detailed job information"""
-    print(f"\n{'🚨' if job['priority'] == 'EMERGENCY' else '📝'} Job Details: {job['id']}")
+    print(f"\n{' ' if job['priority'] == 'EMERGENCY' else ' '} Job Details: {job['id']}")
     print("="*60)
-    print(f"👤 User: {job['user_name']}")
-    print(f"🚗 Car: {job['car_model']}")
-    print(f"🔧 Issue: {job['issue']}")
-    print(f"🔧 Issue Type: {job['issue_type']}")
-    print(f"🏙️ User City: {job['user_city']}")
-    print(f"📏 Distance: {job['distance_km']:.1f} km")
-    print(f"⏱️ ETA: {job['eta_minutes']} minutes")
-    print(f"💰 Estimated earning: ₹{job['estimated_earning']:.0f}")
-    print(f"🎯 Priority: {job['priority']}")
-    print(f"📅 Created: {job['created_at']}")
+    print(f"  User: {job['user_name']}")
+    print(f"  Car: {job['car_model']}")
+    print(f"  Issue: {job['issue']}")
+    print(f"  Issue Type: {job['issue_type']}")
+    print(f"   User City: {job['user_city']}")
+    print(f"  Distance: {job['distance_km']:.1f} km")
+    print(f"   ETA: {job['eta_minutes']} minutes")
+    print(f"  Estimated earning:  {job['estimated_earning']:.0f}")
+    print(f"  Priority: {job['priority']}")
+    print(f"  Created: {job['created_at']}")
     
     if job['assignment_reason']:
-        print(f"\n📋 Assignment reason:")
+        print(f"\n  Assignment reason:")
         print(f"   {job['assignment_reason']}")
     
     print("\n" + "="*60)
@@ -676,17 +676,17 @@ def accept_job(job_id, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Job accepted')}")
-            print(f"📊 {result.get('note', 'Status updated')}")
-            print("🔧 Job moved to Active Jobs")
+            print(f"\n  {result.get('message', 'Job accepted')}")
+            print(f"  {result.get('note', 'Status updated')}")
+            print("  Job moved to Active Jobs")
         else:
             error = response.json().get("error", "Failed to accept job")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Accept job error: {e}")
+        print(f"  Accept job error: {e}")
         input("\nPress Enter to continue...")
 
 def reject_job(job_id, token):
@@ -700,16 +700,16 @@ def reject_job(job_id, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n❌ {result.get('message', 'Job rejected')}")
-            print(f"📋 {result.get('note', 'Request sent to next mechanic')}")
+            print(f"\n  {result.get('message', 'Job rejected')}")
+            print(f"  {result.get('note', 'Request sent to next mechanic')}")
         else:
             error = response.json().get("error", "Failed to reject job")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Reject job error: {e}")
+        print(f"  Reject job error: {e}")
         input("\nPress Enter to continue...")
 
 def active_jobs_screen(worker, token):
@@ -724,46 +724,46 @@ def active_jobs_screen(worker, token):
             active_job = data.get("active_job")
             
             print("\n" + "="*60)
-            print("🔧 ACTIVE JOBS")
+            print("  ACTIVE JOBS")
             print("="*60)
             
             if not active_job:
-                print("📭 No active jobs")
-                print("💡 Accept job requests to start working")
+                print("  No active jobs")
+                print("  Accept job requests to start working")
                 input("\nPress Enter to continue...")
                 return
             
             # Display active job
-            print(f"\n🎯 ACTIVE JOB: {active_job['id']}")
+            print(f"\n  ACTIVE JOB: {active_job['id']}")
             print("="*50)
-            print(f"👤 User: {active_job['user_name']}")
-            print(f"🚗 Car: {active_job['car_model']}")
-            print(f"🔧 Issue: {active_job['issue']}")
-            print(f"🏙️ User Location: {active_job.get('user_city', 'Unknown')}")
+            print(f"  User: {active_job['user_name']}")
+            print(f"  Car: {active_job['car_model']}")
+            print(f"  Issue: {active_job['issue']}")
+            print(f"   User Location: {active_job.get('user_city', 'Unknown')}")
             
             if active_job.get('user_lat') and active_job.get('user_long'):
-                print(f"📍 User Coordinates: {active_job['user_lat']:.6f}, {active_job['user_long']:.6f}")
+                print(f"  User Coordinates: {active_job['user_lat']:.6f}, {active_job['user_long']:.6f}")
             
             if active_job.get('mechanic_lat') and active_job.get('mechanic_long'):
-                print(f"📍 Your Coordinates: {active_job['mechanic_lat']:.6f}, {active_job['mechanic_long']:.6f}")
+                print(f"  Your Coordinates: {active_job['mechanic_lat']:.6f}, {active_job['mechanic_long']:.6f}")
             
-            print(f"📏 Distance: {active_job.get('distance_km', 0):.1f} km")
-            print(f"⏱️ ETA: {active_job.get('eta_minutes', 0)} minutes")
-            print(f"💰 Estimated earning: ₹{active_job.get('estimated_earning', 0):.0f}")
-            print(f"📊 Status: {active_job['status']}")
+            print(f"  Distance: {active_job.get('distance_km', 0):.1f} km")
+            print(f"   ETA: {active_job.get('eta_minutes', 0)} minutes")
+            print(f"  Estimated earning:  {active_job.get('estimated_earning', 0):.0f}")
+            print(f"  Status: {active_job['status']}")
             
             if active_job['status'] == 'WORKING':
-                print(f"⏰ Repair time: {active_job.get('repair_time', '0 minutes')}")
+                print(f"  Repair time: {active_job.get('repair_time', '0 minutes')}")
             
             if active_job.get('before_photo'):
-                print(f"📸 Before photo: ✅ Uploaded")
+                print(f"  Before photo:   Uploaded")
             else:
-                print(f"📸 Before photo: ❌ Not uploaded")
+                print(f"  Before photo:   Not uploaded")
             
             if active_job.get('after_photo'):
-                print(f"📸 After photo: ✅ Uploaded")
+                print(f"  After photo:   Uploaded")
             else:
-                print(f"📸 After photo: ❌ Not uploaded")
+                print(f"  After photo:   Not uploaded")
             
             print("\n" + "-"*50)
             
@@ -771,11 +771,11 @@ def active_jobs_screen(worker, token):
             show_active_job_options(active_job, token)
                 
         else:
-            print("❌ Failed to get active job")
+            print("  Failed to get active job")
             input("\nPress Enter to continue...")
             
     except Exception as e:
-        print(f"❌ Active jobs error: {e}")
+        print(f"  Active jobs error: {e}")
         input("\nPress Enter to continue...")
 
 def show_active_job_options(active_job, token):
@@ -784,26 +784,26 @@ def show_active_job_options(active_job, token):
     
     if status == 'ARRIVING':
         print("\nOptions:")
-        print("1. 🗺️ Navigate")
-        print("2. ✅ Mark Arrived")
-        print("3. ⬅️ Back")
+        print("1.    Navigate")
+        print("2.   Mark Arrived")
+        print("3.    Back")
         
     elif status == 'ARRIVED':
         print("\nOptions:")
-        print("1. 🔢 Start Job (Enter OTP)")
-        print("2. 📸 Upload Before Photo")
-        print("3. ⬅️ Back")
+        print("1.   Start Job (Enter OTP)")
+        print("2.   Upload Before Photo")
+        print("3.    Back")
         
     elif status == 'WORKING':
         print("\nOptions:")
-        print("1. 📸 Upload Before Photo")
-        print("2. 📸 Upload After Photo")
-        print("3. ✅ Complete Job")
-        print("4. ⬅️ Back")
+        print("1.   Upload Before Photo")
+        print("2.   Upload After Photo")
+        print("3.   Complete Job")
+        print("4.    Back")
         
     else:
         print("\nOptions:")
-        print("1. ⬅️ Back")
+        print("1.    Back")
     
     choice = input("\nSelect option: ").strip()
     
@@ -840,20 +840,20 @@ def show_active_job_options(active_job, token):
     elif choice in ["5", "6", "7", "8", "9"]:
         return
     else:
-        print("❌ Invalid choice")
+        print("  Invalid choice")
 
 def navigate_to_job(active_job):
     """Simulate navigation to job location"""
-    print("\n🗺️ Opening navigation...")
+    print("\n   Opening navigation...")
     print("="*40)
     
     if active_job.get('user_lat') and active_job.get('user_long'):
-        print(f"📍 User coordinates:")
+        print(f"  User coordinates:")
         print(f"   Latitude: {active_job['user_lat']:.6f}")
         print(f"   Longitude: {active_job['user_long']:.6f}")
         
         if active_job.get('mechanic_lat') and active_job.get('mechanic_long'):
-            print(f"\n📍 Your coordinates:")
+            print(f"\n  Your coordinates:")
             print(f"   Latitude: {active_job['mechanic_lat']:.6f}")
             print(f"   Longitude: {active_job['mechanic_long']:.6f}")
             
@@ -868,12 +868,12 @@ def navigate_to_job(active_job):
             c = 2 * atan2(sqrt(a), sqrt(1-a))
             distance = 63710 * c  # Earth's radius in km
             
-            print(f"\n📏 Distance remaining: {distance:.2f} km")
-            print(f"⏱️ ETA: {int(distance * 3)} minutes")
+            print(f"\n  Distance remaining: {distance:.2f} km")
+            print(f"   ETA: {int(distance * 3)} minutes")
     else:
-        print("📍 Location coordinates not available")
+        print("  Location coordinates not available")
     
-    print("\n💡 Future: Will open Google Maps with navigation")
+    print("\n  Future: Will open Google Maps with navigation")
     input("\nPress Enter to continue...")
 
 def mark_arrived(active_job, token):
@@ -884,25 +884,25 @@ def mark_arrived(active_job, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Marked as arrived')}")
-            print(f"📊 Status: {result.get('status', 'ARRIVED')}")
-            print(f"💡 {result.get('note', 'Ask user for OTP')}")
+            print(f"\n  {result.get('message', 'Marked as arrived')}")
+            print(f"  Status: {result.get('status', 'ARRIVED')}")
+            print(f"  {result.get('note', 'Ask user for OTP')}")
         else:
             error = response.json().get("error", "Failed to mark arrived")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Mark arrived error: {e}")
+        print(f"  Mark arrived error: {e}")
         input("\nPress Enter to continue...")
 
 def start_job_with_otp(active_job, token):
     """Start job with OTP verification"""
-    otp = input("\n🔢 Enter OTP: ").strip()
+    otp = input("\n  Enter OTP: ").strip()
     
     if not otp:
-        print("❌ OTP is required")
+        print("  OTP is required")
         input("\nPress Enter to continue...")
         return
     
@@ -913,34 +913,34 @@ def start_job_with_otp(active_job, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Job started')}")
-            print(f"📊 Status: {result.get('status', 'WORKING')}")
-            print(f"💡 {result.get('note', 'Repair timer started')}")
+            print(f"\n  {result.get('message', 'Job started')}")
+            print(f"  Status: {result.get('status', 'WORKING')}")
+            print(f"  {result.get('note', 'Repair timer started')}")
         else:
             error = response.json().get("error", "Failed to start job")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Start job error: {e}")
+        print(f"  Start job error: {e}")
         input("\nPress Enter to continue...")
 
 def upload_before_photo(active_job, token):
     """Upload before repair photo"""
-    print("\n📸 Upload Before Photo")
+    print("\n  Upload Before Photo")
     print("="*30)
     print("Enter file path (e.g., C:/Photos/before.jpg):")
     
     file_path = input("File path: ").strip()
     
     if not file_path:
-        print("❌ File path is required")
+        print("  File path is required")
         input("\nPress Enter to continue...")
         return
     
     if not os.path.exists(file_path):
-        print("❌ File not found")
+        print("  File not found")
         input("\nPress Enter to continue...")
         return
     
@@ -953,33 +953,33 @@ def upload_before_photo(active_job, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Photo uploaded')}")
-            print(f"📁 File: {result.get('photo_path', 'Unknown')}")
+            print(f"\n  {result.get('message', 'Photo uploaded')}")
+            print(f"  File: {result.get('photo_path', 'Unknown')}")
         else:
             error = response.json().get("error", "Failed to upload photo")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Upload error: {e}")
+        print(f"  Upload error: {e}")
         input("\nPress Enter to continue...")
 
 def upload_after_photo(active_job, token):
     """Upload after repair photo"""
-    print("\n📸 Upload After Photo")
+    print("\n  Upload After Photo")
     print("="*30)
     print("Enter file path (e.g., C:/Photos/after.jpg):")
     
     file_path = input("File path: ").strip()
     
     if not file_path:
-        print("❌ File path is required")
+        print("  File path is required")
         input("\nPress Enter to continue...")
         return
     
     if not os.path.exists(file_path):
-        print("❌ File not found")
+        print("  File not found")
         input("\nPress Enter to continue...")
         return
     
@@ -992,37 +992,37 @@ def upload_after_photo(active_job, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Photo uploaded')}")
-            print(f"📁 File: {result.get('photo_path', 'Unknown')}")
+            print(f"\n  {result.get('message', 'Photo uploaded')}")
+            print(f"  File: {result.get('photo_path', 'Unknown')}")
         else:
             error = response.json().get("error", "Failed to upload photo")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Upload error: {e}")
+        print(f"  Upload error: {e}")
         input("\nPress Enter to continue...")
 
 def complete_active_job(active_job, token):
     """Complete the active job"""
-    print("\n✅ Complete Job")
+    print("\n  Complete Job")
     print("="*30)
     
     # Check if photos are uploaded
     if not active_job.get('before_photo'):
-        print("❌ Before photo is required")
+        print("  Before photo is required")
         input("\nPress Enter to continue...")
         return
     
     if not active_job.get('after_photo'):
-        print("❌ After photo is required")
+        print("  After photo is required")
         input("\nPress Enter to continue...")
         return
     
     confirm = input("Are you sure you want to complete this job? (y/n): ").strip().lower()
     if confirm != 'y':
-        print("❌ Job completion cancelled")
+        print("  Job completion cancelled")
         input("\nPress Enter to continue...")
         return
     
@@ -1032,18 +1032,18 @@ def complete_active_job(active_job, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Job completed')}")
-            print(f"📊 Status: {result.get('status', 'COMPLETED')}")
-            print(f"💰 Earning: ₹{result.get('earning', 0):.0f}")
-            print(f"💡 {result.get('note', 'Status updated')}")
+            print(f"\n  {result.get('message', 'Job completed')}")
+            print(f"  Status: {result.get('status', 'COMPLETED')}")
+            print(f"  Earning:  {result.get('earning', 0):.0f}")
+            print(f"  {result.get('note', 'Status updated')}")
         else:
             error = response.json().get("error", "Failed to complete job")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Complete job error: {e}")
+        print(f"  Complete job error: {e}")
         input("\nPress Enter to continue...")
 
 def earnings_fairness_screen(worker, token):
@@ -1067,28 +1067,28 @@ def earnings_fairness_screen(worker, token):
                 stats = stats_data.get("stats", {})
             
             print("\n" + "="*60)
-            print("💰 EARNINGS & FAIRNESS INSIGHTS")
+            print("  EARNINGS & FAIRNESS INSIGHTS")
             print("="*60)
             
             # Earnings Dashboard
-            print(f"\n📊 EARNINGS DASHBOARD")
+            print(f"\n  EARNINGS DASHBOARD")
             print("="*40)
-            print(f"💸 Today Earnings: ₹{earnings.get('today_earnings', 0):.0f}")
-            print(f"💰 Total Earnings: ₹{earnings.get('total_earnings', 0):.0f}")
-            print(f"📈 Today Jobs: {earnings.get('today_jobs', 0)}")
-            print(f"🎯 Total Jobs: {earnings.get('total_jobs', 0)}")
-            print(f"🎁 Today Bonus: ₹{earnings.get('today_bonus', 0):.0f}")
-            print(f"💸 Today Commission: ₹{earnings.get('today_commission', 0):.0f}")
+            print(f"  Today Earnings:  {earnings.get('today_earnings', 0):.0f}")
+            print(f"  Total Earnings:  {earnings.get('total_earnings', 0):.0f}")
+            print(f"  Today Jobs: {earnings.get('today_jobs', 0)}")
+            print(f"  Total Jobs: {earnings.get('total_jobs', 0)}")
+            print(f"  Today Bonus:  {earnings.get('today_bonus', 0):.0f}")
+            print(f"  Today Commission:  {earnings.get('today_commission', 0):.0f}")
             
             # Performance Stats
-            print(f"\n📈 PERFORMANCE STATS")
+            print(f"\n  PERFORMANCE STATS")
             print("="*40)
-            print(f"⭐ Rating: {stats.get('rating', 5):.1f}/5.0")
-            print(f"✅ Completion Rate: {stats.get('completion_rate', 0)*100:.1f}%")
-            print(f"🎯 Fairness Score: {stats.get('fairness_score', 100):.0f}%")
-            print(f"📊 Total Jobs: {stats.get('total_jobs', 0)}")
-            print(f"✅ Completed: {stats.get('completed_jobs', 0)}")
-            print(f"❌ Cancelled: {stats.get('cancelled_jobs', 0)}")
+            print(f"  Rating: {stats.get('rating', 5):.1f}/5.0")
+            print(f"  Completion Rate: {stats.get('completion_rate', 0)*100:.1f}%")
+            print(f"  Fairness Score: {stats.get('fairness_score', 100):.0f}%")
+            print(f"  Total Jobs: {stats.get('total_jobs', 0)}")
+            print(f"  Completed: {stats.get('completed_jobs', 0)}")
+            print(f"  Cancelled: {stats.get('cancelled_jobs', 0)}")
             
             # Recent Jobs (show last 3)
             history_response = requests.get(f"{API}/api/car/mechanic/earnings/history?limit=3",
@@ -1099,24 +1099,24 @@ def earnings_fairness_screen(worker, token):
                 history = history_data.get("history", [])
                 
                 if history:
-                    print(f"\n📋 RECENT JOBS")
+                    print(f"\n  RECENT JOBS")
                     print("="*40)
                     for job in history:
-                        print(f"🎯 Job {job['job_id']}")
-                        print(f"👤 User: {job['user_name']}")
-                        print(f"🚗 Car: {job['car_model']}")
-                        print(f"💰 Earned: ₹{job['final_amount']:.0f}")
-                        print(f"🎁 Bonus: ₹{job['bonus']:.0f}")
-                        print(f"💸 Commission: ₹{job['platform_commission']:.0f}")
-                        print(f"📅 Date: {job['created_at'][:10]}")
+                        print(f"  Job {job['job_id']}")
+                        print(f"  User: {job['user_name']}")
+                        print(f"  Car: {job['car_model']}")
+                        print(f"  Earned:  {job['final_amount']:.0f}")
+                        print(f"  Bonus:  {job['bonus']:.0f}")
+                        print(f"  Commission:  {job['platform_commission']:.0f}")
+                        print(f"  Date: {job['created_at'][:10]}")
                         print("-" * 30)
             
             print("\n" + "-"*50)
             print("Options:")
-            print("1. 📊 View Full History")
-            print("2. 🎯 View Fairness Details")
-            print("3. 💸 View Commission Info")
-            print("4. ⬅️ Back")
+            print("1.   View Full History")
+            print("2.   View Fairness Details")
+            print("3.   View Commission Info")
+            print("4.    Back")
             
             choice = input("\nSelect option: ").strip()
             
@@ -1130,11 +1130,11 @@ def earnings_fairness_screen(worker, token):
                 return
                 
         else:
-            print("❌ Failed to get earnings data")
+            print("  Failed to get earnings data")
             input("\nPress Enter to continue...")
             
     except Exception as e:
-        print(f"❌ Earnings screen error: {e}")
+        print(f"  Earnings screen error: {e}")
         input("\nPress Enter to continue...")
 
 def view_full_earnings_history(token):
@@ -1148,38 +1148,38 @@ def view_full_earnings_history(token):
             history = data.get("history", [])
             
             print("\n" + "="*60)
-            print("📊 FULL EARNINGS HISTORY")
+            print("  FULL EARNINGS HISTORY")
             print("="*60)
             
             if not history:
-                print("📭 No earnings history found")
+                print("  No earnings history found")
                 input("\nPress Enter to continue...")
                 return
             
             for job in history:
-                print(f"\n🎯 Job {job['job_id']}")
+                print(f"\n  Job {job['job_id']}")
                 print("="*40)
-                print(f"👤 User: {job['user_name']}")
-                print(f"🚗 Car: {job['car_model']}")
-                print(f"🔧 Issue: {job['issue']}")
-                print(f"💰 Base Amount: ₹{job['base_amount']:.0f}")
-                print(f"💸 Commission: ₹{job['platform_commission']:.0f}")
-                print(f"🎁 Bonus: ₹{job['bonus']:.0f}")
-                print(f"💸 Final Amount: ₹{job['final_amount']:.0f}")
-                print(f"📏 Distance: {job.get('distance', 0):.1f} km")
-                print(f"⏱️ Time: {job.get('job_time_minutes', 0)} minutes")
-                print(f"📅 Date: {job['created_at']}")
+                print(f"  User: {job['user_name']}")
+                print(f"  Car: {job['car_model']}")
+                print(f"  Issue: {job['issue']}")
+                print(f"  Base Amount:  {job['base_amount']:.0f}")
+                print(f"  Commission:  {job['platform_commission']:.0f}")
+                print(f"  Bonus:  {job['bonus']:.0f}")
+                print(f"  Final Amount:  {job['final_amount']:.0f}")
+                print(f"  Distance: {job.get('distance', 0):.1f} km")
+                print(f"   Time: {job.get('job_time_minutes', 0)} minutes")
+                print(f"  Date: {job['created_at']}")
                 print("-" * 50)
             
-            print(f"\n📊 Total Records: {len(history)}")
+            print(f"\n  Total Records: {len(history)}")
             
         else:
-            print("❌ Failed to get earnings history")
+            print("  Failed to get earnings history")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ History view error: {e}")
+        print(f"  History view error: {e}")
         input("\nPress Enter to continue...")
 
 def view_fairness_details(token):
@@ -1193,39 +1193,39 @@ def view_fairness_details(token):
             insights = data.get("insights", {})
             
             print("\n" + "="*60)
-            print("🎯 DISPATCH FAIRNESS INSIGHTS")
+            print("  DISPATCH FAIRNESS INSIGHTS")
             print("="*60)
             
-            print(f"\n📊 FAIRNESS SCORE: {insights.get('fairness_score', 100):.0f}%")
-            print(f"✅ COMPLETION RATE: {insights.get('completion_rate', 0):.1f}%")
-            print(f"📈 TOTAL JOBS: {insights.get('total_jobs', 0)}")
-            print(f"⭐ RATING: {insights.get('rating', 5):.1f}/5.0")
+            print(f"\n  FAIRNESS SCORE: {insights.get('fairness_score', 100):.0f}%")
+            print(f"  COMPLETION RATE: {insights.get('completion_rate', 0):.1f}%")
+            print(f"  TOTAL JOBS: {insights.get('total_jobs', 0)}")
+            print(f"  RATING: {insights.get('rating', 5):.1f}/5.0")
             
             # Dispatch factors
             dispatch_factors = insights.get('dispatch_factors', [])
             if dispatch_factors:
-                print(f"\n✅ WHY YOU RECEIVE JOBS:")
+                print(f"\n  WHY YOU RECEIVE JOBS:")
                 print("="*40)
                 for factor in dispatch_factors:
-                    print(f"• {factor}")
+                    print(f"  {factor}")
             
             # Improvement suggestions
             suggestions = insights.get('improvement_suggestions', [])
             if suggestions:
-                print(f"\n💡 IMPROVEMENT SUGGESTIONS:")
+                print(f"\n  IMPROVEMENT SUGGESTIONS:")
                 print("="*40)
                 for suggestion in suggestions:
-                    print(f"• {suggestion}")
+                    print(f"  {suggestion}")
             
-            print(f"\n📅 LAST JOB ACTIVITY: {insights.get('recent_job_activity', 'No recent jobs')}")
+            print(f"\n  LAST JOB ACTIVITY: {insights.get('recent_job_activity', 'No recent jobs')}")
             
         else:
-            print("❌ Failed to get fairness insights")
+            print("  Failed to get fairness insights")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Fairness view error: {e}")
+        print(f"  Fairness view error: {e}")
         input("\nPress Enter to continue...")
 
 def view_commission_info(token):
@@ -1239,42 +1239,42 @@ def view_commission_info(token):
             commission = data.get("commission_info", {})
             
             print("\n" + "="*60)
-            print("💸 COMMISSION TRANSPARENCY")
+            print("  COMMISSION TRANSPARENCY")
             print("="*60)
             
-            print(f"\n📊 COMMISSION STRUCTURE:")
+            print(f"\n  COMMISSION STRUCTURE:")
             print("="*40)
-            print(f"💰 Platform Commission: {commission.get('platform_commission_rate', 0.20)*100:.0f}%")
-            print(f"🔧 Your Share: {commission.get('mechanic_share_rate', 0.80)*100:.0f}%")
-            print(f"📝 {commission.get('description', 'Transparent commission model')}")
+            print(f"  Platform Commission: {commission.get('platform_commission_rate', 0.20)*100:.0f}%")
+            print(f"  Your Share: {commission.get('mechanic_share_rate', 0.80)*100:.0f}%")
+            print(f"  {commission.get('description', 'Transparent commission model')}")
             
             # Example
             example = commission.get('example', {})
             if example:
-                print(f"\n💡 EXAMPLE:")
+                print(f"\n  EXAMPLE:")
                 print("="*40)
-                print(f"💸 Customer pays: ₹{example.get('customer_pays', 500)}")
-                print(f"💰 Platform commission: ₹{example.get('platform_commission', 100)}")
-                print(f"🔧 Your earning: ₹{example.get('mechanic_earning', 400)}")
+                print(f"  Customer pays:  {example.get('customer_pays', 500)}")
+                print(f"  Platform commission:  {example.get('platform_commission', 100)}")
+                print(f"  Your earning:  {example.get('mechanic_earning', 400)}")
             
             # Bonus types
             bonus_types = commission.get('bonus_types', [])
             if bonus_types:
-                print(f"\n🎁 BONUS TYPES:")
+                print(f"\n  BONUS TYPES:")
                 print("="*40)
                 for bonus in bonus_types:
-                    print(f"• {bonus['type']}: +₹{bonus['amount']} ({bonus['condition']})")
+                    print(f"  {bonus['type']}: + {bonus['amount']} ({bonus['condition']})")
             
-            print(f"\n💡 NO HIDDEN DEDUCTIONS!")
-            print(f"💡 100% TRANSPARENT EARNINGS!")
+            print(f"\n  NO HIDDEN DEDUCTIONS!")
+            print(f"  100% TRANSPARENT EARNINGS!")
             
         else:
-            print("❌ Failed to get commission info")
+            print("  Failed to get commission info")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Commission view error: {e}")
+        print(f"  Commission view error: {e}")
         input("\nPress Enter to continue...")
 
 def performance_safety_screen(worker, token):
@@ -1289,37 +1289,37 @@ def performance_safety_screen(worker, token):
             tips = data.get("tips", {})
             
             print("\n" + "="*60)
-            print("📊 PERFORMANCE DASHBOARD")
+            print("  PERFORMANCE DASHBOARD")
             print("="*60)
             
             # Performance Metrics
-            print(f"\n📈 PERFORMANCE METRICS")
+            print(f"\n  PERFORMANCE METRICS")
             print("="*40)
-            print(f"⭐ Rating: {performance.get('rating', 5):.1f}/5.0")
-            print(f"✅ Completion Rate: {performance.get('completion_rate', 0)*100:.1f}%")
-            print(f"📊 Acceptance Rate: {performance.get('acceptance_rate', 0)*100:.1f}%")
-            print(f"🎯 Total Jobs: {performance.get('total_jobs', 0)}")
-            print(f"✅ Completed: {performance.get('completed_jobs', 0)}")
-            print(f"❌ Cancelled: {performance.get('cancelled_jobs', 0)}")
-            print(f"⏱️ Avg Response Time: {performance.get('avg_response_time', 0):.1f} seconds")
-            print(f"🏆 Performance Level: {tips.get('performance_level', 'Average')}")
+            print(f"  Rating: {performance.get('rating', 5):.1f}/5.0")
+            print(f"  Completion Rate: {performance.get('completion_rate', 0)*100:.1f}%")
+            print(f"  Acceptance Rate: {performance.get('acceptance_rate', 0)*100:.1f}%")
+            print(f"  Total Jobs: {performance.get('total_jobs', 0)}")
+            print(f"  Completed: {performance.get('completed_jobs', 0)}")
+            print(f"  Cancelled: {performance.get('cancelled_jobs', 0)}")
+            print(f"   Avg Response Time: {performance.get('avg_response_time', 0):.1f} seconds")
+            print(f"  Performance Level: {tips.get('performance_level', 'Average')}")
             
             # Performance Tips
             tips_list = tips.get('tips', [])
             if tips_list:
-                print(f"\n💡 PERFORMANCE TIPS")
+                print(f"\n  PERFORMANCE TIPS")
                 print("="*40)
                 for tip in tips_list:
-                    print(f"• {tip}")
+                    print(f"  {tip}")
             
             print("\n" + "-"*50)
-            print("🛡️ SAFETY TOOLS")
+            print("   SAFETY TOOLS")
             print("="*40)
-            print("1. 🚨 Panic Alert")
-            print("2. 📝 Report Incident")
-            print("3. 📋 View Safety Reports")
-            print("4. 📋 View Panic Alerts")
-            print("5. ⬅️ Back")
+            print("1.   Panic Alert")
+            print("2.   Report Incident")
+            print("3.   View Safety Reports")
+            print("4.   View Panic Alerts")
+            print("5.    Back")
             
             choice = input("\nSelect option: ").strip()
             
@@ -1335,24 +1335,24 @@ def performance_safety_screen(worker, token):
                 return
                 
         else:
-            print("❌ Failed to get performance data")
+            print("  Failed to get performance data")
             input("\nPress Enter to continue...")
             
     except Exception as e:
-        print(f"❌ Performance screen error: {e}")
+        print(f"  Performance screen error: {e}")
         input("\nPress Enter to continue...")
 
 def send_panic_alert(worker, token):
     """Send panic alert for immediate help"""
     try:
-        print("\n🚨 PANIC ALERT")
+        print("\n  PANIC ALERT")
         print("="*40)
         print("This will immediately notify admin for help.")
         print("Use only in emergency situations.")
         
         confirm = input("\nAre you sure you want to send panic alert? (y/n): ").strip().lower()
         if confirm != 'y':
-            print("❌ Panic alert cancelled")
+            print("  Panic alert cancelled")
             input("\nPress Enter to continue...")
             return
         
@@ -1375,22 +1375,22 @@ def send_panic_alert(worker, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Panic alert sent')}")
-            print(f"🚨 Alert ID: {result.get('alert_id', 'Unknown')}")
-            print(f"💡 {result.get('note', 'Admin has been notified')}")
+            print(f"\n  {result.get('message', 'Panic alert sent')}")
+            print(f"  Alert ID: {result.get('alert_id', 'Unknown')}")
+            print(f"  {result.get('note', 'Admin has been notified')}")
         else:
-            print("❌ Failed to send panic alert")
+            print("  Failed to send panic alert")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Panic alert error: {e}")
+        print(f"  Panic alert error: {e}")
         input("\nPress Enter to continue...")
 
 def report_incident(worker, token):
     """Report safety incident"""
     try:
-        print("\n📝 REPORT INCIDENT")
+        print("\n  REPORT INCIDENT")
         print("="*40)
         print("Select incident type:")
         print("1. Unsafe location")
@@ -1410,7 +1410,7 @@ def report_incident(worker, token):
         }
         
         if incident_choice not in incident_types:
-            print("❌ Invalid incident type")
+            print("  Invalid incident type")
             input("\nPress Enter to continue...")
             return
         
@@ -1418,7 +1418,7 @@ def report_incident(worker, token):
         description = input(f"\nDescribe the {incident_type.lower()}: ").strip()
         
         if not description:
-            print("❌ Description is required")
+            print("  Description is required")
             input("\nPress Enter to continue...")
             return
         
@@ -1443,15 +1443,15 @@ def report_incident(worker, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Incident reported')}")
-            print(f"📝 Report ID: {result.get('report_id', 'Unknown')}")
+            print(f"\n  {result.get('message', 'Incident reported')}")
+            print(f"  Report ID: {result.get('report_id', 'Unknown')}")
         else:
-            print("❌ Failed to report incident")
+            print("  Failed to report incident")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Report incident error: {e}")
+        print(f"  Report incident error: {e}")
         input("\nPress Enter to continue...")
 
 def view_safety_reports(worker, token):
@@ -1465,30 +1465,30 @@ def view_safety_reports(worker, token):
             reports = data.get("reports", [])
             
             print("\n" + "="*60)
-            print("📋 SAFETY REPORTS")
+            print("  SAFETY REPORTS")
             print("="*60)
             
             if not reports:
-                print("📭 No safety reports found")
+                print("  No safety reports found")
             else:
                 for report in reports:
-                    print(f"\n📝 Report {report['id']}")
+                    print(f"\n  Report {report['id']}")
                     print("="*40)
-                    print(f"🚨 Type: {report['incident_type']}")
-                    print(f"📝 Description: {report['description'][:50]}...")
-                    print(f"📅 Date: {report['created_at'][:10]}")
-                    print(f"📊 Status: {report['status']}")
+                    print(f"  Type: {report['incident_type']}")
+                    print(f"  Description: {report['description'][:50]}...")
+                    print(f"  Date: {report['created_at'][:10]}")
+                    print(f"  Status: {report['status']}")
                     print("-" * 50)
             
-            print(f"\n📊 Total Reports: {len(reports)}")
+            print(f"\n  Total Reports: {len(reports)}")
             
         else:
-            print("❌ Failed to get safety reports")
+            print("  Failed to get safety reports")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ View safety reports error: {e}")
+        print(f"  View safety reports error: {e}")
         input("\nPress Enter to continue...")
 
 def view_panic_alerts(worker, token):
@@ -1502,42 +1502,42 @@ def view_panic_alerts(worker, token):
             alerts = data.get("alerts", [])
             
             print("\n" + "="*60)
-            print("🚨 PANIC ALERTS")
+            print("  PANIC ALERTS")
             print("="*60)
             
             if not alerts:
-                print("📭 No panic alerts found")
+                print("  No panic alerts found")
             else:
                 for alert in alerts:
-                    print(f"\n🚨 Alert {alert['id']}")
+                    print(f"\n  Alert {alert['id']}")
                     print("="*40)
-                    print(f"📍 Location: {alert['location']}")
-                    print(f"📅 Date: {alert['created_at'][:10]}")
-                    print(f"📊 Status: {alert['status']}")
+                    print(f"  Location: {alert['location']}")
+                    print(f"  Date: {alert['created_at'][:10]}")
+                    print(f"  Status: {alert['status']}")
                     if alert.get('resolved_at'):
-                        print(f"✅ Resolved: {alert['resolved_at'][:10]}")
+                        print(f"  Resolved: {alert['resolved_at'][:10]}")
                     print("-" * 50)
             
-            print(f"\n📊 Total Alerts: {len(alerts)}")
+            print(f"\n  Total Alerts: {len(alerts)}")
             
         else:
-            print("❌ Failed to get panic alerts")
+            print("  Failed to get panic alerts")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ View panic alerts error: {e}")
+        print(f"  View panic alerts error: {e}")
         input("\nPress Enter to continue...")
 
 def unified_mechanic_menu():
     """Unified mechanic menu"""
     while True:
         print("\n" + "="*50)
-        print("🔧 MECHANIC MENU")
+        print("  MECHANIC MENU")
         print("="*50)
-        print("1. 📝 Signup")
-        print("2. 🔐 Login")
-        print("3. ⬅️ Back")
+        print("1.   Signup")
+        print("2.   Login")
+        print("3.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -1548,7 +1548,7 @@ def unified_mechanic_menu():
         elif choice == "3":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def manage_available_slots(worker, token):
     """Manage mechanic availability slots for pre-bookings"""
@@ -1556,16 +1556,16 @@ def manage_available_slots(worker, token):
     
     while True:
         print("\n" + "="*60)
-        print("📅 MANAGE AVAILABLE SLOTS")
+        print("  MANAGE AVAILABLE SLOTS")
         print("="*60)
-        print(f"👤 {worker.get('name')}")
+        print(f"  {worker.get('name')}")
         
         print("\nOptions:")
-        print("1. ➕ Add New Slot")
-        print("2. 📋 View My Slots")
-        print("3. 🗑️ Delete Slot")
-        print("4. 📊 View Slots by Date")
-        print("5. ⬅️ Back")
+        print("1.   Add New Slot")
+        print("2.   View My Slots")
+        print("3.    Delete Slot")
+        print("4.   View Slots by Date")
+        print("5.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -1580,76 +1580,76 @@ def manage_available_slots(worker, token):
         elif choice == "5":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def add_new_slot(worker):
     """Add a new availability slot"""
     print("\n" + "="*60)
-    print("➕ ADD NEW SLOT")
+    print("  ADD NEW SLOT")
     print("="*60)
     
     try:
         # Get date
-        date = input("📅 Enter date (YYYY-MM-DD): ").strip()
+        date = input("  Enter date (YYYY-MM-DD): ").strip()
         # Validate date format
         try:
             datetime.strptime(date, '%Y-%m-%d')
         except ValueError:
-            print("❌ Invalid date format. Use YYYY-MM-DD")
+            print("  Invalid date format. Use YYYY-MM-DD")
             return
         
         # Get time range
-        start_time = input("⏰ Start time (HH:MM, 24-hour format): ").strip()
-        end_time = input("⏰ End time (HH:MM, 24-hour format): ").strip()
+        start_time = input("  Start time (HH:MM, 24-hour format): ").strip()
+        end_time = input("  End time (HH:MM, 24-hour format): ").strip()
         
         # Validate time format
         try:
             datetime.strptime(start_time, '%H:%M')
             datetime.strptime(end_time, '%H:%M')
         except ValueError:
-            print("❌ Invalid time format. Use HH:MM (24-hour format)")
+            print("  Invalid time format. Use HH:MM (24-hour format)")
             return
         
         # Add slot to database
         success = worker_slots_db.add_slot(worker['id'], date, start_time, end_time)
         
         if success:
-            print(f"✅ Slot added successfully!")
-            print(f"📅 Date: {date}")
-            print(f"⏰ Time: {start_time} - {end_time}")
+            print(f"  Slot added successfully!")
+            print(f"  Date: {date}")
+            print(f"  Time: {start_time} - {end_time}")
         else:
-            print("❌ Failed to add slot. Slot may already exist.")
+            print("  Failed to add slot. Slot may already exist.")
             
     except Exception as e:
-        print(f"❌ Error adding slot: {e}")
+        print(f"  Error adding slot: {e}")
 
 def view_my_slots(worker):
     """View all slots for the worker"""
     print("\n" + "="*60)
-    print("📋 MY AVAILABLE SLOTS")
+    print("  MY AVAILABLE SLOTS")
     print("="*60)
     
     try:
         slots = worker_slots_db.get_available_slots(worker['id'])
         
         if not slots:
-            print("📭 No available slots found.")
+            print("  No available slots found.")
             return
         
-        print(f"📊 Total slots: {len(slots)}")
+        print(f"  Total slots: {len(slots)}")
         print("-" * 60)
         
         for slot in slots:
-            status_emoji = "✅" if slot['status'] == 'AVAILABLE' else "❌"
+            status_emoji = " " if slot['status'] == 'AVAILABLE' else " "
             print(f"{status_emoji} {slot['slot_date']} | {slot['start_time']} - {slot['end_time']} | {slot['status']}")
         
     except Exception as e:
-        print(f"❌ Error viewing slots: {e}")
+        print(f"  Error viewing slots: {e}")
 
 def delete_slot(worker):
     """Delete a slot"""
     print("\n" + "="*60)
-    print("🗑️ DELETE SLOT")
+    print("   DELETE SLOT")
     print("="*60)
     
     try:
@@ -1657,7 +1657,7 @@ def delete_slot(worker):
         slots = worker_slots_db.get_available_slots(worker['id'])
         
         if not slots:
-            print("📭 No slots available to delete.")
+            print("  No slots available to delete.")
             return
         
         print("Available slots:")
@@ -1676,47 +1676,47 @@ def delete_slot(worker):
                 success = worker_slots_db.delete_slot(slot_id, worker['id'])
                 
                 if success:
-                    print("✅ Slot deleted successfully!")
+                    print("  Slot deleted successfully!")
                 else:
-                    print("❌ Failed to delete slot.")
+                    print("  Failed to delete slot.")
             else:
-                print("❌ Invalid slot number.")
+                print("  Invalid slot number.")
         except ValueError:
-            print("❌ Invalid input. Enter a number.")
+            print("  Invalid input. Enter a number.")
             
     except Exception as e:
-        print(f"❌ Error deleting slot: {e}")
+        print(f"  Error deleting slot: {e}")
 
 def view_slots_by_date(worker):
     """View slots for a specific date range"""
     print("\n" + "="*60)
-    print("📊 VIEW SLOTS BY DATE RANGE")
+    print("  VIEW SLOTS BY DATE RANGE")
     print("="*60)
     
     try:
-        start_date = input("📅 Start date (YYYY-MM-DD): ").strip()
-        end_date = input("📅 End date (YYYY-MM-DD): ").strip()
+        start_date = input("  Start date (YYYY-MM-DD): ").strip()
+        end_date = input("  End date (YYYY-MM-DD): ").strip()
         
         # Validate date format
         try:
             datetime.strptime(start_date, '%Y-%m-%d')
             datetime.strptime(end_date, '%Y-%m-%d')
         except ValueError:
-            print("❌ Invalid date format. Use YYYY-MM-DD")
+            print("  Invalid date format. Use YYYY-MM-DD")
             return
         
         slots = worker_slots_db.get_worker_slots_by_date_range(worker['id'], start_date, end_date)
         
         if not slots:
-            print(f"📭 No slots found between {start_date} and {end_date}")
+            print(f"  No slots found between {start_date} and {end_date}")
             return
         
-        print(f"\n📊 Slots from {start_date} to {end_date}:")
+        print(f"\n  Slots from {start_date} to {end_date}:")
         print("-" * 60)
         
         for slot in slots:
-            status_emoji = "✅" if slot['status'] == 'AVAILABLE' else "❌"
+            status_emoji = " " if slot['status'] == 'AVAILABLE' else " "
             print(f"{status_emoji} {slot['slot_date']} | {slot['start_time']} - {slot['end_time']} | {slot['status']}")
         
     except Exception as e:
-        print(f"❌ Error viewing slots: {e}")
+        print(f"  Error viewing slots: {e}")

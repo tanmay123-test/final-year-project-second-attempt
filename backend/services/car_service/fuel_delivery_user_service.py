@@ -98,7 +98,7 @@ class FuelDeliveryUserService:
             return []
             
         except Exception as e:
-            print(f"❌ Error finding nearby agents: {e}")
+            print(f"  Error finding nearby agents: {e}")
             return []
     
     def get_max_capacity(self, vehicle_type):

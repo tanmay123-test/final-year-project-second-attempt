@@ -222,10 +222,10 @@ Compound interest is the process where interest earns interest, creating exponen
 - This creates a snowball effect of growing wealth
 
 **Example:**
-If you invest ₹10,000 at 8% annual compound interest:
-- Year 1: ₹10,800
-- Year 2: ₹11,664 (interest on interest)
-- Year 3: ₹12,597 (compounding continues)
+If you invest  10,000 at 8% annual compound interest:
+- Year 1:  10,800
+- Year 2:  11,664 (interest on interest)
+- Year 3:  12,597 (compounding continues)
 
 **Key Insight:**
 The earlier you start, the more powerful compound interest becomes.
@@ -381,9 +381,9 @@ This information is for educational purposes only and not financial advice.
                 change = stock_data.get('change', 0)
                 change_percent = stock_data.get('change_percent', 0)
                 
-                response = f"📈 {symbol} Stock Analysis\n\n"
-                response += f"Current Price: ₹{price:.2f}\n"
-                response += f"Change: ₹{change:.2f} ({change_percent:.2f}%)\n\n"
+                response = f"  {symbol} Stock Analysis\n\n"
+                response += f"Current Price:  {price:.2f}\n"
+                response += f"Change:  {change:.2f} ({change_percent:.2f}%)\n\n"
                 response += f"AI Analysis:\n{ai_analysis}\n"
                 
             else:
@@ -394,16 +394,16 @@ This information is for educational purposes only and not financial advice.
                 change_percent = analysis.get('change_percent', 0)
                 insights = analysis.get('insights', [])
                 
-                response = f"📈 {symbol} Stock Analysis\n\n"
-                response += f"Current Price: ₹{price:.2f}\n"
-                response += f"Change: ₹{change:.2f} ({change_percent:.2f}%)\n\n"
+                response = f"  {symbol} Stock Analysis\n\n"
+                response += f"Current Price:  {price:.2f}\n"
+                response += f"Change:  {change:.2f} ({change_percent:.2f}%)\n\n"
                 
                 response += "Key Insights:\n"
                 for insight in insights[:3]:  # Show top 3 insights
-                    response += f"• {insight}\n"
+                    response += f"  {insight}\n"
             
-            response += "\n💡 This analysis is for educational purposes only and not financial advice."
-            response += "\n📊 Data provided by financial APIs"
+            response += "\n  This analysis is for educational purposes only and not financial advice."
+            response += "\n  Data provided by financial APIs"
             
             return response
             
@@ -419,21 +419,21 @@ This information is for educational purposes only and not financial advice.
             holdings = analysis.get('holdings', [])
             insights = analysis.get('insights', [])
             
-            response = f"💼 Portfolio Analysis\n\n"
-            response += f"Total Value: ₹{total_value:.2f}\n"
-            response += f"Total Return: ₹{total_return:.2f} ({return_percent:.2f}%)\n\n"
+            response = f"  Portfolio Analysis\n\n"
+            response += f"Total Value:  {total_value:.2f}\n"
+            response += f"Total Return:  {total_return:.2f} ({return_percent:.2f}%)\n\n"
             
             response += "Top Holdings:\n"
             for holding in holdings[:5]:  # Show top 5 holdings
                 symbol = holding.get('symbol', 'Unknown')
                 value = holding.get('value', 0)
-                response += f"• {symbol}: ₹{value:.2f}\n"
+                response += f"  {symbol}:  {value:.2f}\n"
             
             response += "\nPortfolio Insights:\n"
             for insight in insights[:3]:  # Show top 3 insights
-                response += f"• {insight}\n"
+                response += f"  {insight}\n"
             
-            response += "\n💡 This analysis is for educational purposes only and not financial advice."
+            response += "\n  This analysis is for educational purposes only and not financial advice."
             
             return response
             
@@ -448,15 +448,15 @@ This information is for educational purposes only and not financial advice.
             if not articles:
                 return "No market news available at the moment."
             
-            response = f"📰 Market News Update\n\n"
+            response = f"  Market News Update\n\n"
             
             for article in articles[:5]:  # Show top 5 articles
                 title = article.get('title', 'No title')
                 source = article.get('source', 'Unknown source')
-                response += f"• {title} ({source})\n"
+                response += f"  {title} ({source})\n"
             
-            response += "\n💡 News summaries are for informational purposes only and not financial advice."
-            response += "\n📰 Data provided by financial news APIs"
+            response += "\n  News summaries are for informational purposes only and not financial advice."
+            response += "\n  Data provided by financial news APIs"
             
             return response
             
@@ -492,7 +492,7 @@ Please provide a helpful, educational response to the user's question.
             
             # Add educational disclaimer
             if not any(disclaimer in response.lower() for disclaimer in ['educational', 'not financial advice']):
-                response += "\n\n💡 This information is for educational purposes only and not financial advice."
+                response += "\n\n  This information is for educational purposes only and not financial advice."
             
             return response
             

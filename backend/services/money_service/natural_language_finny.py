@@ -27,18 +27,18 @@ class NaturalLanguageFinny:
 
     def natural_language_entry(self, user_id):
         print("\n" + "="*60)
-        print("💬 NATURAL LANGUAGE FINNY - CHAT STYLE")
+        print("  NATURAL LANGUAGE FINNY - CHAT STYLE")
         print("="*60)
-        print("🤝 Just tell me how you spent money today!")
-        print("💡 Examples:")
-        print("   • food 200 entertainment 300 transport 150")
-        print("   • lunch 150 at subway movie 200 at pvr")
-        print("   • spent 500 on shopping 200 on food")
-        print("   • breakfast 100 lunch 150 dinner 200")
-        print("\n💬 Type your expenses (or 'help' for examples):")
+        print("  Just tell me how you spent money today!")
+        print("  Examples:")
+        print("     food 200 entertainment 300 transport 150")
+        print("     lunch 150 at subway movie 200 at pvr")
+        print("     spent 500 on shopping 200 on food")
+        print("     breakfast 100 lunch 150 dinner 200")
+        print("\n  Type your expenses (or 'help' for examples):")
         
         while True:
-            user_input = input("\n💭 You: ").strip()
+            user_input = input("\n  You: ").strip()
             
             if user_input.lower() in ['exit', 'quit', 'back']:
                 break
@@ -49,7 +49,7 @@ class NaturalLanguageFinny:
                 self._show_today_summary(user_id)
                 continue
             elif not user_input:
-                print("💡 Tell me about your expenses...")
+                print("  Tell me about your expenses...")
                 continue
             
             # Parse the natural language input
@@ -62,7 +62,7 @@ class NaturalLanguageFinny:
                     # Get suggested category for merchant
                     suggested_category = self.analytics.get_suggested_category(trans['merchant'])
                     if suggested_category and suggested_category != trans['category']:
-                        print(f"💡 Suggestion: '{trans['merchant']}' is usually categorized as '{suggested_category}'")
+                        print(f"  Suggestion: '{trans['merchant']}' is usually categorized as '{suggested_category}'")
                         use_suggested = input("Use suggested category? (yes/no): ").strip().lower()
                         if use_suggested in ['yes', 'y']:
                             trans['category'] = suggested_category
@@ -74,15 +74,15 @@ class NaturalLanguageFinny:
                     )
                     
                     if is_duplicate:
-                        print(f"\n⚠️ Possible duplicate transaction detected!")
-                        print(f"💰 Amount: ₹{trans['amount']}")
-                        print(f"📂 Category: {trans['category']}")
-                        print(f"🏪 Merchant: {trans['merchant']}")
-                        print(f"📅 Date: {trans['date']}")
+                        print(f"\n   Possible duplicate transaction detected!")
+                        print(f"  Amount:  {trans['amount']}")
+                        print(f"  Category: {trans['category']}")
+                        print(f"  Merchant: {trans['merchant']}")
+                        print(f"  Date: {trans['date']}")
                         
                         confirm = input("Confirm save? (yes/no): ").strip().lower()
                         if confirm not in ['yes', 'y']:
-                            print("❌ Transaction cancelled")
+                            print("  Transaction cancelled")
                             continue
                     
                     # Learn merchant-category mapping
@@ -97,21 +97,21 @@ class NaturalLanguageFinny:
                     if transaction_id:
                         trans['id'] = transaction_id
                         saved_transactions.append(trans)
-                        print(f"✅ Transaction saved successfully! ID: {transaction_id}")
+                        print(f"  Transaction saved successfully! ID: {transaction_id}")
                     else:
-                        print(f"❌ Failed to save transaction")
+                        print(f"  Failed to save transaction")
                 
                 # Show summary
                 self._show_parsed_summary(saved_transactions)
                 
                 # Ask if more expenses
-                more = input("\n💬 Any more expenses? (type 'yes' or just continue): ").strip()
+                more = input("\n  Any more expenses? (type 'yes' or just continue): ").strip()
                 if more.lower() not in ['yes', 'y', '']:
                     break
             else:
-                print("❌ I couldn't understand that. Try examples like:")
-                print("   • food 200 entertainment 300")
-                print("   • lunch 150 dinner 200")
+                print("  I couldn't understand that. Try examples like:")
+                print("     food 200 entertainment 300")
+                print("     lunch 150 dinner 200")
 
     def _parse_natural_language(self, text):
         """Parse natural language expense input"""
@@ -218,45 +218,45 @@ class NaturalLanguageFinny:
     def _show_parsed_summary(self, transactions):
         """Show summary of parsed transactions"""
         print("\n" + "="*50)
-        print("✅ EXPENSES RECORDED")
+        print("  EXPENSES RECORDED")
         print("="*50)
         
         total = 0
         for trans in transactions:
-            print(f"💰 ₹{trans['amount']:.2f} - {trans['category'].title()}")
-            print(f"   🏪 {trans['merchant']}")
+            print(f"   {trans['amount']:.2f} - {trans['category'].title()}")
+            print(f"     {trans['merchant']}")
             total += trans['amount']
         
-        print(f"\n💸 Total: ₹{total:.2f}")
-        print(f"📝 {len(transactions)} transactions saved!")
+        print(f"\n  Total:  {total:.2f}")
+        print(f"  {len(transactions)} transactions saved!")
 
     def _show_help(self):
         """Show help examples"""
         print("\n" + "="*50)
-        print("💡 HOW TO TELL ME ABOUT EXPENSES")
+        print("  HOW TO TELL ME ABOUT EXPENSES")
         print("="*50)
         
-        print("\n🎯 SIMPLE FORMAT:")
+        print("\n  SIMPLE FORMAT:")
         print("   food 200 entertainment 300 transport 150")
         print("   breakfast 100 lunch 150 dinner 200")
         print("   shopping 500 bills 200 education 300")
         
-        print("\n🎯 WITH MERCHANTS:")
+        print("\n  WITH MERCHANTS:")
         print("   lunch 150 at subway dinner 200 at restaurant")
         print("   movie 200 at pvr coffee 100 at starbucks")
         print("   transport 300 at ola shopping 2000 at amazon")
         
-        print("\n🎯 NATURAL LANGUAGE:")
+        print("\n  NATURAL LANGUAGE:")
         print("   spent 200 on food 300 on entertainment")
         print("   paid 150 for lunch 200 for shopping")
         print("   bought groceries for 500 fuel for 1000")
         
-        print("\n🎯 QUICK COMMANDS:")
+        print("\n  QUICK COMMANDS:")
         print("   help - Show this help")
         print("   today - Show today's summary")
         print("   exit/quit - Go back")
         
-        print("\n🎯 CATEGORIES I UNDERSTAND:")
+        print("\n  CATEGORIES I UNDERSTAND:")
         print("   Food: food, breakfast, lunch, dinner, snacks, coffee, groceries")
         print("   Entertainment: movie, games, subscription, streaming")
         print("   Transport: fuel, auto, cab, uber, ola, bus, train")
@@ -271,10 +271,10 @@ class NaturalLanguageFinny:
         today_transactions = [t for t in transactions if t[5] == today]
         
         if not today_transactions:
-            print(f"\n📭 No expenses recorded for today ({today})")
+            print(f"\n  No expenses recorded for today ({today})")
             return
         
-        print(f"\n📊 TODAY'S SUMMARY ({today})")
+        print(f"\n  TODAY'S SUMMARY ({today})")
         print("="*40)
         
         total = 0
@@ -290,25 +290,25 @@ class NaturalLanguageFinny:
                 category_totals[category] = 0
             category_totals[category] += amount
             
-            print(f"💰 ₹{amount:.2f} - {category.title()} at {merchant}")
+            print(f"   {amount:.2f} - {category.title()} at {merchant}")
         
-        print(f"\n💸 Total Today: ₹{total:.2f}")
-        print(f"📊 Categories:")
+        print(f"\n  Total Today:  {total:.2f}")
+        print(f"  Categories:")
         for category, amount in category_totals.items():
             percentage = (amount / total) * 100 if total > 0 else 0
-            print(f"   {category.title()}: ₹{amount:.2f} ({percentage:.1f}%)")
+            print(f"   {category.title()}:  {amount:.2f} ({percentage:.1f}%)")
 
     def show_menu(self, user_id):
         while True:
             print("\n" + "="*60)
-            print("💬 NATURAL LANGUAGE FINNY - CHAT STYLE")
+            print("  NATURAL LANGUAGE FINNY - CHAT STYLE")
             print("="*60)
-            print("1. 💬 Chat Entry (Natural Language)")
-            print("2. 📋 View Transactions")
-            print("3. 📊 Today's Summary")
-            print("4. 💡 Help & Examples")
-            print("5. 🧠 Advanced Analytics Dashboard")
-            print("6. ⬅️ Back to Money Service")
+            print("1.   Chat Entry (Natural Language)")
+            print("2.   View Transactions")
+            print("3.   Today's Summary")
+            print("4.   Help & Examples")
+            print("5.   Advanced Analytics Dashboard")
+            print("6.    Back to Money Service")
             
             choice = input("\nSelect option: ").strip()
             
@@ -327,27 +327,27 @@ class NaturalLanguageFinny:
             elif choice == "6":
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
 
     def _view_transactions(self, user_id):
         """View transactions with enhanced formatting"""
         print("\n" + "="*50)
-        print("💰 MY TRANSACTIONS")
+        print("  MY TRANSACTIONS")
         print("="*50)
         
         transactions = self.db.get_transactions(user_id)
         
         if not transactions:
-            print("📭 No transactions found")
-            print("💬 Start by telling me about your expenses!")
+            print("  No transactions found")
+            print("  Start by telling me about your expenses!")
             return
 
         print(f"\nTotal Transactions: {len(transactions)}\n")
         
         for idx, trans in enumerate(transactions, 1):
-            print(f"[{idx}] ₹{trans[2]:.2f} - {trans[4]}")
-            print(f"    📂 {trans[3].title()}")
-            print(f"    📅 {trans[5]}")
+            print(f"[{idx}]  {trans[2]:.2f} - {trans[4]}")
+            print(f"      {trans[3].title()}")
+            print(f"      {trans[5]}")
             if trans[6]:
-                print(f"    📝 {trans[6]}")
+                print(f"      {trans[6]}")
             print("-" * 40)

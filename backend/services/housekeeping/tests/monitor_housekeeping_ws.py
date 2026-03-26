@@ -150,9 +150,9 @@ def main():
     # Wait for Worker to receive 'new_booking'
     time.sleep(2)
     if events_received["worker_new_booking"]:
-        log("✅ PASS: Worker received new_booking event")
+        log("  PASS: Worker received new_booking event")
     else:
-        log("❌ FAIL: Worker did NOT receive new_booking event")
+        log("  FAIL: Worker did NOT receive new_booking event")
 
     # 4. Worker Accepts Booking (Worker -> API)
     log("Worker accepting booking...")
@@ -176,9 +176,9 @@ def main():
     # Wait for User to receive 'booking_update'
     time.sleep(2)
     if events_received["user_booking_update"]:
-        log("✅ PASS: User received booking_update event (ACCEPTED)")
+        log("  PASS: User received booking_update event (ACCEPTED)")
     else:
-        log("❌ FAIL: User did NOT receive booking_update event")
+        log("  FAIL: User did NOT receive booking_update event")
         
     # Reset flag for next test
     events_received["user_booking_update"] = False
@@ -203,14 +203,14 @@ def main():
     # Wait for updates
     time.sleep(2)
     if events_received["worker_booking_update"]:
-        log("✅ PASS: Worker received booking_update (CANCELLED)")
+        log("  PASS: Worker received booking_update (CANCELLED)")
     else:
-        log("❌ FAIL: Worker did NOT receive booking_update (CANCELLED)")
+        log("  FAIL: Worker did NOT receive booking_update (CANCELLED)")
         
     if events_received["user_booking_update"]:
-        log("✅ PASS: User received booking_update (CANCELLED)")
+        log("  PASS: User received booking_update (CANCELLED)")
     else:
-        log("❌ FAIL: User did NOT receive booking_update (CANCELLED)")
+        log("  FAIL: User did NOT receive booking_update (CANCELLED)")
 
     # Cleanup
     user_sio.disconnect()

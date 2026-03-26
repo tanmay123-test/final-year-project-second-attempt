@@ -18,7 +18,7 @@ def create_database_schema():
     db_base = Path("backend/database/databases")
     db_base.mkdir(parents=True, exist_ok=True)
     
-    print("🗄️ Creating Organized Database Structure...")
+    print("   Creating Organized Database Structure...")
     
     # 1. Central User Database (shared across all 5 services)
     user_db_path = db_base / "users.db"
@@ -55,8 +55,8 @@ def create_database_schema():
         worker_db_path = car_workers_path / f"{worker_type}.db"
         create_car_worker_database(worker_db_path, worker_type, tables)
     
-    print("✅ Database structure created successfully!")
-    print(f"📍 Location: {db_base.absolute()}")
+    print("  Database structure created successfully!")
+    print(f"  Location: {db_base.absolute()}")
     
     return db_base
 
@@ -105,7 +105,7 @@ def create_user_database(db_path):
     
     conn.commit()
     conn.close()
-    print(f"✅ Created: {db_path.name}")
+    print(f"  Created: {db_path.name}")
 
 def create_worker_database(db_path):
     """Create central worker database"""
@@ -157,7 +157,7 @@ def create_worker_database(db_path):
     
     conn.commit()
     conn.close()
-    print(f"✅ Created: {db_path.name}")
+    print(f"  Created: {db_path.name}")
 
 def create_service_database(db_path, service_name, tables):
     """Create service-specific database"""
@@ -202,7 +202,7 @@ def create_service_database(db_path, service_name, tables):
     
     conn.commit()
     conn.close()
-    print(f"✅ Created: {db_path.name}")
+    print(f"  Created: {db_path.name}")
 
 def create_car_worker_database(db_path, worker_type, tables):
     """Create car service worker-specific database"""
@@ -224,7 +224,7 @@ def create_car_worker_database(db_path, worker_type, tables):
     
     conn.commit()
     conn.close()
-    print(f"✅ Created: car_service_workers/{db_path.name}")
+    print(f"  Created: car_service_workers/{db_path.name}")
 
 def create_database_config():
     """Create database configuration file"""
@@ -261,7 +261,7 @@ def get_db_connection(db_type):
     with open(config_path, 'w') as f:
         f.write(config_content)
     
-    print(f"✅ Created: database_config.py")
+    print(f"  Created: database_config.py")
 
 if __name__ == "__main__":
     # Create the organized database structure
@@ -270,19 +270,19 @@ if __name__ == "__main__":
     # Create configuration file
     create_database_config()
     
-    print("\n🎯 Database Structure Summary:")
-    print("├── 📁 databases/")
-    print("│   ├── 👥 users.db (shared across all 5 services)")
-    print("│   ├── 👷 workers.db (shared across all 5 services)")
-    print("│   ├── 🏥 healthcare.db (healthcare specific)")
-    print("│   ├── 🏠 housekeeping.db (housekeeping specific)")
-    print("│   ├── 💼 freelance.db (freelance specific)")
-    print("│   ├── 💰 money_management.db (money management specific)")
-    print("│   ├── 🚗 car_service.db (car service specific)")
-    print("│   └── 📁 car_service_workers/")
-    print("│       ├── 🔧 mechanics.db (mechanics specific)")
-    print("│       ├── ⛽ fuel_delivery.db (fuel delivery specific)")
-    print("│       └── 🚛 tow_truck.db (tow truck specific)")
-    print("└── 📄 database_config.py (configuration helper)")
+    print("\n  Database Structure Summary:")
+    print("      databases/")
+    print("          users.db (shared across all 5 services)")
+    print("          workers.db (shared across all 5 services)")
+    print("          healthcare.db (healthcare specific)")
+    print("          housekeeping.db (housekeeping specific)")
+    print("          freelance.db (freelance specific)")
+    print("          money_management.db (money management specific)")
+    print("          car_service.db (car service specific)")
+    print("          car_service_workers/")
+    print("              mechanics.db (mechanics specific)")
+    print("              fuel_delivery.db (fuel delivery specific)")
+    print("              tow_truck.db (tow truck specific)")
+    print("      database_config.py (configuration helper)")
     
-    print("\n✅ All databases are now properly organized!")
+    print("\n  All databases are now properly organized!")

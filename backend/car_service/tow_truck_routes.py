@@ -63,7 +63,7 @@ def register_operator():
                     security_declaration=True
                 )
             except Exception as e:
-                print(f"⚠️ Unified worker registration failed: {e}")
+                print(f"   Unified worker registration failed: {e}")
                 
             return jsonify({
                 'success': True, 

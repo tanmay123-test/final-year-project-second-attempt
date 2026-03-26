@@ -73,7 +73,7 @@ class WorkerDB:
     def register_worker(self, full_name, email, phone, service, specialization, experience, clinic_location="", license_number=None, password=None, aadhaar=None, id_proof=None, skills=None, hourly_rate=None, bio=None):
         # Validate email format
         if not self.is_valid_email(email):
-            print(f"❌ Registration failed: Invalid email format '{email}'")
+            print(f"  Registration failed: Invalid email format '{email}'")
             return None
 
         load_dotenv()
@@ -366,7 +366,7 @@ class WorkerDB:
             return workers
         except Exception as e:
             conn.rollback()
-            print(f"❌ DB Error: {e}")
+            print(f"  DB Error: {e}")
             return []
         finally:
             cursor.close()

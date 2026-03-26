@@ -16,7 +16,7 @@ def tts_speak(text, lang=None):
             _speak(text)
     except Exception:
         try:
-            print(f"🔊 {text}")
+            print(f"  {text}")
         except Exception:
             pass
 def check_server_connection():
@@ -61,20 +61,20 @@ def freelance_user_flow():
             break
 
 def browse_freelancers():
-    print("\n🔍 Searching for top freelancers...")
+    print("\n  Searching for top freelancers...")
     # Mock data for now
     freelancers = [
-        {"name": "Aditya Verma", "role": "Full Stack Developer", "rating": 4.9, "rate": "₹2500/hr", "skills": "React, Node.js"},
-        {"name": "Meera Nair", "role": "UI/UX Designer", "rating": 4.8, "rate": "₹1800/hr", "skills": "Figma, Adobe XD"}
+        {"name": "Aditya Verma", "role": "Full Stack Developer", "rating": 4.9, "rate": " 2500/hr", "skills": "React, Node.js"},
+        {"name": "Meera Nair", "role": "UI/UX Designer", "rating": 4.8, "rate": " 1800/hr", "skills": "Figma, Adobe XD"}
     ]
     for f in freelancers:
-        print(f"\n👤 {f['name']} - {f['role']}")
-        print(f"⭐ {f['rating']} | 💰 {f['rate']}")
-        print(f"🔧 Skills: {f['skills']}")
+        print(f"\n  {f['name']} - {f['role']}")
+        print(f"  {f['rating']} |   {f['rate']}")
+        print(f"  Skills: {f['skills']}")
     input("\nPress Enter...")
 
 def post_freelance_project():
-    print("\n📝 POST NEW PROJECT")
+    print("\n  POST NEW PROJECT")
     title = input("Project Title: ").strip()
     desc = input("Description: ").strip()
     cat = input("Category (Web/App/Design/AI): ").strip()
@@ -93,50 +93,50 @@ def post_freelance_project():
     
     r = requests.post(f"{API}/api/freelance/projects", json=data, headers={"Authorization": f"Bearer {TOKEN}"})
     if r.status_code == 201:
-        print("✅ Project posted successfully! Status: OPEN")
+        print("  Project posted successfully! Status: OPEN")
     else:
-        print("❌ Failed to post project")
+        print("  Failed to post project")
     input("\nPress Enter...")
 
 def view_my_projects():
-    print("\n💼 MY PROJECTS")
+    print("\n  MY PROJECTS")
     # Fetch from API
     r = requests.get(f"{API}/api/freelance/projects", headers={"Authorization": f"Bearer {TOKEN}"})
     if r.status_code == 200:
         projects = r.json().get('projects', [])
         for p in projects:
             print(f"\nID: {p['id']} | {p['title']} ({p['status']})")
-            print(f"💰 {p['budget_type']}: ₹{p['budget_amount']}")
+            print(f"  {p['budget_type']}:  {p['budget_amount']}")
     else:
-        print("❌ Failed to fetch projects")
+        print("  Failed to fetch projects")
     input("\nPress Enter...")
 
 def freelance_worker_flow(worker_id):
     """Freelance Marketplace Worker Flow (Freelancer)"""
     while True:
         print("\n" + "="*60)
-        print("👷 FREELANCER DASHBOARD")
+        print("  FREELANCER DASHBOARD")
         print("="*60)
-        print("1. 📊 Overview (Earnings & Rating)")
-        print("2. 🔍 Browse Projects")
-        print("3. 📑 My Proposals")
-        print("4. 🛠️  My Work (Active Contracts)")
-        print("5. 👤 Profile & Portfolio")
-        print("6. ⬅️ Back")
+        print("1.   Overview (Earnings & Rating)")
+        print("2.   Browse Projects")
+        print("3.   My Proposals")
+        print("4.     My Work (Active Contracts)")
+        print("5.   Profile & Portfolio")
+        print("6.    Back")
         
         choice = input("\nSelect tab: ").strip()
         
         if choice == "1":
-            print("\n📈 PERFORMANCE OVERVIEW")
-            print("💰 Total Earnings: ₹0.00")
-            print("⭐ Rating: 0.0")
-            print("📦 Active Projects: 0")
+            print("\n  PERFORMANCE OVERVIEW")
+            print("  Total Earnings:  0.00")
+            print("  Rating: 0.0")
+            print("  Active Projects: 0")
             input("\nPress Enter...")
         elif choice == "2":
             browse_and_apply_projects(worker_id)
         elif choice == "3":
-            print("\n📑 MY PROPOSALS")
-            print("📭 No active proposals")
+            print("\n  MY PROPOSALS")
+            print("  No active proposals")
             input("\nPress Enter...")
         elif choice == "6":
             break
@@ -145,11 +145,11 @@ def browse_and_apply_projects(worker_id):
     r = requests.get(f"{API}/api/freelance/projects")
     if r.status_code == 200:
         projects = r.json().get('projects', [])
-        print("\n🔍 AVAILABLE PROJECTS")
+        print("\n  AVAILABLE PROJECTS")
         for idx, p in enumerate(projects, 1):
             print(f"\n[{idx}] {p['title']}")
-            print(f"   📝 {p['description'][:100]}...")
-            print(f"   💰 Budget: ₹{p['budget_amount']}")
+            print(f"     {p['description'][:100]}...")
+            print(f"     Budget:  {p['budget_amount']}")
         
         sel = input("\nSelect project to apply (or 0): ").strip()
         if sel.isdigit() and int(sel) > 0:
@@ -164,14 +164,14 @@ def browse_and_apply_projects(worker_id):
             }
             res = requests.post(f"{API}/api/freelance/proposals", json=data, headers={"Authorization": f"Bearer {TOKEN}"})
             if res.status_code == 201:
-                print("✅ Proposal sent!")
+                print("  Proposal sent!")
             else:
-                print("❌ Failed to send proposal")
+                print("  Failed to send proposal")
     input("\nPress Enter...")
 
 
 def user_signup():
-    print("\n👤 User Signup (Email OTP)")
+    print("\n  User Signup (Email OTP)")
     name = input("Name: ").strip()
     username = input("Username: ").strip()
     password = input("Password: ").strip()
@@ -185,10 +185,10 @@ def user_signup():
     })
 
     if r.status_code != 201:
-        print("❌ Signup failed:", r.json())
+        print("  Signup failed:", r.json())
         return
 
-    print(f"📨 OTP sent to {email}")
+    print(f"  OTP sent to {email}")
 
     while True:
         print("\n1. Enter OTP")
@@ -203,10 +203,10 @@ def user_signup():
             })
 
             if vr.status_code == 200:
-                print("✅ Account verified")
+                print("  Account verified")
                 return
             else:
-                print("❌", vr.json().get("error"))
+                print(" ", vr.json().get("error"))
 
         elif c == "2":
             return
@@ -214,7 +214,7 @@ def user_signup():
 
 def user_login():
     global TOKEN, USER_ID
-    print("\n🔐 User Login")
+    print("\n  User Login")
     username = input("Username: ").strip()
     password = input("Password: ").strip()
 
@@ -227,36 +227,36 @@ def user_login():
         data = r.json()
         TOKEN = data["token"]
         USER_ID = data.get("user_id")
-        print("✅ Logged in successfully")
+        print("  Logged in successfully")
         service_selection()
     else:
-        print("❌ Login failed:", r.json().get("error"))
+        print("  Login failed:", r.json().get("error"))
 
 
 def service_selection():
     """Service Selection Screen - User selects from 5 services"""
     global TOKEN, USER_ID
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     while True:
         print("\n" + "="*50)
-        print("🏠 EXPERTEASE - SELECT A SERVICE")
+        print("  EXPERTEASE - SELECT A SERVICE")
         print("="*50)
-        print("1. 🏥 Healthcare")
-        print("2. 🏠 Housekeeping")
-        print("3. 💜 Freelance Marketplace")
-        print("4. 🚗 Car Services")
-        print("5. 💰 Money Management")
-        print("6. 👋 Logout")
+        print("1.   Healthcare")
+        print("2.   Housekeeping")
+        print("3.   Freelance Marketplace")
+        print("4.   Car Services")
+        print("5.   Money Management")
+        print("6.   Logout")
         
         choice = input("\nSelect service: ").strip()
         
         if choice == "1":
             healthcare_navigation()
         elif choice == "2":
-            print("🚧 Housekeeping service coming soon!")
+            print("  Housekeeping service coming soon!")
         elif choice == "3":
             freelance_user_flow()
         elif choice == "4":
@@ -267,15 +267,15 @@ def service_selection():
         elif choice == "6":
             TOKEN = None
             USER_ID = None
-            print("👋 Logged out")
+            print("  Logged out")
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def open_car_service():
     global TOKEN, USER_ID
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     from car_service.home_cli import show_car_home
     if not USER_ID:
@@ -283,12 +283,12 @@ def open_car_service():
         if r.status_code == 200:
             USER_ID = r.json().get("user_id")
         else:
-            print("❌ Could not fetch user info")
+            print("  Could not fetch user info")
             return
     pr = requests.get(f"{API}/api/car/profile", headers={"Authorization": f"Bearer {TOKEN}"})
     if pr.status_code == 404:
         print("\n" + "="*60)
-        print("🚗 CAR SERVICE SETUP")
+        print("  CAR SERVICE SETUP")
         print("="*60)
         city = input("Enter City: ").strip()
         address = input("Enter Address: ").strip()
@@ -313,25 +313,25 @@ def open_car_service():
         }
         sr = requests.post(f"{API}/api/car/setup-profile", json=data, headers={"Authorization": f"Bearer {TOKEN}"})
         if sr.status_code not in (200, 201):
-            print("❌ Failed to setup car service profile")
+            print("  Failed to setup car service profile")
             return
-        print("✅ Car service profile created")
+        print("  Car service profile created")
     elif pr.status_code != 200:
         print(" Failed to load profile")
         return
     while True:
         print("\n" + "="*60)
-        print("🚗 CAR SERVICE")
+        print("  CAR SERVICE")
         print("="*60)
-        print("1. 🏠 Home")
-        print("2. 🔧 Book Mechanic")
-        print("3. 🤖 AI Mechanic")
-        print("4. 🚗 My Garage")
-        print("5. 📅 My Bookings")
-        print("6. 👤 Profile")
-        print("7. 🧠 ASK EXPERT")
-        print("8. 👋 Logout")
-        print("9. ⬅️ Back")
+        print("1.   Home")
+        print("2.   Book Mechanic")
+        print("3.   AI Mechanic")
+        print("4.   My Garage")
+        print("5.   My Bookings")
+        print("6.   Profile")
+        print("7.   ASK EXPERT")
+        print("8.   Logout")
+        print("9.    Back")
         c = input("\nSelect option: ").strip()
         if c == "1":
             from car_service.home_cli import show_car_home
@@ -356,19 +356,19 @@ def open_car_service():
         elif c == "8":
             TOKEN = None
             USER_ID = None
-            print("👋 Logged out successfully")
+            print("  Logged out successfully")
             return
         elif c == "9":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def show_my_garage(user_id):
     from car_service.car_profile_db import car_profile_db
     while True:
         cars = car_profile_db.get_user_cars(user_id)
         print("\n" + "="*50)
-        print("🚗 MY GARAGE")
+        print("  MY GARAGE")
         print("="*50)
         print(f"\nTotal Cars: {len(cars)}\n")
         for idx, car in enumerate(cars, 1):
@@ -379,7 +379,7 @@ def show_my_garage(user_id):
             print(f"Fuel: {car.get('fuel_type','')}")
             print(f"Registration: {car.get('registration_number','')}")
             if car.get('is_default') == 1:
-                print("⭐ DEFAULT")
+                print("  DEFAULT")
             print("")
         print("----------------------------------------")
         print("\nOptions:")
@@ -394,30 +394,30 @@ def show_my_garage(user_id):
             fuel = input("Enter Fuel Type: ").strip()
             reg = input("Enter Registration Number: ").strip()
             if not all([brand, model, year, fuel, reg]) or not year.isdigit():
-                print("❌ Invalid inputs")
+                print("  Invalid inputs")
                 continue
             data = {"brand": brand, "model": model, "year": int(year), "fuel_type": fuel, "registration_number": reg}
             ar = requests.post(f"{API}/api/car/add-car", json=data, headers={"Authorization": f"Bearer {TOKEN}"})
             if ar.status_code in (200, 201):
-                print("✅ Car added")
+                print("  Car added")
             else:
-                print("❌ Failed to add car")
+                print("  Failed to add car")
         elif ch == "2":
             if not cars:
-                print("❌ No cars to set as default")
+                print("  No cars to set as default")
                 continue
             sel = input("Enter car number to set default: ").strip()
             if not sel.isdigit() or int(sel) < 1 or int(sel) > len(cars):
-                print("❌ Invalid selection")
+                print("  Invalid selection")
                 continue
             car_id = cars[int(sel)-1]['id']
             from car_service.car_profile_db import car_profile_db
             car_profile_db.set_default_car(user_id, car_id)
-            print("✅ Default car updated successfully")
+            print("  Default car updated successfully")
         elif ch == "3":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 
@@ -427,16 +427,16 @@ def show_online_experts():
         # Get categories first
         r = requests.get(f"{API}/expert/categories")
         if r.status_code != 200:
-            print("❌ Failed to load categories")
+            print("  Failed to load categories")
             return
         
         categories = r.json().get("categories", [])
         if not categories:
-            print("📭 No expert categories available")
+            print("  No expert categories available")
             return
         
         print("\n" + "="*60)
-        print("📂 EXPERT CATEGORIES")
+        print("  EXPERT CATEGORIES")
         print("="*60)
         for idx, category in enumerate(categories, 1):
             print(f"[{idx}] {category}")
@@ -445,7 +445,7 @@ def show_online_experts():
         
         choice = input("\nSelect category: ").strip()
         if not choice.isdigit():
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             return
         
         choice_num = int(choice)
@@ -456,7 +456,7 @@ def show_online_experts():
         elif 1 <= choice_num <= len(categories):
             category = categories[choice_num - 1]
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             return
         
         # Get online experts
@@ -466,39 +466,39 @@ def show_online_experts():
         
         r = requests.get(f"{API}/expert/online", params=params)
         if r.status_code != 200:
-            print("❌ Failed to load experts")
+            print("  Failed to load experts")
             return
         
         experts = r.json().get("experts", [])
         if not experts:
-            print("📭 No online experts found")
+            print("  No online experts found")
             return
         
         print("\n" + "="*70)
-        print(f"🟢 ONLINE EXPERTS{' - ' + category if category else ''}")
+        print(f"  ONLINE EXPERTS{' - ' + category if category else ''}")
         print("="*70)
         for idx, expert in enumerate(experts, 1):
-            print(f"\n[{idx}] {expert.get('full_name', 'Unknown')}  ⭐ {expert.get('rating', 0):.1f}/5.0")
-            print(f"   🎓 {expert.get('category', 'Unknown')}")
+            print(f"\n[{idx}] {expert.get('full_name', 'Unknown')}    {expert.get('rating', 0):.1f}/5.0")
+            print(f"     {expert.get('category', 'Unknown')}")
             if expert.get('subcategory'):
-                print(f"   📚 {expert['subcategory']}")
-            print(f"   💰 Rate: ₹{expert.get('hourly_rate', 0)}/hr")
-            print(f"   ✅ {expert.get('total_jobs', 0)} jobs completed")
-            print(f"   🆔 Expert ID: {expert.get('id', 'Unknown')}")
+                print(f"     {expert['subcategory']}")
+            print(f"     Rate:  {expert.get('hourly_rate', 0)}/hr")
+            print(f"     {expert.get('total_jobs', 0)} jobs completed")
+            print(f"     Expert ID: {expert.get('id', 'Unknown')}")
         
         expert_choice = input("\nSelect expert to request (or 0 to go back): ").strip()
         if expert_choice == "0":
             return
         
         if not expert_choice.isdigit() or int(expert_choice) < 1 or int(expert_choice) > len(experts):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             return
         
         selected_expert = experts[int(expert_choice) - 1]
         create_expert_request(selected_expert)
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
 
 
 def browse_all_experts():
@@ -507,16 +507,16 @@ def browse_all_experts():
         # Get categories first
         r = requests.get(f"{API}/expert/categories")
         if r.status_code != 200:
-            print("❌ Failed to load categories")
+            print("  Failed to load categories")
             return
         
         categories = r.json().get("categories", [])
         if not categories:
-            print("📭 No expert categories available")
+            print("  No expert categories available")
             return
         
         print("\n" + "="*60)
-        print("📂 EXPERT CATEGORIES")
+        print("  EXPERT CATEGORIES")
         print("="*60)
         for idx, category in enumerate(categories, 1):
             print(f"[{idx}] {category}")
@@ -525,7 +525,7 @@ def browse_all_experts():
         
         choice = input("\nSelect category: ").strip()
         if not choice.isdigit():
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             return
         
         choice_num = int(choice)
@@ -536,7 +536,7 @@ def browse_all_experts():
         elif 1 <= choice_num <= len(categories):
             category = categories[choice_num - 1]
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             return
         
         # Get all experts
@@ -546,41 +546,41 @@ def browse_all_experts():
         
         r = requests.get(f"{API}/expert/all", params=params)
         if r.status_code != 200:
-            print("❌ Failed to load experts")
+            print("  Failed to load experts")
             return
         
         experts = r.json().get("experts", [])
         if not experts:
-            print("📭 No experts found")
+            print("  No experts found")
             return
         
         print("\n" + "="*70)
-        print(f"👥 ALL EXPERTS{' - ' + category if category else ''}")
+        print(f"  ALL EXPERTS{' - ' + category if category else ''}")
         print("="*70)
         for idx, expert in enumerate(experts, 1):
-            status = "🟢 Online" if expert.get('is_online') else "🔴 Offline"
-            print(f"\n[{idx}] {expert.get('full_name', 'Unknown')}  ⭐ {expert.get('rating', 0):.1f}/5.0")
-            print(f"   🎓 {expert.get('category', 'Unknown')}")
+            status = "  Online" if expert.get('is_online') else "  Offline"
+            print(f"\n[{idx}] {expert.get('full_name', 'Unknown')}    {expert.get('rating', 0):.1f}/5.0")
+            print(f"     {expert.get('category', 'Unknown')}")
             if expert.get('subcategory'):
-                print(f"   📚 {expert['subcategory']}")
-            print(f"   💰 Rate: ₹{expert.get('hourly_rate', 0)}/hr")
-            print(f"   ✅ {expert.get('total_jobs', 0)} jobs completed")
-            print(f"   📊 Status: {status}")
-            print(f"   🆔 Expert ID: {expert.get('id', 'Unknown')}")
+                print(f"     {expert['subcategory']}")
+            print(f"     Rate:  {expert.get('hourly_rate', 0)}/hr")
+            print(f"     {expert.get('total_jobs', 0)} jobs completed")
+            print(f"     Status: {status}")
+            print(f"     Expert ID: {expert.get('id', 'Unknown')}")
         
         expert_choice = input("\nSelect expert to request (or 0 to go back): ").strip()
         if expert_choice == "0":
             return
         
         if not expert_choice.isdigit() or int(expert_choice) < 1 or int(expert_choice) > len(experts):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             return
         
         selected_expert = experts[int(expert_choice) - 1]
         create_expert_request(selected_expert)
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
 
 
 def search_experts():
@@ -588,7 +588,7 @@ def search_experts():
     try:
         query = input("Enter search query (name, category, or keywords): ").strip()
         if not query:
-            print("❌ Search query is required")
+            print("  Search query is required")
             return
         
         # Optional category filter
@@ -612,69 +612,69 @@ def search_experts():
         
         r = requests.get(f"{API}/expert/search", params=params)
         if r.status_code != 200:
-            print("❌ Failed to search experts")
+            print("  Failed to search experts")
             return
         
         experts = r.json().get("experts", [])
         if not experts:
-            print("📭 No experts found matching your search")
+            print("  No experts found matching your search")
             return
         
-        print(f"\n🔍 Found {len(experts)} expert(s) matching '{query}'")
+        print(f"\n  Found {len(experts)} expert(s) matching '{query}'")
         print("="*70)
         for idx, expert in enumerate(experts, 1):
-            status = "🟢 Online" if expert.get('is_online') else "🔴 Offline"
-            print(f"\n[{idx}] {expert.get('full_name', 'Unknown')}  ⭐ {expert.get('rating', 0):.1f}/5.0")
-            print(f"   🎓 {expert.get('category', 'Unknown')}")
+            status = "  Online" if expert.get('is_online') else "  Offline"
+            print(f"\n[{idx}] {expert.get('full_name', 'Unknown')}    {expert.get('rating', 0):.1f}/5.0")
+            print(f"     {expert.get('category', 'Unknown')}")
             if expert.get('subcategory'):
-                print(f"   📚 {expert['subcategory']}")
-            print(f"   💰 Rate: ₹{expert.get('hourly_rate', 0)}/hr")
-            print(f"   ✅ {expert.get('total_jobs', 0)} jobs completed")
-            print(f"   📊 Status: {status}")
-            print(f"   🆔 Expert ID: {expert.get('id', 'Unknown')}")
+                print(f"     {expert['subcategory']}")
+            print(f"     Rate:  {expert.get('hourly_rate', 0)}/hr")
+            print(f"     {expert.get('total_jobs', 0)} jobs completed")
+            print(f"     Status: {status}")
+            print(f"     Expert ID: {expert.get('id', 'Unknown')}")
         
         expert_choice = input("\nSelect expert to request (or 0 to go back): ").strip()
         if expert_choice == "0":
             return
         
         if not expert_choice.isdigit() or int(expert_choice) < 1 or int(expert_choice) > len(experts):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             return
         
         selected_expert = experts[int(expert_choice) - 1]
         create_expert_request(selected_expert)
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
 
 
 def create_expert_request(expert):
     """Create a request for selected expert"""
     try:
-        print(f"\n📝 Creating request for {expert.get('full_name', 'Unknown')}")
+        print(f"\n  Creating request for {expert.get('full_name', 'Unknown')}")
         print("="*60)
         
-        title = input("📋 Request Title: ").strip()
+        title = input("  Request Title: ").strip()
         if not title:
-            print("❌ Title is required")
+            print("  Title is required")
             return
         
-        description = input("📝 Describe your problem: ").strip()
+        description = input("  Describe your problem: ").strip()
         if not description:
-            print("❌ Description is required")
+            print("  Description is required")
             return
         
         # Ask if user wants to upload an image
-        upload_image = input("📷 Do you want to upload an image? (y/n): ").strip().lower()
+        upload_image = input("  Do you want to upload an image? (y/n): ").strip().lower()
         image_url = None
         
         if upload_image == 'y':
-            print("📷 Please upload an image using the web interface at:")
+            print("  Please upload an image using the web interface at:")
             print(f"   {API}/expert/upload")
             print("   (Copy the returned file_url and paste it below)")
-            image_url = input("📷 Image URL (or press Enter to skip): ").strip()
+            image_url = input("  Image URL (or press Enter to skip): ").strip()
         
-        priority = input("🚨 Priority (normal/urgent): ").strip().lower()
+        priority = input("  Priority (normal/urgent): ").strip().lower()
         if priority not in ['normal', 'urgent']:
             priority = 'normal'
         
@@ -699,22 +699,22 @@ def create_expert_request(expert):
         if r.status_code == 201:
             response = r.json()
             request_id = response.get('request_id')
-            print(f"\n✅ Expert request created successfully!")
-            print(f"📋 Request ID: {request_id}")
-            print(f"👨‍🏫 Expert: {expert.get('full_name', 'Unknown')}")
-            print(f"📋 Title: {title}")
-            print(f"🚨 Priority: {priority}")
-            print("⏳ Status: Pending expert response")
-            print("\n📱 You will be notified when the expert responds.")
-            print("💬 You can check your requests from the main menu.")
+            print(f"\n  Expert request created successfully!")
+            print(f"  Request ID: {request_id}")
+            print(f"    Expert: {expert.get('full_name', 'Unknown')}")
+            print(f"  Title: {title}")
+            print(f"  Priority: {priority}")
+            print("  Status: Pending expert response")
+            print("\n  You will be notified when the expert responds.")
+            print("  You can check your requests from the main menu.")
         else:
             error = r.json().get('error', 'Unknown error')
-            print(f"❌ Failed to create request: {error}")
+            print(f"  Failed to create request: {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Error creating request: {e}")
+        print(f"  Error creating request: {e}")
         input("\nPress Enter to continue...")
 
 
@@ -727,32 +727,32 @@ def show_my_requests():
         )
         
         if r.status_code != 200:
-            print("❌ Failed to load requests")
+            print("  Failed to load requests")
             return
         
         requests = r.json().get("requests", [])
         if not requests:
-            print("📭 You haven't made any expert requests yet")
+            print("  You haven't made any expert requests yet")
             input("\nPress Enter to continue...")
             return
         
         print("\n" + "="*70)
-        print("📋 MY EXPERT REQUESTS")
+        print("  MY EXPERT REQUESTS")
         print("="*70)
         for idx, req in enumerate(requests, 1):
-            status_emoji = {"pending": "⏳", "accepted": "✅", "rejected": "❌", "completed": "✨"}
+            status_emoji = {"pending": " ", "accepted": " ", "rejected": " ", "completed": " "}
             status = req.get('status', 'unknown')
             print(f"\n[{idx}] {req.get('title', 'Unknown Request')}")
-            print(f"   👨‍🏫 Expert: {req.get('expert_name', 'Unknown')}")
-            print(f"   🎓 Category: {req.get('category', 'Unknown')}")
-            print(f"   📊 Status: {status_emoji.get(status, '❓')} {status.title()}")
-            print(f"   📅 Created: {req.get('created_at', 'Unknown')}")
-            print(f"   🆔 Request ID: {req.get('id', 'Unknown')}")
+            print(f"       Expert: {req.get('expert_name', 'Unknown')}")
+            print(f"     Category: {req.get('category', 'Unknown')}")
+            print(f"     Status: {status_emoji.get(status, ' ')} {status.title()}")
+            print(f"     Created: {req.get('created_at', 'Unknown')}")
+            print(f"     Request ID: {req.get('id', 'Unknown')}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
         input("\nPress Enter to continue...")
 
 
@@ -765,31 +765,31 @@ def show_my_chats():
         )
         
         if r.status_code != 200:
-            print("❌ Failed to load chat rooms")
+            print("  Failed to load chat rooms")
             return
         
         rooms = r.json().get("rooms", [])
         if not rooms:
-            print("📭 You don't have any active chat sessions")
+            print("  You don't have any active chat sessions")
             input("\nPress Enter to continue...")
             return
         
         print("\n" + "="*70)
-        print("💬 MY ACTIVE CHATS")
+        print("  MY ACTIVE CHATS")
         print("="*70)
         for idx, room in enumerate(rooms, 1):
             unread = room.get('unread_count', 0)
             unread_text = f" ({unread} unread)" if unread > 0 else ""
             print(f"\n[{idx}] {room.get('expert_name', 'Unknown Expert')}{unread_text}")
-            print(f"   💬 Room: {room.get('room_name', 'Unknown')}")
-            print(f"   🎓 Category: {room.get('category', 'Unknown')}")
-            print(f"   📅 Started: {room.get('created_at', 'Unknown')}")
-            print(f"   🆔 Room ID: {room.get('id', 'Unknown')}")
+            print(f"     Room: {room.get('room_name', 'Unknown')}")
+            print(f"     Category: {room.get('category', 'Unknown')}")
+            print(f"     Started: {room.get('created_at', 'Unknown')}")
+            print(f"     Room ID: {room.get('id', 'Unknown')}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
         input("\nPress Enter to continue...")
 
 
@@ -800,20 +800,20 @@ def healthcare_navigation():
     """Healthcare Navigation - 5 tabs like Instagram bottom nav"""
     global TOKEN, USER_ID
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     while True:
         print("\n" + "="*50)
-        print("🏥 HEALTHCARE")
+        print("  HEALTHCARE")
         print("="*50)
-        print("1. 🏠 Home")
-        print("2. 🤖 AI Care")
-        print("3. 🔍 Explore")
-        print("4. 📅 Appointments")
-        print("5. 🎥 Video Consultation")
-        print("6. 👤 Profile")
-        print("7. ⬅️  Back to Services")
+        print("1.   Home")
+        print("2.   AI Care")
+        print("3.   Explore")
+        print("4.   Appointments")
+        print("5.   Video Consultation")
+        print("6.   Profile")
+        print("7.     Back to Services")
         
         choice = input("\nSelect tab: ").strip()
         
@@ -832,20 +832,20 @@ def healthcare_navigation():
         elif choice == "7":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 def healthcare_home_tab():
     """Healthcare Home Tab - Show specializations, then doctor cards"""
     global TOKEN, USER_ID
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     # Get all specializations
     r = requests.get(f"{API}/healthcare/specializations")
     if r.status_code != 200:
-        print("❌ Error fetching specializations")
+        print("  Error fetching specializations")
         return
     
     specializations = r.json().get("specializations", [])
@@ -864,16 +864,16 @@ def healthcare_home_tab():
     
     while True:
         print("\n" + "="*60)
-        print("🏠 HEALTHCARE HOME")
+        print("  HEALTHCARE HOME")
         print("="*60)
-        print("\n📋 Medical Specializations:")
+        print("\n  Medical Specializations:")
         print("-" * 60)
         
         for idx, spec in enumerate(specializations[:20], 1):  # Show max 20
             print(f"{idx:2}. {spec}")
         
-        print(f"\n{len(specializations) + 1}. 🔍 Search within specialization")
-        print(f"{len(specializations) + 2}. ⬅️  Back")
+        print(f"\n{len(specializations) + 1}.   Search within specialization")
+        print(f"{len(specializations) + 2}.     Back")
         
         choice = input("\nSelect specialization: ").strip()
         
@@ -887,9 +887,9 @@ def healthcare_home_tab():
             elif choice_num == len(specializations) + 2:
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
         else:
-            print("❌ Please enter a number")
+            print("  Please enter a number")
 
 
 
@@ -899,33 +899,33 @@ def show_doctors_by_specialization(specialization):
     
     r = requests.get(f"{API}/healthcare/doctors/{specialization}")
     if r.status_code != 200:
-        print("❌ Error fetching doctors")
+        print("  Error fetching doctors")
         return
     
     doctors = r.json().get("doctors", [])
     
     if not doctors:
-        print(f"\n👨‍⚕️ No {specialization} doctors available at the moment")
+        print(f"\n     No {specialization} doctors available at the moment")
         input("\nPress Enter to continue...")
         return
     
     while True:
         print("\n" + "="*70)
-        print(f"🏥 {specialization.upper()} - Available Doctors")
+        print(f"  {specialization.upper()} - Available Doctors")
         print("="*70)
         
         for idx, doc in enumerate(doctors, 1):
             print(f"\n[{idx}] DOCTOR CARD")
             print("-" * 70)
-            print(f"👤 Name: Dr. {doc['full_name']}")
-            print(f"⭐ Rating: {doc.get('rating', 0.0):.1f}/5.0")
-            print(f"📅 Experience: {doc['experience']} years")
-            print(f"📍 Location: {doc.get('clinic_location', 'Location not specified')}")
-            print(f"🆔 Doctor ID: {doc['id']}")
+            print(f"  Name: Dr. {doc['full_name']}")
+            print(f"  Rating: {doc.get('rating', 0.0):.1f}/5.0")
+            print(f"  Experience: {doc['experience']} years")
+            print(f"  Location: {doc.get('clinic_location', 'Location not specified')}")
+            print(f"  Doctor ID: {doc['id']}")
             print("-" * 70)
         
-        print(f"\n{len(doctors) + 1}. 🔍 Search by doctor name")
-        print(f"{len(doctors) + 2}. ⬅️  Back to Specializations")
+        print(f"\n{len(doctors) + 1}.   Search by doctor name")
+        print(f"{len(doctors) + 2}.     Back to Specializations")
         
         choice = input("\nSelect doctor (or search/back): ").strip()
         
@@ -939,9 +939,9 @@ def show_doctors_by_specialization(specialization):
             elif choice_num == len(doctors) + 2:
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
         else:
-            print("❌ Please enter a number")
+            print("  Please enter a number")
 
 
 def show_doctor_actions(doctor):
@@ -950,29 +950,29 @@ def show_doctor_actions(doctor):
     
     while True:
         print("\n" + "="*60)
-        print(f"👨‍⚕️ Dr. {doctor['full_name']}")
+        print(f"     Dr. {doctor['full_name']}")
         print("="*60)
         print(f"Specialization: {doctor['specialization']}")
         print(f"Experience: {doctor['experience']} years")
         print(f"Location: {doctor.get('clinic_location', 'N/A')}")
         print(f"Rating: {doctor.get('rating', 0.0):.1f}/5.0")
         print("="*60)
-        print("\n1. 📅 Book Appointment")
-        print("2. 📞 Audio / Video Call")
-        print("3. ⬅️  Back")
+        print("\n1.   Book Appointment")
+        print("2.   Audio / Video Call")
+        print("3.     Back")
         
         choice = input("\nSelect action: ").strip()
         
         if choice == "1":
             book_appointment_user(doctor['id'])
         elif choice == "2":
-            print("🚧 Audio/Video Call feature coming soon!")
-            print("💡 This will be available after appointment is accepted")
+            print("  Audio/Video Call feature coming soon!")
+            print("  This will be available after appointment is accepted")
             input("\nPress Enter to continue...")
         elif choice == "3":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 def search_within_specialization():
@@ -981,7 +981,7 @@ def search_within_specialization():
     if spec:
         show_doctors_by_specialization(spec)
     else:
-        print("❌ Please enter a specialization name")
+        print("  Please enter a specialization name")
 
 
 def search_doctor_by_name(doctors):
@@ -993,11 +993,11 @@ def search_doctor_by_name(doctors):
     matched = [doc for doc in doctors if query in doc['full_name'].lower()]
     
     if not matched:
-        print(f"\n❌ No doctors found matching '{query}'")
+        print(f"\n  No doctors found matching '{query}'")
         input("\nPress Enter to continue...")
         return
     
-    print(f"\n✅ Found {len(matched)} doctor(s):")
+    print(f"\n  Found {len(matched)} doctor(s):")
     for idx, doc in enumerate(matched, 1):
         print(f"{idx}. Dr. {doc['full_name']} - {doc['specialization']}")
     
@@ -1014,7 +1014,7 @@ def healthcare_ai_care_tab():
     global TOKEN, USER_ID
 
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     # Import AI engine and voice functions
@@ -1023,52 +1023,52 @@ def healthcare_ai_care_tab():
         ai = AIEngine()
         AI_AVAILABLE = True
         VOICE_AVAILABLE = True
-        print("🎥 Voice features available!")
+        print("  Voice features available!")
     except ImportError:
         AI_AVAILABLE = False
         VOICE_AVAILABLE = False
-        print("⚠️ Voice features not available. Install: pip install SpeechRecognition pyaudio pyttsx3")
+        print("   Voice features not available. Install: pip install SpeechRecognition pyaudio pyttsx3")
         # Create dummy functions
         def reset_session(user_id):
             pass
         def get_voice_input():
             return ""
         def speak(text):
-            print(f"🔊 {text}")
+            print(f"  {text}")
         def get_session_info():
             return {}
     
     print("\n" + "="*60)
-    print("🤖 AI CARE - Conversational Health Assistant")
+    print("  AI CARE - Conversational Health Assistant")
     print("="*60)
-    print("🎥 NEW: Voice input/output support!")
-    print("💬 AI now asks follow-up questions like a real doctor")
-    print("🌍 Supports: English, Hindi, Marathi")
+    print("  NEW: Voice input/output support!")
+    print("  AI now asks follow-up questions like a real doctor")
+    print("  Supports: English, Hindi, Marathi")
     print("-" * 60)
     
     # Reset session for new conversation
     reset_session(str(USER_ID) if USER_ID else "default")
-    print("🔄 Started new conversation session")
+    print("  Started new conversation session")
     
     # Main conversation loop
     while True:
         print("\n" + "="*60)
-        print("🗣️ INPUT OPTIONS")
+        print("   INPUT OPTIONS")
         print("="*60)
-        print("1. 💬 Type symptoms")
+        print("1.   Type symptoms")
         if VOICE_AVAILABLE:
-            print("2. 🎤 Speak symptoms")
-        print("3. 🔄 Reset conversation")
-        print("4. ⬅️  Exit")
+            print("2.   Speak symptoms")
+        print("3.   Reset conversation")
+        print("4.     Exit")
         print("-" * 60)
         
         choice = input("\nSelect option: ").strip()
         
         if choice == "1":
             # Text input
-            symptoms = input("💬 Describe your symptoms: ").strip()
+            symptoms = input("  Describe your symptoms: ").strip()
             if not symptoms:
-                print("❌ Please describe your symptoms")
+                print("  Please describe your symptoms")
                 continue
                 
             # Process conversation
@@ -1077,10 +1077,10 @@ def healthcare_ai_care_tab():
                 
         elif choice == "2" and VOICE_AVAILABLE:
             # Voice input
-            print("\n🎤 Voice Input Mode")
+            print("\n  Voice Input Mode")
             symptoms = get_voice_input()
             if not symptoms:
-                print("❌ Could not understand speech. Please try again.")
+                print("  Could not understand speech. Please try again.")
                 continue
                 
             # Process conversation
@@ -1090,19 +1090,19 @@ def healthcare_ai_care_tab():
         elif choice == "3":
             # Reset conversation
             reset_session(str(USER_ID) if USER_ID else "default")
-            print("🔄 Conversation reset. Starting fresh...")
+            print("  Conversation reset. Starting fresh...")
             
         elif choice == "4":
-            print("👋 Ending conversation. Take care!")
+            print("  Ending conversation. Take care!")
             break
             
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def process_ai_conversation(symptoms: str, user_id: str, voice_available: bool) -> bool:
     """Process AI conversation and handle response"""
     
-    print("\n🤖 AI is analyzing...")
+    print("\n  AI is analyzing...")
     
     # Send to AI
     r = requests.post(f"{API}/healthcare/ai-care", json={
@@ -1112,36 +1112,36 @@ def process_ai_conversation(symptoms: str, user_id: str, voice_available: bool) 
     })
     
     if r.status_code != 200:
-        print("❌ AI Care service unavailable")
+        print("  AI Care service unavailable")
         return True  # Continue conversation
     
     data = r.json()
     stage = data.get("stage", "triage")
     
     print("\n" + "="*60)
-    print(f"🤖 AI Response (Stage: {stage.upper()})")
+    print(f"  AI Response (Stage: {stage.upper()})")
     print("="*60)
     
     if stage == "emergency":
         # Emergency response
         message = data.get("message", "")
-        print(f"\n🚨 {message}")
-        print("\n⚠️ Please seek immediate medical attention!")
+        print(f"\n  {message}")
+        print("\n   Please seek immediate medical attention!")
         return False  # End conversation
         
     elif stage == "triage":
         # Triage stage - show question and continue
         question = data.get("question", "")
-        print(f"\n💬 AI asks: {question}")
+        print(f"\n  AI asks: {question}")
         
         # Voice output
         if voice_available:
             try:
                 tts_speak(question)
             except ImportError:
-                print(f"🔊 {question}")
+                print(f"  {question}")
         
-        print("\n🔄 Please answer the question to continue...")
+        print("\n  Please answer the question to continue...")
         return True  # Continue conversation
         
     else:  # final stage
@@ -1160,17 +1160,17 @@ def process_ai_conversation(symptoms: str, user_id: str, voice_available: bool) 
         
         # End of consultation
         print(f"\n" + "="*60)
-        print("🎉 Consultation Complete!")
+        print("  Consultation Complete!")
         
         # Ask to continue
-        continue_choice = input("\n💬 Start new conversation? (y/n): ").strip().lower()
+        continue_choice = input("\n  Start new conversation? (y/n): ").strip().lower()
         if continue_choice in ['y', 'yes']:
             try:
                 from ai_engine import reset_session
                 reset_session(user_id)
             except ImportError:
                 pass  # reset_session already defined as dummy function above
-            print("🔄 Starting new conversation...")
+            print("  Starting new conversation...")
             return True  # Continue with new conversation
         else:
             return False  # End conversation
@@ -1182,14 +1182,14 @@ def display_ai_response(response: dict):
     
     if stage == "triage":
         print("\n" + "="*60)
-        print("🤖 AI Response (Stage: TRIAGE)")
+        print("  AI Response (Stage: TRIAGE)")
         print("="*60)
-        print(f"\n💬 AI asks: {response.get('question', '')}")
+        print(f"\n  AI asks: {response.get('question', '')}")
         
         # Show detected language
         detected_lang = response.get('detected_language', 'en')
         lang_names = {'en': 'English', 'hi': 'Hindi', 'mr': 'Marathi'}
-        print(f"🌍 Language: {lang_names.get(detected_lang, 'Unknown')}")
+        print(f"  Language: {lang_names.get(detected_lang, 'Unknown')}")
         
         # Voice output
         try:
@@ -1197,27 +1197,27 @@ def display_ai_response(response: dict):
         except:
             pass
             
-        print("\n🔄 Please answer the question to continue...")
+        print("\n  Please answer the question to continue...")
         
     elif stage == "final":
         print("\n" + "="*60)
-        print("🤖 AI Response (Stage: FINAL)")
+        print("  AI Response (Stage: FINAL)")
         print("="*60)
         
         # Show detected language
         detected_lang = response.get('detected_language', 'en')
         lang_names = {'en': 'English', 'hi': 'Hindi', 'mr': 'Marathi'}
-        print(f"🌍 Response Language: {lang_names.get(detected_lang, 'English')}")
+        print(f"  Response Language: {lang_names.get(detected_lang, 'English')}")
         
         # Severity indicator
         severity = response.get('severity', 'medium')
         severity_emoji = {
-            'low': '🟢', 'mild': '🟡', 'moderate': '🟡', 
-            'medium': '🟡', 'high': '🟠', 'severe': '🔴', 'emergency': '🚨'
+            'low': ' ', 'mild': ' ', 'moderate': ' ', 
+            'medium': ' ', 'high': ' ', 'severe': ' ', 'emergency': ' '
         }
-        print(f"\n{severity_emoji.get(severity, '🟡')} {severity.title()} - Medical consultation advised")
+        print(f"\n{severity_emoji.get(severity, ' ')} {severity.title()} - Medical consultation advised")
         
-        print(f"\n💡 AI Advice: {response.get('advice', '')}")
+        print(f"\n  AI Advice: {response.get('advice', '')}")
         
         # Voice output for advice
         try:
@@ -1225,15 +1225,15 @@ def display_ai_response(response: dict):
         except:
             pass
         
-        print(f"\n🏠 First Aid: {response.get('first_aid', '')}")
+        print(f"\n  First Aid: {response.get('first_aid', '')}")
         
         # Enhanced OTC medicines display
         otc_medicines = response.get('otc_medicines', '')
         if otc_medicines:
-            print(f"\n💊 OTC Medicines:")
+            print(f"\n  OTC Medicines:")
             print(otc_medicines)
         
-        print(f"\n📅 When to Visit Doctor: {response.get('when_to_visit_doctor', '')}")
+        print(f"\n  When to Visit Doctor: {response.get('when_to_visit_doctor', '')}")
         
         # Dynamic doctors display
         doctors = response.get('recommended_doctors', [])
@@ -1242,21 +1242,21 @@ def display_ai_response(response: dict):
         
         # Show AI analysis
         if ai_analysis:
-            print(f"\n🧠 AI Medical Analysis:")
+            print(f"\n  AI Medical Analysis:")
             suggested_specs = ai_analysis.get('suggested_specializations', [])
             if suggested_specs:
-                print(f"   🎯 Suggested Specialists: {', '.join(suggested_specs)}")
+                print(f"     Suggested Specialists: {', '.join(suggested_specs)}")
             
             medical_context = ai_analysis.get('medical_context', {})
             if medical_context.get('severity'):
-                print(f"   📊 Severity: {medical_context['severity']}")
+                print(f"     Severity: {medical_context['severity']}")
             if medical_context.get('urgency'):
-                print(f"   🚨 Urgency: {medical_context['urgency']}")
+                print(f"     Urgency: {medical_context['urgency']}")
             if medical_context.get('body_parts'):
-                print(f"   🏥 Affected Areas: {', '.join(medical_context['body_parts'])}")
+                print(f"     Affected Areas: {', '.join(medical_context['body_parts'])}")
         
         if doctors_available and doctors:
-            print(f"\n👨‍⚕️ Recommended Doctors (from database):")
+            print(f"\n     Recommended Doctors (from database):")
             for i, doctor in enumerate(doctors, 1):
                 print(f"   {i}. Dr. {doctor.get('name', 'Unknown')}")
                 print(f"      Specialization: {doctor.get('specialization', 'General')}")
@@ -1267,15 +1267,15 @@ def display_ai_response(response: dict):
                 if i < len(doctors):
                     print()
         elif not doctors_available:
-            print(f"\n👨‍⚕️ Doctor Database: Currently unavailable")
+            print(f"\n     Doctor Database: Currently unavailable")
             print("   Please check back later for doctor recommendations")
         
         # Follow-up notification
         if response.get('follow_up_created'):
-            print(f"\n📅 Follow-up: Check-in notification scheduled for tomorrow")
+            print(f"\n  Follow-up: Check-in notification scheduled for tomorrow")
         
         print("\n" + "="*60)
-        print("🎉 Consultation Complete!")
+        print("  Consultation Complete!")
         print("="*60)
 
 
@@ -1283,41 +1283,41 @@ def healthcare_explore_tab():
     """Explore Tab - Global doctor search"""
     global TOKEN, USER_ID
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     while True:
         print("\n" + "="*60)
-        print("🔍 EXPLORE - Search Doctors")
+        print("  EXPLORE - Search Doctors")
         print("="*60)
         print("Search by: Doctor name, Specialization, or Location")
         print("-" * 60)
         
-        query = input("\n🔍 Enter search query: ").strip()
+        query = input("\n  Enter search query: ").strip()
         
         if not query:
-            print("❌ Please enter a search query")
+            print("  Please enter a search query")
             continue
         
         if query.lower() == "back":
             return
         
-        print("\n🔍 Searching...")
+        print("\n  Searching...")
         
         r = requests.get(f"{API}/healthcare/search?q={query}")
         
         if r.status_code != 200:
-            print("❌ Error:", r.json().get("error", "Search failed"))
+            print("  Error:", r.json().get("error", "Search failed"))
             continue
         
         doctors = r.json().get("doctors", [])
         
         if not doctors:
-            print(f"\n❌ No doctors found matching '{query}'")
+            print(f"\n  No doctors found matching '{query}'")
             input("\nPress Enter to continue...")
             continue
         
-        print(f"\n✅ Found {len(doctors)} doctor(s):")
+        print(f"\n  Found {len(doctors)} doctor(s):")
         print("="*60)
         
         for idx, doc in enumerate(doctors, 1):
@@ -1329,8 +1329,8 @@ def healthcare_explore_tab():
             print(f"   ID: {doc['id']}")
         
         print("\n" + "="*60)
-        print(f"{len(doctors) + 1}. 🔍 New Search")
-        print(f"{len(doctors) + 2}. ⬅️  Back")
+        print(f"{len(doctors) + 1}.   New Search")
+        print(f"{len(doctors) + 2}.     Back")
         
         choice = input("\nSelect doctor (or search/back): ").strip()
         
@@ -1343,16 +1343,16 @@ def healthcare_explore_tab():
             elif choice_num == len(doctors) + 2:
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
         else:
-            print("❌ Please enter a number")
+            print("  Please enter a number")
 
 
 def book_appointment_user(doctor_id=None):
     """Book an appointment with a doctor"""
     global USER_ID
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     if not USER_ID:
@@ -1361,11 +1361,11 @@ def book_appointment_user(doctor_id=None):
         if r.status_code == 200:
             USER_ID = r.json().get("user_id")
         else:
-            print("❌ Could not get user information. Please login again.")
+            print("  Could not get user information. Please login again.")
             return
     
     print("\n" + "="*60)
-    print("📅 BOOK APPOINTMENT")
+    print("  BOOK APPOINTMENT")
     print("="*60)
     
     if doctor_id:
@@ -1388,7 +1388,7 @@ def book_appointment_user(doctor_id=None):
         appointment_type = "clinic"
     
     if not all([worker_id, user_name, symptoms, date]):
-        print("❌ All fields are required")
+        print("  All fields are required")
         input("\nPress Enter to continue...")
         return
     
@@ -1403,15 +1403,15 @@ def book_appointment_user(doctor_id=None):
     
     if r.status_code == 201:
         data = r.json()
-        print("\n✅ Appointment requested successfully!")
-        print(f"📋 Appointment ID: {data['id']}")
+        print("\n  Appointment requested successfully!")
+        print(f"  Appointment ID: {data['id']}")
         if appointment_type == "video":
-            print("📹 Type: Video / Audio Consultation")
+            print("  Type: Video / Audio Consultation")
         else:
-            print("🏥 Type: Clinic Visit")
-        print("⏳ Waiting for doctor's approval...")
+            print("  Type: Clinic Visit")
+        print("  Waiting for doctor's approval...")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to book appointment"))
+        print("  Error:", r.json().get("error", "Failed to book appointment"))
     
     input("\nPress Enter to continue...")
 
@@ -1420,45 +1420,45 @@ def healthcare_appointments_tab():
     """Healthcare Appointments Tab - View and manage appointments"""
     global TOKEN, USER_ID
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     while True:
         print("\n" + "="*60)
-        print("📅 APPOINTMENTS")
+        print("  APPOINTMENTS")
         print("="*60)
         
         r = requests.get(f"{API}/user/appointments", headers={"Authorization": f"Bearer {TOKEN}"})
         
         if r.status_code != 200:
-            print("❌ Error:", r.json().get("error", "Failed to fetch appointments"))
+            print("  Error:", r.json().get("error", "Failed to fetch appointments"))
             input("\nPress Enter to continue...")
             return
         
         appointments = r.json().get("appointments", [])
         
         if not appointments:
-            print("\n📭 No appointments found")
-            print("\n1. ⬅️  Back")
+            print("\n  No appointments found")
+            print("\n1.     Back")
             choice = input("\nChoice: ").strip()
             if choice == "1":
                 return
             continue
         
-        print("\n📋 Your Appointments:")
+        print("\n  Your Appointments:")
         print("-" * 60)
         
         for idx, apt in enumerate(appointments, 1):
             status_icon = {
-                "pending": "⏳",
-                "accepted": "✅",
-                "rejected": "❌",
-                "payment_pending": "💰",
-                "confirmed": "✅",
-                "in_consultation": "💬",
-                "completed": "✓",
-                "cancelled": "🚫"
-            }.get(apt["status"], "❓")
+                "pending": " ",
+                "accepted": " ",
+                "rejected": " ",
+                "payment_pending": " ",
+                "confirmed": " ",
+                "in_consultation": " ",
+                "completed": " ",
+                "cancelled": " "
+            }.get(apt["status"], " ")
             apt_type = apt.get("appointment_type", "clinic")
             type_label = "VIDEO" if apt_type == "video" else "CLINIC"
             
@@ -1467,9 +1467,9 @@ def healthcare_appointments_tab():
             if apt.get('payment_status'):
                 payment_status = apt['payment_status'].upper()
                 if payment_status == 'PENDING':
-                    payment_info = f" 💳 PAYMENT PENDING"
+                    payment_info = f"   PAYMENT PENDING"
                 elif payment_status == 'PAID':
-                    payment_info = f" ✅ PAID"
+                    payment_info = f"   PAID"
             
             print(f"\n[{idx}] {status_icon} {apt['status'].upper()} ({type_label}){payment_info}")
             print(f"    Appointment ID: {apt['id']}")
@@ -1477,15 +1477,15 @@ def healthcare_appointments_tab():
             print(f"    Symptoms: {apt['patient_symptoms']}")
             print(f"    Date: {apt['booking_date']}")
             if apt.get('payment_status'):
-                print(f"    💰 Payment Status: {apt['payment_status'].upper()}")
+                print(f"      Payment Status: {apt['payment_status'].upper()}")
             print("-" * 60)
         
         print(f"\n{len(appointments) + 1}. View Appointment Details")
         print(f"{len(appointments) + 2}. Cancel Appointment")
-        print(f"{len(appointments) + 3}. 🔐 Join Video Call (Enter OTP)")
+        print(f"{len(appointments) + 3}.   Join Video Call (Enter OTP)")
         print(f"{len(appointments) + 4}. View Messages")
-        print(f"{len(appointments) + 5}. 💳 Make Payment")
-        print(f"{len(appointments) + 6}. ⬅️ Back")
+        print(f"{len(appointments) + 5}.   Make Payment")
+        print(f"{len(appointments) + 6}.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -1518,9 +1518,9 @@ def healthcare_appointments_tab():
             elif choice_num == len(appointments) + 6:
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
         else:
-            print("❌ Please enter a number")
+            print("  Please enter a number")
 
 
 def join_video_call(appointment_id):
@@ -1528,7 +1528,7 @@ def join_video_call(appointment_id):
 
     global TOKEN
 
-    print("\n🔐 Enter OTP from email to join call")
+    print("\n  Enter OTP from email to join call")
     otp = input("OTP: ").strip()
 
     r = requests.post(
@@ -1541,39 +1541,39 @@ def join_video_call(appointment_id):
     )
 
     if r.status_code != 200:
-        print("\n❌", r.json().get("error", "Cannot join call"))
+        print("\n ", r.json().get("error", "Cannot join call"))
         input("\nPress Enter...")
         return
 
-    print("\n🎉 JOINED VIDEO CONSULTATION")
-    print("👨‍⚕️ Doctor is in the call")
-    print("💬 Video session ACTIVE (simulated)")
+    print("\n  JOINED VIDEO CONSULTATION")
+    print("     Doctor is in the call")
+    print("  Video session ACTIVE (simulated)")
     input("\nPress Enter to leave call...")
 
 def healthcare_profile_tab():
     """Healthcare Profile Tab - User details and appointment history"""
     global TOKEN, USER_ID
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     while True:
         print("\n" + "="*60)
-        print("👤 PROFILE")
+        print("  PROFILE")
         print("="*60)
         
         # Get user info
         r = requests.get(f"{API}/user/info", headers={"Authorization": f"Bearer {TOKEN}"})
         if r.status_code == 200:
             user_info = r.json()
-            print(f"\n🆔 User ID: {user_info.get('user_id', 'N/A')}")
+            print(f"\n  User ID: {user_info.get('user_id', 'N/A')}")
         
         # Get appointment history
         r = requests.get(f"{API}/user/appointments", headers={"Authorization": f"Bearer {TOKEN}"})
         if r.status_code == 200:
             appointments = r.json().get("appointments", [])
             
-            print(f"\n📊 Appointment Statistics:")
+            print(f"\n  Appointment Statistics:")
             print("-" * 60)
             status_counts = {}
             for apt in appointments:
@@ -1583,12 +1583,12 @@ def healthcare_profile_tab():
             for status, count in status_counts.items():
                 print(f"  {status.upper()}: {count}")
             
-            print(f"\n📋 Total Appointments: {len(appointments)}")
+            print(f"\n  Total Appointments: {len(appointments)}")
         
         print("\n" + "="*60)
         print("1. View Full Appointment History")
-        print("2. 👋 Logout")
-        print("3. ⬅️  Back")
+        print("2.   Logout")
+        print("3.     Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -1597,12 +1597,12 @@ def healthcare_profile_tab():
         elif choice == "2":
             TOKEN = None
             USER_ID = None
-            print("👋 Logged out")
+            print("  Logged out")
             return
         elif choice == "3":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 def view_full_appointment_history():
@@ -1611,30 +1611,30 @@ def view_full_appointment_history():
     
     r = requests.get(f"{API}/user/appointments", headers={"Authorization": f"Bearer {TOKEN}"})
     if r.status_code != 200:
-        print("❌ Error fetching appointments")
+        print("  Error fetching appointments")
         input("\nPress Enter to continue...")
         return
     
     appointments = r.json().get("appointments", [])
     
     if not appointments:
-        print("\n📭 No appointment history")
+        print("\n  No appointment history")
         input("\nPress Enter to continue...")
         return
     
     print("\n" + "="*70)
-    print("📋 COMPLETE APPOINTMENT HISTORY")
+    print("  COMPLETE APPOINTMENT HISTORY")
     print("="*70)
     
     for apt in appointments:
         status_icon = {
-            "pending": "⏳",
-            "accepted": "✅",
-            "rejected": "❌",
-            "in_consultation": "💬",
-            "completed": "✓",
-            "cancelled": "🚫"
-        }.get(apt["status"], "❓")
+            "pending": " ",
+            "accepted": " ",
+            "rejected": " ",
+            "in_consultation": " ",
+            "completed": " ",
+            "cancelled": " "
+        }.get(apt["status"], " ")
         
         print(f"\n{status_icon} Appointment #{apt['id']} - {apt['status'].upper()}")
         print(f"   Doctor ID: {apt['worker_id']}")
@@ -1654,7 +1654,7 @@ def view_user_appointments():
 def view_appointment_detail_user(appointment_id=None):
     """View detailed information about a specific appointment"""
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     if not appointment_id:
@@ -1666,7 +1666,7 @@ def view_appointment_detail_user(appointment_id=None):
     if r.status_code == 200:
         apt = r.json()
         print("\n" + "="*60)
-        print("📄 APPOINTMENT DETAILS")
+        print("  APPOINTMENT DETAILS")
         print("="*60)
         print(f"ID: {apt['id']}")
         print(f"Status: {apt['status']}")
@@ -1675,11 +1675,11 @@ def view_appointment_detail_user(appointment_id=None):
         if apt.get('payment_status'):
             payment_status = apt['payment_status'].upper()
             if payment_status == 'PENDING':
-                print(f"💰 Payment Status: {payment_status} - PAYMENT REQUIRED")
+                print(f"  Payment Status: {payment_status} - PAYMENT REQUIRED")
             elif payment_status == 'PAID':
-                print(f"💰 Payment Status: {payment_status} - ✅ PAID")
+                print(f"  Payment Status: {payment_status} -   PAID")
             else:
-                print(f"💰 Payment Status: {payment_status}")
+                print(f"  Payment Status: {payment_status}")
         
         print(f"Doctor ID: {apt['worker_id']}")
         print(f"Patient: {apt['user_name']}")
@@ -1690,11 +1690,11 @@ def view_appointment_detail_user(appointment_id=None):
         # Show payment options if payment is pending
         if apt.get('payment_status') == 'pending' and apt.get('status') in ['accepted', 'payment_pending']:
             print("\n" + "="*60)
-            print("💳 PAYMENT OPTIONS")
+            print("  PAYMENT OPTIONS")
             print("="*60)
-            print("1. 💳 Make Payment")
-            print("2. 📋 View Payment Details")
-            print("3. ⬅️ Back")
+            print("1.   Make Payment")
+            print("2.   View Payment Details")
+            print("3.    Back")
             
             choice = input("\nSelect option: ").strip()
             
@@ -1705,14 +1705,14 @@ def view_appointment_detail_user(appointment_id=None):
         
         print("="*60)
     else:
-        print("❌ Error:", r.json().get("error", "Failed to fetch appointment"))
+        print("  Error:", r.json().get("error", "Failed to fetch appointment"))
     
     input("\nPress Enter to continue...")
 
 
 def make_payment_for_appointment(appointment_id):
     """Process payment for an appointment"""
-    print("\n💳 INITIATING PAYMENT")
+    print("\n  INITIATING PAYMENT")
     print("="*60)
     
     try:
@@ -1723,23 +1723,23 @@ def make_payment_for_appointment(appointment_id):
         
         if r.status_code == 200:
             data = r.json()
-            print(f"✅ Payment order created!")
-            print(f"📋 Order ID: {data['order_id']}")
-            print(f"💰 Amount: ₹{data['amount']}")
+            print(f"  Payment order created!")
+            print(f"  Order ID: {data['order_id']}")
+            print(f"  Amount:  {data['amount']}")
             
             if data.get('pricing_breakdown'):
                 breakdown = data['pricing_breakdown']
-                print(f"\n📊 PRICE BREAKDOWN:")
-                print(f"   Doctor Fee: ₹{breakdown['doctor_fee']}")
-                print(f"   Platform Fee: ₹{breakdown['platform_fee']}")
-                print(f"   Total Amount: ₹{breakdown['total_amount']}")
+                print(f"\n  PRICE BREAKDOWN:")
+                print(f"   Doctor Fee:  {breakdown['doctor_fee']}")
+                print(f"   Platform Fee:  {breakdown['platform_fee']}")
+                print(f"   Total Amount:  {breakdown['total_amount']}")
             
-            print(f"\n🌐 Opening payment gateway...")
-            print(f"📱 Please complete payment in browser")
-            print(f"🔗 Payment URL: https://razorpay.com/pay/{data['order_id']}")
+            print(f"\n  Opening payment gateway...")
+            print(f"  Please complete payment in browser")
+            print(f"  Payment URL: https://razorpay.com/pay/{data['order_id']}")
             
             # Simulate payment completion (in real app, this would be handled by webhook)
-            confirm = input(f"\n✅ Payment completed? (y/n): ").strip().lower()
+            confirm = input(f"\n  Payment completed? (y/n): ").strip().lower()
             if confirm in ['y', 'yes', 'Y', 'YES']:
                 # For testing, simulate payment confirmation
                 payment_id = f"pay_test_{appointment_id}_{int(time.time())}"
@@ -1752,31 +1752,31 @@ def make_payment_for_appointment(appointment_id):
                                      headers={"Authorization": f"Bearer {TOKEN}"})
                 
                 if r_confirm.status_code == 200:
-                    print("✅ Payment confirmed successfully!")
-                    print("📅 Appointment confirmed!")
+                    print("  Payment confirmed successfully!")
+                    print("  Appointment confirmed!")
                     
                     if r_confirm.json().get('video_details'):
                         video = r_confirm.json()['video_details']
-                        print(f"\n🎥 VIDEO CONSULTATION DETAILS:")
-                        print(f"🔗 Patient URL: {video['patient_url']}")
-                        print(f"🔐 OTP: {video['otp']}")
+                        print(f"\n  VIDEO CONSULTATION DETAILS:")
+                        print(f"  Patient URL: {video['patient_url']}")
+                        print(f"  OTP: {video['otp']}")
                 else:
-                    print("❌ Payment confirmation failed")
+                    print("  Payment confirmation failed")
             else:
-                print("❌ Payment cancelled")
+                print("  Payment cancelled")
         else:
-            print("❌ Failed to create payment order")
+            print("  Failed to create payment order")
             print("Error:", r.json().get("error", "Unknown error"))
             
     except Exception as e:
-        print(f"❌ Payment error: {e}")
+        print(f"  Payment error: {e}")
     
     input("\nPress Enter to continue...")
 
 
 def view_payment_details(appointment_id):
     """View payment details for an appointment"""
-    print("\n📋 PAYMENT DETAILS")
+    print("\n  PAYMENT DETAILS")
     print("="*60)
     
     try:
@@ -1787,15 +1787,15 @@ def view_payment_details(appointment_id):
             data = r.json()
             print(f"Appointment ID: {appointment_id}")
             print(f"Payment Status: {data.get('payment_status', 'Unknown')}")
-            print(f"Payment Amount: ₹{data.get('payment_amount', 'N/A')}")
+            print(f"Payment Amount:  {data.get('payment_amount', 'N/A')}")
             print(f"Razorpay Order ID: {data.get('razorpay_order_id', 'N/A')}")
             print(f"Razorpay Payment ID: {data.get('razorpay_payment_id', 'N/A')}")
             print(f"Payout Status: {data.get('payout_status', 'N/A')}")
         else:
-            print("❌ Failed to fetch payment details")
+            print("  Failed to fetch payment details")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
@@ -1803,7 +1803,7 @@ def view_payment_details(appointment_id):
 def view_messages_user():
     """View messages in an appointment chat"""
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     apt_id = input("Appointment ID: ").strip()
@@ -1816,31 +1816,31 @@ def view_messages_user():
         messages = data.get("messages", [])
         
         if not messages:
-            print("\n📭 No messages yet")
+            print("\n  No messages yet")
             return
         
-        print(f"\n💬 Messages for Appointment #{apt_id}:")
+        print(f"\n  Messages for Appointment #{apt_id}:")
         print("-" * 80)
         for msg in messages:
-            sender_label = "👤 You" if msg["sender_role"] == "user" else "👨‍⚕️ Doctor"
+            sender_label = "  You" if msg["sender_role"] == "user" else "     Doctor"
             print(f"{sender_label} ({msg['timestamp'][:19]}):")
             print(f"  {msg['message']}")
             print("-" * 80)
     else:
-        print("❌ Error:", r.json().get("error", "Failed to fetch messages"))
+        print("  Error:", r.json().get("error", "Failed to fetch messages"))
 
 
 def send_message_user():
     """Send a message in an appointment chat"""
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     apt_id = input("Appointment ID: ").strip()
     message = input("Message: ").strip()
     
     if not message:
-        print("❌ Message cannot be empty")
+        print("  Message cannot be empty")
         return
     
     r = requests.post(f"{API}/messages/send", json={
@@ -1850,15 +1850,15 @@ def send_message_user():
     }, headers={"Authorization": f"Bearer {TOKEN}"})
     
     if r.status_code == 201:
-        print("✅ Message sent successfully")
+        print("  Message sent successfully")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to send message"))
+        print("  Error:", r.json().get("error", "Failed to send message"))
 
 
 def cancel_appointment_user(appointment_id=None):
     """Cancel an appointment"""
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     if appointment_id:
@@ -1868,7 +1868,7 @@ def cancel_appointment_user(appointment_id=None):
     
     confirm = input("Are you sure you want to cancel? (yes/no): ").strip().lower()
     if confirm != "yes":
-        print("❌ Cancelled")
+        print("  Cancelled")
         return
     
     r = requests.post(f"{API}/appointment/cancel", json={
@@ -1876,9 +1876,9 @@ def cancel_appointment_user(appointment_id=None):
     })
     
     if r.status_code == 200:
-        print("✅ Appointment cancelled successfully")
+        print("  Appointment cancelled successfully")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to cancel appointment"))
+        print("  Error:", r.json().get("error", "Failed to cancel appointment"))
 
 
 def user_menu():
@@ -1903,18 +1903,18 @@ def user_menu():
 # ==================================================
 
 def freelance_worker_signup():
-    print("\n💜 Freelance Worker Signup")
+    print("\n  Freelance Worker Signup")
 
     full_name = input("Full Name: ").strip()
     email = input("Email: ").strip()
     phone = input("Phone: ").strip()
     skills = input("Skills (comma separated): ").strip()
-    hourly_rate = input("Hourly Rate (₹): ").strip()
+    hourly_rate = input("Hourly Rate ( ): ").strip()
     bio = input("Short Bio: ").strip()
     
-    print("\n📄 IDENTITY VERIFICATION")
+    print("\n  IDENTITY VERIFICATION")
     aadhaar = input("Aadhaar Number: ").strip()
-    print("📷 Document upload (Aadhaar Card) required via Web UI")
+    print("  Document upload (Aadhaar Card) required via Web UI")
     id_proof_url = input("Document URL (or press Enter for now): ").strip()
 
     r = requests.post(f"{API}/worker/freelance/signup", json={
@@ -1930,14 +1930,14 @@ def freelance_worker_signup():
     })
     
     if r.status_code == 201:
-        print("\n✅ Freelancer registered successfully!")
-        print("⏳ Status: Pending admin verification")
+        print("\n  Freelancer registered successfully!")
+        print("  Status: Pending admin verification")
     else:
-        print("❌ Signup failed:", r.json().get("error"))
+        print("  Signup failed:", r.json().get("error"))
     input("\nPress Enter...")
 
 def healthcare_worker_signup():
-    print("\n🩺 Healthcare Worker Signup")
+    print("\n  Healthcare Worker Signup")
 
     full_name = input("Full Name: ").strip()
     email = input("Email: ").strip()
@@ -1950,7 +1950,7 @@ def healthcare_worker_signup():
         if exp.isdigit():
             experience = int(exp)
             break
-        print("❌ Enter numbers only")
+        print("  Enter numbers only")
 
     r = requests.post(f"{API}/worker/healthcare/signup", json={
         "full_name": full_name,
@@ -1961,38 +1961,38 @@ def healthcare_worker_signup():
         "clinic_location": clinic_location
     })
     
-    print(f"🔍 Status Code: {r.status_code}")
-    print(f"🔍 Response: {r.text[:200]}...")  # Show first 200 chars of response
+    print(f"  Status Code: {r.status_code}")
+    print(f"  Response: {r.text[:200]}...")  # Show first 200 chars of response
 
     if r.status_code == 201:
         data = r.json()
-        print("\n✅ Worker registered successfully")
-        print("🆔 Worker ID:", data["worker_id"])
-        print("⏳ Status: Pending approval (2–3 hours)")
-        print("📤 Documents will be uploaded via App/UI later")
+        print("\n  Worker registered successfully")
+        print("  Worker ID:", data["worker_id"])
+        print("  Status: Pending approval (2 3 hours)")
+        print("  Documents will be uploaded via App/UI later")
     else:
         try:
             error_data = r.json()
-            print("❌", error_data.get("error", "Registration failed"))
+            print(" ", error_data.get("error", "Registration failed"))
         except:
-            print("❌ Registration failed. Server response:", r.text)
+            print("  Registration failed. Server response:", r.text)
 
 
 def worker_login():
-    print("\n🔐 Worker Login (After Approval)")
+    print("\n  Worker Login (After Approval)")
     email = input("Email: ").strip()
 
     r = requests.post(f"{API}/worker/login", json={"email": email})
 
     if r.status_code == 200:
         data = r.json()
-        print("\n✅ Login Successful")
+        print("\n  Login Successful")
         print("Service:", data["service"])
         print("Specialization:", data["specialization"])
         worker_id = data["worker_id"]
         worker_dashboard(worker_id)
     else:
-        print("❌", r.json().get("error"))
+        print(" ", r.json().get("error"))
 
 
 def worker_dashboard(worker_id):
@@ -2005,7 +2005,7 @@ def authenticate_worker_for_service(service_type):
     """Authenticate worker for specific service"""
     from auth.worker_auth import worker_login, TOKEN, WORKER_ID
     
-    print(f"\n🔐 Authentication Required for {service_type.title()} Service")
+    print(f"\n  Authentication Required for {service_type.title()} Service")
     print("="*60)
     
     # Try to login
@@ -2018,15 +2018,15 @@ def authenticate_worker_for_service(service_type):
         result = cursor.fetchone()
         
         if result and result[0] == service_type:
-            print(f"✅ Authenticated for {service_type.title()} service")
+            print(f"  Authenticated for {service_type.title()} service")
             return True
         else:
-            print(f"❌ You are not registered for {service_type.title()} service")
-            print(f"📋 Your registered service: {result[0] if result else 'Unknown'}")
-            print("💡 Please signup for the correct service type")
+            print(f"  You are not registered for {service_type.title()} service")
+            print(f"  Your registered service: {result[0] if result else 'Unknown'}")
+            print("  Please signup for the correct service type")
             return False
     else:
-        print("❌ Authentication failed")
+        print("  Authentication failed")
         return False
 
 
@@ -2034,44 +2034,44 @@ def worker_service_selection():
     """Worker selects which service they belong to"""
     while True:
         print("\n" + "="*50)
-        print("👷 SELECT WORKER SERVICE")
+        print("  SELECT WORKER SERVICE")
         print("="*50)
-        print("1. 🏥 Healthcare")
-        print("2. 🏠 Housekeeping")
-        print("3. 🚗 Car Services")
-        print("4. 💜 Freelance Marketplace")
-        print("5. 💰 Money Management")
-        print("6. ⬅️ Back")
+        print("1.   Healthcare")
+        print("2.   Housekeeping")
+        print("3.   Car Services")
+        print("4.   Freelance Marketplace")
+        print("5.   Money Management")
+        print("6.    Back")
 
         choice = input("\nSelect service: ").strip()
 
         if choice == "1":
             healthcare_worker_menu()
         elif choice == "2":
-            print("🚧 Housekeeping worker module coming soon")
+            print("  Housekeeping worker module coming soon")
         elif choice == "3":
             car_service_worker_menu()
         elif choice == "4":
             freelance_worker_flow(None)  # Will get worker_id after login
         elif choice == "5":
-            print("🚧 Money Management worker module coming soon")
+            print("  Money Management worker module coming soon")
         elif choice == "6":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 def car_service_worker_menu():
     """Car service worker selection menu"""
     while True:
         print("\n" + "="*50)
-        print("🚗 CAR SERVICE WORKER")
+        print("  CAR SERVICE WORKER")
         print("="*50)
-        print("1. 🔧 Mechanic")
-        print("2. ⛽ Fuel Delivery Agent")
-        print("3. 🚛 Tow Truck Operator")
-        print("4. 🧠 Automobile Expert")
-        print("5. ⬅️ Back")
+        print("1.   Mechanic")
+        print("2.   Fuel Delivery Agent")
+        print("3.   Tow Truck Operator")
+        print("4.   Automobile Expert")
+        print("5.    Back")
         
         choice = input("\nSelect worker type: ").strip()
         
@@ -2090,7 +2090,7 @@ def car_service_worker_menu():
         elif choice == "5":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             time.sleep(1)
         print("2. Worker Login")
         print("3. Back")
@@ -2109,15 +2109,15 @@ def worker_menu(worker_id):
     """Doctor Dashboard - All tabs"""
     while True:
         print("\n" + "="*60)
-        print("👨‍⚕️ DOCTOR DASHBOARD")
+        print("     DOCTOR DASHBOARD")
         print("="*60)
-        print("1. 📊 Dashboard")
-        print("2. 📅 Availability")
+        print("1.   Dashboard")
+        print("2.   Availability")
         print("3.  Consultations")
-        print("4. 🎥 Video Consultation")
-        print("5. 👤 Profile")
-        print("6. 💳 Subscription")
-        print("7. 🚪 Logout")
+        print("4.   Video Consultation")
+        print("5.   Profile")
+        print("6.   Subscription")
+        print("7.   Logout")
 
         c = input("\nSelect tab: ").strip()
 
@@ -2142,24 +2142,24 @@ def worker_menu(worker_id):
             doctor_subscription_menu(worker_id)
 
         elif c == "7":
-            print("👋 Logged out")
+            print("  Logged out")
             return
 
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 def doctor_consultations_tab(worker_id):
     """Unified Consultations Module - All consultation lifecycle management"""
     while True:
         print("\n" + "="*60)
-        print("📋 CONSULTATIONS")
+        print("  CONSULTATIONS")
         print("="*60)
-        print("1. 🟡 Pending Requests")
-        print("2. 🟢 Accepted / Upcoming")
-        print("3. 📹 Video Consultations")
-        print("4. ✅ Completed History")
-        print("5. ⬅️ Back")
+        print("1.   Pending Requests")
+        print("2.   Accepted / Upcoming")
+        print("3.   Video Consultations")
+        print("4.   Completed History")
+        print("5.    Back")
 
         choice = input("\nSelect option: ").strip()
 
@@ -2174,36 +2174,36 @@ def doctor_consultations_tab(worker_id):
         elif choice == "5":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 def doctor_pending_requests(worker_id):
     """Show pending consultation requests and allow doctor to accept/reject"""
-    print("\n🔄 Fetching pending requests...")
+    print("\n  Fetching pending requests...")
     
     try:
         r = requests.get(f"{API}/worker/{worker_id}/requests")
         if r.status_code != 200:
-            print("❌ Failed to fetch requests")
+            print("  Failed to fetch requests")
             input("\nPress Enter to continue...")
             return
         
         pending_requests = r.json().get("requests", [])
         
         if not pending_requests:
-            print("\n📭 No pending requests")
+            print("\n  No pending requests")
             input("\nPress Enter to continue...")
             return
         
-        print("\n🟡 PENDING REQUESTS")
+        print("\n  PENDING REQUESTS")
         print("-" * 60)
         
         for idx, req in enumerate(pending_requests, 1):
             print(f"\n[{idx}] Appointment ID: {req['id']}")
-            print(f"    👤 Patient: {req['user_name']}")
-            print(f"    📅 Date: {req.get('booking_date', 'N/A')}")
-            print(f"    🩺 Symptoms: {req['patient_symptoms']}")
-            print(f"    📝 Type: {req.get('appointment_type', 'clinic').upper()}")
+            print(f"      Patient: {req['user_name']}")
+            print(f"      Date: {req.get('booking_date', 'N/A')}")
+            print(f"      Symptoms: {req['patient_symptoms']}")
+            print(f"      Type: {req.get('appointment_type', 'clinic').upper()}")
         
         print("\n" + "-" * 60)
         choice = input("\nSelect request number to act on (0 to go back): ").strip()
@@ -2212,22 +2212,22 @@ def doctor_pending_requests(worker_id):
             return
         
         if not choice.isdigit() or int(choice) < 1 or int(choice) > len(pending_requests):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             input("\nPress Enter to continue...")
             return
         
         selected_request = pending_requests[int(choice) - 1]
         appointment_id = selected_request['id']
         
-        print(f"\n📋 Request Details:")
+        print(f"\n  Request Details:")
         print(f"   Patient: {selected_request['user_name']}")
         print(f"   Symptoms: {selected_request['patient_symptoms']}")
         print(f"   Type: {selected_request.get('appointment_type', 'clinic').upper()}")
         
-        print("\n🤔 Action:")
-        print("1. ✅ Accept")
-        print("2. ❌ Reject")
-        print("0. ⬅️ Back")
+        print("\n  Action:")
+        print("1.   Accept")
+        print("2.   Reject")
+        print("0.    Back")
         
         action = input("\nChoose action: ").strip()
         
@@ -2241,44 +2241,44 @@ def doctor_pending_requests(worker_id):
                 
                 if r.status_code == 200:
                     data = r.json()
-                    print("✅ Request accepted successfully!")
+                    print("  Request accepted successfully!")
                     
                     # Handle new payment flow
                     if data.get('payment_required'):
-                        print(f"\n💰 PAYMENT REQUIRED")
-                        print(f"📋 Consultation Fee: ₹{data.get('doctor_fee', 'N/A')}")
-                        print(f"💳 Patient needs to pay before consultation")
-                        print(f"📱 Patient will receive payment prompt")
+                        print(f"\n  PAYMENT REQUIRED")
+                        print(f"  Consultation Fee:  {data.get('doctor_fee', 'N/A')}")
+                        print(f"  Patient needs to pay before consultation")
+                        print(f"  Patient will receive payment prompt")
                         
                         if selected_request.get('appointment_type') == 'video':
-                            print(f"\n🎥 Video consultation details will be sent after payment")
+                            print(f"\n  Video consultation details will be sent after payment")
                         else:
-                            print(f"\n🏥 Clinic appointment confirmed after payment")
+                            print(f"\n  Clinic appointment confirmed after payment")
                     
                     # Handle old flow for backward compatibility or video details after payment
                     elif selected_request.get('appointment_type') == 'video':
                         if data.get('success') and data.get('otp'):
-                            print(f"\n🎥 VIDEO CONSULTATION DETAILS:")
-                            print(f"🔐 Doctor OTP: {data.get('otp')}")
-                            print(f"🔗 Doctor URL: {data.get('doctor_url')}")
-                            print(f"🔗 Patient URL: {data.get('patient_url')}")
-                            print(f"\n📧 Share the Patient URL with the patient")
-                            print(f"🔐 Use the OTP to start the video call")
+                            print(f"\n  VIDEO CONSULTATION DETAILS:")
+                            print(f"  Doctor OTP: {data.get('otp')}")
+                            print(f"  Doctor URL: {data.get('doctor_url')}")
+                            print(f"  Patient URL: {data.get('patient_url')}")
+                            print(f"\n  Share the Patient URL with the patient")
+                            print(f"  Use the OTP to start the video call")
                         elif data.get('meeting_link'):
-                            print(f"🔗 Meeting Link: {data['meeting_link']}")
+                            print(f"  Meeting Link: {data['meeting_link']}")
                         if data.get('otp_sent'):
-                            print("📧 OTP sent to your email")
+                            print("  OTP sent to your email")
                     else:
-                        print(f"\n📅 Appointment accepted successfully!")
+                        print(f"\n  Appointment accepted successfully!")
                         
                 else:
-                    print("❌ Failed to accept request")
+                    print("  Failed to accept request")
                     if r.status_code != 500:
                         error_data = r.json()
                         print("Server says:", error_data.get("error", "Unknown error"))
                         
             except Exception as e:
-                print(f"❌ Network error: {e}")
+                print(f"  Network error: {e}")
                 
         elif action == "2":
             # Reject request
@@ -2289,27 +2289,27 @@ def doctor_pending_requests(worker_id):
                 })
                 
                 if r.status_code == 200:
-                    print("✅ Request rejected successfully!")
+                    print("  Request rejected successfully!")
                 else:
-                    print(f"❌ Failed to reject: {r.json().get('error', 'Unknown error')}")
+                    print(f"  Failed to reject: {r.json().get('error', 'Unknown error')}")
             except Exception as e:
-                print(f"❌ Network error: {e}")
+                print(f"  Network error: {e}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Error fetching requests: {e}")
+        print(f"  Error fetching requests: {e}")
         input("\nPress Enter to continue...")
 
 
 def doctor_accepted_appointments(worker_id):
     """Show accepted/upcoming appointments"""
-    print("\n🔄 Fetching accepted appointments...")
+    print("\n  Fetching accepted appointments...")
     
     try:
         r = requests.get(f"{API}/worker/{worker_id}/appointments")
         if r.status_code != 200:
-            print("❌ Failed to fetch appointments")
+            print("  Failed to fetch appointments")
             input("\nPress Enter to continue...")
             return
         
@@ -2319,23 +2319,23 @@ def doctor_accepted_appointments(worker_id):
         accepted = [apt for apt in appointments if apt.get('status') == 'accepted']
         
         if not accepted:
-            print("\n📭 No accepted appointments")
+            print("\n  No accepted appointments")
             input("\nPress Enter to continue...")
             return
         
-        print("\n🟢 ACCEPTED / UPCOMING")
+        print("\n  ACCEPTED / UPCOMING")
         print("-" * 60)
         
         for idx, apt in enumerate(accepted, 1):
             print(f"\n[{idx}] Appointment ID: {apt['id']}")
-            print(f"    📅 Date: {apt.get('booking_date', 'N/A')}")
-            print(f"    ⏰ Time: {apt.get('time_slot', 'N/A')}")
-            print(f"    👤 Patient: {apt['user_name']}")
-            print(f"    📝 Type: {apt.get('appointment_type', 'clinic').upper()}")
+            print(f"      Date: {apt.get('booking_date', 'N/A')}")
+            print(f"      Time: {apt.get('time_slot', 'N/A')}")
+            print(f"      Patient: {apt['user_name']}")
+            print(f"      Type: {apt.get('appointment_type', 'clinic').upper()}")
             
             # Show video consultation option
             if apt.get('appointment_type') == 'video':
-                print("    📹 Video Consultation")
+                print("      Video Consultation")
         
         print("\n" + "-" * 60)
         choice = input("\nSelect appointment number for details (0 to go back): ").strip()
@@ -2344,13 +2344,13 @@ def doctor_accepted_appointments(worker_id):
             return
         
         if not choice.isdigit() or int(choice) < 1 or int(choice) > len(accepted):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             input("\nPress Enter to continue...")
             return
         
         selected_apt = accepted[int(choice) - 1]
         
-        print(f"\n📋 Appointment Details:")
+        print(f"\n  Appointment Details:")
         print(f"   Patient: {selected_apt['user_name']}")
         print(f"   Date: {selected_apt.get('booking_date', 'N/A')}")
         print(f"   Time: {selected_apt.get('time_slot', 'N/A')}")
@@ -2358,9 +2358,9 @@ def doctor_accepted_appointments(worker_id):
         print(f"   Status: {selected_apt.get('status', 'N/A')}")
         
         if selected_apt.get('appointment_type') == 'video':
-            print("\n📹 Video Consultation Options:")
-            print("1. 🎥 Start Video Consultation")
-            print("0. ⬅️ Back")
+            print("\n  Video Consultation Options:")
+            print("1.   Start Video Consultation")
+            print("0.    Back")
             
             video_choice = input("\nChoose option: ").strip()
             if video_choice == "1":
@@ -2369,36 +2369,36 @@ def doctor_accepted_appointments(worker_id):
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Error fetching appointments: {e}")
+        print(f"  Error fetching appointments: {e}")
         input("\nPress Enter to continue...")
 
 
 def doctor_video_consultations(worker_id):
     """Show video consultations"""
-    print("\n🔄 Fetching video consultations...")
+    print("\n  Fetching video consultations...")
     
     try:
         r = requests.get(f"{API}/worker/video_appointments")
         if r.status_code != 200:
-            print("❌ Failed to fetch video consultations")
+            print("  Failed to fetch video consultations")
             input("\nPress Enter to continue...")
             return
         
         video_consults = r.json()
         
         if not video_consults:
-            print("\n📭 No video consultations")
+            print("\n  No video consultations")
             input("\nPress Enter to continue...")
             return
         
-        print("\n📹 VIDEO CONSULTATIONS")
+        print("\n  VIDEO CONSULTATIONS")
         print("-" * 60)
         
         for idx, consult in enumerate(video_consults, 1):
             print(f"\n[{idx}] Consult ID: {consult['id']}")
-            print(f"    📋 Appointment ID: {consult['id']}")
-            print(f"    👤 User Name: {consult['user_name']}")
-            print(f"    📊 Status: {consult['status']}")
+            print(f"      Appointment ID: {consult['id']}")
+            print(f"      User Name: {consult['user_name']}")
+            print(f"      Status: {consult['status']}")
         
         print("\n" + "-" * 60)
         choice = input("\nSelect consultation number for actions (0 to go back): ").strip()
@@ -2407,20 +2407,20 @@ def doctor_video_consultations(worker_id):
             return
         
         if not choice.isdigit() or int(choice) < 1 or int(choice) > len(video_consults):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             input("\nPress Enter to continue...")
             return
         
         selected_consult = video_consults[int(choice) - 1]
         
-        print(f"\n📋 Video Consultation Details:")
+        print(f"\n  Video Consultation Details:")
         print(f"   User: {selected_consult['user_name']}")
         print(f"   Status: {selected_consult['status']}")
         
         if selected_consult.get('status') == 'accepted':
-            print("\n🎥 Video Options:")
-            print("1. 🎥 Start Video Call")
-            print("0. ⬅️ Back")
+            print("\n  Video Options:")
+            print("1.   Start Video Call")
+            print("0.    Back")
             
             video_choice = input("\nChoose option: ").strip()
             if video_choice == "1":
@@ -2429,43 +2429,43 @@ def doctor_video_consultations(worker_id):
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Error fetching video consultations: {e}")
+        print(f"  Error fetching video consultations: {e}")
         input("\nPress Enter to continue...")
 
 
 def doctor_completed_history(worker_id):
     """Show completed consultation history"""
-    print("\n🔄 Fetching completed history...")
+    print("\n  Fetching completed history...")
     
     try:
         r = requests.get(f"{API}/worker/{worker_id}/history")
         if r.status_code != 200:
-            print("❌ Failed to fetch history")
+            print("  Failed to fetch history")
             input("\nPress Enter to continue...")
             return
         
         history = r.json().get("history", [])
         
         if not history:
-            print("\n📭 No completed consultations")
+            print("\n  No completed consultations")
             input("\nPress Enter to continue...")
             return
         
-        print("\n✅ COMPLETED HISTORY")
+        print("\n  COMPLETED HISTORY")
         print("-" * 60)
         
         for idx, consult in enumerate(history, 1):
             print(f"\n[{idx}] Consultation ID: {consult['id']}")
-            print(f"    👤 Patient: {consult['user_name']}")
-            print(f"    📅 Date: {consult.get('booking_date', 'N/A')}")
-            print(f"    📝 Type: {consult.get('appointment_type', 'clinic').upper()}")
-            print(f"    ✅ Completed: {consult.get('completed_date', 'N/A')}")
+            print(f"      Patient: {consult['user_name']}")
+            print(f"      Date: {consult.get('booking_date', 'N/A')}")
+            print(f"      Type: {consult.get('appointment_type', 'clinic').upper()}")
+            print(f"      Completed: {consult.get('completed_date', 'N/A')}")
         
         print("\n" + "-" * 60)
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Error fetching history: {e}")
+        print(f"  Error fetching history: {e}")
         input("\nPress Enter to continue...")
 
 
@@ -2474,24 +2474,24 @@ def request_video_consultation(worker_id):
     global USER_ID, TOKEN
     
     if not TOKEN:
-        print("⚠️ Please login first")
+        print("   Please login first")
         return
     
     if not USER_ID:
-        print("⚠️ User ID not found")
+        print("   User ID not found")
         return
     
     print("\n" + "="*60)
-    print("📹 REQUEST VIDEO CONSULTATION")
+    print("  REQUEST VIDEO CONSULTATION")
     print("="*60)
     
-    symptoms = input("🩺 Describe your symptoms: ").strip()
+    symptoms = input("  Describe your symptoms: ").strip()
     if not symptoms:
-        print("❌ Symptoms are required")
+        print("  Symptoms are required")
         input("\nPress Enter to continue...")
         return
     
-    print("\n🔄 Requesting video consultation...")
+    print("\n  Requesting video consultation...")
     
     try:
         r = requests.post(f"{API}/appointment/video-request", json={
@@ -2504,44 +2504,44 @@ def request_video_consultation(worker_id):
         if r.status_code == 201:
             data = r.json()
             appointment_id = data.get("appointment_id")
-            print(f"✅ Video consultation requested successfully!")
-            print(f"📋 Appointment ID: {appointment_id}")
-            print("⏳ Waiting for doctor to accept...")
+            print(f"  Video consultation requested successfully!")
+            print(f"  Appointment ID: {appointment_id}")
+            print("  Waiting for doctor to accept...")
             
             # Generate video call URL for patient
             video_url = f"http://127.0.0.1:5000/video-call/{appointment_id}?role=user"
-            print(f"🔗 Join Call URL: {video_url}")
-            print("📧 Please save this URL to join when doctor accepts")
+            print(f"  Join Call URL: {video_url}")
+            print("  Please save this URL to join when doctor accepts")
             
         else:
             error = r.json().get("error", "Unknown error")
-            print(f"❌ Failed to request video consultation: {error}")
+            print(f"  Failed to request video consultation: {error}")
             
     except Exception as e:
-        print(f"❌ Network error: {e}")
+        print(f"  Network error: {e}")
     
     input("\nPress Enter to continue...")
 
 
 def doctor_start_video_consultation(appointment_id):
     """Start video consultation for given appointment"""
-    print(f"\n🎥 Starting video consultation for appointment {appointment_id}")
+    print(f"\n  Starting video consultation for appointment {appointment_id}")
     
     # Generate video call URL
     video_url = f"http://127.0.0.1:5000/video-call/{appointment_id}?role=doctor"
     
-    print(f"🔗 Video Call URL: {video_url}")
-    print("📧 Opening video call page in your browser...")
-    print("🌐 Please open the URL above to start the consultation")
+    print(f"  Video Call URL: {video_url}")
+    print("  Opening video call page in your browser...")
+    print("  Please open the URL above to start the consultation")
     
     # Try to open browser automatically (optional)
     try:
         import webbrowser
         webbrowser.open(video_url)
-        print("✅ Browser opened automatically")
+        print("  Browser opened automatically")
     except:
-        print("⚠️ Could not open browser automatically")
-        print(f"💻 Please manually copy and paste: {video_url}")
+        print("   Could not open browser automatically")
+        print(f"  Please manually copy and paste: {video_url}")
     
     input("\nPress Enter to continue...")
 
@@ -2550,7 +2550,7 @@ def doctor_subscription_menu(worker_id):
     """Handle doctor subscription management"""
     while True:
         print("\n" + "="*60)
-        print("💳 SUBSCRIPTION MANAGEMENT")
+        print("  SUBSCRIPTION MANAGEMENT")
         print("="*60)
         
         # Get current subscription
@@ -2560,27 +2560,27 @@ def doctor_subscription_menu(worker_id):
             subscription = data.get("subscription")
             
             if subscription:
-                print(f"\n📋 Current Plan: {subscription['plan_name']}")
-                print(f"📅 End Date: {subscription['end_date'][:10] if subscription['end_date'] else 'N/A'}")
-                print(f"📝 Features: Basic appointment scheduling, Profile management")
+                print(f"\n  Current Plan: {subscription['plan_name']}")
+                print(f"  End Date: {subscription['end_date'][:10] if subscription['end_date'] else 'N/A'}")
+                print(f"  Features: Basic appointment scheduling, Profile management")
                 
                 # Get stats
                 r_stats = requests.get(f"{API}/api/subscription/stats/{worker_id}")
                 if r_stats.status_code == 200:
                     stats = r_stats.json().get("stats")
                     if stats:
-                        print(f"📊 Today's Usage: {stats['today_usage']}/{stats['daily_limit']}")
-                        print(f"🔄 Remaining Today: {stats['remaining_today']}")
+                        print(f"  Today's Usage: {stats['today_usage']}/{stats['daily_limit']}")
+                        print(f"  Remaining Today: {stats['remaining_today']}")
             else:
-                print("\n❌ No active subscription")
-                print("🔒 Limited features available")
+                print("\n  No active subscription")
+                print("  Limited features available")
         
         print("\n" + "-"*40)
-        print("1. 📋 View Available Plans")
-        print("2. 💳 Subscribe to Plan")
-        print("3. 📊 View Usage Stats")
-        print("4. ❌ Cancel Subscription")
-        print("5. ⬅️  Back")
+        print("1.   View Available Plans")
+        print("2.   Subscribe to Plan")
+        print("3.   View Usage Stats")
+        print("4.   Cancel Subscription")
+        print("5.     Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -2595,7 +2595,7 @@ def doctor_subscription_menu(worker_id):
         elif choice == "5":
             break
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             input("\nPress Enter to continue...")
 
 def view_subscription_plans():
@@ -2606,17 +2606,17 @@ def view_subscription_plans():
         plans = data.get("plans", [])
         
         print("\n" + "="*60)
-        print("📋 AVAILABLE SUBSCRIPTION PLANS")
+        print("  AVAILABLE SUBSCRIPTION PLANS")
         print("="*60)
         
         for i, plan in enumerate(plans, 1):
             print(f"\n[{i}] {plan['name']} Plan")
-            print(f"💰 Price: ₹{plan['price']}/month")
-            print(f"📅 Duration: {plan['duration_days']} days")
-            print(f"📊 Max Appointments/Day: {plan['daily_appointment_limit']}")
+            print(f"  Price:  {plan['price']}/month")
+            print(f"  Duration: {plan['duration_days']} days")
+            print(f"  Max Appointments/Day: {plan['daily_appointment_limit']}")
             print("-" * 40)
     else:
-        print("❌ Error fetching plans")
+        print("  Error fetching plans")
     
     input("\nPress Enter to continue...")
 
@@ -2625,38 +2625,38 @@ def subscribe_to_plan(worker_id):
     # Show available plans
     r = requests.get(f"{API}/api/subscription/plans")
     if r.status_code != 200:
-        print("❌ Error fetching plans")
+        print("  Error fetching plans")
         return
     
     data = r.json()
     plans = data.get("plans", [])
     if not plans:
-        print("❌ No plans available")
+        print("  No plans available")
         return
     
     print("\n" + "="*60)
-    print("💳 CHOOSE SUBSCRIPTION PLAN")
+    print("  CHOOSE SUBSCRIPTION PLAN")
     print("="*60)
     
     for i, plan in enumerate(plans, 1):
-        print(f"[{i}] {plan['name']} - ₹{plan['price']}/month ({plan['daily_appointment_limit']}/day)")
+        print(f"[{i}] {plan['name']} -  {plan['price']}/month ({plan['daily_appointment_limit']}/day)")
     
     try:
         choice = int(input("\nSelect plan number: "))
         if choice < 1 or choice > len(plans):
-            print("❌ Invalid plan selection")
+            print("  Invalid plan selection")
             return
         
         selected_plan = plans[choice - 1]
         
-        print(f"\n📋 Selected: {selected_plan['name']} Plan")
-        print(f"💰 Price: ₹{selected_plan['price']}/month")
-        print(f"📊 Limit: {selected_plan['daily_appointment_limit']} appointments/day")
-        print(f"💰 Price: ${selected_plan['price']}/month")
+        print(f"\n  Selected: {selected_plan['name']} Plan")
+        print(f"  Price:  {selected_plan['price']}/month")
+        print(f"  Limit: {selected_plan['daily_appointment_limit']} appointments/day")
+        print(f"  Price: ${selected_plan['price']}/month")
         
         if selected_plan['price'] > 0:
-            print("🔒 Payment integration required")
-            print("💳 For demo, we'll simulate payment...")
+            print("  Payment integration required")
+            print("  For demo, we'll simulate payment...")
             payment_id = f"PAY_{random.randint(100000, 999999)}"
         else:
             payment_id = "FREE_PLAN"
@@ -2673,23 +2673,23 @@ def subscribe_to_plan(worker_id):
                 order_data = r_order.json()
                 order = order_data.get("order", {})
                 
-                print(f"\n💳 Payment order created!")
-                print(f"📋 Order ID: {order.get('order_id')}")
-                print(f"💰 Amount: ₹{order.get('amount')}")
+                print(f"\n  Payment order created!")
+                print(f"  Order ID: {order.get('order_id')}")
+                print(f"  Amount:  {order.get('amount')}")
                 
                 # Simulate payment confirmation
                 if selected_plan['price'] > 0:
-                    print(f"\n💳 INITIATING PAYMENT")
+                    print(f"\n  INITIATING PAYMENT")
                     print("="*60)
-                    print(f"📋 Order ID: {order.get('order_id')}")
-                    print(f"💰 Amount: ₹{order.get('amount')}")
-                    print(f"🔑 Razorpay Key: {order.get('key')}")
+                    print(f"  Order ID: {order.get('order_id')}")
+                    print(f"  Amount:  {order.get('amount')}")
+                    print(f"  Razorpay Key: {order.get('key')}")
                     
                     # Use your existing payment system
                     payment_url = f"{API}/create-order"
                     
-                    print(f"\n🌐 Using your payment system...")
-                    print(f"🔗 Payment API: {payment_url}")
+                    print(f"\n  Using your payment system...")
+                    print(f"  Payment API: {payment_url}")
                     
                     # Create payment using your existing system
                     try:
@@ -2702,36 +2702,36 @@ def subscribe_to_plan(worker_id):
                         
                         if r_payment.status_code == 200:
                             payment_response = r_payment.json()
-                            print("✅ Payment order created successfully!")
+                            print("  Payment order created successfully!")
                             print(f"   Payment Order ID: {payment_response.get('order_id')}")
-                            print(f"   Amount: ₹{payment_response.get('amount')}")
+                            print(f"   Amount:  {payment_response.get('amount')}")
                             print(f"   Key: {payment_response.get('key')}")
                             
                             # Build frontend payment URL (using your existing frontend)
                             frontend_url = f"http://127.0.0.1:5001/payment?order_id={payment_response.get('order_id')}&amount={payment_response.get('amount')}&key={payment_response.get('key')}"
                             
-                            print(f"\n🌐 Opening payment page...")
-                            print(f"🔗 Payment URL: {frontend_url}")
+                            print(f"\n  Opening payment page...")
+                            print(f"  Payment URL: {frontend_url}")
                             
                             # Open browser for payment (using your frontend)
                             try:
                                 import webbrowser
                                 webbrowser.open(frontend_url)
-                                print("📱 Payment page opened in browser")
+                                print("  Payment page opened in browser")
                             except:
-                                print("⚠️ Could not open browser automatically")
-                                print(f"📱 Please visit: {frontend_url}")
+                                print("   Could not open browser automatically")
+                                print(f"  Please visit: {frontend_url}")
                             
-                            print("\n💡 Instructions:")
+                            print("\n  Instructions:")
                             print("1. Complete payment on your payment page")
                             print("2. After payment, enter 'y' to confirm")
                             print("3. Or enter 'n' to cancel")
                             
-                            payment_confirmed = input("\n✅ Payment completed? (y/n): ").lower().strip()
+                            payment_confirmed = input("\n  Payment completed? (y/n): ").lower().strip()
                             
                             if payment_confirmed in ['y', 'yes', 'Y', 'YES']:
                                 # Get payment ID from user (in real implementation, this would come from webhook)
-                                payment_id = input("💳 Enter Payment ID (or press Enter for demo): ").strip()
+                                payment_id = input("  Enter Payment ID (or press Enter for demo): ").strip()
                                 if not payment_id:
                                     payment_id = f"PAY_{random.randint(100000, 999999)}"
                                 
@@ -2744,22 +2744,22 @@ def subscribe_to_plan(worker_id):
                                 
                                 if r_confirm.status_code == 200:
                                     confirm_data = r_confirm.json()
-                                    print("✅ Subscription created successfully!")
-                                    print(f"📋 Plan: {selected_plan['name']}")
-                                    print(f"💳 Payment ID: {payment_id}")
-                                    print(f"🎉 {confirm_data.get('message', 'Subscription activated!')}")
+                                    print("  Subscription created successfully!")
+                                    print(f"  Plan: {selected_plan['name']}")
+                                    print(f"  Payment ID: {payment_id}")
+                                    print(f"  {confirm_data.get('message', 'Subscription activated!')}")
                                 else:
-                                    print("❌ Payment confirmation failed")
+                                    print("  Payment confirmation failed")
                                     print(r_confirm.json().get("error", "Unknown error"))
                             else:
-                                print("❌ Payment cancelled")
+                                print("  Payment cancelled")
                         else:
-                            print("❌ Failed to create payment order")
+                            print("  Failed to create payment order")
                             print(r_payment.json())
                             
                     except Exception as e:
-                        print(f"❌ Payment system error: {e}")
-                        print("🔄 Falling back to demo mode...")
+                        print(f"  Payment system error: {e}")
+                        print("  Falling back to demo mode...")
                         payment_id = f"PAY_{random.randint(100000, 999999)}"
                         
                         # Confirm payment
@@ -2771,24 +2771,24 @@ def subscribe_to_plan(worker_id):
                         
                         if r_confirm.status_code == 200:
                             confirm_data = r_confirm.json()
-                            print("✅ Subscription created successfully! (Demo Mode)")
-                            print(f"📋 Plan: {selected_plan['name']}")
-                            print(f"💳 Payment ID: {payment_id}")
-                            print(f"🎉 {confirm_data.get('message', 'Subscription activated!')}")
+                            print("  Subscription created successfully! (Demo Mode)")
+                            print(f"  Plan: {selected_plan['name']}")
+                            print(f"  Payment ID: {payment_id}")
+                            print(f"  {confirm_data.get('message', 'Subscription activated!')}")
                         else:
-                            print("❌ Payment confirmation failed")
+                            print("  Payment confirmation failed")
                             print(r_confirm.json().get("error", "Unknown error"))
                 else:
-                    print("✅ Free plan activated!")
-                    print(f"📋 Plan: {selected_plan['name']}")
+                    print("  Free plan activated!")
+                    print(f"  Plan: {selected_plan['name']}")
             else:
-                print("❌ Error creating subscription order")
+                print("  Error creating subscription order")
                 print(r_order.json().get("error", "Unknown error"))
         else:
-            print("❌ Subscription cancelled")
+            print("  Subscription cancelled")
             
     except ValueError:
-        print("❌ Invalid input")
+        print("  Invalid input")
     
     input("\nPress Enter to continue...")
 
@@ -2801,24 +2801,24 @@ def view_subscription_stats(worker_id):
         
         if stats:
             print("\n" + "="*60)
-            print("📊 SUBSCRIPTION STATISTICS")
+            print("  SUBSCRIPTION STATISTICS")
             print("="*60)
-            print(f"📋 Current Plan: {stats['plan_name']}")
-            print(f"📅 End Date: {stats['end_date'][:10] if stats['end_date'] else 'N/A'}")
-            print(f"📊 Daily Limit: {stats['daily_limit']}")
-            print(f"📈 Today's Usage: {stats['today_usage']}")
-            print(f"🔄 Remaining Today: {stats['remaining_today']}")
+            print(f"  Current Plan: {stats['plan_name']}")
+            print(f"  End Date: {stats['end_date'][:10] if stats['end_date'] else 'N/A'}")
+            print(f"  Daily Limit: {stats['daily_limit']}")
+            print(f"  Today's Usage: {stats['today_usage']}")
+            print(f"  Remaining Today: {stats['remaining_today']}")
             
             # Calculate days remaining
             if stats['end_date']:
                 from datetime import datetime
                 end_date = datetime.fromisoformat(stats['end_date'])
                 days_remaining = (end_date - datetime.now()).days
-                print(f"⏰ Days Remaining: {days_remaining}")
+                print(f"  Days Remaining: {days_remaining}")
         else:
-            print("\n❌ No active subscription")
+            print("\n  No active subscription")
     else:
-        print("❌ Error fetching statistics")
+        print("  Error fetching statistics")
     
     input("\nPress Enter to continue...")
 
@@ -2829,20 +2829,20 @@ def cancel_subscription(worker_id):
     if r.status_code == 200:
         data = r.json()
         if not data.get("subscription"):
-            print("❌ No active subscription to cancel")
+            print("  No active subscription to cancel")
             input("\nPress Enter to continue...")
             return
     
-    confirm = input("\n⚠️ Are you sure you want to cancel your subscription? (y/n): ").lower()
+    confirm = input("\n   Are you sure you want to cancel your subscription? (y/n): ").lower()
     if confirm == 'y':
         r = requests.post(f"{API}/api/subscription/cancel/{worker_id}")
         if r.status_code == 200:
-            print("✅ Subscription cancelled successfully")
-            print("📅 You can continue using features until the end of your billing period")
+            print("  Subscription cancelled successfully")
+            print("  You can continue using features until the end of your billing period")
         else:
-            print("❌ Error cancelling subscription")
+            print("  Error cancelling subscription")
     else:
-        print("❌ Cancellation cancelled")
+        print("  Cancellation cancelled")
     
     input("\nPress Enter to continue...")
 
@@ -2851,26 +2851,26 @@ def doctor_dashboard_tab(worker_id):
     """Dashboard Tab - Shows today's appointments, pending requests, and status"""
     while True:
         print("\n" + "="*60)
-        print("📊 DASHBOARD")
+        print("  DASHBOARD")
         print("="*60)
         
         # Get dashboard stats
         r = requests.get(f"{API}/worker/{worker_id}/dashboard/stats")
         if r.status_code == 200:
             stats = r.json()
-            print(f"\n📥 Pending Requests: {stats.get('pending_requests', 0)}")
-            print(f"📅 Today's Appointments: {stats.get('today_appointments', 0)}")
-            print(f"✅ Accepted Appointments: {stats.get('accepted_appointments', 0)}")
-            print(f"📊 Total Appointments: {stats.get('total_appointments', 0)}")
+            print(f"\n  Pending Requests: {stats.get('pending_requests', 0)}")
+            print(f"  Today's Appointments: {stats.get('today_appointments', 0)}")
+            print(f"  Accepted Appointments: {stats.get('accepted_appointments', 0)}")
+            print(f"  Total Appointments: {stats.get('total_appointments', 0)}")
         else:
-            print("❌ Error fetching dashboard stats")
+            print("  Error fetching dashboard stats")
         
         # Get worker status
         r = requests.get(f"{API}/worker/{worker_id}/status")
         if r.status_code == 200:
             status_data = r.json()
             status = status_data.get('status', 'online')
-            status_icon = "🟢" if status == "online" else "🔴"
+            status_icon = " " if status == "online" else " "
             print(f"\n{status_icon} Status: {status.upper()}")
         
         # Show today's appointments
@@ -2879,24 +2879,24 @@ def doctor_dashboard_tab(worker_id):
             stats = r.json()
             today_list = stats.get('today_appointments_list', [])
             if today_list:
-                print("\n📅 Today's Appointments:")
+                print("\n  Today's Appointments:")
                 print("-" * 60)
                 for apt in today_list:
                     status_icon = {
-                        "pending": "⏳",
-                        "accepted": "✅",
-                        "in_consultation": "💬",
-                        "completed": "✓"
-                    }.get(apt['status'], "❓")
+                        "pending": " ",
+                        "accepted": " ",
+                        "in_consultation": " ",
+                        "completed": " "
+                    }.get(apt['status'], " ")
                     print(f"{status_icon} Appointment #{apt['id']} - {apt['user_name']}")
                     print(f"   Time: {apt['booking_date']}")
                     print(f"   Symptoms: {apt['patient_symptoms'][:50]}...")
                     print("-" * 60)
         
         print("\n" + "="*60)
-        print("1. 🔄 Refresh")
-        print("2. ⚙️  Change Status")
-        print("3. ⬅️  Back")
+        print("1.   Refresh")
+        print("2.     Change Status")
+        print("3.     Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -2907,17 +2907,17 @@ def doctor_dashboard_tab(worker_id):
         elif choice == "3":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 def change_worker_status(worker_id):
     """Change worker online/offline status"""
     print("\n" + "="*60)
-    print("⚙️ CHANGE STATUS")
+    print("   CHANGE STATUS")
     print("="*60)
-    print("1. 🟢 Online")
-    print("2. 🔴 Offline")
-    print("3. ⬅️  Back")
+    print("1.   Online")
+    print("2.   Offline")
+    print("3.     Back")
     
     choice = input("\nSelect status: ").strip()
     
@@ -2928,14 +2928,14 @@ def change_worker_status(worker_id):
     elif choice == "3":
         return
     else:
-        print("❌ Invalid choice")
+        print("  Invalid choice")
         return
     
     r = requests.post(f"{API}/worker/{worker_id}/status", json={"status": status})
     if r.status_code == 200:
-        print(f"\n✅ Status changed to {status.upper()}")
+        print(f"\n  Status changed to {status.upper()}")
     else:
-        print("❌ Error changing status")
+        print("  Error changing status")
     
     input("\nPress Enter to continue...")
 
@@ -2944,12 +2944,12 @@ def doctor_availability_tab(worker_id):
     """Availability Tab - Manage available dates and time slots"""
     while True:
         print("\n" + "="*60)
-        print("📅 AVAILABILITY")
+        print("  AVAILABILITY")
         print("="*60)
         print("1. View Availability")
         print("2. Add Time Slot")
         print("3. Remove Time Slot")
-        print("4. ⬅️  Back")
+        print("4.     Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -2962,13 +2962,13 @@ def doctor_availability_tab(worker_id):
         elif choice == "4":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 def view_worker_availability(worker_id):
     """View worker's availability"""
     print("\n" + "="*60)
-    print("📅 YOUR AVAILABILITY")
+    print("  YOUR AVAILABILITY")
     print("="*60)
     
     date_filter = input("Enter date to filter (YYYY-MM-DD) or press Enter for all: ").strip()
@@ -2983,7 +2983,7 @@ def view_worker_availability(worker_id):
         availability = r.json().get("availability", [])
         
         if not availability:
-            print("\n📭 No availability set")
+            print("\n  No availability set")
         else:
             # Group by date
             by_date = {}
@@ -2994,12 +2994,12 @@ def view_worker_availability(worker_id):
                 by_date[date].append(slot['time_slot'])
             
             for date in sorted(by_date.keys()):
-                print(f"\n📅 {date}")
+                print(f"\n  {date}")
                 print("-" * 60)
                 for time_slot in sorted(by_date[date]):
-                    print(f"  ⏰ {time_slot}")
+                    print(f"    {time_slot}")
     else:
-        print("❌ Error fetching availability")
+        print("  Error fetching availability")
     
     input("\nPress Enter to continue...")
 
@@ -3007,14 +3007,14 @@ def view_worker_availability(worker_id):
 def add_availability_slot(worker_id):
     """Add a new availability time slot"""
     print("\n" + "="*60)
-    print("➕ ADD AVAILABILITY")
+    print("  ADD AVAILABILITY")
     print("="*60)
     
     date = input("Date (YYYY-MM-DD): ").strip()
     time_slot = input("Time Slot (e.g., 09:00-10:00): ").strip()
     
     if not date or not time_slot:
-        print("❌ Date and time slot are required")
+        print("  Date and time slot are required")
         input("\nPress Enter to continue...")
         return
     
@@ -3024,9 +3024,9 @@ def add_availability_slot(worker_id):
     })
     
     if r.status_code == 200:
-        print("\n✅ Availability added successfully")
+        print("\n  Availability added successfully")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to add availability"))
+        print("  Error:", r.json().get("error", "Failed to add availability"))
     
     input("\nPress Enter to continue...")
 
@@ -3034,14 +3034,14 @@ def add_availability_slot(worker_id):
 def remove_availability_slot(worker_id):
     """Remove an availability time slot"""
     print("\n" + "="*60)
-    print("➖ REMOVE AVAILABILITY")
+    print("  REMOVE AVAILABILITY")
     print("="*60)
     
     date = input("Date (YYYY-MM-DD): ").strip()
     time_slot = input("Time Slot (e.g., 09:00-10:00): ").strip()
     
     if not date or not time_slot:
-        print("❌ Date and time slot are required")
+        print("  Date and time slot are required")
         input("\nPress Enter to continue...")
         return
     
@@ -3051,9 +3051,9 @@ def remove_availability_slot(worker_id):
     })
     
     if r.status_code == 200:
-        print("\n✅ Availability removed successfully")
+        print("\n  Availability removed successfully")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to remove availability"))
+        print("  Error:", r.json().get("error", "Failed to remove availability"))
     
     input("\nPress Enter to continue...")
 
@@ -3062,22 +3062,22 @@ def doctor_requests_tab(worker_id):
     """Requests Tab - View and respond to appointment requests"""
     while True:
         print("\n" + "="*60)
-        print("📥 REQUESTS")
+        print("  REQUESTS")
         print("="*60)
         
         r = requests.get(f"{API}/worker/{worker_id}/requests")
         
         if r.status_code != 200:
-            print("❌ Error fetching requests")
+            print("  Error fetching requests")
             input("\nPress Enter to continue...")
             return
         
         requests_list = r.json().get("requests", [])
         
         if not requests_list:
-            print("\n📭 No pending requests")
-            print("\n1. 🔄 Refresh")
-            print("2. ⬅️  Back")
+            print("\n  No pending requests")
+            print("\n1.   Refresh")
+            print("2.     Back")
             
             choice = input("\nSelect option: ").strip()
             if choice == "1":
@@ -3086,7 +3086,7 @@ def doctor_requests_tab(worker_id):
                 return
             continue
         
-        print(f"\n📥 Pending Requests: {len(requests_list)}")
+        print(f"\n  Pending Requests: {len(requests_list)}")
         print("-" * 60)
         
         for idx, req in enumerate(requests_list, 1):
@@ -3096,8 +3096,8 @@ def doctor_requests_tab(worker_id):
             print(f"    Symptoms: {req['patient_symptoms']}")
             print("-" * 60)
         
-        print(f"\n{len(requests_list) + 1}. 🔄 Refresh")
-        print(f"{len(requests_list) + 2}. ⬅️  Back")
+        print(f"\n{len(requests_list) + 1}.   Refresh")
+        print(f"{len(requests_list) + 2}.     Back")
         
         choice = input("\nSelect request to respond (or refresh/back): ").strip()
         
@@ -3110,31 +3110,31 @@ def doctor_requests_tab(worker_id):
             elif choice_num == len(requests_list) + 2:
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
         else:
-            print("❌ Please enter a number")
+            print("  Please enter a number")
 
 
 def doctor_appointments_tab(worker_id):
     """Appointments Tab - Manage accepted appointments"""
     while True:
         print("\n" + "="*60)
-        print("📋 APPOINTMENTS")
+        print("  APPOINTMENTS")
         print("="*60)
         
         r = requests.get(f"{API}/worker/{worker_id}/accepted-appointments")
         
         if r.status_code != 200:
-            print("❌ Error fetching appointments")
+            print("  Error fetching appointments")
             input("\nPress Enter to continue...")
             return
         
         appointments = r.json().get("appointments", [])
         
         if not appointments:
-            print("\n📭 No accepted appointments")
-            print("\n1. 🔄 Refresh")
-            print("2. ⬅️  Back")
+            print("\n  No accepted appointments")
+            print("\n1.   Refresh")
+            print("2.     Back")
             
             choice = input("\nSelect option: ").strip()
             if choice == "1":
@@ -3143,15 +3143,15 @@ def doctor_appointments_tab(worker_id):
                 return
             continue
         
-        print(f"\n📋 Accepted Appointments: {len(appointments)}")
+        print(f"\n  Accepted Appointments: {len(appointments)}")
         print("-" * 60)
         
         for idx, apt in enumerate(appointments, 1):
             status_icon = {
-                "accepted": "✅",
-                "in_consultation": "💬",
-                "completed": "✓"
-            }.get(apt['status'], "❓")
+                "accepted": " ",
+                "in_consultation": " ",
+                "completed": " "
+            }.get(apt['status'], " ")
             apt_type = apt.get("appointment_type", "clinic")
             type_label = "VIDEO" if apt_type == "video" else "CLINIC"
             
@@ -3162,12 +3162,12 @@ def doctor_appointments_tab(worker_id):
             print("-" * 60)
         
         print(f"\n{len(appointments) + 1}. View Details")
-        print(f"{len(appointments) + 2}. 🔐 Start Video Call (Enter OTP)")
+        print(f"{len(appointments) + 2}.   Start Video Call (Enter OTP)")
         print(f"{len(appointments) + 3}. Join Video Call")
         print(f"{len(appointments) + 4}. Complete Appointment")
         print(f"{len(appointments) + 5}. View Messages")
-        print(f"{len(appointments) + 6}. 🔄 Refresh")
-        print(f"{len(appointments) + 7}. ⬅️  Back")
+        print(f"{len(appointments) + 6}.   Refresh")
+        print(f"{len(appointments) + 7}.     Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -3201,9 +3201,9 @@ def doctor_appointments_tab(worker_id):
             elif choice_num == len(appointments) + 7:
                 return
             else:
-                print("❌ Invalid choice")
+                print("  Invalid choice")
         else:
-            print("❌ Please enter a number")
+            print("  Please enter a number")
 
 
 def join_video_call_worker(worker_id, appointment_id):
@@ -3212,33 +3212,33 @@ def join_video_call_worker(worker_id, appointment_id):
         f"{API}/appointment/{appointment_id}/video-eligible?sender_role=worker&worker_id={worker_id}"
     )
     if r.status_code in (401, 403, 404):
-        print("\n❌", r.json().get("error", "Not authorized or appointment not found"))
+        print("\n ", r.json().get("error", "Not authorized or appointment not found"))
         input("\nPress Enter to continue...")
         return
     if r.status_code != 200:
-        print("\n❌ Could not check video eligibility")
+        print("\n  Could not check video eligibility")
         input("\nPress Enter to continue...")
         return
 
     j = r.json()
     if not j.get("can_join"):
-        print("\n❌", j.get("reason", "Video call is not available."))
+        print("\n ", j.get("reason", "Video call is not available."))
         input("\nPress Enter to continue...")
         return
 
     status = j.get("status", "")
     print("\n" + "="*60)
-    print("📹 JOINING VIDEO / AUDIO CONSULTATION (SIMULATED)")
+    print("  JOINING VIDEO / AUDIO CONSULTATION (SIMULATED)")
     print("="*60)
     print(f"Appointment ID: {appointment_id}")
     print(f"Status: {status}")
 
     if status == "accepted":
-        print("\n⏳ You can start the consultation to begin the video session.")
+        print("\n  You can start the consultation to begin the video session.")
     elif status == "in_consultation":
-        print("\n✅ Video consultation started (simulated).")
+        print("\n  Video consultation started (simulated).")
 
-    print("\n💬 This is a simulation. In the real app, a video SDK would open here.")
+    print("\n  This is a simulation. In the real app, a video SDK would open here.")
     input("\nPress Enter to leave the call...")
 
 
@@ -3246,14 +3246,14 @@ def doctor_profile_tab(worker_id):
     """Profile Tab - Doctor personal details and settings"""
     while True:
         print("\n" + "="*60)
-        print("👤 PROFILE")
+        print("  PROFILE")
         print("="*60)
         
         # Get worker info - we'll need to fetch from appointments or create an endpoint
         # For now, show basic info
-        print(f"\n🆔 Worker ID: {worker_id}")
-        print("📋 Verification Status: Approved")
-        print("💡 Full profile details coming soon")
+        print(f"\n  Worker ID: {worker_id}")
+        print("  Verification Status: Approved")
+        print("  Full profile details coming soon")
         print("\nThis will show:")
         print("  - Name")
         print("  - Email")
@@ -3264,28 +3264,28 @@ def doctor_profile_tab(worker_id):
         
         print("\n" + "="*60)
         print("1. View Full Details")
-        print("2. 👋 Logout")
-        print("3. ⬅️  Back")
+        print("2.   Logout")
+        print("3.     Back")
         
         choice = input("\nSelect option: ").strip()
         
         if choice == "1":
             view_worker_full_profile(worker_id)
         elif choice == "2":
-            print("👋 Logged out")
+            print("  Logged out")
             return True  # Signal logout
         elif choice == "3":
             return False
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 def view_worker_full_profile(worker_id):
     """View complete worker profile"""
     print("\n" + "="*60)
-    print("👤 DOCTOR PROFILE")
+    print("  DOCTOR PROFILE")
     print("="*60)
-    print("💡 Full profile view coming soon")
+    print("  Full profile view coming soon")
     print("This will show: Name, Email, Specialization, Experience, Location, Rating")
     input("\nPress Enter to continue...")
 
@@ -3296,11 +3296,11 @@ def respond_to_appointment(worker_id, appointment_id=None):
         appointment_id = input("Appointment ID: ").strip()
     
     print("\n" + "="*60)
-    print("📥 RESPOND TO REQUEST")
+    print("  RESPOND TO REQUEST")
     print("="*60)
-    print("1. ✅ Accept")
-    print("2. ❌ Reject")
-    print("3. ⬅️  Cancel")
+    print("1.   Accept")
+    print("2.   Reject")
+    print("3.     Cancel")
     
     choice = input("\nSelect action: ").strip()
     
@@ -3311,7 +3311,7 @@ def respond_to_appointment(worker_id, appointment_id=None):
     elif choice == "3":
         return
     else:
-        print("❌ Invalid choice")
+        print("  Invalid choice")
         return
     
     r = requests.post(f"{API}/worker/respond", json={
@@ -3321,12 +3321,12 @@ def respond_to_appointment(worker_id, appointment_id=None):
     })
     
     if r.status_code == 200:
-        print(f"\n✅ Appointment {status} successfully")
+        print(f"\n  Appointment {status} successfully")
     else:
         if r.status_code == 200:
-         print(f"\n✅ Appointment {status} successfully")
+         print(f"\n  Appointment {status} successfully")
         else:
-         print("\n❌ Failed to update appointment")
+         print("\n  Failed to update appointment")
          print("Server response:", r.text)
 
     
@@ -3343,7 +3343,7 @@ def view_appointment_detail_worker(worker_id, appointment_id=None):
     if r.status_code == 200:
         apt = r.json()
         print("\n" + "="*60)
-        print("📄 APPOINTMENT DETAILS")
+        print("  APPOINTMENT DETAILS")
         print("="*60)
         print(f"ID: {apt['id']}")
         print(f"Status: {apt['status']}")
@@ -3353,7 +3353,7 @@ def view_appointment_detail_worker(worker_id, appointment_id=None):
         print(f"Created: {apt['created_at']}")
         print("="*60)
     else:
-        print("❌ Error:", r.json().get("error", "Failed to fetch appointment"))
+        print("  Error:", r.json().get("error", "Failed to fetch appointment"))
     
     input("\nPress Enter to continue...")
 
@@ -3364,7 +3364,7 @@ def start_consultation_worker(worker_id, appointment_id=None):
     if not appointment_id:
         appointment_id = input("Appointment ID: ").strip()
 
-    print("\n🔐 Doctor OTP Verification")
+    print("\n  Doctor OTP Verification")
     otp = input("Enter OTP sent to patient email: ").strip()
 
     r = requests.post(f"{API}/appointment/video/start", json={
@@ -3373,21 +3373,21 @@ def start_consultation_worker(worker_id, appointment_id=None):
     })
 
     if r.status_code == 200:
-        print("\n🎉 VIDEO CONSULTATION STARTED")
-        print("💬 Patient can now join the call")
+        print("\n  VIDEO CONSULTATION STARTED")
+        print("  Patient can now join the call")
     else:
-        print("❌ Error:", r.json().get("error", "Invalid OTP"))
+        print("  Error:", r.json().get("error", "Invalid OTP"))
 
     input("\nPress Enter to continue...")
 
 
     
     if r.status_code == 200:
-        print("\n✅ Consultation started successfully")
-        print("💬 Chat is now available for this appointment")
-        print("📹 If this is a video appointment, the video/audio session is now considered ACTIVE (simulated).")
+        print("\n  Consultation started successfully")
+        print("  Chat is now available for this appointment")
+        print("  If this is a video appointment, the video/audio session is now considered ACTIVE (simulated).")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to start consultation"))
+        print("  Error:", r.json().get("error", "Failed to start consultation"))
     
     input("\nPress Enter to continue...")
 
@@ -3402,10 +3402,10 @@ def complete_appointment_worker(worker_id, appointment_id=None):
     })
     
     if r.status_code == 200:
-        print("\n✅ Appointment marked as completed")
-        print("📹 Any associated video/audio consultation is now considered ENDED (simulated).")
+        print("\n  Appointment marked as completed")
+        print("  Any associated video/audio consultation is now considered ENDED (simulated).")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to complete appointment"))
+        print("  Error:", r.json().get("error", "Failed to complete appointment"))
     
     input("\nPress Enter to continue...")
 
@@ -3422,17 +3422,17 @@ def view_messages_worker(worker_id, appointment_id=None):
         messages = data.get("messages", [])
         
         if not messages:
-            print("\n📭 No messages yet")
+            print("\n  No messages yet")
         else:
-            print(f"\n💬 Messages for Appointment #{appointment_id}:")
+            print(f"\n  Messages for Appointment #{appointment_id}:")
             print("-" * 60)
             for msg in messages:
-                sender_label = "👤 You" if msg["sender_role"] == "worker" else "👨‍⚕️ Patient"
+                sender_label = "  You" if msg["sender_role"] == "worker" else "     Patient"
                 print(f"{sender_label} ({msg['timestamp'][:19]}):")
                 print(f"  {msg['message']}")
                 print("-" * 60)
     else:
-        print("❌ Error:", r.json().get("error", "Failed to fetch messages"))
+        print("  Error:", r.json().get("error", "Failed to fetch messages"))
     
     input("\nPress Enter to continue...")
 
@@ -3445,7 +3445,7 @@ def send_message_worker(worker_id, appointment_id=None):
     message = input("Message: ").strip()
     
     if not message:
-        print("❌ Message cannot be empty")
+        print("  Message cannot be empty")
         return
     
     r = requests.post(f"{API}/messages/send", json={
@@ -3456,9 +3456,9 @@ def send_message_worker(worker_id, appointment_id=None):
     })
     
     if r.status_code == 201:
-        print("✅ Message sent successfully")
+        print("  Message sent successfully")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to send message"))
+        print("  Error:", r.json().get("error", "Failed to send message"))
     
     input("\nPress Enter to continue...")
 
@@ -3475,20 +3475,20 @@ def view_worker_appointments(worker_id):
     if r.status_code == 200:
         appointments = r.json()
         if not appointments:
-            print("\n📭 No appointments found")
+            print("\n  No appointments found")
             return
         
-        print("\n📋 Your Appointments:")
+        print("\n  Your Appointments:")
         print("-" * 80)
         for apt in appointments:
             status_icon = {
-                "pending": "⏳",
-                "accepted": "✅",
-                "rejected": "❌",
-                "in_consultation": "💬",
-                "completed": "✓",
-                "cancelled": "🚫"
-            }.get(apt["status"], "❓")
+                "pending": " ",
+                "accepted": " ",
+                "rejected": " ",
+                "in_consultation": " ",
+                "completed": " ",
+                "cancelled": " "
+            }.get(apt["status"], " ")
             
             print(f"ID: {apt['id']} | {status_icon} {apt['status'].upper()}")
             print(f"  Patient: {apt['user_name']}")
@@ -3496,7 +3496,7 @@ def view_worker_appointments(worker_id):
             print(f"  Date: {apt['booking_date']}")
             print("-" * 80)
     else:
-        print("❌ Error:", r.json().get("error", "Failed to fetch appointments"))
+        print("  Error:", r.json().get("error", "Failed to fetch appointments"))
 
 
 def view_appointment_detail_worker_legacy(worker_id):
@@ -3507,7 +3507,7 @@ def view_appointment_detail_worker_legacy(worker_id):
     
     if r.status_code == 200:
         apt = r.json()
-        print("\n📄 Appointment Details:")
+        print("\n  Appointment Details:")
         print("-" * 80)
         print(f"ID: {apt['id']}")
         print(f"Status: {apt['status']}")
@@ -3517,7 +3517,7 @@ def view_appointment_detail_worker_legacy(worker_id):
         print(f"Created: {apt['created_at']}")
         print("-" * 80)
     else:
-        print("❌ Error:", r.json().get("error", "Failed to fetch appointment"))
+        print("  Error:", r.json().get("error", "Failed to fetch appointment"))
 
 
 def respond_to_appointment_legacy(worker_id):
@@ -3533,7 +3533,7 @@ def respond_to_appointment_legacy(worker_id):
     elif choice == "2":
         status = "rejected"
     else:
-        print("❌ Invalid choice")
+        print("  Invalid choice")
         return
     
     r = requests.post(f"{API}/worker/respond-appointment", json={
@@ -3543,9 +3543,9 @@ def respond_to_appointment_legacy(worker_id):
 
     
     if r.status_code == 200:
-        print(f"✅ Appointment {status} successfully")
+        print(f"  Appointment {status} successfully")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to update appointment"))
+        print("  Error:", r.json().get("error", "Failed to update appointment"))
 
 
 def start_consultation_worker_legacy(worker_id):
@@ -3557,10 +3557,10 @@ def start_consultation_worker_legacy(worker_id):
     })
     
     if r.status_code == 200:
-        print("✅ Consultation started successfully")
-        print("💬 Chat is now available for this appointment")
+        print("  Consultation started successfully")
+        print("  Chat is now available for this appointment")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to start consultation"))
+        print("  Error:", r.json().get("error", "Failed to start consultation"))
 
 
 def complete_appointment_worker_legacy(worker_id):
@@ -3572,9 +3572,9 @@ def complete_appointment_worker_legacy(worker_id):
     })
     
     if r.status_code == 200:
-        print("✅ Appointment marked as completed")
+        print("  Appointment marked as completed")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to complete appointment"))
+        print("  Error:", r.json().get("error", "Failed to complete appointment"))
 
 
 def cancel_appointment_worker_legacy(worker_id):
@@ -3583,7 +3583,7 @@ def cancel_appointment_worker_legacy(worker_id):
     
     confirm = input("Are you sure you want to cancel? (yes/no): ").strip().lower()
     if confirm != "yes":
-        print("❌ Cancelled")
+        print("  Cancelled")
         return
     
     r = requests.post(f"{API}/appointment/cancel", json={
@@ -3591,9 +3591,9 @@ def cancel_appointment_worker_legacy(worker_id):
     })
     
     if r.status_code == 200:
-        print("✅ Appointment cancelled successfully")
+        print("  Appointment cancelled successfully")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to cancel appointment"))
+        print("  Error:", r.json().get("error", "Failed to cancel appointment"))
 
 
 def view_messages_worker_legacy(worker_id):
@@ -3607,18 +3607,18 @@ def view_messages_worker_legacy(worker_id):
         messages = data.get("messages", [])
         
         if not messages:
-            print("\n📭 No messages yet")
+            print("\n  No messages yet")
             return
         
-        print(f"\n💬 Messages for Appointment #{apt_id}:")
+        print(f"\n  Messages for Appointment #{apt_id}:")
         print("-" * 80)
         for msg in messages:
-            sender_label = "👤 You" if msg["sender_role"] == "worker" else "👨‍⚕️ Patient"
+            sender_label = "  You" if msg["sender_role"] == "worker" else "     Patient"
             print(f"{sender_label} ({msg['timestamp'][:19]}):")
             print(f"  {msg['message']}")
             print("-" * 80)
     else:
-        print("❌ Error:", r.json().get("error", "Failed to fetch messages"))
+        print("  Error:", r.json().get("error", "Failed to fetch messages"))
 
 
 def send_message_worker_legacy(worker_id):
@@ -3627,7 +3627,7 @@ def send_message_worker_legacy(worker_id):
     message = input("Message: ").strip()
     
     if not message:
-        print("❌ Message cannot be empty")
+        print("  Message cannot be empty")
         return
     
     r = requests.post(f"{API}/messages/send", json={
@@ -3638,9 +3638,9 @@ def send_message_worker_legacy(worker_id):
     })
     
     if r.status_code == 201:
-        print("✅ Message sent successfully")
+        print("  Message sent successfully")
     else:
-        print("❌ Error:", r.json().get("error", "Failed to send message"))
+        print("  Error:", r.json().get("error", "Failed to send message"))
 
 def doctor_start_video_call(token):
 # ==================================================
@@ -3648,28 +3648,28 @@ def doctor_start_video_call(token):
 # ==================================================
 
     def admin_login():
-     print("\n🔐 Admin Login")
+     print("\n  Admin Login")
 
     u = input("Username: ").strip()
     p = input("Password: ").strip()
 
     if u == "admin" and p == "admin123":
-        print("✅ Admin logged in")
+        print("  Admin logged in")
         admin_menu()
     else:
-        print("❌ Invalid credentials")
+        print("  Invalid credentials")
 
 
 def admin_menu():
     while True:
         print("\n=== ADMIN DASHBOARD ===")
-        print("1. 👷 Car Service Workers")
-        print("2. 🏥 Healthcare Workers")
-        print("3. 💜 Freelance Workers")
-        print("4. ⛽ Fuel Delivery Agents")
-        print("5. 🚛 Tow Truck Operators")
-        print("6. 🏠 Housekeeping Workers")
-        print("7. 👋 Logout")
+        print("1.   Car Service Workers")
+        print("2.   Healthcare Workers")
+        print("3.   Freelance Workers")
+        print("4.   Fuel Delivery Agents")
+        print("5.   Tow Truck Operators")
+        print("6.   Housekeeping Workers")
+        print("7.   Logout")
 
         c = input("Choice: ").strip()
 
@@ -3689,7 +3689,7 @@ def admin_menu():
         elif c == "7":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             time.sleep(1)
 
 def housekeeping_admin_menu():
@@ -3700,14 +3700,14 @@ def housekeeping_admin_menu():
     
     while True:
         print("\n" + "="*60)
-        print("🏠 HOUSEKEEPING WORKER ADMIN")
+        print("  HOUSEKEEPING WORKER ADMIN")
         print("="*60)
-        print("1. 📋 List Pending Workers")
-        print("2. ✅ Approve Worker")
-        print("3. ❌ Reject Worker")
-        print("4. 👥 List All Workers")
-        print("5. 📊 Worker Statistics")
-        print("6. ⬅️ Back")
+        print("1.   List Pending Workers")
+        print("2.   Approve Worker")
+        print("3.   Reject Worker")
+        print("4.   List All Workers")
+        print("5.   Worker Statistics")
+        print("6.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -3715,11 +3715,11 @@ def housekeeping_admin_menu():
             # List pending workers
             workers = worker_db.get_pending_workers('housekeeping')
             if workers:
-                print(f"\n📋 Pending Housekeeping Workers ({len(workers)}):")
+                print(f"\n  Pending Housekeeping Workers ({len(workers)}):")
                 for worker in workers:
                     print(f"ID: {worker['id']} | Name: {worker['full_name']} | Email: {worker['email']} | Service: {worker['service']}")
             else:
-                print("\n✅ No pending housekeeping workers found!")
+                print("\n  No pending housekeeping workers found!")
                 
         elif choice == "2":
             # Approve worker
@@ -3727,11 +3727,11 @@ def housekeeping_admin_menu():
             if worker_id.isdigit():
                 success = worker_db.update_worker_status(int(worker_id), 'approved')
                 if success:
-                    print(f"✅ Worker {worker_id} approved successfully!")
+                    print(f"  Worker {worker_id} approved successfully!")
                 else:
-                    print(f"❌ Failed to approve worker {worker_id}")
+                    print(f"  Failed to approve worker {worker_id}")
             else:
-                print("❌ Invalid worker ID")
+                print("  Invalid worker ID")
                 
         elif choice == "3":
             # Reject worker
@@ -3739,23 +3739,23 @@ def housekeeping_admin_menu():
             if worker_id.isdigit():
                 success = worker_db.update_worker_status(int(worker_id), 'rejected')
                 if success:
-                    print(f"❌ Worker {worker_id} rejected successfully!")
+                    print(f"  Worker {worker_id} rejected successfully!")
                 else:
-                    print(f"❌ Failed to reject worker {worker_id}")
+                    print(f"  Failed to reject worker {worker_id}")
             else:
-                print("❌ Invalid worker ID")
+                print("  Invalid worker ID")
                 
         elif choice == "4":
             # List all workers
             workers = worker_db.get_all_workers_unfiltered()
             housekeeping_workers = [w for w in workers if 'housekeeping' in w.get('service', '').split(',')]
             if housekeeping_workers:
-                print(f"\n👥 All Housekeeping Workers ({len(housekeeping_workers)}):")
+                print(f"\n  All Housekeeping Workers ({len(housekeeping_workers)}):")
                 for worker in housekeeping_workers:
-                    status_emoji = "✅" if worker['status'] == 'approved' else "⏳" if worker['status'] == 'pending' else "❌"
+                    status_emoji = " " if worker['status'] == 'approved' else " " if worker['status'] == 'pending' else " "
                     print(f"{status_emoji} ID: {worker['id']} | Name: {worker['full_name']} | Email: {worker['email']} | Status: {worker['status']}")
             else:
-                print("\n📭 No housekeeping workers found!")
+                print("\n  No housekeeping workers found!")
                 
         elif choice == "5":
             # Worker statistics
@@ -3765,27 +3765,27 @@ def housekeeping_admin_menu():
             approved_workers = worker_db.get_approved_workers('housekeeping')
             rejected_workers = worker_db.get_rejected_workers('housekeeping')
             
-            print(f"\n📊 Housekeeping Worker Statistics:")
+            print(f"\n  Housekeeping Worker Statistics:")
             print(f"Total Housekeeping Workers: {len(housekeeping_workers)}")
-            print(f"✅ Approved: {len(approved_workers)}")
-            print(f"⏳ Pending: {len(pending_workers)}")
-            print(f"❌ Rejected: {len(rejected_workers)}")
+            print(f"  Approved: {len(approved_workers)}")
+            print(f"  Pending: {len(pending_workers)}")
+            print(f"  Rejected: {len(rejected_workers)}")
             
         elif choice == "6":
             break
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def freelance_admin_menu():
     """Freelance worker admin management"""
     while True:
         print("\n" + "="*60)
-        print("💜 FREELANCE WORKER ADMIN")
+        print("  FREELANCE WORKER ADMIN")
         print("="*60)
-        print("1. 📋 Pending Freelancers")
-        print("2. ✅ Approved Freelancers")
-        print("3. 🔍 Freelancer Details")
-        print("4. ⬅️ Back")
+        print("1.   Pending Freelancers")
+        print("2.   Approved Freelancers")
+        print("3.   Freelancer Details")
+        print("4.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -3798,17 +3798,17 @@ def freelance_admin_menu():
         elif choice == "4":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             time.sleep(1)
 
 def admin_pending_workers_by_service(service):
     """List pending workers for a specific service"""
-    print(f"\n📋 PENDING {service.upper()} WORKERS")
+    print(f"\n  PENDING {service.upper()} WORKERS")
     r = requests.get(f"{API}/admin/workers/pending?service={service}")
     if r.status_code == 200:
         workers = r.json()
         if not workers:
-            print("📭 No pending workers")
+            print("  No pending workers")
         else:
             for w in workers:
                 print(f"ID: {w['id']} | {w['full_name']} | {w['email']}")
@@ -3819,28 +3819,28 @@ def admin_pending_workers_by_service(service):
                 if confirm == 'y':
                     ra = requests.post(f"{API}/admin/worker/approve/{wid}")
                     if ra.status_code == 200:
-                        print("✅ Worker approved!")
+                        print("  Worker approved!")
                     else:
-                        print("❌ Failed to approve worker")
+                        print("  Failed to approve worker")
     else:
-        print("❌ Error fetching pending workers")
+        print("  Error fetching pending workers")
     input("\nPress Enter...")
 
 def admin_approved_workers_by_service(service):
     """List approved workers for a specific service"""
-    print(f"\n✅ APPROVED {service.upper()} WORKERS")
+    print(f"\n  APPROVED {service.upper()} WORKERS")
     # Using the same pending endpoint but we would need an approved endpoint in app.py
     # For now, let's assume it exists or we use worker search
     r = requests.get(f"{API}/admin/workers/approved?service={service}") 
     if r.status_code == 200:
         workers = r.json()
         if not workers:
-            print("📭 No approved workers")
+            print("  No approved workers")
         else:
             for w in workers:
                 print(f"ID: {w['id']} | {w['full_name']} | {w['email']}")
     else:
-        print("❌ Error fetching approved workers")
+        print("  Error fetching approved workers")
     input("\nPress Enter...")
 
 def admin_worker_details_view():
@@ -3852,7 +3852,7 @@ def admin_worker_details_view():
     if r.status_code == 200:
         w = r.json().get("worker", {})
         print("\n" + "="*40)
-        print("👤 WORKER DETAILS")
+        print("  WORKER DETAILS")
         print("="*40)
         print(f"ID: {w.get('id')}")
         print(f"Name: {w.get('full_name')}")
@@ -3866,23 +3866,23 @@ def admin_worker_details_view():
         # Show freelance specific fields if applicable
         if 'freelance' in (w.get('service') or ''):
             print(f"Skills: {w.get('skills')}")
-            print(f"Hourly Rate: ₹{w.get('hourly_rate')}")
+            print(f"Hourly Rate:  {w.get('hourly_rate')}")
             print(f"Bio: {w.get('bio')}")
             print(f"Aadhaar: {w.get('aadhaar_number')}")
     else:
-        print("❌ Worker not found")
+        print("  Worker not found")
     input("\nPress Enter...")
 
 def fuel_delivery_admin_menu():
     """Fuel delivery agent admin management"""
     while True:
         print("\n" + "="*60)
-        print("⛽ FUEL DELIVERY AGENT ADMIN")
+        print("  FUEL DELIVERY AGENT ADMIN")
         print("="*60)
-        print("1. 📋 Pending Agents")
-        print("2. ✅ Approved Agents")
-        print("3. 🔍 Agent Details")
-        print("4. ⬅️ Back")
+        print("1.   Pending Agents")
+        print("2.   Approved Agents")
+        print("3.   Agent Details")
+        print("4.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -3895,13 +3895,13 @@ def fuel_delivery_admin_menu():
         elif choice == "4":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             time.sleep(1)
 
 def fuel_delivery_pending_agents():
     """Show pending fuel delivery agents"""
     print("\n" + "="*60)
-    print("📋 PENDING FUEL DELIVERY AGENTS")
+    print("  PENDING FUEL DELIVERY AGENTS")
     print("="*60)
     
     try:
@@ -3911,17 +3911,17 @@ def fuel_delivery_pending_agents():
             agents = response.json()
             
             if not agents:
-                print("📭 No pending fuel delivery agents found")
+                print("  No pending fuel delivery agents found")
             else:
                 for idx, agent in enumerate(agents, 1):
-                    print(f"\n[{idx}] 📋 Agent ID: {agent['id']}")
-                    print(f"    👤 Name: {agent['name']}")
-                    print(f"    📧 Email: {agent['email']}")
-                    print(f"    📱 Phone: {agent['phone_number']}")
-                    print(f"    🏙️ City: {agent['city']}")
-                    print(f"    🚗 Vehicle: {agent['vehicle_type']} - {agent['vehicle_number']}")
-                    print(f"    📅 Applied: {agent['created_at']}")
-                    print(f"    📊 Status: {agent['approval_status']}")
+                    print(f"\n[{idx}]   Agent ID: {agent['id']}")
+                    print(f"      Name: {agent['name']}")
+                    print(f"      Email: {agent['email']}")
+                    print(f"      Phone: {agent['phone_number']}")
+                    print(f"       City: {agent['city']}")
+                    print(f"      Vehicle: {agent['vehicle_type']} - {agent['vehicle_number']}")
+                    print(f"      Applied: {agent['created_at']}")
+                    print(f"      Status: {agent['approval_status']}")
                 
                 print("\n" + "-"*60)
                 choice = input("\nSelect agent number for actions (0 to go back): ").strip()
@@ -3933,20 +3933,20 @@ def fuel_delivery_pending_agents():
                     selected_agent = agents[int(choice) - 1]
                     fuel_delivery_agent_actions(selected_agent)
                 else:
-                    print("❌ Invalid selection")
+                    print("  Invalid selection")
                     time.sleep(1)
         else:
-            print("❌ Failed to fetch pending agents")
+            print("  Failed to fetch pending agents")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
 def fuel_delivery_approved_agents():
     """Show approved fuel delivery agents"""
     print("\n" + "="*60)
-    print("✅ APPROVED FUEL DELIVERY AGENTS")
+    print("  APPROVED FUEL DELIVERY AGENTS")
     print("="*60)
     
     try:
@@ -3956,36 +3956,36 @@ def fuel_delivery_approved_agents():
             agents = response.json()
             
             if not agents:
-                print("📭 No approved fuel delivery agents found")
+                print("  No approved fuel delivery agents found")
             else:
                 for idx, agent in enumerate(agents, 1):
-                    print(f"\n[{idx}] 📋 Agent ID: {agent['id']}")
-                    print(f"    👤 Name: {agent['name']}")
-                    print(f"    📧 Email: {agent['email']}")
-                    print(f"    📱 Phone: {agent['phone_number']}")
-                    print(f"    🏙️ City: {agent['city']}")
-                    print(f"    🚗 Vehicle: {agent['vehicle_type']} - {agent['vehicle_number']}")
-                    print(f"    📅 Approved: {agent['approved_at']}")
+                    print(f"\n[{idx}]   Agent ID: {agent['id']}")
+                    print(f"      Name: {agent['name']}")
+                    print(f"      Email: {agent['email']}")
+                    print(f"      Phone: {agent['phone_number']}")
+                    print(f"       City: {agent['city']}")
+                    print(f"      Vehicle: {agent['vehicle_type']} - {agent['vehicle_number']}")
+                    print(f"      Approved: {agent['approved_at']}")
             
         else:
-            print("❌ Failed to fetch approved agents")
+            print("  Failed to fetch approved agents")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
 def fuel_delivery_agent_details():
     """Search for specific fuel delivery agent"""
     print("\n" + "="*60)
-    print("🔍 FUEL DELIVERY AGENT DETAILS")
+    print("  FUEL DELIVERY AGENT DETAILS")
     print("="*60)
     
     try:
         agent_id = input("Enter Agent ID: ").strip()
         
         if not agent_id:
-            print("❌ Agent ID is required")
+            print("  Agent ID is required")
             input("\nPress Enter to continue...")
             return
         
@@ -3994,25 +3994,25 @@ def fuel_delivery_agent_details():
         if response.status_code == 200:
             agent = response.json()
             
-            print(f"\n📋 Agent Details:")
-            print(f"    🆔 ID: {agent['id']}")
-            print(f"    👤 Name: {agent['name']}")
-            print(f"    📧 Email: {agent['email']}")
-            print(f"    📱 Phone: {agent['phone_number']}")
-            print(f"    🏙️ City: {agent['city']}")
-            print(f"    🚗 Vehicle Type: {agent['vehicle_type']}")
-            print(f"    🔢 Vehicle Number: {agent['vehicle_number']}")
-            print(f"    📊 Status: {agent['approval_status']}")
-            print(f"    📅 Created: {agent['created_at']}")
+            print(f"\n  Agent Details:")
+            print(f"      ID: {agent['id']}")
+            print(f"      Name: {agent['name']}")
+            print(f"      Email: {agent['email']}")
+            print(f"      Phone: {agent['phone_number']}")
+            print(f"       City: {agent['city']}")
+            print(f"      Vehicle Type: {agent['vehicle_type']}")
+            print(f"      Vehicle Number: {agent['vehicle_number']}")
+            print(f"      Status: {agent['approval_status']}")
+            print(f"      Created: {agent['created_at']}")
             
             if agent.get('approved_at'):
-                print(f"    ✅ Approved: {agent['approved_at']}")
+                print(f"      Approved: {agent['approved_at']}")
                 
         else:
-            print("❌ Agent not found")
+            print("  Agent not found")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
@@ -4020,12 +4020,12 @@ def fuel_delivery_agent_actions(agent):
     """Actions for fuel delivery agent"""
     while True:
         print(f"\n" + "="*60)
-        print(f"⚡ AGENT ACTIONS - {agent['name']}")
+        print(f"  AGENT ACTIONS - {agent['name']}")
         print("="*60)
-        print("1. ✅ Approve Agent")
-        print("2. ❌ Reject Agent")
-        print("3. 📄 View Documents")
-        print("4. ⬅️ Back")
+        print("1.   Approve Agent")
+        print("2.   Reject Agent")
+        print("3.   View Documents")
+        print("4.    Back")
         
         choice = input("\nSelect action: ").strip()
         
@@ -4040,7 +4040,7 @@ def fuel_delivery_agent_actions(agent):
         elif choice == "4":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             time.sleep(1)
 
 def fuel_delivery_approve_agent(agent_id):
@@ -4053,14 +4053,14 @@ def fuel_delivery_approve_agent(agent_id):
         if response.status_code == 200:
             result = response.json()
             if result['success']:
-                print("✅ Agent approved successfully!")
+                print("  Agent approved successfully!")
             else:
-                print(f"❌ Approval failed: {result.get('error', 'Unknown error')}")
+                print(f"  Approval failed: {result.get('error', 'Unknown error')}")
         else:
-            print("❌ Failed to approve agent")
+            print("  Failed to approve agent")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
@@ -4074,21 +4074,21 @@ def fuel_delivery_reject_agent(agent_id):
         if response.status_code == 200:
             result = response.json()
             if result['success']:
-                print("❌ Agent rejected successfully!")
+                print("  Agent rejected successfully!")
             else:
-                print(f"❌ Rejection failed: {result.get('error', 'Unknown error')}")
+                print(f"  Rejection failed: {result.get('error', 'Unknown error')}")
         else:
-            print("❌ Failed to reject agent")
+            print("  Failed to reject agent")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
 def fuel_delivery_view_documents(agent):
     """View agent documents"""
     print("\n" + "="*60)
-    print("📄 AGENT DOCUMENTS")
+    print("  AGENT DOCUMENTS")
     print("="*60)
     
     documents = [
@@ -4102,9 +4102,9 @@ def fuel_delivery_view_documents(agent):
     
     for doc_name, doc_path in documents:
         if doc_path:
-            print(f"✅ {doc_name}: {doc_path}")
+            print(f"  {doc_name}: {doc_path}")
         else:
-            print(f"❌ {doc_name}: Not uploaded")
+            print(f"  {doc_name}: Not uploaded")
     
     input("\nPress Enter to continue...")
 
@@ -4112,12 +4112,12 @@ def tow_truck_admin_menu():
     """Tow truck operator admin management"""
     while True:
         print("\n" + "="*60)
-        print("🚛 TOW TRUCK OPERATOR ADMIN")
+        print("  TOW TRUCK OPERATOR ADMIN")
         print("="*60)
-        print("1. 📋 Pending Operators")
-        print("2. ✅ Approved Operators")
-        print("3. 🔍 Operator Details")
-        print("4. ⬅️ Back")
+        print("1.   Pending Operators")
+        print("2.   Approved Operators")
+        print("3.   Operator Details")
+        print("4.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -4130,13 +4130,13 @@ def tow_truck_admin_menu():
         elif choice == "4":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             time.sleep(1)
 
 def tow_truck_pending_operators():
     """Show pending tow truck operators"""
     print("\n" + "="*60)
-    print("📋 PENDING TOW TRUCK OPERATORS")
+    print("  PENDING TOW TRUCK OPERATORS")
     print("="*60)
     
     try:
@@ -4146,16 +4146,16 @@ def tow_truck_pending_operators():
             operators = response.json()
             
             if not operators:
-                print("📭 No pending tow truck operators found")
+                print("  No pending tow truck operators found")
             else:
                 for idx, operator in enumerate(operators, 1):
-                    print(f"\n[{idx}] 📋 Operator ID: {operator['id']}")
-                    print(f"    👤 Name: {operator['name']}")
-                    print(f"    📧 Email: {operator['email']}")
-                    print(f"    📱 Phone: {operator['phone']}")
-                    print(f"    🏙️ City: {operator['city']}")
-                    print(f"    🚛 Truck: {operator['truck_type']} - {operator['truck_registration']}")
-                    print(f"    📊 Status: {operator['approval_status']}")
+                    print(f"\n[{idx}]   Operator ID: {operator['id']}")
+                    print(f"      Name: {operator['name']}")
+                    print(f"      Email: {operator['email']}")
+                    print(f"      Phone: {operator['phone']}")
+                    print(f"       City: {operator['city']}")
+                    print(f"      Truck: {operator['truck_type']} - {operator['truck_registration']}")
+                    print(f"      Status: {operator['approval_status']}")
                 
                 print("\n" + "-"*60)
                 choice = input("\nSelect operator number for actions (0 to go back): ").strip()
@@ -4167,20 +4167,20 @@ def tow_truck_pending_operators():
                     selected_operator = operators[int(choice) - 1]
                     tow_truck_operator_actions(selected_operator)
                 else:
-                    print("❌ Invalid selection")
+                    print("  Invalid selection")
                     time.sleep(1)
         else:
-            print("❌ Failed to fetch pending operators")
+            print("  Failed to fetch pending operators")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
 def tow_truck_approved_operators():
     """Show approved tow truck operators"""
     print("\n" + "="*60)
-    print("✅ APPROVED TOW TRUCK OPERATORS")
+    print("  APPROVED TOW TRUCK OPERATORS")
     print("="*60)
     
     try:
@@ -4190,35 +4190,35 @@ def tow_truck_approved_operators():
             operators = response.json()
             
             if not operators:
-                print("📭 No approved tow truck operators found")
+                print("  No approved tow truck operators found")
             else:
                 for idx, operator in enumerate(operators, 1):
-                    print(f"\n[{idx}] ✅ Operator ID: {operator['id']}")
-                    print(f"    👤 Name: {operator['name']}")
-                    print(f"    📧 Email: {operator['email']}")
-                    print(f"    📱 Phone: {operator['phone']}")
-                    print(f"    🏙️ City: {operator['city']}")
-                    print(f"    🚛 Truck: {operator['truck_type']} - {operator['truck_registration']}")
-                    print(f"    📊 Status: {operator['approval_status']}")
+                    print(f"\n[{idx}]   Operator ID: {operator['id']}")
+                    print(f"      Name: {operator['name']}")
+                    print(f"      Email: {operator['email']}")
+                    print(f"      Phone: {operator['phone']}")
+                    print(f"       City: {operator['city']}")
+                    print(f"      Truck: {operator['truck_type']} - {operator['truck_registration']}")
+                    print(f"      Status: {operator['approval_status']}")
         else:
-            print("❌ Failed to fetch approved operators")
+            print("  Failed to fetch approved operators")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
 def tow_truck_operator_details():
     """Search for specific tow truck operator"""
     print("\n" + "="*60)
-    print("🔍 TOW TRUCK OPERATOR DETAILS")
+    print("  TOW TRUCK OPERATOR DETAILS")
     print("="*60)
     
     try:
         operator_id = input("Enter operator ID: ").strip()
         
         if not operator_id:
-            print("❌ Operator ID required")
+            print("  Operator ID required")
             input("\nPress Enter to continue...")
             return
         
@@ -4226,24 +4226,24 @@ def tow_truck_operator_details():
         
         if response.status_code == 200:
             operator = response.json()
-            print(f"\n📋 Operator Details:")
-            print(f"🆔 ID: {operator.get('id')}")
-            print(f"👤 Name: {operator.get('name')}")
-            print(f"📧 Email: {operator.get('email')}")
-            print(f"📱 Phone: {operator.get('phone')}")
-            print(f"🏙️ City: {operator.get('city')}")
-            print(f"💼 Experience: {operator.get('experience')}")
-            print(f"🚛 Truck Type: {operator.get('truck_type')}")
-            print(f"🔢 Registration: {operator.get('truck_registration')}")
-            print(f"🚗 Model: {operator.get('truck_model')}")
-            print(f"📏 Capacity: {operator.get('truck_capacity')}")
-            print(f"📊 Status: {operator.get('approval_status')}")
-            print(f"📅 Applied: {operator.get('created_at')}")
+            print(f"\n  Operator Details:")
+            print(f"  ID: {operator.get('id')}")
+            print(f"  Name: {operator.get('name')}")
+            print(f"  Email: {operator.get('email')}")
+            print(f"  Phone: {operator.get('phone')}")
+            print(f"   City: {operator.get('city')}")
+            print(f"  Experience: {operator.get('experience')}")
+            print(f"  Truck Type: {operator.get('truck_type')}")
+            print(f"  Registration: {operator.get('truck_registration')}")
+            print(f"  Model: {operator.get('truck_model')}")
+            print(f"  Capacity: {operator.get('truck_capacity')}")
+            print(f"  Status: {operator.get('approval_status')}")
+            print(f"  Applied: {operator.get('created_at')}")
         else:
-            print("❌ Operator not found")
+            print("  Operator not found")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
@@ -4251,12 +4251,12 @@ def tow_truck_operator_actions(operator):
     """Actions for tow truck operator"""
     while True:
         print(f"\n" + "="*60)
-        print(f"⚡ OPERATOR ACTIONS - {operator['name']}")
+        print(f"  OPERATOR ACTIONS - {operator['name']}")
         print("="*60)
-        print("1. ✅ Approve Operator")
-        print("2. ❌ Reject Operator")
-        print("3. 📄 View Documents")
-        print("4. ⬅️ Back")
+        print("1.   Approve Operator")
+        print("2.   Reject Operator")
+        print("3.   View Documents")
+        print("4.    Back")
         
         choice = input("\nSelect action: ").strip()
         
@@ -4271,7 +4271,7 @@ def tow_truck_operator_actions(operator):
         elif choice == "4":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
             time.sleep(1)
 
 def tow_truck_approve_operator(operator_id):
@@ -4284,14 +4284,14 @@ def tow_truck_approve_operator(operator_id):
         if response.status_code == 200:
             result = response.json()
             if result.get('success'):
-                print("✅ Operator approved successfully!")
+                print("  Operator approved successfully!")
             else:
-                print(f"❌ Approval failed: {result.get('error')}")
+                print(f"  Approval failed: {result.get('error')}")
         else:
-            print("❌ Failed to approve operator")
+            print("  Failed to approve operator")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
@@ -4305,21 +4305,21 @@ def tow_truck_reject_operator(operator_id):
         if response.status_code == 200:
             result = response.json()
             if result.get('success'):
-                print("✅ Operator rejected successfully!")
+                print("  Operator rejected successfully!")
             else:
-                print(f"❌ Rejection failed: {result.get('error')}")
+                print(f"  Rejection failed: {result.get('error')}")
         else:
-            print("❌ Failed to reject operator")
+            print("  Failed to reject operator")
             
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"  Error: {e}")
     
     input("\nPress Enter to continue...")
 
 def tow_truck_view_documents(operator):
     """View operator documents"""
     print("\n" + "="*60)
-    print("📄 OPERATOR DOCUMENTS")
+    print("  OPERATOR DOCUMENTS")
     print("="*60)
     
     documents = [
@@ -4331,9 +4331,9 @@ def tow_truck_view_documents(operator):
     
     for doc_name, doc_path in documents:
         if doc_path:
-            print(f"✅ {doc_name}: {doc_path}")
+            print(f"  {doc_name}: {doc_path}")
         else:
-            print(f"❌ {doc_name}: Not uploaded")
+            print(f"  {doc_name}: Not uploaded")
     
     input("\nPress Enter to continue...")
 
@@ -4349,7 +4349,7 @@ def safe_json(r):
 
 # ---------- LOOKUP APPOINTMENTS (USER) -------------
 def lookup_appointment_user():
-    print("\n🔎 LOOKUP APPOINTMENT")
+    print("\n  LOOKUP APPOINTMENT")
     doctor_id = input("Doctor ID (optional): ").strip()
     date = input("Date YYYY-MM-DD (optional): ").strip()
 
@@ -4369,7 +4369,7 @@ def lookup_appointment_user():
     appointments = data.get("appointments", [])
 
     if not appointments:
-        print("📭 No matching appointments found")
+        print("  No matching appointments found")
         input("Press Enter...")
         return
 
@@ -4395,10 +4395,10 @@ def check_doctor_slots(doctor_id, date):
     slots = data.get("availability", [])
 
     if not slots:
-        print("❌ No slots available")
+        print("  No slots available")
         return []
 
-    print("\n⏰ Available Slots")
+    print("\n  Available Slots")
     for i, s in enumerate(slots, 1):
         print(f"{i}. {s['time_slot']}")
 
@@ -4410,23 +4410,23 @@ def book_appointment_with_slot(doctor_id):
     global USER_ID, TOKEN
 
     if not USER_ID or not TOKEN:
-        print("❌ Login required")
+        print("  Login required")
         return
 
     # Get user info
     try:
         r = requests.get(f"{API}/user/info", headers={"Authorization": f"Bearer {TOKEN}"})
         if r.status_code != 200:
-            print("❌ Could not get user information")
+            print("  Could not get user information")
             return
         user_info = r.json()
     except Exception as e:
-        print(f"❌ Error getting user info: {e}")
+        print(f"  Error getting user info: {e}")
         return
 
     date = input("Date (YYYY-MM-DD): ").strip()
     if not date:
-        print("❌ Date is required")
+        print("  Date is required")
         return
 
     slots = check_doctor_slots(doctor_id, date)
@@ -4436,17 +4436,17 @@ def book_appointment_with_slot(doctor_id):
 
     c = input("Select slot number: ").strip()
     if not c.isdigit() or int(c) < 1 or int(c) > len(slots):
-        print("❌ Invalid slot selection")
+        print("  Invalid slot selection")
         return
 
     slot = slots[int(c) - 1]["time_slot"]
     symptoms = input("Symptoms: ").strip()
     
     if not symptoms:
-        print("❌ Symptoms are required")
+        print("  Symptoms are required")
         return
 
-    print(f"\n📅 Booking appointment...")
+    print(f"\n  Booking appointment...")
     print(f"   Doctor ID: {doctor_id}")
     print(f"   User ID: {USER_ID}")
     print(f"   Date: {date}")
@@ -4463,22 +4463,22 @@ def book_appointment_with_slot(doctor_id):
             "time_slot": slot
         })
 
-        print(f"🔍 Response status: {r.status_code}")
+        print(f"  Response status: {r.status_code}")
         if r.status_code != 201:
-            print(f"❌ Response error: {r.text}")
+            print(f"  Response error: {r.text}")
 
         if r.status_code == 201:
             data = r.json()
-            print("✅ Appointment booked successfully!")
+            print("  Appointment booked successfully!")
             if data.get("success"):
-                print(f"📋 Appointment ID: {data.get('appointment_id')}")
-            print("⏳ Waiting for doctor's approval...")
+                print(f"  Appointment ID: {data.get('appointment_id')}")
+            print("  Waiting for doctor's approval...")
         else:
             error_msg = r.json().get("error", "Unknown error")
-            print(f"❌ Booking failed: {error_msg}")
+            print(f"  Booking failed: {error_msg}")
 
     except Exception as e:
-        print(f"❌ Network error: {e}")
+        print(f"  Network error: {e}")
 
     input("Press Enter...")
 
@@ -4487,11 +4487,11 @@ def book_appointment_with_slot(doctor_id):
 def show_doctor_actions(doctor):
     while True:
         print("\n" + "="*60)
-        print(f"👨‍⚕️ Dr. {doctor['full_name']}")
+        print(f"     Dr. {doctor['full_name']}")
         print("="*60)
-        print("1. 📅 Check Availability & Book")
-        print("2. � Request Video Consultation")
-        print("3. ⬅️ Back")
+        print("1.   Check Availability & Book")
+        print("2.   Request Video Consultation")
+        print("3.    Back")
 
         c = input("\nSelect action: ").strip()
 
@@ -4502,14 +4502,14 @@ def show_doctor_actions(doctor):
         elif c == "3":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 
 # ---------- OVERRIDE APPOINTMENT TAB -----------------
 def healthcare_appointments_tab():
     while True:
         print("\n" + "="*60)
-        print("📅 APPOINTMENTS")
+        print("  APPOINTMENTS")
         print("="*60)
 
         r = requests.get(
@@ -4521,7 +4521,7 @@ def healthcare_appointments_tab():
         appointments = data.get("appointments", [])
 
         if not appointments:
-            print("📭 No appointments")
+            print("  No appointments")
         else:
             for i, a in enumerate(appointments, 1):
                 print(f"[{i}] ID:{a['id']} | {a['status']} | {a['booking_date']}")
@@ -4529,8 +4529,8 @@ def healthcare_appointments_tab():
         print("\n1. View Details")
         print("2. Join Video Call")
         print("3. Cancel Appointment")
-        print("4. 🔎 Lookup Appointment")
-        print("5. ⬅️ Back")
+        print("4.   Lookup Appointment")
+        print("5.    Back")
 
         c = input("Choice: ").strip()
 
@@ -4546,7 +4546,7 @@ def healthcare_appointments_tab():
             return
         
         # ==================================================
-# ===== FIX: DOCTOR → ACTION (BOOKING VISIBLE) =====
+# ===== FIX: DOCTOR   ACTION (BOOKING VISIBLE) =====
 # ==================================================
 
 def show_doctors_by_specialization(specialization):
@@ -4554,13 +4554,13 @@ def show_doctors_by_specialization(specialization):
     doctors = r.json().get("doctors", [])
 
     if not doctors:
-        print("❌ No doctors available")
+        print("  No doctors available")
         input("Press Enter...")
         return
 
     while True:
         print("\n" + "=" * 70)
-        print(f"🏥 {specialization.upper()} - Available Doctors")
+        print(f"  {specialization.upper()} - Available Doctors")
         print("=" * 70)
 
         for i, doc in enumerate(doctors, 1):
@@ -4569,7 +4569,7 @@ def show_doctors_by_specialization(specialization):
             print(f"    Location: {doc.get('clinic_location','N/A')}")
             print(f"    Doctor ID: {doc['id']}")
 
-        print("\n0. ⬅️ Back")
+        print("\n0.    Back")
 
         choice = input("\nSelect doctor number: ").strip()
 
@@ -4577,15 +4577,15 @@ def show_doctors_by_specialization(specialization):
             return
 
         if not choice.isdigit():
-            print("❌ Enter a number")
+            print("  Enter a number")
             continue
 
         idx = int(choice) - 1
         if 0 <= idx < len(doctors):
-            # 🔥 THIS WAS MISSING
+            #   THIS WAS MISSING
             show_doctor_actions(doctors[idx])
         else:
-            print("❌ Invalid selection")
+            print("  Invalid selection")
 
 
 
@@ -4596,14 +4596,14 @@ def show_doctors_by_specialization(specialization):
 def request_video_consultation(worker_id):
     global USER_ID
 
-    # 🔐 Ensure USER_ID exists
+    #   Ensure USER_ID exists
     if not USER_ID:
         r = requests.get(
             f"{API}/user/info",
             headers={"Authorization": f"Bearer {TOKEN}"}
         )
         if r.status_code != 200:
-            print("❌ Session expired. Please login again.")
+            print("  Session expired. Please login again.")
             return
         USER_ID = r.json()["user_id"]
 
@@ -4615,20 +4615,20 @@ def request_video_consultation(worker_id):
     })
 
     if r.status_code == 201:
-        print("\n✅ Video consultation requested successfully")
-        print("⏳ Waiting for doctor to accept")
+        print("\n  Video consultation requested successfully")
+        print("  Waiting for doctor to accept")
     else:
-        print("❌ Failed to request video consultation")
+        print("  Failed to request video consultation")
         print("Server says:", r.text)
 
     input("Press Enter...")
 
 
     if r.status_code == 201:
-        print("\n✅ Video consultation requested")
-        print("⏳ Waiting for doctor to accept")
+        print("\n  Video consultation requested")
+        print("  Waiting for doctor to accept")
     else:
-        print("❌ Failed to request video consultation")
+        print("  Failed to request video consultation")
 
     input("Press Enter...")
 
@@ -4640,7 +4640,7 @@ def join_active_video_call():
     )
 
     if r.status_code != 200:
-        print("❌ Could not fetch appointments")
+        print("  Could not fetch appointments")
         input("Press Enter...")
         return
 
@@ -4648,7 +4648,7 @@ def join_active_video_call():
     active = [a for a in appointments if a["status"] == "in_consultation"]
 
     if not active:
-        print("❌ No active video consultations right now")
+        print("  No active video consultations right now")
         input("Press Enter...")
         return
 
@@ -4656,16 +4656,16 @@ def join_active_video_call():
 
     r = requests.get(f"{API}/appointment/{apt['id']}/video-link")
     if r.status_code == 200:
-        print("\n🎥 JOINING VIDEO CALL")
+        print("\n  JOINING VIDEO CALL")
         print("Meeting Link:", r.json()["video_link"])
     else:
-        print("❌ Video not started yet")
+        print("  Video not started yet")
 
     input("Press Enter...")
 
 def doctor_video_appointments():
     while True:
-        print("\n🎥 VIDEO CONSULTATIONS")
+        print("\n  VIDEO CONSULTATIONS")
         r = requests.get(f"{API}/worker/video_appointments")
         data = r.json()
 
@@ -4687,7 +4687,7 @@ def doctor_video_appointments():
 
         apt_id = data[int(choice)-1]["id"]
 
-        print("\n🔐 ENTER DOCTOR OTP TO START CALL")
+        print("\n  ENTER DOCTOR OTP TO START CALL")
         otp = input("OTP: ").strip()
 
         r = requests.post(f"{API}/video/start",
@@ -4695,37 +4695,37 @@ def doctor_video_appointments():
         )
 
         if r.status_code != 200:
-            print("❌ Invalid OTP")
+            print("  Invalid OTP")
             input("Press Enter...")
             continue
 
         meeting = r.json()["meeting_link"]
 
-        print("\n🎉 CALL STARTED SUCCESSFULLY")
-        print("🔗 Open this link in browser:")
+        print("\n  CALL STARTED SUCCESSFULLY")
+        print("  Open this link in browser:")
         print(meeting)
         input("Press Enter...")
 
 
 def main():
     # Check if server is running
-    print("\n🔍 Checking server connection...")
+    print("\n  Checking server connection...")
     if not check_server_connection():
         print("\n" + "="*60)
-        print("❌ ERROR: Flask server is not running!")
+        print("  ERROR: Flask server is not running!")
         print("="*60)
-        print("\n📋 To fix this:")
+        print("\n  To fix this:")
         print("1. Open a NEW terminal/command prompt")
         print("2. Navigate to the project folder")
         print("3. Run: python app.py")
         print("4. Wait for: 'Running on http://127.0.0.1:5000'")
         print("5. Then come back here and run: python cli.py")
-        print("\n💡 Keep the server running in the background!")
+        print("\n  Keep the server running in the background!")
         print("="*60)
         input("\nPress Enter to exit...")
         sys.exit(1)
     
-    print("✅ Server connection successful!")
+    print("  Server connection successful!")
     
     while True:
         print("\n=== ExpertEase ===")
@@ -4743,31 +4743,31 @@ def main():
         elif c == "3":
             admin_menu()
         elif c == "4":
-            print("👋 Goodbye")
+            print("  Goodbye")
             break
 
 def doctor_video_appointments(worker_id):
     """Show all accepted VIDEO appointments for doctor"""
 
-    print("\n📹 FETCHING VIDEO APPOINTMENTS...")
+    print("\n  FETCHING VIDEO APPOINTMENTS...")
 
     r = requests.get(f"{API}/worker/video_appointments")
 
     if r.status_code != 200:
-        print("❌ Failed to fetch video appointments")
+        print("  Failed to fetch video appointments")
         input("\nPress Enter...")
         return
 
     appointments = r.json()
 
     if not appointments:
-        print("\n📭 No video consultations ready")
+        print("\n  No video consultations ready")
         input("\nPress Enter...")
         return
 
     while True:
         print("\n" + "="*60)
-        print("📹 VIDEO CONSULTATIONS READY")
+        print("  VIDEO CONSULTATIONS READY")
         print("="*60)
 
         for idx, apt in enumerate(appointments, 1):
@@ -4776,8 +4776,8 @@ def doctor_video_appointments(worker_id):
             print(f"Status: {apt['status']}")
             print("-"*50)
 
-        print(f"\n{len(appointments)+1}. 🔄 Refresh")
-        print(f"{len(appointments)+2}. ⬅️ Back")
+        print(f"\n{len(appointments)+1}.   Refresh")
+        print(f"{len(appointments)+2}.    Back")
 
         choice = input("\nSelect appointment to START video call: ").strip()
 
@@ -4799,13 +4799,13 @@ def doctor_video_appointments(worker_id):
 
 def create_video_session_cli(worker_id):
     """Create video session and get OTP"""
-    print("\n🎥 CREATE VIDEO SESSION")
+    print("\n  CREATE VIDEO SESSION")
     print("="*60)
     
     # Get doctor's appointments
     r = requests.get(f"{API}/worker/appointments/{worker_id}")
     if r.status_code != 200:
-        print("❌ Failed to fetch appointments")
+        print("  Failed to fetch appointments")
         input("\nPress Enter...")
         return
     
@@ -4813,18 +4813,18 @@ def create_video_session_cli(worker_id):
     accepted_appointments = [apt for apt in appointments if apt['status'] == 'accepted']
     
     if not accepted_appointments:
-        print("📭 No accepted appointments found")
+        print("  No accepted appointments found")
         input("\nPress Enter...")
         return
     
-    print("📋 Select Appointment:")
+    print("  Select Appointment:")
     for idx, apt in enumerate(accepted_appointments, 1):
         print(f"[{idx}] Appointment #{apt['id']} - {apt['user_name']}")
     
     try:
         choice = int(input("\nSelect appointment: ")) - 1
         if choice < 0 or choice >= len(accepted_appointments):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             return
         
         appointment_id = accepted_appointments[choice]['id']
@@ -4836,29 +4836,29 @@ def create_video_session_cli(worker_id):
         if r.status_code == 201:
             data = r.json()
             session = data['session']
-            print("✅ Video session created successfully!")
-            print(f"📋 Appointment ID: {appointment_id}")
-            print(f"🔑 OTP: {session['doctor_otp']}")
-            print(f"🏠 Room ID: {session['room_id']}")
-            print("\n💡 Save this OTP to start video call!")
+            print("  Video session created successfully!")
+            print(f"  Appointment ID: {appointment_id}")
+            print(f"  OTP: {session['doctor_otp']}")
+            print(f"  Room ID: {session['room_id']}")
+            print("\n  Save this OTP to start video call!")
         else:
             error_data = r.json()
-            print(f"❌ Error: {error_data.get('message', 'Unknown error')}")
+            print(f"  Error: {error_data.get('message', 'Unknown error')}")
             
     except ValueError:
-        print("❌ Invalid input")
+        print("  Invalid input")
     
     input("\nPress Enter to continue...")
 
 def start_video_call_cli(worker_id):
     """Start video call with OTP verification"""
-    print("\n🎥 START VIDEO CALL")
+    print("\n  START VIDEO CALL")
     print("="*60)
     
     # Get doctor's video sessions
     r = requests.get(f"{API}/worker/appointments/{worker_id}")
     if r.status_code != 200:
-        print("❌ Failed to fetch appointments")
+        print("  Failed to fetch appointments")
         input("\nPress Enter...")
         return
     
@@ -4866,22 +4866,22 @@ def start_video_call_cli(worker_id):
     accepted_appointments = [apt for apt in appointments if apt['status'] in ['accepted', 'in_progress']]
     
     if not accepted_appointments:
-        print("📭 No appointments ready for video call")
+        print("  No appointments ready for video call")
         input("\nPress Enter...")
         return
     
-    print("📋 Select Appointment:")
+    print("  Select Appointment:")
     for idx, apt in enumerate(accepted_appointments, 1):
         print(f"[{idx}] Appointment #{apt['id']} - {apt['user_name']} ({apt['status']})")
     
     try:
         choice = int(input("\nSelect appointment: ")) - 1
         if choice < 0 or choice >= len(accepted_appointments):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             return
         
         appointment_id = accepted_appointments[choice]['id']
-        otp = input("🔑 Enter OTP: ").strip()
+        otp = input("  Enter OTP: ").strip()
         
         # Start video call
         r = requests.post(f"{API}/video/start", 
@@ -4893,29 +4893,29 @@ def start_video_call_cli(worker_id):
         
         if r.status_code == 200:
             data = r.json()
-            print("✅ Video call started successfully!")
-            print(f"🏠 Room ID: {data['room_id']}")
-            print(f"📋 Session Status: {data['session']['session_status']}")
-            print("\n💡 Patients can now join call!")
-            print("🔗 Room is live and ready for WebRTC connections")
+            print("  Video call started successfully!")
+            print(f"  Room ID: {data['room_id']}")
+            print(f"  Session Status: {data['session']['session_status']}")
+            print("\n  Patients can now join call!")
+            print("  Room is live and ready for WebRTC connections")
         else:
             error_data = r.json()
-            print(f"❌ Error: {error_data.get('message', 'Unknown error')}")
+            print(f"  Error: {error_data.get('message', 'Unknown error')}")
             
     except ValueError:
-        print("❌ Invalid input")
+        print("  Invalid input")
     
     input("\nPress Enter to continue...")
 
 def end_video_call_cli(worker_id):
     """End video call"""
-    print("\n🎥 END VIDEO CALL")
+    print("\n  END VIDEO CALL")
     print("="*60)
     
     # Get active video sessions
     r = requests.get(f"{API}/video/active-sessions")
     if r.status_code != 200:
-        print("❌ Failed to fetch active sessions")
+        print("  Failed to fetch active sessions")
         input("\nPress Enter...")
         return
     
@@ -4933,18 +4933,18 @@ def end_video_call_cli(worker_id):
                 doctor_sessions.append(session)
     
     if not doctor_sessions:
-        print("📭 No active video sessions found")
+        print("  No active video sessions found")
         input("\nPress Enter...")
         return
     
-    print("📋 Select Active Session:")
+    print("  Select Active Session:")
     for idx, session in enumerate(doctor_sessions, 1):
         print(f"[{idx}] Room: {session['room_id']} (Status: {session['session_status']})")
     
     try:
         choice = int(input("\nSelect session to end: ")) - 1
         if choice < 0 or choice >= len(doctor_sessions):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             return
         
         session = doctor_sessions[choice]
@@ -4960,27 +4960,27 @@ def end_video_call_cli(worker_id):
         
         if r.status_code == 200:
             data = r.json()
-            print("✅ Video call ended successfully!")
-            print(f"📋 Session Status: {data['session']['session_status']}")
-            print("📊 Appointment marked as completed")
+            print("  Video call ended successfully!")
+            print(f"  Session Status: {data['session']['session_status']}")
+            print("  Appointment marked as completed")
         else:
             error_data = r.json()
-            print(f"❌ Error: {error_data.get('message', 'Unknown error')}")
+            print(f"  Error: {error_data.get('message', 'Unknown error')}")
             
     except ValueError:
-        print("❌ Invalid input")
+        print("  Invalid input")
     
     input("\nPress Enter to continue...")
 
 def join_video_call_cli(user_id):
     """Patient joins video call"""
-    print("\n🎥 JOIN VIDEO CALL")
+    print("\n  JOIN VIDEO CALL")
     print("="*60)
     
     # Get user's appointments
     r = requests.get(f"{API}/user/appointments", headers={"Authorization": f"Bearer {TOKEN}"})
     if r.status_code != 200:
-        print("❌ Failed to fetch appointments")
+        print("  Failed to fetch appointments")
         input("\nPress Enter...")
         return
     
@@ -4993,19 +4993,19 @@ def join_video_call_cli(user_id):
     ]
     
     if not video_appointments:
-        print("📭 No video calls available to join")
-        print("💡 Please wait for doctor to start call")
+        print("  No video calls available to join")
+        print("  Please wait for doctor to start call")
         input("\nPress Enter...")
         return
     
-    print("📋 Select Video Call to Join:")
+    print("  Select Video Call to Join:")
     for idx, apt in enumerate(video_appointments, 1):
         print(f"[{idx}] Appointment #{apt['id']} - Dr. {apt.get('doctor_name', 'Unknown')}")
     
     try:
         choice = int(input("\nSelect video call: ")) - 1
         if choice < 0 or choice >= len(video_appointments):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
             return
         
         appointment_id = video_appointments[choice]['id']
@@ -5015,17 +5015,17 @@ def join_video_call_cli(user_id):
         
         if r.status_code == 200:
             data = r.json()
-            print("✅ Successfully joined video call!")
-            print(f"🏠 Room ID: {data['room_id']}")
-            print(f"📋 Session Status: {data['session']['session_status']}")
-            print("\n💡 Ready for WebRTC connection!")
-            print("🔗 Use this Room ID to establish video connection")
+            print("  Successfully joined video call!")
+            print(f"  Room ID: {data['room_id']}")
+            print(f"  Session Status: {data['session']['session_status']}")
+            print("\n  Ready for WebRTC connection!")
+            print("  Use this Room ID to establish video connection")
         else:
             error_data = r.json()
-            print(f"❌ Error: {error_data.get('message', 'Unknown error')}")
+            print(f"  Error: {error_data.get('message', 'Unknown error')}")
             
     except ValueError:
-        print("❌ Invalid input")
+        print("  Invalid input")
     
     input("\nPress Enter to continue...")
 
@@ -5033,13 +5033,13 @@ def video_menu_doctor(worker_id):
     """Video consultation menu for doctors"""
     while True:
         print("\n" + "="*60)
-        print("🎥 VIDEO CONSULTATION")
+        print("  VIDEO CONSULTATION")
         print("="*60)
-        print("1. 📋 Create Video Session (Get OTP)")
-        print("2. 🎥 Start Video Call")
-        print("3. 🛑 End Video Call")
-        print("4. 📊 View Active Sessions")
-        print("5. ⬅️ Back")
+        print("1.   Create Video Session (Get OTP)")
+        print("2.   Start Video Call")
+        print("3.   End Video Call")
+        print("4.   View Active Sessions")
+        print("5.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -5055,14 +5055,14 @@ def video_menu_doctor(worker_id):
             if r.status_code == 200:
                 data = r.json()
                 sessions = data['sessions']
-                print("\n📊 ACTIVE VIDEO SESSIONS:")
+                print("\n  ACTIVE VIDEO SESSIONS:")
                 for session in sessions:
-                    print(f"🏠 Room: {session['room_id']}")
-                    print(f"📋 Status: {session['session_status']}")
-                    print(f"📅 Started: {session['started_at'] or 'Not started'}")
+                    print(f"  Room: {session['room_id']}")
+                    print(f"  Status: {session['session_status']}")
+                    print(f"  Started: {session['started_at'] or 'Not started'}")
                     print("-"*40)
             else:
-                print("❌ Failed to fetch active sessions")
+                print("  Failed to fetch active sessions")
             input("\nPress Enter...")
         elif choice == "5":
             break
@@ -5071,11 +5071,11 @@ def video_menu_user(user_id):
     """Video consultation menu for users"""
     while True:
         print("\n" + "="*60)
-        print("🎥 VIDEO CONSULTATION")
+        print("  VIDEO CONSULTATION")
         print("="*60)
-        print("1. 🎥 Join Live Consultation")
-        print("2. 📊 My Video Appointments")
-        print("3. ⬅️ Back")
+        print("1.   Join Live Consultation")
+        print("2.   My Video Appointments")
+        print("3.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -5087,15 +5087,15 @@ def video_menu_user(user_id):
             if r.status_code == 200:
                 appointments = r.json().get("appointments", [])
                 video_appts = [apt for apt in appointments if apt['status'] in ['accepted', 'in_progress', 'completed']]
-                print("\n📋 MY VIDEO APPOINTMENTS:")
+                print("\n  MY VIDEO APPOINTMENTS:")
                 for apt in video_appts:
-                    print(f"🏥 Appointment #{apt['id']}")
-                    print(f"👨‍⚕️ Doctor: {apt.get('doctor_name', 'Unknown')}")
-                    print(f"📋 Status: {apt['status']}")
-                    print(f"📅 Date: {apt.get('appointment_date', 'N/A')}")
+                    print(f"  Appointment #{apt['id']}")
+                    print(f"     Doctor: {apt.get('doctor_name', 'Unknown')}")
+                    print(f"  Status: {apt['status']}")
+                    print(f"  Date: {apt.get('appointment_date', 'N/A')}")
                     print("-"*40)
             else:
-                print("❌ Failed to fetch appointments")
+                print("  Failed to fetch appointments")
             input("\nPress Enter...")
         elif choice == "3":
             break

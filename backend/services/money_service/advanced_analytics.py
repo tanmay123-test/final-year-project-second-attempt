@@ -85,15 +85,15 @@ class AdvancedAnalytics:
                 earlier_avg = sum(totals[:-2]) / (len(totals) - 2) if len(totals) > 2 else totals[0]
                 
                 if recent_avg > earlier_avg * 1.2:
-                    insights.append("📈 Spending increased in recent weeks")
+                    insights.append("  Spending increased in recent weeks")
                 elif recent_avg < earlier_avg * 0.8:
-                    insights.append("📉 Spending decreased in recent weeks")
+                    insights.append("  Spending decreased in recent weeks")
                 else:
-                    insights.append("➡️ Spending stable across weeks")
+                    insights.append("   Spending stable across weeks")
             
             # Check for volatility
             if changes and max(abs(c) for c in changes) > 50:
-                insights.append("⚡ High spending volatility detected")
+                insights.append("  High spending volatility detected")
         
         return insights
     
@@ -141,7 +141,7 @@ class AdvancedAnalytics:
                 alerts.append({
                     'level': 'CRITICAL',
                     'category': category,
-                    'message': f"🚨 {category.title()} spending has reached {percentage:.1f}% of budget!",
+                    'message': f"  {category.title()} spending has reached {percentage:.1f}% of budget!",
                     'budget': budget_amount,
                     'spent': current_spending,
                     'remaining': budget_amount - current_spending
@@ -150,7 +150,7 @@ class AdvancedAnalytics:
                 alerts.append({
                     'level': 'WARNING',
                     'category': category,
-                    'message': f"⚠️ {category.title()} spending has reached {percentage:.1f}% of budget.",
+                    'message': f"   {category.title()} spending has reached {percentage:.1f}% of budget.",
                     'budget': budget_amount,
                     'spent': current_spending,
                     'remaining': budget_amount - current_spending
@@ -159,7 +159,7 @@ class AdvancedAnalytics:
                 alerts.append({
                     'level': 'EXCEEDED',
                     'category': category,
-                    'message': f"💸 {category.title()} budget exceeded by {percentage - 100:.1f}%!",
+                    'message': f"  {category.title()} budget exceeded by {percentage - 100:.1f}%!",
                     'budget': budget_amount,
                     'spent': current_spending,
                     'remaining': budget_amount - current_spending
@@ -207,11 +207,11 @@ class AdvancedAnalytics:
         concentration = (top_merchant_amount / total_amount) * 100 if total_amount > 0 else 0
         
         if concentration > 50:
-            insights.append(f"🎯 High concentration: {merchants[0][0]} accounts for {concentration:.1f}% of spending")
+            insights.append(f"  High concentration: {merchants[0][0]} accounts for {concentration:.1f}% of spending")
         
         # Check frequency
         if len(merchants) > 0 and merchants[0][2] > 10:
-            insights.append(f"🔄 Frequent visits: {merchants[0][0]} visited {merchants[0][2]} times")
+            insights.append(f"  Frequent visits: {merchants[0][0]} visited {merchants[0][2]} times")
         
         return insights
     
@@ -260,7 +260,7 @@ class AdvancedAnalytics:
             )
             
             if abs(change_percent) > 50:  # Significant change threshold
-                direction = "📈 increased" if change_percent > 0 else "📉 decreased"
+                direction = "  increased" if change_percent > 0 else "  decreased"
                 spikes.append({
                     'category': category,
                     'previous_month': prev_spending,
@@ -280,35 +280,35 @@ class AdvancedAnalytics:
         insights = []
         
         if overall_score >= 80:
-            insights.append("🎉 Excellent financial health!")
+            insights.append("  Excellent financial health!")
         elif overall_score >= 60:
-            insights.append("💪 Good financial management")
+            insights.append("  Good financial management")
         elif overall_score >= 40:
-            insights.append("⚠️ Room for improvement")
+            insights.append("   Room for improvement")
         else:
-            insights.append("🚨 Financial health needs attention")
+            insights.append("  Financial health needs attention")
         
         # Component insights
         if budget_adherence >= 80:
-            insights.append("✅ Great budget adherence")
+            insights.append("  Great budget adherence")
         elif budget_adherence >= 60:
-            insights.append("📊 Budget adherence is good")
+            insights.append("  Budget adherence is good")
         else:
-            insights.append("💸 Budget adherence needs improvement")
+            insights.append("  Budget adherence needs improvement")
         
         if spending_stability >= 80:
-            insights.append("📈 Stable spending patterns")
+            insights.append("  Stable spending patterns")
         elif spending_stability >= 60:
-            insights.append("⚡ Spending patterns are moderate")
+            insights.append("  Spending patterns are moderate")
         else:
-            insights.append("🎢 Spending patterns are volatile")
+            insights.append("  Spending patterns are volatile")
         
         if category_balance >= 80:
-            insights.append("⚖️ Well-balanced spending")
+            insights.append("   Well-balanced spending")
         elif category_balance >= 60:
-            insights.append("📊 Category balance is moderate")
+            insights.append("  Category balance is moderate")
         else:
-            insights.append("🎯 Spending is concentrated in few categories")
+            insights.append("  Spending is concentrated in few categories")
         
         return {
             'overall_score': overall_score,

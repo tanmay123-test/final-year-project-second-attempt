@@ -5,7 +5,7 @@ DB="database.db"
 def create_payment_database():
     """Create the missing payments table"""
     
-    print("🔧 CREATING PAYMENT DATABASE")
+    print("  CREATING PAYMENT DATABASE")
     print("="*40)
     
     conn = sqlite3.connect(DB)
@@ -27,9 +27,9 @@ def create_payment_database():
     conn.commit()
     conn.close()
     
-    print("✅ Payments table created successfully!")
-    print(f"📁 Database: {DB}")
-    print("📋 Table: payments")
+    print("  Payments table created successfully!")
+    print(f"  Database: {DB}")
+    print("  Table: payments")
     
     # Verify table creation
     conn = sqlite3.connect(DB)
@@ -38,9 +38,9 @@ def create_payment_database():
     cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables = cur.fetchall()
     
-    print(f"\n📊 Tables in database:")
+    print(f"\n  Tables in database:")
     for table in tables:
-        print(f"   📁 {table[0]}")
+        print(f"     {table[0]}")
     
     conn.close()
 

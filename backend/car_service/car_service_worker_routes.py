@@ -223,7 +223,7 @@ def worker_signup():
 
     except Exception as e:
 
-        print(f"❌ Worker signup error: {e}")
+        print(f"  Worker signup error: {e}")
 
         return jsonify({"error": "Failed to create worker account"}), 500
 
@@ -321,7 +321,7 @@ def worker_login():
 
     except Exception as e:
 
-        print(f"❌ Worker login error: {e}")
+        print(f"  Worker login error: {e}")
 
         return jsonify({"error": "Login failed"}), 500
 
@@ -409,7 +409,7 @@ def get_worker_status():
 
     except Exception as e:
 
-        print(f"❌ Get worker status error: {e}")
+        print(f"  Get worker status error: {e}")
 
         return jsonify({"error": "Failed to get status"}), 500
 
@@ -460,12 +460,12 @@ def update_worker_admin_status():
                         conn.commit()
                     except Exception as e:
                         conn.rollback()
-                        print(f"⚠️ Fuel agent approval sync error: {e}")
+                        print(f"   Fuel agent approval sync error: {e}")
                     finally:
                         cur.close()
                         conn.close()
             except Exception as e:
-                print(f"⚠️ Fuel agent approval sync failed: {e}")
+                print(f"   Fuel agent approval sync failed: {e}")
 
             return jsonify({"success": True, "message": f"Worker status updated to {status}"}), 200
 
@@ -477,7 +477,7 @@ def update_worker_admin_status():
 
     except Exception as e:
 
-        print(f"❌ Update worker status error: {e}")
+        print(f"  Update worker status error: {e}")
 
         return jsonify({"error": "Failed to update status"}), 500
 
@@ -507,7 +507,7 @@ def get_pending_workers():
 
     except Exception as e:
 
-        print(f"❌ Get pending car service workers error: {e}")
+        print(f"  Get pending car service workers error: {e}")
 
         return jsonify({"error": "Failed to get pending workers"}), 500
 
@@ -545,7 +545,7 @@ def get_approved_workers():
 
     except Exception as e:
 
-        print(f"❌ Get approved workers error: {e}")
+        print(f"  Get approved workers error: {e}")
 
         return jsonify({"error": "Failed to get approved workers"}), 500
 
@@ -684,11 +684,48 @@ def update_worker_availability():
 
     except Exception as e:
 
-        print(f"❌ Update worker availability error: {e}")
+        print(f"  Update worker availability error: {e}")
 
         return jsonify({"error": "Failed to update availability"}), 500
 
 
+
+@car_service_worker_bp.route("/api/car/service/worker/profile", methods=["PUT"])
+def update_worker_profile():
+    """Update worker profile"""
+    try:
+        # Get worker from token
+        auth = request.headers.get("Authorization")
+        if not auth or not auth.startswith("Bearer "):
+            return jsonify({"error": "Unauthorized"}), 401
+        
+        token = auth.split(" ")[1]
+        email = verify_token(token)
+        if not email:
+            return jsonify({"error": "Invalid token"}), 401
+        
+        worker = car_service_worker_db.get_worker_by_email(email)
+        if not worker:
+            return jsonify({"error": "Worker not found"}), 404
+        
+        # Get update data
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Update profile
+        success = car_service_worker_db.update_worker_profile(worker["id"], data)
+        if success:
+            return jsonify({
+                "success": True,
+                "message": "Profile updated successfully"
+            }), 200
+        else:
+            return jsonify({"error": "Failed to update profile or no changes made"}), 500
+            
+    except Exception as e:
+        print(f"  Update worker profile error: {e}")
+        return jsonify({"error": "Failed to update profile"}), 500
 
 # ===== WORKER SLOTS MANAGEMENT =====
 
@@ -728,7 +765,7 @@ def get_worker_slots(worker_id):
 
     except Exception as e:
 
-        print(f"❌ Get worker slots error: {e}")
+        print(f"  Get worker slots error: {e}")
 
         return jsonify({"error": "Failed to get worker slots"}), 500
 
@@ -802,7 +839,7 @@ def add_worker_slot(worker_id):
 
     except Exception as e:
 
-        print(f"❌ Add worker slot error: {e}")
+        print(f"  Add worker slot error: {e}")
 
         return jsonify({"error": "Failed to add worker slot"}), 500
 
@@ -844,7 +881,7 @@ def delete_worker_slot(worker_id, slot_id):
 
     except Exception as e:
 
-        print(f"❌ Delete worker slot error: {e}")
+        print(f"  Delete worker slot error: {e}")
 
         return jsonify({"error": "Failed to delete worker slot"}), 500
 

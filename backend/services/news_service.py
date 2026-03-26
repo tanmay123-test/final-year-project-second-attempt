@@ -68,11 +68,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch news: {response.status_code}")
+                print(f"  Failed to fetch news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching market news: {str(e)}")
+            print(f"  Error fetching market news: {str(e)}")
             return []
     
     async def get_company_news(self, symbol: str, limit: int = 10) -> List[Dict[str, Any]]:
@@ -120,11 +120,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch company news: {response.status_code}")
+                print(f"  Failed to fetch company news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching company news: {str(e)}")
+            print(f"  Error fetching company news: {str(e)}")
             return []
     
     async def get_crypto_news(self, limit: int = 10) -> List[Dict[str, Any]]:
@@ -171,11 +171,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch crypto news: {response.status_code}")
+                print(f"  Failed to fetch crypto news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching crypto news: {str(e)}")
+            print(f"  Error fetching crypto news: {str(e)}")
             return []
     
     async def get_forex_news(self, limit: int = 10) -> List[Dict[str, Any]]:
@@ -222,11 +222,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch forex news: {response.status_code}")
+                print(f"  Failed to fetch forex news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching forex news: {str(e)}")
+            print(f"  Error fetching forex news: {str(e)}")
             return []
     
     async def get_merger_news(self, limit: int = 10) -> List[Dict[str, Any]]:
@@ -273,11 +273,11 @@ class NewsService:
                 
                 return formatted_news
             else:
-                print(f"❌ Failed to fetch merger news: {response.status_code}")
+                print(f"  Failed to fetch merger news: {response.status_code}")
                 return []
                 
         except Exception as e:
-            print(f"❌ Error fetching merger news: {str(e)}")
+            print(f"  Error fetching merger news: {str(e)}")
             return []
     
     async def summarize_news(self, news_articles: List[Dict[str, Any]], user_query: str = "") -> Dict[str, Any]:
@@ -476,7 +476,7 @@ Provide a helpful news summary and analysis:"""
                 "title": "Reliance Industries Announces Green Energy Investment",
                 "source": "Business Standard",
                 "url": "https://www.business-standard.com",
-                "summary": "Reliance Industries announced a ₹75,000 crore investment in green energy projects over the next three years.",
+                "summary": "Reliance Industries announced a  75,000 crore investment in green energy projects over the next three years.",
                 "datetime": datetime.utcnow().isoformat()
             },
             {

@@ -35,7 +35,7 @@ class AIAdvisorService:
 
     def get_cleaning_status(self, user_id):
         """
-        1️⃣ GET /api/ai/cleaning-status
+        1   GET /api/ai/cleaning-status
         Logic:
         - Fetch last COMPLETED booking for logged-in user.
         - Calculate days_passed and status.
@@ -119,7 +119,7 @@ class AIAdvisorService:
 
     def get_seasonal_tip(self):
         """
-        5️⃣ GET /api/ai/seasonal-tip
+        5   GET /api/ai/seasonal-tip
         """
         month = datetime.now().month
         
@@ -132,7 +132,7 @@ class AIAdvisorService:
 
     def set_reminder(self, user_id, reminder_type, frequency_type, custom_date=None, repeat=False):
         """
-        3️⃣ POST /api/ai/set-reminder
+        3   POST /api/ai/set-reminder
         Updated to support manual reminders with frequency and repeat toggle.
         """
         today = datetime.now().date()
@@ -208,7 +208,7 @@ class AIAdvisorService:
 
     def get_upgrade_suggestion(self, user_id):
         """
-        4️⃣ GET /api/ai/upgrade-suggestion
+        4   GET /api/ai/upgrade-suggestion
         """
         conn = self.db.get_conn()
         cursor = conn.cursor()
@@ -229,7 +229,7 @@ class AIAdvisorService:
         if all_basic:
             return {
                 "show_upgrade": True,
-                "message": "You’ve booked Basic Cleaning 3 times. Deep Cleaning is recommended for better hygiene."
+                "message": "You ve booked Basic Cleaning 3 times. Deep Cleaning is recommended for better hygiene."
             }
         
         return {"show_upgrade": False}

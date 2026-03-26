@@ -116,10 +116,10 @@ Compound interest is the process where interest earns interest, creating exponen
 - This creates a snowball effect of growing wealth
 
 **Example:**
-If you invest ₹10,000 at 8% annual compound interest:
-- Year 1: ₹10,800
-- Year 2: ₹11,664 (interest on interest)
-- Year 3: ₹12,597 (compounding continues)
+If you invest  10,000 at 8% annual compound interest:
+- Year 1:  10,800
+- Year 2:  11,664 (interest on interest)
+- Year 3:  12,597 (compounding continues)
 
 **Key Insight:**
 The earlier you start, the more powerful compound interest becomes.

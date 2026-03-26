@@ -35,7 +35,7 @@ class LeftoverBudgetManager:
                     'budget_amount': budget['budget_amount'],
                     'spent_amount': budget['spent'],
                     'remaining_amount': budget['remaining'],
-                    'suggestion': f"You saved ₹{budget['remaining']:.2f} in {budget['category']}. Move this to your savings jar?"
+                    'suggestion': f"You saved  {budget['remaining']:.2f} in {budget['category']}. Move this to your savings jar?"
                 })
                 total_leftover += budget['remaining']
         
@@ -60,9 +60,9 @@ class LeftoverBudgetManager:
             # Update existing goal
             success = self.db.update_goal_jar(user_id, goal_name, amount)
             if success:
-                return True, f"✅ Added ₹{amount:.2f} to {goal_name}"
+                return True, f"  Added  {amount:.2f} to {goal_name}"
             else:
-                return False, "❌ Failed to update goal jar"
+                return False, "  Failed to update goal jar"
         else:
             # Create new goal jar with target amount (double the amount as default)
             target_amount = amount * 2
@@ -71,9 +71,9 @@ class LeftoverBudgetManager:
             if goal_id:
                 # Update with initial amount
                 self.db.update_goal_jar(user_id, goal_name, amount)
-                return True, f"✅ Created {goal_name} goal jar with ₹{amount:.2f}"
+                return True, f"  Created {goal_name} goal jar with  {amount:.2f}"
             else:
-                return False, "❌ Failed to create goal jar"
+                return False, "  Failed to create goal jar"
     
     def get_goal_jars_status(self, user_id):
         """Get status of all goal jars"""
@@ -83,21 +83,21 @@ class LeftoverBudgetManager:
             # Add status indicators
             if jar['percentage'] >= 100:
                 jar['status'] = 'COMPLETED'
-                jar['status_color'] = '🟢'
+                jar['status_color'] = ' '
             elif jar['percentage'] >= 75:
                 jar['status'] = 'NEAR_GOAL'
-                jar['status_color'] = '🟡'
+                jar['status_color'] = ' '
             elif jar['percentage'] >= 50:
                 jar['status'] = 'IN_PROGRESS'
-                jar['status_color'] = '🔵'
+                jar['status_color'] = ' '
             else:
                 jar['status'] = 'JUST_STARTED'
-                jar['status_color'] = '⚪'
+                jar['status_color'] = ' '
             
             # Add progress bar
             bar_length = 20
             filled_length = min(int(jar['percentage'] / 5), bar_length)
-            jar['progress_bar'] = '█' * filled_length + '░' * (bar_length - filled_length)
+            jar['progress_bar'] = ' ' * filled_length + ' ' * (bar_length - filled_length)
         
         return goal_jars
     
@@ -106,32 +106,32 @@ class LeftoverBudgetManager:
         leftover_data, message = self.check_monthly_leftover(user_id)
         
         if not leftover_data:
-            print(f"\n💡 {message}")
+            print(f"\n  {message}")
             return
         
         print(f"\n" + "="*70)
-        print(f"💰 LEFTOVER BUDGET SUGGESTIONS - {leftover_data['month']} {leftover_data['year']}")
+        print(f"  LEFTOVER BUDGET SUGGESTIONS - {leftover_data['month']} {leftover_data['year']}")
         print("="*70)
-        print(f"📅 {leftover_data['days_remaining']} days remaining in month")
-        print(f"💰 Total Leftover: ₹{leftover_data['total_leftover']:,.2f}")
+        print(f"  {leftover_data['days_remaining']} days remaining in month")
+        print(f"  Total Leftover:  {leftover_data['total_leftover']:,.2f}")
         
         if not leftover_data['leftover_suggestions']:
-            print("\n📭 No leftover budget found in any category")
+            print("\n  No leftover budget found in any category")
             return
         
-        print(f"\n📋 CATEGORY LEFTOVERS")
+        print(f"\n  CATEGORY LEFTOVERS")
         print("-" * 50)
         
         for i, suggestion in enumerate(leftover_data['leftover_suggestions'], 1):
-            print(f"\n{i}. 📂 {suggestion['category'].upper()}")
+            print(f"\n{i}.   {suggestion['category'].upper()}")
             print("-" * 30)
-            print(f"💰 Budget: ₹{suggestion['budget_amount']:,.2f}")
-            print(f"💸 Spent: ₹{suggestion['spent_amount']:,.2f}")
-            print(f"💵 Remaining: ₹{suggestion['remaining_amount']:,.2f}")
-            print(f"💡 {suggestion['suggestion']}")
+            print(f"  Budget:  {suggestion['budget_amount']:,.2f}")
+            print(f"  Spent:  {suggestion['spent_amount']:,.2f}")
+            print(f"  Remaining:  {suggestion['remaining_amount']:,.2f}")
+            print(f"  {suggestion['suggestion']}")
         
         # Ask for action
-        print(f"\n🎯 ACTION OPTIONS")
+        print(f"\n  ACTION OPTIONS")
         print("-" * 50)
         print("1. Move all leftovers to goal jars")
         print("2. Select specific categories to move")
@@ -144,11 +144,11 @@ class LeftoverBudgetManager:
         elif choice == "2":
             self._select_categories_to_move(user_id, leftover_data['leftover_suggestions'])
         else:
-            print("⏭️ Skipped leftover budget management")
+            print("   Skipped leftover budget management")
     
     def _move_all_leftovers(self, user_id, suggestions):
         """Move all leftover amounts to goal jars"""
-        print(f"\n🔄 Moving leftovers to goal jars...")
+        print(f"\n  Moving leftovers to goal jars...")
         
         moved_count = 0
         total_moved = 0
@@ -161,18 +161,18 @@ class LeftoverBudgetManager:
             if success:
                 moved_count += 1
                 total_moved += suggestion['remaining_amount']
-                print(f"✅ {message}")
+                print(f"  {message}")
             else:
-                print(f"❌ {message}")
+                print(f"  {message}")
         
-        print(f"\n🎉 Successfully moved {moved_count} leftovers totaling ₹{total_moved:,.2f} to goal jars!")
+        print(f"\n  Successfully moved {moved_count} leftovers totaling  {total_moved:,.2f} to goal jars!")
     
     def _select_categories_to_move(self, user_id, suggestions):
         """Let user select specific categories to move"""
-        print(f"\n📋 Select categories to move (comma-separated numbers):")
+        print(f"\n  Select categories to move (comma-separated numbers):")
         
         for i, suggestion in enumerate(suggestions, 1):
-            print(f"{i}. {suggestion['category']} (₹{suggestion['remaining_amount']:,.2f})")
+            print(f"{i}. {suggestion['category']} ( {suggestion['remaining_amount']:,.2f})")
         
         try:
             selected = input("Enter numbers: ").strip()
@@ -194,43 +194,43 @@ class LeftoverBudgetManager:
                     if success:
                         moved_count += 1
                         total_moved += suggestion['remaining_amount']
-                        print(f"✅ {message}")
+                        print(f"  {message}")
                     else:
-                        print(f"❌ {message}")
+                        print(f"  {message}")
             
-            print(f"\n🎉 Successfully moved {moved_count} leftovers totaling ₹{total_moved:,.2f} to goal jars!")
+            print(f"\n  Successfully moved {moved_count} leftovers totaling  {total_moved:,.2f} to goal jars!")
             
         except (ValueError, IndexError):
-            print("❌ Invalid selection")
+            print("  Invalid selection")
     
     def display_goal_jars(self, user_id):
         """Display all goal jars with progress"""
         goal_jars = self.get_goal_jars_status(user_id)
         
         if not goal_jars:
-            print("\n📭 No goal jars created yet")
+            print("\n  No goal jars created yet")
             return
         
         print(f"\n" + "="*70)
-        print("🏆 GOAL JARS STATUS")
+        print("  GOAL JARS STATUS")
         print("="*70)
         
         for jar in goal_jars:
-            print(f"\n🎯 {jar['goal_name'].upper()}")
+            print(f"\n  {jar['goal_name'].upper()}")
             print("-" * 40)
-            print(f"💰 Target: ₹{jar['target_amount']:,.2f}")
-            print(f"💵 Current: ₹{jar['current_amount']:,.2f}")
-            print(f"📊 Progress: {jar['percentage']:.1f}%")
+            print(f"  Target:  {jar['target_amount']:,.2f}")
+            print(f"  Current:  {jar['current_amount']:,.2f}")
+            print(f"  Progress: {jar['percentage']:.1f}%")
             print(f"   {jar['progress_bar']} {jar['status_color']} {jar['status']}")
             
             if jar['status'] == 'COMPLETED':
-                print(f"🎉 Congratulations! Goal achieved!")
+                print(f"  Congratulations! Goal achieved!")
             elif jar['status'] == 'NEAR_GOAL':
                 remaining = jar['target_amount'] - jar['current_amount']
-                print(f"🔥 Almost there! ₹{remaining:.2f} to go!")
+                print(f"  Almost there!  {remaining:.2f} to go!")
             else:
                 remaining = jar['target_amount'] - jar['current_amount']
-                print(f"💡 ₹{remaining:.2f} remaining to reach goal")
+                print(f"   {remaining:.2f} remaining to reach goal")
     
     def suggest_goal_jar_ideas(self, user_id):
         """Suggest goal jar ideas based on spending patterns"""
@@ -242,11 +242,11 @@ class LeftoverBudgetManager:
         spending_data = self.db.get_monthly_spending_data(user_id, month, year)
         
         if not spending_data:
-            print("📭 No spending data available for suggestions")
+            print("  No spending data available for suggestions")
             return
         
         print(f"\n" + "="*70)
-        print("💡 GOAL JAR SUGGESTIONS")
+        print("  GOAL JAR SUGGESTIONS")
         print("="*70)
         
         suggestions = []
@@ -263,67 +263,67 @@ class LeftoverBudgetManager:
                 })
         
         if suggestions:
-            print(f"\n🎯 BASED ON YOUR SPENDING PATTERNS:")
+            print(f"\n  BASED ON YOUR SPENDING PATTERNS:")
             print("-" * 50)
             
             for i, suggestion in enumerate(suggestions, 1):
-                print(f"\n{i}. 📂 {suggestion['category'].title()}")
-                print(f"   💸 Current Spending: ₹{suggestion['current_spending']:,.2f}")
-                print(f"   🎯 Suggested Target: ₹{suggestion['suggested_target']:,.2f}")
-                print(f"   💡 Reason: {suggestion['reason']}")
+                print(f"\n{i}.   {suggestion['category'].title()}")
+                print(f"     Current Spending:  {suggestion['current_spending']:,.2f}")
+                print(f"     Suggested Target:  {suggestion['suggested_target']:,.2f}")
+                print(f"     Reason: {suggestion['reason']}")
         
         # General suggestions
-        print(f"\n🌟 GENERAL GOAL IDEAS:")
+        print(f"\n  GENERAL GOAL IDEAS:")
         print("-" * 50)
-        print("🏖️ Vacation Fund - Save for your dream vacation")
-        print("💻 Emergency Fund - Build 6-month expense cushion")
-        print("🎁 Gift Fund - Save for special occasions")
-        print("🏠 Home Improvement - Save for home projects")
-        print("📚 Education Fund - Invest in learning and development")
-        print("🚗 Vehicle Fund - Save for car maintenance or upgrade")
-        print("💰 Investment Fund - Build your investment portfolio")
+        print("   Vacation Fund - Save for your dream vacation")
+        print("  Emergency Fund - Build 6-month expense cushion")
+        print("  Gift Fund - Save for special occasions")
+        print("  Home Improvement - Save for home projects")
+        print("  Education Fund - Invest in learning and development")
+        print("  Vehicle Fund - Save for car maintenance or upgrade")
+        print("  Investment Fund - Build your investment portfolio")
         
-        create_goal = input("\n💭 Would you like to create a new goal jar? (yes/no): ").strip().lower()
+        create_goal = input("\n  Would you like to create a new goal jar? (yes/no): ").strip().lower()
         if create_goal in ['yes', 'y']:
             self._create_custom_goal_jar(user_id)
     
     def _create_custom_goal_jar(self, user_id):
         """Create a custom goal jar"""
-        print(f"\n🎯 CREATE CUSTOM GOAL JAR")
+        print(f"\n  CREATE CUSTOM GOAL JAR")
         print("-" * 40)
         
-        goal_name = input("📝 Goal name: ").strip()
+        goal_name = input("  Goal name: ").strip()
         if not goal_name:
-            print("❌ Goal name is required")
+            print("  Goal name is required")
             return
         
         try:
-            target_amount = float(input("💰 Target amount: ₹").strip())
+            target_amount = float(input("  Target amount:  ").strip())
             if target_amount <= 0:
-                print("❌ Target amount must be greater than 0")
+                print("  Target amount must be greater than 0")
                 return
         except ValueError:
-            print("❌ Invalid target amount")
+            print("  Invalid target amount")
             return
         
         # Create goal jar
         goal_id = self.db.create_goal_jar(user_id, goal_name, target_amount)
         
         if goal_id:
-            print(f"✅ Created '{goal_name}' goal jar with target ₹{target_amount:,.2f}")
+            print(f"  Created '{goal_name}' goal jar with target  {target_amount:,.2f}")
             
             # Ask if want to add initial amount
-            add_initial = input("💵 Add initial amount? (yes/no): ").strip().lower()
+            add_initial = input("  Add initial amount? (yes/no): ").strip().lower()
             if add_initial in ['yes', 'y']:
                 try:
-                    initial_amount = float(input("💰 Initial amount: ₹").strip())
+                    initial_amount = float(input("  Initial amount:  ").strip())
                     if initial_amount > 0:
                         self.db.update_goal_jar(user_id, goal_name, initial_amount)
-                        print(f"✅ Added ₹{initial_amount:.2f} to {goal_name}")
+                        print(f"  Added  {initial_amount:.2f} to {goal_name}")
                 except ValueError:
-                    print("❌ Invalid amount")
+                    print("  Invalid amount")
         else:
-            print("❌ Failed to create goal jar")
+            print("  Failed to create goal jar")
     
     def _get_days_in_month(self, month, year):
         """Get number of days in a month"""

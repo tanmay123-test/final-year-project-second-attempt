@@ -40,9 +40,9 @@ async def startup_event():
     """
     try:
         init_db()
-        print("✅ Database initialized successfully")
+        print("  Database initialized successfully")
     except Exception as e:
-        print(f"❌ Database initialization failed: {e}")
+        print(f"  Database initialization failed: {e}")
         raise
 
 @app.on_event("shutdown")
@@ -50,7 +50,7 @@ async def shutdown_event():
     """
     Cleanup on application shutdown
     """
-    print("🔄 Application shutting down...")
+    print("  Application shutting down...")
 
 @app.get("/")
 async def root():

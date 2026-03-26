@@ -105,17 +105,17 @@ const BookMechanic = () => {
         car_id: selectedCar.id,
         booking_type: bookingType,
         issue_description: issueDescription,
-        service_fee: 45.00 // From design
+        service_fee: 450 // Real currency (Rupees)
       };
 
       const response = await api.post('/api/car/book-mechanic', bookingData);
       if (response.data?.success) {
         alert('Booking submitted successfully!');
-        navigate('/car-service/my-bookings');
+        navigate('/car-service/home');
       }
     } catch (error) {
       console.error('Error submitting booking:', error);
-      alert('Failed to submit booking. Please try again.');
+      alert(error.response?.data?.error || 'Failed to submit booking. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -347,30 +347,50 @@ const BookMechanic = () => {
               {/* Selected Vehicle */}
               <div className="bg-surface-container-low rounded-2xl p-6 border border-[#c7c4d8]/10">
                 <div className="flex items-center justify-between mb-4">
-                  <label className="text-[10px] uppercase font-black tracking-widest text-[#777587]">Selected Vehicle</label>
+                  <label className="text-[10px] uppercase font-black tracking-widest text-[#777587]">Select Vehicle</label>
                   <button 
                     onClick={() => navigate('/car-service/garage')}
                     className="text-[10px] uppercase font-black tracking-widest text-[#4d41df] hover:underline"
                   >
-                    Change
+                    Add New Car
                   </button>
                 </div>
-                {selectedCar ? (
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-12 bg-surface-container-lowest rounded-lg flex items-center justify-center border border-[#c7c4d8]/20">
-                      <span className="material-symbols-outlined text-2xl text-[#4d41df]">directions_car</span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-[#191c20]">{selectedCar.make} {selectedCar.model}</h4>
-                      <p className="text-xs text-[#464555] font-medium">{selectedCar.year} • {selectedCar.fuel_type || 'Petrol'} • Plate: {selectedCar.registration_number}</p>
+                
+                {userCars.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-3">
+                      {userCars.map(car => (
+                        <button
+                          key={car.id}
+                          onClick={() => setSelectedCar(car)}
+                          className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
+                            selectedCar?.id === car.id 
+                              ? 'border-[#4d41df] bg-surface-container-lowest shadow-sm' 
+                              : 'border-[#c7c4d8]/10 bg-surface-container-low hover:border-[#4d41df]/30'
+                          }`}
+                        >
+                          <div className={`w-12 h-10 rounded-lg flex items-center justify-center border ${
+                            selectedCar?.id === car.id ? 'bg-[#4d41df]/10 text-[#4d41df] border-[#4d41df]/20' : 'bg-surface-container-lowest text-[#777587] border-[#c7c4d8]/20'
+                          }`}>
+                            <span className="material-symbols-outlined text-xl">directions_car</span>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-[#191c20] text-sm">{car.brand} {car.model}</h4>
+                            <p className="text-[10px] text-[#464555] font-medium uppercase tracking-wider">{car.registration_number}</p>
+                          </div>
+                          {selectedCar?.id === car.id && (
+                            <span className="material-symbols-outlined text-[#4d41df]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-[#464555]">No vehicle selected</p>
+                  <div className="text-center py-6">
+                    <p className="text-sm font-medium text-[#464555] mb-4">No vehicles in your garage</p>
                     <button 
                       onClick={() => navigate('/car-service/garage')}
-                      className="bg-[#4d41df] text-white px-4 py-2 rounded-lg text-xs font-bold"
+                      className="bg-[#4d41df] text-white px-6 py-2 rounded-xl text-xs font-bold shadow-lg shadow-[#4d41df]/20"
                     >
                       Add Vehicle
                     </button>
@@ -430,7 +450,7 @@ const BookMechanic = () => {
                     </div>
                     <div className="flex justify-between items-center pt-4 border-t border-surface-container-low">
                       <span className="text-sm font-bold text-[#191c20]">Service Fee</span>
-                      <span className="text-xl font-black text-[#4d41df]">$45.00</span>
+                      <span className="text-xl font-black text-[#4d41df]">₹450.00</span>
                     </div>
                   </div>
                 </div>

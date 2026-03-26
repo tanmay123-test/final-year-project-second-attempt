@@ -12,7 +12,7 @@ from datetime import datetime
 def migrate_all_databases():
     """Migrate all scattered databases to organized structure"""
     
-    print("🔄 Starting Database Migration...")
+    print("  Starting Database Migration...")
     
     # Source databases (scattered)
     source_dbs = {
@@ -47,11 +47,11 @@ def migrate_all_databases():
     for worker_type in ["mechanics", "fuel_delivery", "tow_truck"]:
         migrate_car_workers(worker_type, target_base / "car_service_workers" / f"{worker_type}.db")
     
-    print("✅ Migration completed successfully!")
+    print("  Migration completed successfully!")
 
 def migrate_users(source_dbs, target_db):
     """Migrate user data to central users database"""
-    print(f"\n👥 Migrating Users...")
+    print(f"\n  Migrating Users...")
     
     conn_target = sqlite3.connect(target_db)
     cursor_target = conn_target.cursor()
@@ -86,20 +86,20 @@ def migrate_users(source_dbs, target_db):
                                 migrated_users += 1
                                 
                     except Exception as e:
-                        print(f"  ⚠️  Error migrating from {table_name}: {e}")
+                        print(f"      Error migrating from {table_name}: {e}")
                 
                 conn_source.close()
                 
             except Exception as e:
-                print(f"  ⚠️  Error opening {source_db}: {e}")
+                print(f"      Error opening {source_db}: {e}")
     
     conn_target.commit()
     conn_target.close()
-    print(f"  ✅ Migrated {migrated_users} users")
+    print(f"    Migrated {migrated_users} users")
 
 def migrate_workers(source_dbs, target_db):
     """Migrate worker data to central workers database"""
-    print(f"\n👷 Migrating Workers...")
+    print(f"\n  Migrating Workers...")
     
     conn_target = sqlite3.connect(target_db)
     cursor_target = conn_target.cursor()
@@ -134,20 +134,20 @@ def migrate_workers(source_dbs, target_db):
                                 migrated_workers += 1
                                 
                     except Exception as e:
-                        print(f"  ⚠️  Error migrating from {table_name}: {e}")
+                        print(f"      Error migrating from {table_name}: {e}")
                 
                 conn_source.close()
                 
             except Exception as e:
-                print(f"  ⚠️  Error opening {source_db}: {e}")
+                print(f"      Error opening {source_db}: {e}")
     
     conn_target.commit()
     conn_target.close()
-    print(f"  ✅ Migrated {migrated_workers} workers")
+    print(f"    Migrated {migrated_workers} workers")
 
 def migrate_service_data(service, target_db):
     """Migrate service-specific data"""
-    print(f"\n📋 Migrating {service.replace('_', ' ').title()} data...")
+    print(f"\n  Migrating {service.replace('_', ' ').title()} data...")
     
     conn_target = sqlite3.connect(target_db)
     cursor_target = conn_target.cursor()
@@ -193,20 +193,20 @@ def migrate_service_data(service, target_db):
                             migrated_records += 1
                             
                     except Exception as e:
-                        print(f"  ⚠️  Error migrating from {table_name}: {e}")
+                        print(f"      Error migrating from {table_name}: {e}")
                 
                 conn_source.close()
                 
             except Exception as e:
-                print(f"  ⚠️  Error opening {source_db}: {e}")
+                print(f"      Error opening {source_db}: {e}")
     
     conn_target.commit()
     conn_target.close()
-    print(f"  ✅ Migrated {migrated_records} records")
+    print(f"    Migrated {migrated_records} records")
 
 def migrate_car_workers(worker_type, target_db):
     """Migrate car service worker data"""
-    print(f"\n🔧 Migrating {worker_type.replace('_', ' ').title()} data...")
+    print(f"\n  Migrating {worker_type.replace('_', ' ').title()} data...")
     
     conn_target = sqlite3.connect(target_db)
     cursor_target = conn_target.cursor()
@@ -247,16 +247,16 @@ def migrate_car_workers(worker_type, target_db):
                             migrated_records += 1
                             
                     except Exception as e:
-                        print(f"  ⚠️  Error migrating from {table_name}: {e}")
+                        print(f"      Error migrating from {table_name}: {e}")
                 
                 conn_source.close()
                 
             except Exception as e:
-                print(f"  ⚠️  Error opening {source_db}: {e}")
+                print(f"      Error opening {source_db}: {e}")
     
     conn_target.commit()
     conn_target.close()
-    print(f"  ✅ Migrated {migrated_records} records")
+    print(f"    Migrated {migrated_records} records")
 
 def map_user_columns(user_data, cursor_source, table_name):
     """Map user data columns to new schema"""
@@ -286,7 +286,7 @@ def map_user_columns(user_data, cursor_source, table_name):
             return (email, password, name, phone, created_at, is_active)
         
     except Exception as e:
-        print(f"    ⚠️  Error mapping user columns: {e}")
+        print(f"        Error mapping user columns: {e}")
     
     return None
 
@@ -336,27 +336,27 @@ def map_worker_columns(worker_data, cursor_source, table_name):
             return (email, password, name, phone, service_type, worker_type, is_verified or 0, is_active or 1)
         
     except Exception as e:
-        print(f"    ⚠️  Error mapping worker columns: {e}")
+        print(f"        Error mapping worker columns: {e}")
     
     return None
 
 if __name__ == "__main__":
     migrate_all_databases()
     
-    print("\n🎯 Migration Summary:")
-    print("✅ Users migrated to central users.db")
-    print("✅ Workers migrated to central workers.db") 
-    print("✅ Service data migrated to service-specific databases")
-    print("✅ Car service workers migrated to separate databases")
-    print("\n📁 New organized structure:")
-    print("├── 👥 users.db (all users from all services)")
-    print("├── 👷 workers.db (all workers from all services)")
-    print("├── 🏥 healthcare.db (healthcare specific)")
-    print("├── 🏠 housekeeping.db (housekeeping specific)")
-    print("├── 💼 freelance.db (freelance specific)")
-    print("├── 💰 money_management.db (money management specific)")
-    print("├── 🚗 car_service.db (car service specific)")
-    print("└── 📁 car_service_workers/")
-    print("    ├── 🔧 mechanics.db (mechanics only)")
-    print("    ├── ⛽ fuel_delivery.db (fuel delivery only)")
-    print("    └── 🚛 tow_truck.db (tow truck only)")
+    print("\n  Migration Summary:")
+    print("  Users migrated to central users.db")
+    print("  Workers migrated to central workers.db") 
+    print("  Service data migrated to service-specific databases")
+    print("  Car service workers migrated to separate databases")
+    print("\n  New organized structure:")
+    print("      users.db (all users from all services)")
+    print("      workers.db (all workers from all services)")
+    print("      healthcare.db (healthcare specific)")
+    print("      housekeeping.db (housekeeping specific)")
+    print("      freelance.db (freelance specific)")
+    print("      money_management.db (money management specific)")
+    print("      car_service.db (car service specific)")
+    print("      car_service_workers/")
+    print("          mechanics.db (mechanics only)")
+    print("          fuel_delivery.db (fuel delivery only)")
+    print("          tow_truck.db (tow truck only)")

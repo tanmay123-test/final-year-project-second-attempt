@@ -12,22 +12,22 @@ API = "http://127.0.0.1:5000"
 def mechanic_signup():
     """Mechanic signup process"""
     print("\n" + "="*60)
-    print("🔧 MECHANIC SIGNUP")
+    print("  MECHANIC SIGNUP")
     print("="*60)
     
     try:
         # Basic info
-        name = input("👤 Enter full name: ").strip()
-        email = input("📧 Enter email: ").strip()
-        phone = input("📱 Enter phone: ").strip()
-        password = input("🔒 Enter password: ").strip()
-        age = input("🎂 Enter age: ").strip()
-        city = input("🏙️ Enter city: ").strip()
-        experience = input("💼 Enter experience (years): ").strip()
-        skills = input("🔧 Enter skills (comma separated): ").strip()
+        name = input("  Enter full name: ").strip()
+        email = input("  Enter email: ").strip()
+        phone = input("  Enter phone: ").strip()
+        password = input("  Enter password: ").strip()
+        age = input("  Enter age: ").strip()
+        city = input("   Enter city: ").strip()
+        experience = input("  Enter experience (years): ").strip()
+        skills = input("  Enter skills (comma separated): ").strip()
         
         # Document paths
-        print("\n📄 Document Uploads")
+        print("\n  Document Uploads")
         print("Enter file paths for required documents:")
         
         aadhaar_path = input("Enter Aadhaar file path: ").strip()
@@ -37,14 +37,14 @@ def mechanic_signup():
         
         # Validation
         if not all([name, email, phone, password, age, city, experience, skills]):
-            print("❌ All required fields must be filled")
+            print("  All required fields must be filled")
             return
         
         # Validate file paths exist
         for path, field_name in [(aadhaar_path, "Aadhaar"), (license_path, "License"), 
                                  (certificate_path, "Certificate"), (profile_photo_path, "Profile photo")]:
             if path and not os.path.exists(path):
-                print(f"❌ {field_name} file not found: {path}")
+                print(f"  {field_name} file not found: {path}")
                 return
         
         # Prepare data
@@ -70,28 +70,28 @@ def mechanic_signup():
         
         if response.status_code == 201:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Signup successful!')}")
-            print(f"📋 Mechanic ID: {result.get('mechanic_id')}")
-            print("🎉 You can now login to your mechanic dashboard")
+            print(f"\n  {result.get('message', 'Signup successful!')}")
+            print(f"  Mechanic ID: {result.get('mechanic_id')}")
+            print("  You can now login to your mechanic dashboard")
         else:
             error = response.json().get("error", "Signup failed")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
     except Exception as e:
-        print(f"❌ Signup error: {e}")
+        print(f"  Signup error: {e}")
 
 def mechanic_login():
     """Mechanic login process"""
     print("\n" + "="*50)
-    print("🔐 MECHANIC LOGIN")
+    print("  MECHANIC LOGIN")
     print("="*50)
     
     try:
-        email = input("📧 Enter email: ").strip()
-        password = input("🔒 Enter password: ").strip()
+        email = input("  Enter email: ").strip()
+        password = input("  Enter password: ").strip()
         
         if not email or not password:
-            print("❌ Email and password are required")
+            print("  Email and password are required")
             return
         
         # Call API
@@ -105,72 +105,72 @@ def mechanic_login():
             mechanic = result.get("mechanic", {})
             token = result.get("token")
             
-            print(f"\n✅ Login successful!")
-            print(f"👤 Welcome, {mechanic.get('name', 'Mechanic')}!")
-            print(f"🏙️ City: {mechanic.get('city', 'Unknown')}")
-            print(f"💼 Experience: {mechanic.get('experience', 0)} years")
-            print(f"🔧 Skills: {mechanic.get('skills', 'N/A')}")
+            print(f"\n  Login successful!")
+            print(f"  Welcome, {mechanic.get('name', 'Mechanic')}!")
+            print(f"   City: {mechanic.get('city', 'Unknown')}")
+            print(f"  Experience: {mechanic.get('experience', 0)} years")
+            print(f"  Skills: {mechanic.get('skills', 'N/A')}")
             
             # Open mechanic dashboard
             mechanic_dashboard(mechanic, token)
                 
         elif response.status_code == 401:
-            print("❌ Invalid email or password")
+            print("  Invalid email or password")
         elif response.status_code == 403:
             result = response.json()
             status = result.get("status", "PENDING")
-            print(f"❌ {result.get('error', 'Account not approved')}")
-            print(f"📊 Current status: {status}")
+            print(f"  {result.get('error', 'Account not approved')}")
+            print(f"  Current status: {status}")
         else:
             error = response.json().get("error", "Login failed")
-            print(f"❌ {error}")
+            print(f"  {error}")
             
     except Exception as e:
-        print(f"❌ Login error: {e}")
+        print(f"  Login error: {e}")
 
 def mechanic_dashboard(mechanic, token):
     """Mechanic dashboard menu"""
     while True:
         print("\n" + "="*60)
-        print("🔧 MECHANIC DASHBOARD")
+        print("  MECHANIC DASHBOARD")
         print("="*60)
-        print(f"👤 {mechanic.get('name')}")
-        print(f"📧 {mechanic.get('email')}")
-        print(f"📱 {mechanic.get('phone')}")
-        print(f"🏙️ {mechanic.get('city')}")
-        print(f"💼 Experience: {mechanic.get('experience', 0)} years")
-        print(f"🔧 Skills: {mechanic.get('skills', 'N/A')}")
-        print(f"🟢 Status: {'ONLINE' if mechanic.get('is_online', 0) else 'OFFLINE'}")
+        print(f"  {mechanic.get('name')}")
+        print(f"  {mechanic.get('email')}")
+        print(f"  {mechanic.get('phone')}")
+        print(f"   {mechanic.get('city')}")
+        print(f"  Experience: {mechanic.get('experience', 0)} years")
+        print(f"  Skills: {mechanic.get('skills', 'N/A')}")
+        print(f"  Status: {'ONLINE' if mechanic.get('is_online', 0) else 'OFFLINE'}")
         
         print("\nOptions:")
-        print("1. 🟢 Go Online / Offline")
-        print("2. 📋 Job Requests (Transparent Queue)")
-        print("3. 🔧 Active Jobs")
-        print("4. 💰 Earnings & Fairness Insights")
-        print("5. 📊 Performance, Safety & Support")
-        print("6. 👋 Logout")
+        print("1.   Go Online / Offline")
+        print("2.   Job Requests (Transparent Queue)")
+        print("3.   Active Jobs")
+        print("4.   Earnings & Fairness Insights")
+        print("5.   Performance, Safety & Support")
+        print("6.   Logout")
         
         choice = input("\nSelect option: ").strip()
         
         if choice == "1":
             toggle_online_status(mechanic, token)
         elif choice == "2":
-            print("🚧 Job Requests coming soon!")
+            print("  Job Requests coming soon!")
             input("\nPress Enter to continue...")
         elif choice == "3":
-            print("🚧 Active Jobs coming soon!")
+            print("  Active Jobs coming soon!")
             input("\nPress Enter to continue...")
         elif choice == "4":
-            print("🚧 Earnings & Fairness Insights coming soon!")
+            print("  Earnings & Fairness Insights coming soon!")
             input("\nPress Enter to continue...")
         elif choice == "5":
-            print("🚧 Performance, Safety & Support coming soon!")
+            print("  Performance, Safety & Support coming soon!")
             input("\nPress Enter to continue...")
         elif choice == "6":
-            print("👋 Logged out successfully")
+            print("  Logged out successfully")
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
 
 def toggle_online_status(mechanic, token):
     """Toggle mechanic online/offline status"""
@@ -186,34 +186,34 @@ def toggle_online_status(mechanic, token):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\n✅ {result.get('message', 'Status updated')}")
+            print(f"\n  {result.get('message', 'Status updated')}")
             
             # Update local mechanic data
             mechanic['is_online'] = new_status
             
             # Show note if it's a worker account
             if result.get('note'):
-                print(f"ℹ️ {result['note']}")
+                print(f"   {result['note']}")
                 
         else:
             error = response.json().get("error", "Failed to update status")
-            print(f"❌ {error}")
+            print(f"  {error}")
         
         input("\nPress Enter to continue...")
         
     except Exception as e:
-        print(f"❌ Status update error: {e}")
+        print(f"  Status update error: {e}")
         input("\nPress Enter to continue...")
 
 def mechanic_menu():
     """Main mechanic menu"""
     while True:
         print("\n" + "="*50)
-        print("🔧 MECHANIC MENU")
+        print("  MECHANIC MENU")
         print("="*50)
-        print("1. 📝 Signup")
-        print("2. 🔐 Login")
-        print("3. ⬅️ Back")
+        print("1.   Signup")
+        print("2.   Login")
+        print("3.    Back")
         
         choice = input("\nSelect option: ").strip()
         
@@ -224,4 +224,4 @@ def mechanic_menu():
         elif choice == "3":
             return
         else:
-            print("❌ Invalid choice")
+            print("  Invalid choice")
