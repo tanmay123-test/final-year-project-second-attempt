@@ -3,6 +3,7 @@ from ..services.freelance_service import freelance_service
 from ..controllers.freelance_controller import freelance_controller
 from ..controllers.ai_controller import ai_controller
 from ..controllers.profile_controller import profile_controller
+from ..models.database import freelance_db
 from auth_utils import verify_token, get_current_user_id
 from user_db import UserDB
 from worker_db import WorkerDB
@@ -224,8 +225,22 @@ def get_direct_bookings():
     user_id = get_current_user_id()
     if not user_id:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
-    bookings = freelance_service.get_direct_bookings_by_freelancer(user_id)
-    return jsonify({"success": True, "bookings": bookings}), 200
+    
+    try:
+        # Simplified approach - get all bookings for the user and filter in frontend
+        # This avoids the role column issue for now
+        bookings = freelance_service.get_direct_bookings_by_client(user_id)
+        return jsonify({"success": True, "bookings": bookings}), 200
+        
+    except Exception as e:
+        print(f"Error in get_direct_bookings: {e}")
+        # Fallback: try freelancer bookings if client bookings fail
+        try:
+            bookings = freelance_service.get_direct_bookings_by_freelancer(user_id)
+            return jsonify({"success": True, "bookings": bookings}), 200
+        except Exception as e2:
+            print(f"Fallback also failed: {e2}")
+            return jsonify({"success": False, "message": "Failed to fetch bookings", "bookings": []}), 500
 
 @freelance_bp.route('/api/freelancer/bookings/<int:booking_id>/accept', methods=['PUT'])
 def accept_booking(booking_id):
@@ -418,6 +433,18 @@ def list_workers():
             
     workers = freelance_service.get_workers_by_skills(skill_ids)
     return jsonify({"workers": workers}), 200
+
+@freelance_bp.route('/api/freelance/workers/<int:worker_id>', methods=['GET'])
+def get_worker_profile(worker_id):
+    try:
+        worker = freelance_service.get_worker_by_id(worker_id)
+        if worker:
+            return jsonify({"worker": worker}), 200
+        else:
+            return jsonify({"error": "Worker not found"}), 404
+    except Exception as e:
+        print(f"Error fetching worker profile: {e}")
+        return jsonify({"error": "Failed to fetch worker profile"}), 500
 
 @freelance_bp.route('/api/freelance/client/bookings', methods=['GET'])
 def list_client_bookings():

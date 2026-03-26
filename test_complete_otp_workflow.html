@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complete OTP Workflow Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .workflow-step {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            background: #8E44AD; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover { background: #7B3F99; transform: translateY(-1px); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        input { padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        .result { 
+            margin: 10px 0; 
+            padding: 12px; 
+            border-radius: 6px; 
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .otp-display {
+            background: #28a745;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin: 15px 0;
+        }
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #ffc107;
+            color: #000;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Complete OTP Workflow Test</h1>
+        <p style="color: #666;">Test the complete housekeeping OTP system from worker start to user display</p>
+
+        <!-- Authentication Check -->
+        <div class="section">
+            <h3><span class="step-number">0</span>Authentication Check</h3>
+            <button onclick="checkAuth()">Check Authentication</button>
+            <div id="authResult"></div>
+        </div>
+
+        <!-- Step 1: Start Job (Worker Side) -->
+        <div class="section">
+            <div class="workflow-step">
+                <h3>📱 Step 1: Worker Starts Job (Generates OTP)</h3>
+                <p>Worker clicks "Start Job" → System generates 6-digit OTP → Status changes to IN_PROGRESS</p>
+            </div>
+            <div>
+                <label>Booking ID: </label>
+                <input type="number" id="bookingId" value="1" placeholder="Enter booking ID">
+            </div>
+            <button onclick="startJob()">1. Start Job (Generate OTP)</button>
+            <button onclick="checkBookings()">Check Current Bookings</button>
+            <div id="startResult"></div>
+        </div>
+
+        <!-- Step 2: OTP Display (User Side) -->
+        <div class="section">
+            <div class="workflow-step">
+                <h3>👤 Step 2: User Sees OTP</h3>
+                <p>User checks their bookings → OTP is displayed for active jobs → User can copy OTP</p>
+            </div>
+            <button onclick="fetchUserBookings()">2. Fetch User Bookings (Check OTP)</button>
+            <div id="userBookingsResult"></div>
+            <div id="otpDisplay"></div>
+        </div>
+
+        <!-- Step 3: Complete Job (Worker Side) -->
+        <div class="section">
+            <div class="workflow-step">
+                <h3>✅ Step 3: Worker Completes Job</h3>
+                <p>Worker enters OTP from user → System verifies OTP → Status changes to COMPLETED</p>
+            </div>
+            <div>
+                <label>Enter OTP: </label>
+                <input type="text" id="otpInput" placeholder="123456" maxlength="6" style="width: 80px;">
+            </div>
+            <button onclick="completeJob()">3. Complete Job with OTP</button>
+            <div id="completeResult"></div>
+        </div>
+
+        <!-- All Results -->
+        <div class="section">
+            <h3>📊 All Test Results</h3>
+            <button onclick="clearAllResults()">Clear Results</button>
+            <div id="allResults"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let currentOTP = null;
+        
+        function getAuthHeaders() {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'X-Worker-ID': localStorage.getItem('workerId') || '1'
+            };
+        }
+
+        function getUserAuthHeaders() {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        function addResult(message, type = 'info', targetId = 'allResults') {
+            const targetDiv = document.getElementById(targetId);
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong><br>${message}`;
+            targetDiv.appendChild(div);
+            
+            if (targetId !== 'allResults') {
+                const allDiv = div.cloneNode(true);
+                document.getElementById('allResults').appendChild(allDiv);
+            }
+        }
+
+        async function checkAuth() {
+            addResult('🔍 Checking authentication...', 'info', 'authResult');
+            
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            if (!token) {
+                addResult('❌ No auth token found. Please login first.', 'error', 'authResult');
+                return;
+            }
+            
+            addResult('✅ Auth token found', 'success', 'authResult');
+            addResult(`🔑 Token: ${token.substring(0, 20)}...`, 'info', 'authResult');
+        }
+
+        async function startJob() {
+            const bookingId = document.getElementById('bookingId').value;
+            if (!bookingId) {
+                addResult('Please enter a booking ID', 'error', 'startResult');
+                return;
+            }
+            
+            addResult(`🚀 Starting job for booking ${bookingId}...`, 'info', 'startResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/housekeeping/worker/start-job`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        booking_id: parseInt(bookingId)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Job started successfully!`, 'success', 'startResult');
+                    if (data.otp) {
+                        currentOTP = data.otp;
+                        addResult(`🔢 Generated OTP: ${data.otp}`, 'success', 'startResult');
+                        showOTPDisplay(data.otp);
+                    }
+                    addResult(`📱 OTP sent to user via email/notification`, 'info', 'startResult');
+                    addResult(`🔄 Status changed to IN_PROGRESS`, 'info', 'startResult');
+                } else {
+                    addResult(`❌ Error: ${data.error}`, 'error', 'startResult');
+                }
+            } catch (error) {
+                addResult(`💥 Network Error: ${error.message}`, 'error', 'startResult');
+            }
+        }
+
+        async function fetchUserBookings() {
+            addResult('📋 Fetching user bookings...', 'info', 'userBookingsResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/housekeeping/my-bookings`, {
+                    method: 'GET',
+                    headers: getUserAuthHeaders()
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Found ${data.bookings?.length || 0} bookings`, 'success', 'userBookingsResult');
+                    
+                    if (data.bookings && data.bookings.length > 0) {
+                        data.bookings.forEach((booking, index) => {
+                            const status = booking.status || 'UNKNOWN';
+                            const statusIcon = status === 'ACCEPTED' ? '⏳' : 
+                                             status === 'IN_PROGRESS' ? '🔄' : 
+                                             status === 'COMPLETED' ? '✅' : '❓';
+                            
+                            let bookingInfo = `${index + 1}. ID: ${booking.id} ${statusIcon} Status: ${status}`;
+                            
+                            if (booking.otp) {
+                                bookingInfo += ` 🔑 OTP: ${booking.otp}`;
+                                showOTPDisplay(booking.otp);
+                            }
+                            
+                            addResult(bookingInfo, 'info', 'userBookingsResult');
+                        });
+                    }
+                } else {
+                    addResult(`❌ Error: ${data.error}`, 'error', 'userBookingsResult');
+                }
+            } catch (error) {
+                addResult(`💥 Network Error: ${error.message}`, 'error', 'userBookingsResult');
+            }
+        }
+
+        async function completeJob() {
+            const bookingId = document.getElementById('bookingId').value;
+            const otp = document.getElementById('otpInput').value;
+            
+            if (!bookingId || !otp) {
+                addResult('Please enter booking ID and OTP', 'error', 'completeResult');
+                return;
+            }
+            
+            if (otp.length !== 6) {
+                addResult('OTP must be 6 digits', 'error', 'completeResult');
+                return;
+            }
+            
+            addResult(`🔐 Completing job with OTP: ${otp}...`, 'info', 'completeResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/housekeeping/worker/complete-job`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        booking_id: parseInt(bookingId),
+                        otp: otp
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Job completed successfully!`, 'success', 'completeResult');
+                    addResult(`🎉 Payment processed and user notified`, 'success', 'completeResult');
+                    addResult(`🔄 Status changed to COMPLETED`, 'info', 'completeResult');
+                    document.getElementById('otpDisplay').innerHTML = '';
+                } else {
+                    addResult(`❌ Error: ${data.error}`, 'error', 'completeResult');
+                }
+            } catch (error) {
+                addResult(`💥 Network Error: ${error.message}`, 'error', 'completeResult');
+            }
+        }
+
+        async function checkBookings() {
+            addResult('📋 Checking worker bookings...', 'info', 'startResult');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/housekeeping/my-bookings`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`✅ Found ${data.bookings?.length || 0} bookings`, 'success', 'startResult');
+                    
+                    if (data.bookings && data.bookings.length > 0) {
+                        data.bookings.forEach((booking, index) => {
+                            const status = booking.status || 'UNKNOWN';
+                            const statusIcon = status === 'ACCEPTED' ? '⏳' : 
+                                             status === 'IN_PROGRESS' ? '🔄' : 
+                                             status === 'COMPLETED' ? '✅' : '❓';
+                            addResult(`${index + 1}. ID: ${booking.id} ${statusIcon} Status: ${status}`, 'info', 'startResult');
+                        });
+                    }
+                } else {
+                    addResult(`❌ Error: ${data.error}`, 'error', 'startResult');
+                }
+            } catch (error) {
+                addResult(`💥 Network Error: ${error.message}`, 'error', 'startResult');
+            }
+        }
+
+        function showOTPDisplay(otp) {
+            const display = document.getElementById('otpDisplay');
+            display.innerHTML = `
+                <div class="otp-display">
+                    🔑 ACTIVE JOB OTP: ${otp}
+                </div>
+                <p style="text-align: center; color: #666;">
+                    This OTP is now visible to the user in their bookings page
+                </p>
+            `;
+        }
+
+        function clearAllResults() {
+            const resultDivs = ['authResult', 'startResult', 'userBookingsResult', 'completeResult', 'allResults', 'otpDisplay'];
+            resultDivs.forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+        }
+
+        // Auto-check auth on load
+        window.onload = function() {
+            checkAuth();
+        };
+    </script>
+</body>
+</html>

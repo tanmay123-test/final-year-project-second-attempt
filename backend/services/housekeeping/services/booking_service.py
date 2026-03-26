@@ -1,8 +1,6 @@
 import logging
 from datetime import datetime, timedelta
 import random
-import psycopg2
-import psycopg2.extras
 from services.housekeeping.models.database import housekeeping_db
 from worker_db import WorkerDB
 from user_db import UserDB
@@ -130,17 +128,17 @@ class BookingService:
         for w_id in worker_ids:
             online_statuses[w_id] = self.db.get_worker_online_status(w_id)
 
-        # 3. Batch Fetch Availability Slots (PostgreSQL)
+        # 3. Batch Fetch Availability Slots (SQLite)
         # We'll fetch for all candidates in one query if possible, or iterate once
         worker_slots_map = {w_id: [] for w_id in worker_ids}
         try:
             # Raw query to batch fetch
             conn = self.availability_db.get_conn()
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            query = "SELECT worker_id, time_slot FROM availability WHERE worker_id IN %s AND date = %s"
-            cursor.execute(query, (tuple(worker_ids), date))
+            cursor = conn.cursor()
+            query = "SELECT worker_id, time_slot FROM availability WHERE worker_id IN ({}) AND date = ?".format(','.join(['?']*len(worker_ids)))
+            cursor.execute(query, tuple(worker_ids) + (date,))
             for row in cursor.fetchall():
-                worker_slots_map[row['worker_id']].append(self._normalize_time(row['time_slot']))
+                worker_slots_map[row[0]].append(self._normalize_time(row[1]))
             conn.close()
         except Exception as e:
             print(f"  Batch availability fetch error: {e}")
@@ -234,10 +232,11 @@ class BookingService:
         worker_slots_map = {w_id: [] for w_id in worker_ids}
         try:
             conn = self.availability_db.get_conn()
-            cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            cursor.execute("SELECT worker_id, time_slot FROM availability WHERE worker_id IN %s AND date = %s", (tuple(worker_ids), date))
+            cursor = conn.cursor()
+            query = "SELECT worker_id, time_slot FROM availability WHERE worker_id IN ({}) AND date = ?".format(','.join(['?']*len(worker_ids)))
+            cursor.execute(query, tuple(worker_ids) + (date,))
             for row in cursor.fetchall():
-                worker_slots_map[row['worker_id']].append(self._normalize_time(row['time_slot']))
+                worker_slots_map[row[0]].append(self._normalize_time(row[1]))
             conn.close()
         except Exception as e:
             print(f"  check_availability batch slots error: {e}")
@@ -356,8 +355,9 @@ class BookingService:
 
             # Check for availability based on booking type
             if booking_type == 'instant':
-                if not (is_online or has_explicit_slot):
-                    return {"error": "Worker is currently offline and has no available slot for this time"}
+                # For instant booking with specific worker: always allow booking
+                # But only check availability if we need to assign immediately
+                pass  # Always allow booking for specific worker
             else: # schedule
                 if not has_explicit_slot:
                     return {"error": "Worker has not listed availability for this time slot"}
@@ -380,7 +380,17 @@ class BookingService:
             price = self.db.get_service_price(service_type)
         # Add-ons logic could be added here
         
-        status = 'REQUESTED' if worker_id else 'PENDING'
+        # Determine booking status based on worker online status
+        if worker_id:
+            is_online = self.db.get_worker_online_status(worker_id)
+            if booking_type == 'instant' and is_online:
+                # Worker is online and instant booking - assign immediately
+                status = 'ASSIGNED'
+            else:
+                # Worker is offline or scheduled booking - keep as requested
+                status = 'REQUESTED'
+        else:
+            status = 'PENDING'
         
         booking_id, msg = self.db.create_booking_atomic(
             user_id, service_type, address, date, time, price, 
@@ -389,9 +399,11 @@ class BookingService:
         )
         
         if booking_id:
-            # Notify worker if assigned
-            if worker_id:
-                self._notify_worker(worker_id, booking_id, "New Booking Request", f"You have a new booking request for {service_type} on {date} at {time}.")
+            # Notify worker only if assigned (not just requested)
+            if worker_id and status == 'ASSIGNED':
+                self._notify_worker(worker_id, booking_id, "New Booking Assigned", f"You have been assigned a new booking for {service_type} on {date} at {time}.")
+            elif worker_id and status == 'REQUESTED':
+                self._notify_worker(worker_id, booking_id, "Booking Request", f"You have a new booking request for {service_type} on {date} at {time}. Please accept if you're available.")
             
             return {
                 "success": True, 

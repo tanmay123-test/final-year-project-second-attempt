@@ -53,6 +53,10 @@ import FuelDelivery from './services/car/FuelDelivery';
 // Freelance Marketplace
 import FreelanceHome from './services/freelance/client/FreelanceHome';
 import ProjectDetailPage from './services/freelance/client/ProjectDetailPage';
+import FreelancerProfileView from './services/freelance/client/FreelancerProfileView';
+import ChatTestPage from './services/freelance/test/ChatTestPage';
+import DirectBookingTest from './services/freelance/test/DirectBookingTest';
+import SimpleDirectBookingTest from './services/freelance/test/SimpleDirectBookingTest';
 import FreelancerDashboard from './services/freelance/worker/FreelancerDashboard';
 import BrowseProjects from './services/freelance/worker/BrowseProjects';
 import FreelancerProposals from './services/freelance/worker/FreelancerProposals';
@@ -245,10 +249,12 @@ const App = () => {
                        location.pathname.startsWith('/freelancer/') || 
                        location.pathname.startsWith('/doctor/');
 
+  const isFreelanceRoute = location.pathname.startsWith('/freelance');
+
   return (
     <div className="app">
-      {!isCarServiceUserRoute && !isHousekeepingRoute && !isWorkerRoute && <Navbar />}
-      <div className={isCarServiceUserRoute || isHousekeepingRoute || isWorkerRoute ? "" : "main-content"}>
+      {!isCarServiceUserRoute && !isHousekeepingRoute && !isWorkerRoute && !isFreelanceRoute && <Navbar />}
+      <div className={isCarServiceUserRoute || isHousekeepingRoute || isWorkerRoute || isFreelanceRoute ? "" : "main-content"}>
         <Routes>
           <Route path="/" element={<Landing />} />
           
@@ -322,6 +328,11 @@ const App = () => {
           {/* Freelance Marketplace Routes */}
           <Route path="/freelance/home" element={<ProtectedRoute><FreelanceHome /></ProtectedRoute>} />
           <Route path="/freelance/project/:projectId" element={<ProtectedRoute><ProjectDetailPage /></ProtectedRoute>} />
+          <Route path="/freelance/freelancer/:freelancerId" element={<ProtectedRoute><FreelancerProfileView /></ProtectedRoute>} />
+          <Route path="/freelance/test-chat" element={<ProtectedRoute><ChatTestPage /></ProtectedRoute>} />
+          <Route path="/freelance/test-direct-booking" element={<ProtectedRoute><DirectBookingTest /></ProtectedRoute>} />
+          <Route path="/freelance/simple-test" element={<ProtectedRoute><SimpleDirectBookingTest /></ProtectedRoute>} />
+          <Route path="/freelance/test-profile" element={<ProtectedRoute><FreelancerProfileView /></ProtectedRoute>} />
 
           {/* Healthcare User Routes */}
           <Route path="/healthcare/home" element={<ProtectedRoute><HealthcareDashboard /></ProtectedRoute>} />

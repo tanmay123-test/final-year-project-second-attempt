@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Sparkles, BarChart2, Bell, Calendar, Info, AlertTriangle, Trash2, Plus, CheckCircle, ToggleRight, ToggleLeft } from 'lucide-react';
+import { Bot, Send, User, Bell, Calendar, Clock, CheckCircle, Plus, Trash2, Sparkles, ArrowLeft, MessageCircle, Paperclip, Smile } from 'lucide-react';
 import HousekeepingNavigation from '../components/HousekeepingNavigation';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../services/api';
@@ -21,6 +21,14 @@ const AIChat = () => {
   const [repeat, setRepeat] = useState(false);
   const [reminderMessage, setReminderMessage] = useState('');
   const [myReminders, setMyReminders] = useState([]);
+
+  // Chat State
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [quickReplies, setQuickReplies] = useState([]);
+  const messagesEndRef = useRef(null);
 
   const LS_KEY = 'hk_ai_reminders';
 
@@ -45,6 +53,89 @@ const AIChat = () => {
     const addDays = freq === '60_days' ? 60 : freq === '30_days' ? 30 : 15;
     d.setDate(d.getDate() + addDays);
     return d.toISOString().split('T')[0];
+  };
+
+  // Chat Functions
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const initializeChat = () => {
+    console.log("🤖 initializeChat called!");
+    alert("AI Chat is opening!");
+    const welcomeMessage = {
+      id: Date.now(),
+      text: "Hello! I'm your ExpertEase Housekeeping Assistant! 🧹\n\nI can help you with:\n• Booking cleaning services\n• Setting cleaning reminders\n• Checking your hygiene score\n• Getting cleaning tips\n• Price estimates\n\nHow can I assist you today?",
+      sender: 'ai',
+      timestamp: new Date(),
+      quickReplies: ['Book Cleaning', 'Check Hygiene Score', 'Set Reminder', 'Get Price Quote']
+    };
+    setMessages([welcomeMessage]);
+    setQuickReplies(welcomeMessage.quickReplies);
+    setShowChat(true);
+    console.log("✅ Chat state updated - showChat:", true);
+  };
+
+  const sendMessage = async (messageText) => {
+    if (!messageText.trim()) return;
+
+    const userMessage = {
+      id: Date.now(),
+      text: messageText,
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsTyping(true);
+    setQuickReplies([]);
+
+    try {
+      const response = await api.post('/ai/chat', {
+        user_id: user?.id || 1,
+        message: messageText
+      });
+
+      const aiMessage = {
+        id: Date.now() + 1,
+        text: response.data.message,
+        sender: 'ai',
+        timestamp: new Date(),
+        quickReplies: response.data.quick_replies || []
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+      setQuickReplies(aiMessage.quickReplies);
+
+    } catch (error) {
+      const errorMessage = {
+        id: Date.now() + 1,
+        text: "Sorry, I'm having trouble connecting. Please try again or check your internet connection.",
+        sender: 'ai',
+        timestamp: new Date(),
+        quickReplies: ['Try Again', 'Book Cleaning', 'Check Status']
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      setQuickReplies(errorMessage.quickReplies);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleQuickReply = (reply) => {
+    sendMessage(reply);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(inputMessage);
+    }
   };
 
   useEffect(() => {
@@ -153,44 +244,183 @@ const AIChat = () => {
     return '#E74C3C';
   };
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#8E44AD' }}>Loading AI Insights...</div>;
-
   return (
-    <div className="hk-page-container" style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', paddingBottom: '90px', fontFamily: "'Inter', sans-serif" }}>
-      
-      {/* Header */}
-      <div style={{ 
-        backgroundColor: '#8E44AD', 
-        padding: '30px 24px 100px 24px', 
-        borderBottomLeftRadius: '32px', 
-        borderBottomRightRadius: '32px', 
-        color: 'white',
-        position: 'relative',
-        boxShadow: '0 10px 30px -10px rgba(142, 68, 173, 0.4)',
-        zIndex: 0
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-          <div style={{ 
-            width: '48px', height: '48px', 
-            backgroundColor: 'rgba(255,255,255,0.2)', 
-            borderRadius: '16px', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+  <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+    
+    {/* DEBUG TEST BUTTON - Always Visible */}
+    <div style={{
+      position: 'fixed',
+      top: '10px',
+      left: '10px',
+      zIndex: 99999,
+      backgroundColor: 'red',
+      color: 'white',
+      padding: '10px',
+      borderRadius: '5px',
+      fontSize: '16px',
+      fontWeight: 'bold'
+    }}>
+      <button 
+        onClick={initializeChat}
+        style={{
+          backgroundColor: 'lime',
+          color: 'black',
+          border: '2px solid black',
+          padding: '10px',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          cursor: 'pointer'
+        }}
+      >
+        🤖 CLICK ME FOR AI CHAT
+      </button>
+    </div>
+
+    {/* Header Section */}
+    <div style={{ 
+      backgroundColor: '#8E44AD', 
+      padding: '30px 24px 100px 24px', 
+      borderBottomLeftRadius: '32px', 
+      borderBottomRightRadius: '32px', 
+      color: 'white',
+      position: 'relative',
+      boxShadow: '0 10px 30px -10px rgba(142, 68, 173, 0.4)',
+      zIndex: 0
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+        <button
+          onClick={() => navigate('/housekeeping')}
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '8px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             backdropFilter: 'blur(5px)'
-          }}>
-            <Sparkles size={24} color="white" />
-          </div>
+          }}
+        >
+          <ArrowLeft size={20} color="white" />
+        </button>
+        <div style={{ 
+          width: '48px', height: '48px', 
+          backgroundColor: 'rgba(255,255,255,0.2)', 
+          borderRadius: '16px', 
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(5px)'
+        }}>
+          <Sparkles size={24} color="white" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold' }}>Smart Home Hygiene Advisor</h1>
+          <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>AI-powered cleaning intelligence</p>
+        </div>
+        <button
+          onClick={initializeChat}
+          style={{
+            backgroundColor: 'rgba(255,255,255,0.3)',
+            border: '2px solid rgba(255,255,255,0.5)',
+            borderRadius: '12px',
+            padding: '12px 20px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '700',
+            backdropFilter: 'blur(5px)',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+            animation: 'pulse 2s infinite'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = 'rgba(255,255,255,0.4)';
+            e.target.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = 'rgba(255,255,255,0.3)';
+            e.target.style.transform = 'scale(1)';
+          }}
+        >
+          <Bot size={20} />
+          <span>💬 AI Chat</span>
+        </button>
+      </div>
+    </div>
+
+    {/* Main Content */}
+    <div style={{ padding: '0 24px', marginTop: '-80px', position: 'relative', zIndex: 10 }}>
+      
+      {/* AI Chat Test Button - Always Visible */}
+      <div style={{ 
+        backgroundColor: 'white', 
+        padding: '20px', 
+        borderRadius: '16px', 
+        marginBottom: '24px',
+        border: '2px solid #8E44AD',
+        boxShadow: '0 4px 15px rgba(142, 68, 173, 0.2)'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '16px'
+        }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold' }}>Smart Home Hygiene Advisor</h1>
-            <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>AI-powered cleaning intelligence</p>
+            <h3 style={{ 
+              margin: 0, 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              color: '#8E44AD',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <Bot size={24} color="#8E44AD" />
+              🤖 AI Assistant Available
+            </h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: '#64748B' }}>
+              Get instant help with cleaning, booking, and home hygiene advice
+            </p>
           </div>
+          <button
+            onClick={initializeChat}
+            style={{
+              backgroundColor: '#8E44AD',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '12px 24px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 15px rgba(142, 68, 173, 0.3)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'scale(1.05)';
+              e.target.style.backgroundColor = '#9B59B6';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'scale(1)';
+              e.target.style.backgroundColor = '#8E44AD';
+            }}
+          >
+            <MessageCircle size={20} color="white" />
+            Start AI Chat
+          </button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ padding: '0 24px', marginTop: '-80px', position: 'relative', zIndex: 10 }}>
-        
-        {/* 1️⃣ 🚨 AI Alerts Section */}
-        <div style={{ marginBottom: '32px' }}>
+      {/* 1️⃣ 🚨 AI Alerts Section */}
+      <div style={{ marginBottom: '32px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'white', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                🚨 AI Alerts
             </h2>
@@ -425,6 +655,366 @@ const AIChat = () => {
         </div>
 
       </div>
+
+      {/* AI Chat Interface */}
+      {showChat && (
+        <div style={{
+          position: 'fixed',
+          bottom: '80px',
+          right: '20px',
+          width: '380px',
+          height: '500px',
+          backgroundColor: 'white',
+          borderRadius: '20px',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          border: '1px solid #E2E8F0'
+        }}>
+          {/* Chat Header */}
+          <div style={{
+            backgroundColor: '#8E44AD',
+            padding: '16px 20px',
+            borderRadius: '20px 20px 0 0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            color: 'white'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Bot size={20} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>AI Assistant</h3>
+                <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>Always here to help</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowChat(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                padding: '4px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                fontSize: '18px',
+                lineHeight: '1'
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Chat Messages */}
+          <div style={{
+            flex: 1,
+            padding: '20px',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            backgroundColor: '#FAFBFC'
+          }}>
+            {messages.map((message) => (
+              <div key={message.id} style={{
+                display: 'flex',
+                justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                marginBottom: '8px'
+              }}>
+                <div style={{
+                  maxWidth: '80%',
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  gap: '8px'
+                }}>
+                  {message.sender === 'ai' && (
+                    <div style={{
+                      width: '28px',
+                      height: '28px',
+                      backgroundColor: '#8E44AD',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Bot size={16} color="white" />
+                    </div>
+                  )}
+                  <div style={{
+                    backgroundColor: message.sender === 'user' ? '#8E44AD' : 'white',
+                    color: message.sender === 'user' ? 'white' : '#1E293B',
+                    padding: '12px 16px',
+                    borderRadius: message.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                    fontSize: '14px',
+                    lineHeight: '1.4',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    wordBreak: 'break-word',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {message.text}
+                  </div>
+                  {message.sender === 'user' && (
+                    <div style={{
+                      width: '28px',
+                      height: '28px',
+                      backgroundColor: '#E2E8F0',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <User size={16} color="#64748B" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {isTyping && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '28px',
+                  height: '28px',
+                  backgroundColor: '#8E44AD',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Bot size={16} color="white" />
+                </div>
+                <div style={{
+                  backgroundColor: 'white',
+                  padding: '12px 16px',
+                  borderRadius: '18px 18px 18px 4px',
+                  fontSize: '14px',
+                  color: '#64748B',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                }}>
+                  <span>•</span>
+                  <span>•</span>
+                  <span>•</span>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Replies */}
+          {quickReplies.length > 0 && !isTyping && (
+            <div style={{
+              padding: '12px 20px',
+              backgroundColor: 'white',
+              borderTop: '1px solid #E2E8F0',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '8px'
+            }}>
+              {quickReplies.map((reply, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickReply(reply)}
+                  style={{
+                    backgroundColor: '#F3E5F5',
+                    color: '#8E44AD',
+                    border: '1px solid #E1BEE7',
+                    borderRadius: '20px',
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontWeight: '500'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#8E44AD';
+                    e.target.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#F3E5F5';
+                    e.target.style.color = '#8E44AD';
+                  }}
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Chat Input */}
+          <div style={{
+            padding: '16px 20px',
+            backgroundColor: 'white',
+            borderTop: '1px solid #E2E8F0',
+            borderRadius: '0 0 20px 20px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              backgroundColor: '#F8FAFC',
+              borderRadius: '25px',
+              padding: '8px 16px',
+              border: '1px solid #E2E8F0'
+            }}>
+              <button style={{
+                background: 'none',
+                border: 'none',
+                color: '#64748B',
+                cursor: 'pointer',
+                padding: '4px',
+                borderRadius: '50%'
+              }}>
+                <Paperclip size={18} />
+              </button>
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your message..."
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  outline: 'none',
+                  backgroundColor: 'transparent',
+                  fontSize: '14px',
+                  color: '#1E293B'
+                }}
+                disabled={isTyping}
+              />
+              <button style={{
+                background: 'none',
+                border: 'none',
+                color: '#64748B',
+                cursor: 'pointer',
+                padding: '4px',
+                borderRadius: '50%'
+              }}>
+                <Smile size={18} />
+              </button>
+              <button
+                onClick={() => sendMessage(inputMessage)}
+                disabled={!inputMessage.trim() || isTyping}
+                style={{
+                  backgroundColor: inputMessage.trim() && !isTyping ? '#8E44AD' : '#E2E8F0',
+                  border: 'none',
+                  borderRadius: '50%',
+                  padding: '6px',
+                  cursor: inputMessage.trim() && !isTyping ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Send size={16} color={inputMessage.trim() && !isTyping ? 'white' : '#94A3B8'} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating AI Chat Button - Always Visible */}
+      {!showChat && (
+        <button
+          onClick={initializeChat}
+          style={{
+            position: 'fixed',
+            bottom: '100px',
+            right: '20px',
+            width: '70px',
+            height: '70px',
+            borderRadius: '50%',
+            backgroundColor: '#8E44AD',
+            border: '4px solid white',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 8px 25px rgba(142, 68, 173, 0.4)',
+            zIndex: 9999,
+            transition: 'all 0.3s ease',
+            animation: 'bounce 2s infinite'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'scale(1.1)';
+            e.target.style.boxShadow = '0 12px 35px rgba(142, 68, 173, 0.6)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'scale(1)';
+            e.target.style.boxShadow = '0 8px 25px rgba(142, 68, 173, 0.4)';
+          }}
+        >
+          <Bot size={32} color="white" />
+        </button>
+      )}
+
+      {/* Backup AI Chat Button - Top Right */}
+      {!showChat && (
+        <button
+          onClick={initializeChat}
+          style={{
+            position: 'fixed',
+            top: '100px',
+            right: '20px',
+            backgroundColor: '#8E44AD',
+            border: '2px solid white',
+            borderRadius: '12px',
+            padding: '15px 20px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 15px rgba(142, 68, 173, 0.4)',
+            zIndex: 9998,
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'scale(1.05)';
+            e.target.style.backgroundColor = '#9B59B6';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'scale(1)';
+            e.target.style.backgroundColor = '#8E44AD';
+          }}
+        >
+          <Bot size={20} color="white" />
+          💬 AI Chat
+        </button>
+      )}
+
+      {/* Add CSS animations */}
+      <style>{`
+        @keyframes pulse {
+          0% { box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); }
+          50% { box-shadow: 0 4px 25px rgba(142, 68, 173, 0.8); }
+          100% { box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); }
+        }
+        
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-10px); }
+          60% { transform: translateY(-5px); }
+        }
+      `}</style>
 
       <HousekeepingNavigation />
     </div>

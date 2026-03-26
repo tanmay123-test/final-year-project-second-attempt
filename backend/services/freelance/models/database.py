@@ -144,6 +144,7 @@ class FreelanceDatabase:
                 sender_id INTEGER NOT NULL,
                 message TEXT NOT NULL,
                 file_attachment TEXT,
+                is_read BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (project_id) REFERENCES freelance_projects (id),
                 FOREIGN KEY (contract_id) REFERENCES freelance_contracts (id)

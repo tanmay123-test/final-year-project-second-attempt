@@ -80,3 +80,35 @@ def get_seasonal_tip():
     """
     tip = ai_advisor_service.get_seasonal_tip()
     return jsonify({"tip": tip}), 200
+
+@ai_advisor_bp.route('/process-reminders', methods=['POST'])
+def process_reminders():
+    """
+    Process and send notifications for due reminders.
+    This endpoint can be called manually or by a scheduler.
+    """
+    result = ai_advisor_service.process_due_reminders()
+    return jsonify(result), 200
+
+@ai_advisor_bp.route('/chat', methods=['POST'])
+def chat_with_ai():
+    """
+    AI Chat endpoint for conversational housekeeping assistance
+    Input: { user_id, message }
+    Output: { message, quick_replies, type }
+    """
+    data = request.json
+    user_id = data.get('user_id')
+    message = data.get('message', '').strip()
+    
+    if not user_id:
+        return jsonify({"error": "User ID required"}), 400
+    
+    if not message:
+        return jsonify({"error": "Message cannot be empty"}), 400
+    
+    try:
+        response = ai_advisor_service.chat_with_ai(user_id, message)
+        return jsonify(response), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

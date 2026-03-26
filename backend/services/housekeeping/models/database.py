@@ -1,3 +1,11 @@
+# ⚠️  UNUSED FILE - This is the OLD SQLite version
+# The active housekeeping service uses PostgreSQL
+# This file is kept for reference only - DO NOT USE
+# 
+# Use the PostgreSQL version instead:
+# - backend/services/housekeeping/services/booking_service.py (PostgreSQL)
+# - backend/services/housekeeping/controllers/booking_controller.py (PostgreSQL)
+
 import sqlite3
 import os
 from datetime import datetime

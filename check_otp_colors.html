@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check OTP Display Colors</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .color-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .color-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .good { color: #059669; }
+        .bad { color: #DC2626; }
+        button { 
+            padding: 12px 24px; 
+            margin: 8px; 
+            background: #8E44AD; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: 'pointer'; 
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h1>🎨 OTP Color Check</h1>
+        <p>Checking for any unwanted yellow/green colors in the OTP display</p>
+        
+        <button onclick="checkCurrentColors()">Check Current Colors</button>
+        <button onclick="openUserBookings()">Open User Bookings</button>
+        
+        <div id="colorResults"></div>
+    </div>
+
+    <script>
+        function checkCurrentColors() {
+            const results = document.getElementById('colorResults');
+            results.innerHTML = '<h3>🔍 Color Analysis:</h3>';
+            
+            // Check for problematic colors
+            const problematicColors = [
+                { name: 'Yellow Green', hex: '#ECFDF5', issue: 'Light green background' },
+                { name: 'Green Text', hex: '#059669', issue: 'Green text color' },
+                { name: 'Light Green Border', hex: '#10B981', issue: 'Green border' },
+                { name: 'Orange Background', hex: '#FFF7ED', issue: 'Light orange background' },
+                { name: 'Orange Text', hex: '#C2410C', issue: 'Orange text' }
+            ];
+            
+            const goodColors = [
+                { name: 'Light Gray', hex: '#F8FAFC', usage: 'OTP container background' },
+                { name: 'Border Gray', hex: '#E2E8F0', usage: 'OTP container border' },
+                { name: 'Purple', hex: '#8E44AD', usage: 'Brand color for buttons/icons' },
+                { name: 'Dark Text', hex: '#1F2937', usage: 'Main text color' },
+                { name: 'Status Gray', hex: '#F3F4F6', usage: 'Completed status background' }
+            ];
+            
+            // Show problematic colors (should not exist)
+            let hasIssues = false;
+            results.innerHTML += '<h4>❌ Problematic Colors (Should NOT exist):</h4>';
+            problematicColors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-check bad';
+                div.innerHTML = `
+                    <div class="color-box" style="background: ${color.hex}"></div>
+                    <span><strong>${color.name}</strong> (${color.hex}) - ${color.issue}</span>
+                `;
+                results.appendChild(div);
+                hasIssues = true;
+            });
+            
+            // Show good colors (should exist)
+            results.innerHTML += '<h4>✅ Good Colors (Should exist):</h4>';
+            goodColors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-check good';
+                div.innerHTML = `
+                    <div class="color-box" style="background: ${color.hex}"></div>
+                    <span><strong>${color.name}</strong> (${color.hex}) - ${color.usage}</span>
+                `;
+                results.appendChild(div);
+            });
+            
+            if (hasIssues) {
+                results.innerHTML += '<p style="color: #DC2626; font-weight: bold;">⚠️ Issues found! Need to fix remaining colors.</p>';
+            } else {
+                results.innerHTML += '<p style="color: #059669; font-weight: bold;">✅ All colors look good!</p>';
+            }
+        }
+        
+        function openUserBookings() {
+            // Open user bookings in a new tab to check visually
+            window.open('/housekeeping/user/bookings', '_blank');
+        }
+        
+        // Auto-check on load
+        window.onload = function() {
+            checkCurrentColors();
+        };
+    </script>
+</body>
+</html>

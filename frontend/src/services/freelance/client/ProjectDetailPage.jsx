@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Wallet, Clock, Briefcase, Star, User, CheckCircle, ExternalLink, IndianRupee, Shield, Calendar, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Wallet, Clock, Briefcase, Star, User, CheckCircle, ExternalLink, IndianRupee, Shield, Calendar, AlertCircle, MessageCircle } from 'lucide-react';
 import api from '../../../shared/api';
+import { useAuth } from '../../../context/AuthContext';
+import RealTimeChat from '../components/RealTimeChat';
 import '../styles/FreelancerDashboard.css';
 
 const ProjectDetailPage = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [project, setProject] = useState(null);
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [acceptingId, setAcceptingId] = useState(null);
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     fetchProjectDetail();
@@ -161,6 +165,34 @@ const ProjectDetailPage = () => {
           )}
         </div>
       </section>
+
+      {/* Real-time Chat Section - Only show when project is in progress */}
+      {project.status === 'IN_PROGRESS' && (
+        <section className="chat-section" style={{ marginBottom: '3rem' }}>
+          <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <MessageCircle size={20} />
+              Project Chat
+            </h3>
+            <button 
+              className="action-btn-outline"
+              onClick={() => setShowChat(!showChat)}
+            >
+              {showChat ? 'Hide Chat' : 'Show Chat'}
+            </button>
+          </div>
+          
+          {showChat && (
+            <div style={{ height: '500px', borderRadius: '12px', overflow: 'hidden' }}>
+              <RealTimeChat 
+                projectId={parseInt(projectId)}
+                currentUserId={user?.user_id}
+                projectTitle={project.title}
+              />
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Proposals Section (Only for Client) */}
       {isOwner && (

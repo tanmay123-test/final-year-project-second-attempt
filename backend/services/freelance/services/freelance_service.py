@@ -479,6 +479,22 @@ class FreelanceService:
              cursor.close()
              conn.close()
 
+    def get_direct_bookings_by_client(self, client_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT b.*, b.amount as budget, u.name as freelancer_name
+                FROM freelance_bookings b
+                LEFT JOIN users u ON b.freelancer_id = u.id
+                WHERE b.client_id = %s
+                ORDER BY b.created_at DESC
+            """, (client_id,))
+            return [freelance_db._row_to_dict(row, cursor) for row in cursor.fetchall()]
+        finally:
+             cursor.close()
+             conn.close()
+
     def get_freelancer_active_work(self, freelancer_id):
         conn = freelance_db.get_conn()
         cursor = conn.cursor()
@@ -944,6 +960,34 @@ The ExpertEase Team
                 w['skills_list'] = [row[0] for row in cursor.fetchall()]
                 
             return workers
+        finally:
+            cursor.close()
+            conn.close()
+
+    def get_worker_by_id(self, worker_id):
+        conn = freelance_db.get_conn()
+        cursor = conn.cursor()
+        try:
+            # Get worker details
+            cursor.execute("SELECT * FROM workers WHERE id = %s AND status = 'approved'", (worker_id,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+                
+            worker = freelance_db._row_to_dict(row, cursor)
+            
+            # Get worker skills
+            cursor.execute("""
+                SELECT s.name FROM freelance_skills s
+                JOIN freelance_provider_skills ps ON s.id = ps.skill_id
+                WHERE ps.provider_id = %s
+            """, (worker_id,))
+            worker['skills_list'] = [row[0] for row in cursor.fetchall()]
+            
+            # Convert skills list to comma-separated string for frontend compatibility
+            worker['skills'] = ', '.join(worker['skills_list']) if worker['skills_list'] else ''
+            
+            return worker
         finally:
             cursor.close()
             conn.close()

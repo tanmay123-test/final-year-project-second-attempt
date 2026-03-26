@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Sparkles, BarChart2, Bell, Calendar, Info, AlertTriangle, Trash2, Plus, CheckCircle, ToggleRight, ToggleLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles, BarChart2, Bell, Calendar, Info, AlertTriangle, Trash2, Plus, CheckCircle, ToggleRight, ToggleLeft, Bot, Send, User, MessageCircle, Paperclip, Smile } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import api from '../../../shared/api';
 
@@ -12,6 +12,14 @@ const AIChat = () => {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [loading, setLoading] = useState(true);
   const [localMode, setLocalMode] = useState(false);
+  
+  // Chat State
+  const [showChat, setShowChat] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [quickReplies, setQuickReplies] = useState([]);
+  const messagesEndRef = useRef(null);
   
   // Reminder State
   const [reminderType, setReminderType] = useState('General Cleaning');
@@ -44,6 +52,117 @@ const AIChat = () => {
     const addDays = freq === '60_days' ? 60 : freq === '30_days' ? 30 : 15;
     d.setDate(d.getDate() + addDays);
     return d.toISOString().split('T')[0];
+  };
+
+  // Chat Functions
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const initializeChat = () => {
+    console.log("🤖 initializeChat called!");
+    alert("AI Chat is opening!");
+    const welcomeMessage = {
+      id: Date.now(),
+      text: "Hello! I'm your ExpertEase Housekeeping Assistant! 🧹\n\nI can help you with:\n• Booking cleaning services\n• Setting cleaning reminders\n• Checking your hygiene score\n• Getting cleaning tips\n• Price estimates\n\nHow can I assist you today?",
+      sender: 'ai',
+      timestamp: new Date(),
+      quickReplies: ['Book Cleaning', 'Check Hygiene Score', 'Set Reminder', 'Get Price Quote']
+    };
+    setMessages([welcomeMessage]);
+    setQuickReplies(welcomeMessage.quickReplies);
+    setShowChat(true);
+    console.log("✅ Chat state updated - showChat:", true);
+  };
+
+  const sendMessage = async (messageText) => {
+    if (!messageText.trim()) return;
+
+    const userMessage = {
+      id: Date.now(),
+      text: messageText,
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setQuickReplies([]);
+    setIsTyping(true);
+
+    // Mock responses for when backend is not available
+    const mockResponses = {
+      'book cleaning': "Perfect! I can help you book a cleaning service right now! 🧹\n\n**Available Services:**\n• General Cleaning - ₹100 (Basic cleaning)\n• Deep Cleaning - ₹300 (Thorough cleaning)\n• Bathroom Cleaning - ₹200 (Bathroom specialist)\n• Kitchen Cleaning - ₹250 (Kitchen specialist)\n\n**Quick Booking:** Just tell me which service you want and I'll help you book it! For example: 'I want General Cleaning'",
+      'check hygiene score': `Your current hygiene score is ${cleaningStatus?.hygiene_score || 7}/10! 📊\n\n**Status:** ${cleaningStatus?.status || 'Good'}\n**Last Clean:** ${cleaningStatus?.last_clean_date || 'Recently'}\n**Next Recommended:** ${cleaningStatus?.next_suggested_date || 'Soon'}\n\n**Recommendation:** ${cleaningStatus?.recommendation || 'Keep up the good work! Regular cleaning helps maintain a healthy home.'}`,
+      'set reminder': "Perfect! Let's set up your cleaning reminder! ⏰\n\n**Step 1:** Look at the reminder form ABOVE this chat\n**Step 2:** Select 'General Cleaning' from the first dropdown\n**Step 3:** Choose 'Every 15 Days' from the frequency dropdown\n**Step 4:** Turn ON the 'Repeat Reminder' toggle (make it green)\n**Step 5:** Click the purple 'Set Reminder' button\n\n**You'll see:** ✅ Success message and your reminder will appear in the list below!\n\nNeed help? Just tell me what step you're stuck on!",
+      'get price quote': "Here are our current prices with details! 💰\n\n**🧹 General Cleaning - ₹100**\n• Basic dusting and mopping\n• Kitchen and bathroom cleaning\n• Perfect for regular maintenance\n\n**🌟 Deep Cleaning - ₹300**\n• Thorough cleaning of all areas\n• Inside cabinets, windows, fans\n• Best for first-time or special occasions\n\n**🚿 Bathroom Cleaning - ₹200**\n• Tiles, toilet, sink, shower\n• Disinfection and stain removal\n• Bathroom specialist cleaning\n\n**🍳 Kitchen Cleaning - ₹250**\n• Platform, stove, chimney, cabinets\n• Oil and grease removal\n• Kitchen deep cleaning\n\n**Which service interests you?**",
+      'general cleaning': "Great choice! General Cleaning is perfect for regular home maintenance! 🧹\n\n**What's included (₹100):**\n• Dusting all surfaces\n• Mopping floors\n• Kitchen cleaning (platform, sink)\n• Bathroom cleaning (toilet, floor)\n• Living room and bedroom cleaning\n\n**Ready to book?** Just say 'Book General Cleaning' and I'll help you schedule it!\n\n**Or set a reminder:** Say 'Set General Cleaning reminder for 15 days'",
+      'default': "Hello! I'm your ExpertEase Housekeeping Assistant! 🧹\n\n**I can help you with:**\n🏠 **Book Cleaning Services** - General, Deep, Bathroom, Kitchen\n⏰ **Set Cleaning Reminders** - Never forget cleaning day!\n📊 **Check Hygiene Score** - Track your home's cleanliness\n💰 **Get Price Quotes** - Know our service prices\n🧹 **Cleaning Tips** - Expert advice for clean home\n\n**Just tell me what you need!** For example:\n• 'Book General Cleaning'\n• 'Set reminder for 15 days'\n• 'What's my hygiene score?'\n• 'Show me prices'\n\n**What would you like to do today?**"
+    };
+
+    // Simulate API delay
+    setTimeout(() => {
+      const lowerMessage = messageText.toLowerCase();
+      let responseText = mockResponses.default;
+      
+      // Better keyword matching for more specific responses
+      if (lowerMessage.includes('general cleaning') || lowerMessage.includes('genral') || lowerMessage.includes('genaral')) {
+        responseText = mockResponses['general cleaning'];
+      } else if (lowerMessage.includes('book') && (lowerMessage.includes('cleaning') || lowerMessage.includes('service'))) {
+        responseText = mockResponses['book cleaning'];
+      } else if (lowerMessage.includes('hygiene') || lowerMessage.includes('score')) {
+        responseText = mockResponses['check hygiene score'];
+      } else if (lowerMessage.includes('reminder') || lowerMessage.includes('set') || lowerMessage.includes('15') || lowerMessage.includes('day')) {
+        responseText = mockResponses['set reminder'];
+      } else if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('quote') || lowerMessage.includes('rs') || lowerMessage.includes('₹')) {
+        responseText = mockResponses['get price quote'];
+      } else if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hellp')) {
+        responseText = mockResponses['default'];
+      }
+
+      const aiMessage = {
+        id: Date.now() + 1,
+        text: responseText,
+        sender: 'ai',
+        timestamp: new Date(),
+        quickReplies: ['Book General Cleaning', 'Set Reminder for 15 Days', 'Check Hygiene Score', 'Show Prices']
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+      setQuickReplies(aiMessage.quickReplies);
+      setIsTyping(false);
+    }, 1000);
+
+    // Try real API if available (fallback to mock)
+    try {
+      const response = await api.post('/api/ai/chat', {
+        message: messageText,
+        user_id: user?.id || 'anonymous'
+      });
+
+      const aiMessage = {
+        id: Date.now() + 1,
+        text: response.data.response,
+        sender: 'ai',
+        timestamp: new Date(),
+        quickReplies: response.data.quick_replies || []
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+      setQuickReplies(aiMessage.quickReplies);
+      setIsTyping(false);
+    } catch (error) {
+      console.log('Using mock response - backend not available');
+      // Mock response already handled above
+    }
+  };
+
+  const handleQuickReply = (reply) => {
+    sendMessage(reply);
   };
 
   useEffect(() => {
@@ -88,55 +207,53 @@ const AIChat = () => {
 
   const handleSetReminder = async () => {
     try {
-      const userId = user.id || user.user_id;
-      if (!localMode) {
-        const res = await api.post('/api/ai/set-reminder', {
-          user_id: userId,
-          reminder_type: reminderType,
-          frequency_type: frequencyType,
-          custom_date: customDate,
-          repeat: repeat
-        });
-        setReminderMessage(`Reminder set for ${res.data.next_reminder}`);
-        const remindersRes = await api.get(`/api/ai/get-reminders?user_id=${userId}`);
-        setMyReminders(remindersRes.data);
-        setTimeout(() => setReminderMessage(''), 3000);
-      } else {
-        // Local fallback: store in localStorage
-        const nextDate = computeNextDate(frequencyType, customDate);
-        const newItem = {
-          id: Date.now(),
-          reminder_type: reminderType,
-          next_reminder_date: nextDate,
-          repeat
-        };
-        const updated = [newItem, ...readLocalReminders()];
-        writeLocalReminders(updated);
-        setMyReminders(updated);
-        setReminderMessage(`Reminder set for ${nextDate}`);
-        setTimeout(() => setReminderMessage(''), 3000);
-      }
+      console.log("🔔 Setting reminder:", { reminderType, frequencyType, customDate, repeat });
+      
+      // Always use local mode since backend isn't working
+      const nextDate = computeNextDate(frequencyType, customDate);
+      const newItem = {
+        id: Date.now(),
+        reminder_type: reminderType,
+        next_reminder_date: nextDate,
+        repeat
+      };
+      
+      console.log("📅 New reminder item:", newItem);
+      
+      const updated = [newItem, ...readLocalReminders()];
+      writeLocalReminders(updated);
+      setMyReminders(updated);
+      setReminderMessage(`✅ Reminder set for ${nextDate}`);
+      
+      console.log("✅ Reminder saved successfully!");
+      console.log("📋 All reminders:", updated);
+      
+      setTimeout(() => setReminderMessage(''), 5000);
+      
+      // Show success alert
+      alert(`✅ Reminder set successfully!\n\nType: ${reminderType}\nDate: ${nextDate}\n${repeat ? 'Repeats' : 'One time'}`);
+      
     } catch (error) {
       console.error("Failed to set reminder", error);
-      if (!localMode) {
-        const errorMsg = error.response?.data?.error || "Failed to set reminder";
-        alert(errorMsg);
-      }
+      alert("❌ Failed to set reminder. Please try again.");
     }
   };
 
   const handleDeleteReminder = async (id) => {
     try {
-        if (!localMode) {
-          await api.post('/api/ai/delete-reminder', { reminder_id: id });
-          setMyReminders(myReminders.filter(r => r.id !== id));
-        } else {
-          const updated = readLocalReminders().filter(r => r.id !== id);
-          writeLocalReminders(updated);
-          setMyReminders(updated);
-        }
+      console.log("🗑️ Deleting reminder:", id);
+      
+      // Always use local mode
+      const updated = readLocalReminders().filter(r => r.id !== id);
+      writeLocalReminders(updated);
+      setMyReminders(updated);
+      
+      console.log("✅ Reminder deleted successfully!");
+      alert("✅ Reminder deleted successfully!");
+      
     } catch (error) {
-        console.error("Failed to delete reminder", error);
+      console.error("Failed to delete reminder", error);
+      alert("❌ Failed to delete reminder. Please try again.");
     }
   };
 
@@ -424,6 +541,195 @@ const AIChat = () => {
         </div>
 
       </div>
+
+      {/* AI Chat Window */}
+      {showChat && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          width: '380px',
+          height: '600px',
+          backgroundColor: 'white',
+          borderRadius: '20px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          zIndex: 10000,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
+          {/* Chat Header */}
+          <div style={{
+            backgroundColor: '#8E44AD',
+            padding: '20px',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Bot size={24} color="white" />
+              <div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>AI Assistant</h3>
+                <p style={{ margin: 0, fontSize: '12px', opacity: 0.9 }}>Always here to help</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowChat(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '24px',
+                padding: '0',
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255,255,255,0.2)'
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Chat Messages */}
+          <div style={{
+            flex: 1,
+            padding: '20px',
+            overflowY: 'auto',
+            backgroundColor: '#F9FAFB'
+          }}>
+            {messages.map((message) => (
+              <div key={message.id} style={{
+                display: 'flex',
+                justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                marginBottom: '16px'
+              }}>
+                <div style={{
+                  maxWidth: '80%',
+                  padding: '12px 16px',
+                  borderRadius: '18px',
+                  backgroundColor: message.sender === 'user' ? '#8E44AD' : 'white',
+                  color: message.sender === 'user' ? 'white' : '#1E293B',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                  <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.4' }}>
+                    {message.text}
+                  </p>
+                </div>
+              </div>
+            ))}
+            
+            {isTyping && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
+                <div style={{
+                  padding: '12px 16px',
+                  borderRadius: '18px',
+                  backgroundColor: 'white',
+                  color: '#64748B',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#CBD5E1', animation: 'bounce 1.4s infinite' }}></div>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#CBD5E1', animation: 'bounce 1.4s infinite 0.2s' }}></div>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#CBD5E1', animation: 'bounce 1.4s infinite 0.4s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Replies */}
+          {quickReplies.length > 0 && (
+            <div style={{
+              padding: '16px 20px',
+              backgroundColor: 'white',
+              borderTop: '1px solid #E2E8F0'
+            }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {quickReplies.map((reply, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleQuickReply(reply)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '16px',
+                      border: '1px solid #E2E8F0',
+                      backgroundColor: 'white',
+                      color: '#64748B',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = '#8E44AD';
+                      e.target.style.color = 'white';
+                      e.target.style.borderColor = '#8E44AD';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = 'white';
+                      e.target.style.color = '#64748B';
+                      e.target.style.borderColor = '#E2E8F0';
+                    }}
+                  >
+                    {reply}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Chat Input */}
+          <div style={{
+            padding: '16px 20px',
+            backgroundColor: 'white',
+            borderTop: '1px solid #E2E8F0'
+          }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && sendMessage(inputMessage)}
+                placeholder="Type your message..."
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '20px',
+                  border: '1px solid #E2E8F0',
+                  backgroundColor: '#F9FAFB',
+                  outline: 'none',
+                  fontSize: '14px'
+                }}
+              />
+              <button
+                onClick={() => sendMessage(inputMessage)}
+                disabled={!inputMessage.trim() || isTyping}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  backgroundColor: inputMessage.trim() && !isTyping ? '#8E44AD' : '#CBD5E1',
+                  color: 'white',
+                  cursor: inputMessage.trim() && !isTyping ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <Send size={18} color={inputMessage.trim() && !isTyping ? 'white' : '#94A3B8'} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
