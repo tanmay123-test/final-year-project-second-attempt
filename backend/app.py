@@ -54,8 +54,7 @@ video_db.create_table()
 from datetime import datetime
 
 app = Flask(__name__)
-# CORS: web (5173, 5174, 5175), Expo (8081), mobile (null), Android emulator
-CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://127.0.0.1:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5175", "http://localhost:8081", "http://localhost:19006", "null"]}})
+CORS(app, origins=["VERCEL_URL_HERE"])  # replace after Vercel deploy
 
 # Register subscription blueprint
 app.register_blueprint(subscription_bp)
@@ -1925,5 +1924,4 @@ def handle_exception(e):
 
 # ================= RUN =================
 if __name__ == "__main__":
-    # Use SocketIO for WebSocket support
-    socketio.run(app, debug=True, port=5000, host="0.0.0.0", allow_unsafe_werkzeug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
