@@ -143,6 +143,12 @@ import AIMechanic from './pages/AIMechanic';
 // Tow Truck Components
 import TowTruckHomepage from './services/car/TowTruckHomepage';
 import TowTruckDetails from './services/car/TowTruckDetails';
+import WorkerLandingPage from './services/healthcare/worker_portal/WorkerLandingPage';
+import WorkerSignupPage from './services/healthcare/worker_portal/WorkerSignupPage';
+import WorkerLoginPage from './services/healthcare/worker_portal/WorkerLoginPage';
+import WorkerDashboardPage from './services/healthcare/worker_portal/WorkerDashboardPage';
+import WorkerPortalProtectedRoute from './services/healthcare/worker_portal/WorkerPortalProtectedRoute';
+import experteaseELogo from './assets/expertease-e.png';
 
 const ProtectedWorkerRoute = ({ children }) => {
   const [worker, setWorker] = useState(null);
@@ -243,6 +249,7 @@ const ProtectedWorkerRoute = ({ children }) => {
 
 const App = () => {
   const location = useLocation();
+  const [showStartupSplash, setShowStartupSplash] = useState(true);
   const isCarServiceUserRoute = location.pathname.startsWith('/car-service');
   const isHousekeepingRoute = location.pathname.startsWith('/housekeeping');
   const isWorkerRoute = location.pathname.startsWith('/worker') || 
@@ -250,6 +257,60 @@ const App = () => {
                        location.pathname.startsWith('/doctor/');
 
   const isFreelanceRoute = location.pathname.startsWith('/freelance');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowStartupSplash(false), 3200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showStartupSplash) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          background: '#ffffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#5f49b8',
+          flexDirection: 'row',
+          gap: '16px',
+        }}
+      >
+        <div
+          style={{
+            width: '92px',
+            height: '92px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            filter: 'drop-shadow(0 10px 16px rgba(126, 89, 255, 0.2))',
+          }}
+        >
+          <img
+            src={experteaseELogo}
+            alt="ExpertEase logo mark"
+            style={{
+              width: '86px',
+              height: '86px',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
+        <div
+          style={{
+            fontSize: '52px',
+            fontWeight: 700,
+            lineHeight: 1,
+            letterSpacing: '0.2px',
+            color: '#5f49b8',
+          }}
+        >
+          ExpertEase
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -649,17 +710,17 @@ const App = () => {
           <Route path="/worker/resource/login" element={<WorkerLogin serviceType="resource" />} />
           <Route path="/worker/resource/signup" element={<WorkerSignup serviceType="resource" />} />
 
-          {/* Legacy/Fallback Routes */}
-          <Route path="/worker/login" element={<WorkerLogin serviceType="healthcare" />} />
-          <Route path="/worker/signup" element={<WorkerSignup serviceType="healthcare" />} />
-          
-          <Route 
-            path="/worker/dashboard" 
+          {/* Healthcare Worker Portal */}
+          <Route path="/worker" element={<WorkerLandingPage />} />
+          <Route path="/worker/login" element={<WorkerLoginPage />} />
+          <Route path="/worker/signup" element={<WorkerSignupPage />} />
+          <Route
+            path="/worker/dashboard"
             element={
-              <ProtectedWorkerRoute>
-                <WorkerDashboard />
-              </ProtectedWorkerRoute>
-            } 
+              <WorkerPortalProtectedRoute>
+                <WorkerDashboardPage />
+              </WorkerPortalProtectedRoute>
+            }
           />
 
           {/* Fallback */}

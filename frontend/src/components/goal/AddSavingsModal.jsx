@@ -48,7 +48,11 @@ const AddSavingsModal = ({ isOpen, onClose, goal, onSavingsAdded }) => {
       }
     } catch (error) {
       console.error('Add savings error:', error);
-      showToast('Failed to add savings. Try again.');
+      if (error?.response?.status === 401) {
+        showToast('Session expired. Please log in again.');
+      } else {
+        showToast(error?.response?.data?.message || 'Failed to add savings. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, List, PieChart, BarChart3, Home, PiggyBank, Calculator, Target, Brain } from 'lucide-react';
+import { ArrowLeft, Plus, List, PieChart, BarChart3 } from 'lucide-react';
 import { moneyService } from '../../../shared/api';
 import { transactionsApi } from '../api/transactionsApi';
 import TransactionsList from '../components/TransactionsList';
@@ -194,14 +194,6 @@ const QuickModePage = () => {
     { id: 'analytics', label: 'Analytics', icon: BarChart3 }
   ];
 
-  const bottomNavItems = [
-    { icon: Home, label: 'Finny', active: true },
-    { icon: PiggyBank, label: 'Budget', active: false },
-    { icon: Calculator, label: 'Loan', active: false },
-    { icon: Target, label: 'Goal Jar', active: false },
-    { icon: Brain, label: 'AI Coach', active: false }
-  ];
-
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
     // Remove navigation - just switch tabs within the same page
@@ -219,25 +211,7 @@ const QuickModePage = () => {
   };
 
   return (
-    <div className="finny-page-layout">
-      {/* Sidebar for Desktop */}
-      <aside className="finny-sidebar">
-        <div className="sidebar-header">
-          <h1 className="sidebar-title">Finny</h1>
-          <p className="sidebar-subtitle">Smart Tracker</p>
-        </div>
-        <nav className="sidebar-nav">
-          {bottomNavItems.map((item, index) => (
-            <div key={index} className={`sidebar-item ${item.active ? 'active' : ''}`}>
-              <item.icon size={20} color={item.active ? '#F4B400' : '#6B7280'} />
-              <span className="sidebar-label">{item.label}</span>
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      <div className="finny-page-content">
-        <div className="quick-mode-page">
+    <div className="quick-mode-page">
           {/* Header */}
           <div className="header">
             <div className="header-content">
@@ -449,22 +423,6 @@ const QuickModePage = () => {
             </div>
           )}
 
-          {/* Bottom Navigation for Mobile */}
-          <div className="finny-bottom-nav">
-            {bottomNavItems.map((item, index) => (
-              <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
-                <item.icon 
-                  size={20} 
-                  color={item.active ? '#F4B400' : '#6B7280'} 
-                />
-                <span className={`nav-label ${item.active ? 'active' : ''}`}>
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

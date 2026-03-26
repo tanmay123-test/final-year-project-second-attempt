@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, Settings, User, Plus, MessageSquare, BarChart3, Home, PiggyBank, Calculator, Target, Brain } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Settings, User, Plus, MessageSquare, BarChart3 } from 'lucide-react';
 import { moneyService } from '../../../shared/api';
 import '../styles/FinnyHomeScreen.css';
 
 const FinnyHomeScreen = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [monthlyData, setMonthlyData] = useState({
@@ -115,39 +114,8 @@ const FinnyHomeScreen = () => {
     }
   ];
 
-  const bottomNavItems = [
-    { icon: Home, label: 'Finny', path: '/finny', active: location.pathname === '/finny' },
-    { icon: PiggyBank, label: 'Budget', path: '/finny/budget', active: location.pathname === '/finny/budget' },
-    { icon: Calculator, label: 'Loan', path: '/finny/loan', active: location.pathname === '/finny/loan' },
-    { icon: Target, label: 'Goal Jar', path: '/finny/goals', active: location.pathname === '/finny/goals' },
-    { icon: Brain, label: 'AI Coach', path: '/finny/coach', active: location.pathname === '/finny/coach' }
-  ];
-
   return (
-    <div className="finny-page-layout">
-      {/* Sidebar for Desktop */}
-      <aside className="finny-sidebar">
-        <div className="sidebar-header">
-          <h1 className="sidebar-title">Finny</h1>
-          <p className="sidebar-subtitle">Smart Tracker</p>
-        </div>
-        <nav className="sidebar-nav">
-          {bottomNavItems.map((item, index) => (
-            <div 
-              key={index} 
-              className={`sidebar-item ${item.active ? 'active' : ''}`}
-              onClick={() => navigate(item.path)}
-              style={{ cursor: 'pointer' }}
-            >
-              <item.icon size={20} color={item.active ? '#F4B400' : '#6B7280'} />
-              <span className="sidebar-label">{item.label}</span>
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      <div className="finny-page-content">
-        <div className="finny-home-screen">
+    <div className="finny-home-screen">
           {/* Header */}
           <div className="finny-header">
             <div className="header-content">
@@ -258,27 +226,6 @@ const FinnyHomeScreen = () => {
             </div>
           </div>
 
-          {/* Bottom Navigation for Mobile */}
-          <div className="finny-bottom-nav">
-            {bottomNavItems.map((item, index) => (
-              <div 
-                key={index} 
-                className={`nav-item ${item.active ? 'active' : ''}`}
-                onClick={() => navigate(item.path)}
-                style={{ cursor: 'pointer' }}
-              >
-                <item.icon 
-                  size={20} 
-                  color={item.active ? '#F4B400' : '#6B7280'} 
-                />
-                <span className={`nav-label ${item.active ? 'active' : ''}`}>
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

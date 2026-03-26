@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Target, Plus, Home, PiggyBank, Calculator, Brain, 
+  ArrowLeft, Target, Plus,
   Calendar, TrendingUp, AlertCircle 
 } from 'lucide-react';
 import { moneyService } from '../../../shared/api';
@@ -18,6 +18,7 @@ const GoalJarPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [addingSavings, setAddingSavings] = useState(null); // ID of goal being added to
   const [savingsAmount, setSavingsAmount] = useState('');
+  const [, setSummary] = useState({});
 
   // Form state for new goal
   const [formData, setFormData] = useState({
@@ -26,14 +27,6 @@ const GoalJarPage = () => {
     monthly_contribution: '',
     target_date: ''
   });
-
-  const bottomNavItems = [
-    { icon: Home, label: 'Finny', path: '/finny' },
-    { icon: PiggyBank, label: 'Budget', path: '/finny/budget' },
-    { icon: Calculator, label: 'Loan', path: '/finny/loan' },
-    { icon: Target, label: 'Goal Jar', path: '/finny/goals', active: true },
-    { icon: Brain, label: 'AI Coach', path: '/finny/coach' }
-  ];
 
   useEffect(() => {
     fetchGoals();
@@ -44,11 +37,21 @@ const GoalJarPage = () => {
       setLoading(true);
       const userId = user?.user_id || user?.id;
       const response = await moneyService.getGoals(userId);
-      setGoals(response.data?.goals || response.data || []);
+      if (response.data?.success) {
+        setGoals(response.data?.data?.goals || []);
+        setSummary(response.data?.data?.summary || {});
+      } else {
+        setGoals([]);
+        setSummary({});
+      }
       setError(null);
     } catch (err) {
       console.error('Failed to fetch goals:', err);
-      setError('Failed to load goals. Please try again.');
+      if (err?.response?.status === 401) {
+        setError('Session expired. Please log in again.');
+      } else {
+        setError('Failed to load goals. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -68,7 +71,11 @@ const GoalJarPage = () => {
       fetchGoals();
     } catch (err) {
       console.error('Failed to create goal:', err);
-      alert('Failed to create goal.');
+      if (err?.response?.status === 401) {
+        alert('Session expired. Please log in again.');
+      } else {
+        alert(err?.response?.data?.message || 'Failed to create goal. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -89,7 +96,11 @@ const GoalJarPage = () => {
       fetchGoals();
     } catch (err) {
       console.error('Failed to add savings:', err);
-      alert('Failed to add savings.');
+      if (err?.response?.status === 401) {
+        alert('Session expired. Please log in again.');
+      } else {
+        alert(err?.response?.data?.message || 'Failed to add savings. Please try again.');
+      }
       setAddingSavings(null);
     }
   };
@@ -103,29 +114,7 @@ const GoalJarPage = () => {
   };
 
   return (
-    <div className="finny-page-layout">
-      {/* Sidebar for Desktop */}
-      <aside className="finny-sidebar">
-        <div className="sidebar-header">
-          <h1 className="sidebar-title">Finny</h1>
-          <p className="sidebar-subtitle">Smart Tracker</p>
-        </div>
-        <nav className="sidebar-nav">
-          {bottomNavItems.map((item, index) => (
-            <div 
-              key={index} 
-              className={`sidebar-item ${item.active ? 'active' : ''}`}
-              onClick={() => navigate(item.path)}
-            >
-              <item.icon size={20} color={item.active ? '#F4B400' : '#6B7280'} />
-              <span className="sidebar-label">{item.label}</span>
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      <div className="finny-page-content">
-        <div className="goal-jar-page">
+    <div className="goal-jar-page">
           {/* Header */}
           <div className="header">
             <div className="header-content">
@@ -311,26 +300,6 @@ const GoalJarPage = () => {
             </div>
           )}
 
-          {/* Bottom Navigation for Mobile */}
-          <div className="finny-bottom-nav">
-            {bottomNavItems.map((item, index) => (
-              <div 
-                key={index} 
-                className={`nav-item ${item.active ? 'active' : ''}`}
-                onClick={() => navigate(item.path)}
-              >
-                <item.icon 
-                  size={20} 
-                  color={item.active ? '#F4B400' : '#6B7280'} 
-                />
-                <span className={`nav-label ${item.active ? 'active' : ''}`}>
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

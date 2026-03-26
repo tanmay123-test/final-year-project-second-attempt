@@ -157,12 +157,7 @@ class MoneyModel:
                         conn.commit()
                 except Exception as e:
                     print(f"Warning: Could not sync user info: {e}")
-                    # Create minimal user record
-                    cursor.execute('''
-                        INSERT INTO users (id, username, email)
-                        VALUES (?, ?, ?)
-                    ''', (user_id, f'user_{user_id}', f'user_{user_id}@example.com'))
-                    conn.commit()
+                    # Do not insert fake user data
     
     def get_transactions(self, user_id, limit=None, category=None, start_date=None, end_date=None):
         """Get transactions with filters"""
@@ -371,10 +366,10 @@ class MoneyModel:
                        SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expenses,
                        COUNT(*) as transaction_count
                 FROM transactions
-                WHERE user_id = ? AND date >= date('now', '-{} months')
+                WHERE user_id = ? AND date >= date('now', ?)
                 GROUP BY strftime('%Y-%m', date)
                 ORDER BY month DESC
-            '''.format(months), (user_id,))
+            ''', (user_id, f'-{months} months'))
             
             monthly_data = cursor.fetchall()
             
@@ -383,11 +378,11 @@ class MoneyModel:
                 SELECT category, SUM(amount) as total_amount
                 FROM transactions
                 WHERE user_id = ? AND type = 'expense' 
-                AND date >= date('now', '-{} months')
+                AND date >= date('now', ?)
                 GROUP BY category
                 ORDER BY total_amount DESC
                 LIMIT 5
-            '''.format(months), (user_id,))
+            ''', (user_id, f'-{months} months'))
             
             top_categories = cursor.fetchall()
             

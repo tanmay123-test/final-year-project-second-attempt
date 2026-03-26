@@ -33,12 +33,9 @@ const GoalJarPage = () => {
     setLoading(true);
     try {
       const response = await goalApi.getGoals();
-      console.log('Goals response:', response);
-      
-      const data = response.data;
-      if (data?.success) {
-        setGoals(data.data?.goals || []);
-        setSummary(data.data?.summary || {
+      if (response.data?.success) {
+        setGoals(response.data?.data?.goals || []);
+        setSummary(response.data?.data?.summary || {
           total_goals: 0,
           total_target: 0,
           total_saved: 0,
@@ -52,6 +49,9 @@ const GoalJarPage = () => {
       }
     } catch (error) {
       console.error('Fetch goals error:', error);
+      if (error?.response?.status === 401) {
+        alert('Session expired. Please log in again.');
+      }
       // Mock data for testing
       const mockData = generateMockData();
       setGoals(mockData.goals);

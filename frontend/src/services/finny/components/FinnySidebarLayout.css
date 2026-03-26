@@ -64,6 +64,7 @@
 
 .finny-layout-sidebar-item.active {
   background: #fef9c3;
+  border-left: 3px solid #F4B400;
 }
 
 .finny-layout-sidebar-label {
@@ -75,7 +76,8 @@
 }
 
 .finny-layout-sidebar-item.active .finny-layout-sidebar-label {
-  color: #1f2937;
+  color: #1a3a5c;
+  font-weight: 700;
 }
 
 .finny-main-content {
@@ -85,43 +87,114 @@
   background: #f8f8f8;
 }
 
-/* Mobile: hide sidebar, keep bottom-nav visible */
+/* Always hide legacy per-page navs; shared nav is rendered by layout */
+.finny-main-content .finny-bottom-nav,
+.finny-main-content .bottom-nav,
+.finny-main-content .app-bottom-nav,
+.finny-main-content .main-bottom-nav {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
-  .finny-main-content {
-    padding-bottom: 70px;
-  }
   .finny-layout-sidebar {
     display: none !important;
   }
+  .finny-layout {
+    padding-left: 0 !important;
+  }
+  .finny-main-content {
+    margin-left: 0 !important;
+    padding-bottom: 80px;
+  }
 }
 
-/* Desktop: show sidebar, hide all Finny bottom navigation variants */
 @media (min-width: 769px) {
+  .finny-layout-sidebar {
+    display: flex !important;
+    width: 240px;
+    min-width: 240px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    flex-direction: column;
+    background: white;
+    border-right: 1px solid #E5E7EB;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  }
+
   .finny-layout {
     padding-left: 240px;
   }
 
-  .finny-layout-sidebar {
-    display: flex;
-  }
-
   .finny-main-content {
-    padding-bottom: 0;
+    min-height: 100vh;
+    padding-bottom: 40px;
+    overflow-y: auto;
+  }
+}
+
+@media (min-width: 769px) {
+  .finny-main-content::-webkit-scrollbar {
+    width: 6px;
+  }
+  .finny-main-content::-webkit-scrollbar-track {
+    background: #f8f9fa;
+  }
+  .finny-main-content::-webkit-scrollbar-thumb {
+    background: #F4B400;
+    border-radius: 99px;
+    opacity: 0.5;
+  }
+}
+
+@media (min-width: 769px) {
+  [class*='-card'],
+  [class*='card-'] {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
-  /* Hide any page-local Finny sidebar (those pages already render `.finny-sidebar`) */
-  .finny-main-content .finny-sidebar {
-    display: none !important;
+  .mode-card:hover,
+  .goal-card:hover,
+  .feature-card:hover,
+  .transaction-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10) !important;
   }
 
-  /* Hide bottom nav in all page-local implementations */
-  .finny-main-content .finny-bottom-nav,
-  .finny-main-content .bottom-nav,
-  .finny-main-content .app-bottom-nav,
-  .finny-main-content .main-bottom-nav,
-  .finny-main-content [class*='bottom-nav'],
-  .finny-main-content [class*='BottomNav'] {
-    display: none !important;
+  button:hover,
+  .btn:hover {
+    filter: brightness(0.95);
+    transition: filter 0.2s;
+  }
+
+  .mode-button:hover,
+  .feature-btn:hover {
+    background: #e6a800 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(244, 180, 0, 0.3) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .header-title,
+  .page-title {
+    font-size: 26px !important;
+  }
+
+  .section-title {
+    font-size: 18px !important;
+  }
+
+  .card-title {
+    font-size: 16px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .finny-main-content::-webkit-scrollbar-thumb:hover {
+    background: #d4a000;
   }
 }
 

@@ -51,12 +51,12 @@ const ServiceSelection = ({ mode = 'user' }) => {
     <div className="service-selection-page">
       {/* Header Section */}
       <header className="service-header">
-        <div className="header-top-row">
-          <div className="breadcrumbs" style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+        <div className="service-header-top-row">
+          <div className="service-breadcrumbs" style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', marginBottom: '1rem' }}>
             <span>Home</span> <span style={{ margin: '0 8px' }}>&gt;</span> <span style={{ color: 'white', fontWeight: '500' }}>Services</span>
           </div>
         </div>
-        <div className="header-content">
+        <div className="service-header-content">
           <h1>Select Your Service</h1>
           <p>Choose the service you want to provide</p>
         </div>
@@ -156,7 +156,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
           flex-direction: column;
         }
 
-        .header-top-row {
+        .service-header-top-row {
           display: flex;
           align-items: center;
           margin-bottom: 0.5rem;
@@ -186,20 +186,23 @@ const ServiceSelection = ({ mode = 'user' }) => {
           outline-offset: 2px;
         }
 
-        .header-content {
+        .service-header-content {
           text-align: center;
           padding: 0 1rem;
           animation: fadeIn 0.5s ease-out;
+          background: transparent;
+          border: none;
+          box-shadow: none;
         }
 
-        .header-content h1 {
+        .service-header-content h1 {
           font-size: 1.75rem;
           font-weight: 700;
           margin-bottom: 0.5rem;
           line-height: 1.2;
         }
 
-        .header-content p {
+        .service-header-content p {
           font-size: 1rem;
           opacity: 0.95; /* Increased contrast slightly */
           margin: 0;
@@ -305,7 +308,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
              font-size: 1.1rem;
            }
 
-           .header-content h1 {
+           .service-header-content h1 {
              font-size: 2.25rem;
            }
         }

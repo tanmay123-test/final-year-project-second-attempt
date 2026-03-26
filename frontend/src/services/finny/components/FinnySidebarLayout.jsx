@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, PiggyBank, Calculator, Target, Brain } from 'lucide-react';
 import './FinnySidebarLayout.css';
+import FinnyBottomNav from './FinnyBottomNav';
 
 const FinnySidebarLayout = ({ children }) => {
   const navigate = useNavigate();
@@ -75,6 +76,7 @@ const FinnySidebarLayout = ({ children }) => {
       </aside>
 
       <main className="finny-main-content">{children}</main>
+      <FinnyBottomNav />
     </div>
   );
 };

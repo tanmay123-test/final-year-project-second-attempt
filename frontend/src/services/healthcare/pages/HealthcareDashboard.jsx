@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { Home, Bot, Search, Heart, User } from 'lucide-react';
 import '../styles/HealthcareDashboard.css';
 import '../styles/healthcare-shared.css';
 import HealthcareSidebarLayout from '../components/HealthcareSidebarLayout';
@@ -143,6 +144,161 @@ const HealthcareDashboard = () => {
             <div className="search-bar" onClick={handleSearchClick}>
               <span className="search-icon">🔍</span>
               <span className="search-placeholder">Search doctors, specializations...</span>
+            </div>
+          </div>
+
+          {/* Perfect Navigation Tabs */}
+          <div style={{ 
+            backgroundColor: 'white', 
+            margin: '0 0 20px 0', 
+            borderRadius: '16px', 
+            padding: '8px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+            marginBottom: '20px'
+          }}>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                onClick={() => navigate('/healthcare/home')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  backgroundColor: '#8E44AD',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Home size={18} />
+                Home
+              </button>
+              <button
+                onClick={() => navigate('/healthcare/ai-care')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#6B7280',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.backgroundColor = '#F3F4F6';
+                  e.target.style.color = '#8E44AD';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.color = '#6B7280';
+                }}
+              >
+                <Bot size={18} />
+                AI Care
+              </button>
+              <button
+                onClick={() => navigate('/healthcare/appointments')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#6B7280',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.backgroundColor = '#F3F4F6';
+                  e.target.style.color = '#8E44AD';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.color = '#6B7280';
+                }}
+              >
+                <Search size={18} />
+                Appointments
+              </button>
+              <button
+                onClick={() => navigate('/healthcare/my-care')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#6B7280',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.backgroundColor = '#F3F4F6';
+                  e.target.style.color = '#8E44AD';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.color = '#6B7280';
+                }}
+              >
+                <Heart size={18} />
+                My Care
+              </button>
+              <button
+                onClick={() => navigate('/healthcare/profile')}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#6B7280',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.backgroundColor = '#F3F4F6';
+                  e.target.style.color = '#8E44AD';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.color = '#6B7280';
+                }}
+              >
+                <User size={18} />
+                Profile
+              </button>
             </div>
           </div>
 

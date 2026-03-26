@@ -157,13 +157,31 @@ class MoneyService:
     def chat_with_ai(self, user_id, message):
         """Chat with AI financial assistant"""
         try:
+            import sys, os
+            _backend_dir = os.path.dirname(
+                os.path.dirname(
+                    os.path.dirname(
+                        os.path.dirname(os.path.abspath(__file__))
+                    )
+                )
+            )
+            if _backend_dir not in sys.path:
+                sys.path.insert(0, _backend_dir)
             from ai.ai_chat_service import ai_chat_service
             result = ai_chat_service.handle_user_chat(user_id, message)
-            if result['success']:
-                return result['ai_response']
-            return f"Sorry, I couldn't process that: {result.get('error', 'Unknown error')}"
+            return result
+        except ModuleNotFoundError as e:
+            print(f"AI service import error: {e}")
+            return {
+                'response': 'AI service is temporarily unavailable. Please try again later.',
+                'type': 'error'
+            }
         except Exception as e:
-            raise Exception(f"Failed to process AI chat: {str(e)}")
+            print(f"AI chat error: {e}")
+            return {
+                'response': 'Could not process your message. Please try again.',
+                'type': 'error'
+            }
     
     def _check_budget_alerts(self, user_id, category, amount):
         """Check if transaction exceeds budget and send alerts"""

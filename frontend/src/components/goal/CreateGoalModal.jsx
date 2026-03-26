@@ -81,7 +81,11 @@ const CreateGoalModal = ({ isOpen, onClose, onGoalCreated }) => {
       }
     } catch (error) {
       console.error('Create goal error:', error);
-      showToast('Failed to create goal. Try again.');
+      if (error?.response?.status === 401) {
+        showToast('Session expired. Please log in again.');
+      } else {
+        showToast(error?.response?.data?.message || 'Failed to create goal. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, BarChart3, Target, TrendingUp, Activity, User, Home, PiggyBank, Calculator, Brain } from 'lucide-react';
+import { ArrowLeft, BarChart3, Target, TrendingUp, Activity, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { analyticsApi } from '../api/analyticsApi';
 import { moneyService } from '../../../shared/api';
@@ -181,11 +181,6 @@ const AnalyticsDashboardPage = () => {
     if (tab === 'budget') navigate('/finny/budget');
   };
 
-  const handleBottomNav = (item) => {
-    const routes = { finny: '/finny', budget: '/finny/budget', loan: '/finny/loan', goal: '/finny/goal-jar', ai: '/finny/ai-coach' };
-    if (routes[item]) navigate(routes[item]);
-  };
-
   const formatAmount = (val) => `₹${(val || 0).toLocaleString('en-IN')}`;
 
   if (loading) {
@@ -274,7 +269,8 @@ const AnalyticsDashboardPage = () => {
             </div>
 
             {/* Monthly Trend Chart */}
-            <div className="analytics-card">
+            <div className="charts-grid">
+              <div className="analytics-card monthly-trend-card">
               <div className="chart-header">
                 <h3>Monthly Trend</h3>
               </div>
@@ -286,6 +282,7 @@ const AnalyticsDashboardPage = () => {
                 </div>
               )}
             </div>
+            </div>
           </>
         )}
 
@@ -294,21 +291,6 @@ const AnalyticsDashboardPage = () => {
         {activeTab === 'health' && <FinancialHealth />}
       </div>
 
-      {/* Bottom Nav */}
-      <div className="finny-bottom-nav">
-        {[
-          { key: 'finny',  Icon: Home,      label: 'Finny' },
-          { key: 'budget', Icon: PiggyBank,  label: 'Budget' },
-          { key: 'loan',   Icon: Calculator, label: 'Loan' },
-          { key: 'goal',   Icon: Target,     label: 'Goal Jar' },
-          { key: 'ai',     Icon: Brain,      label: 'AI Coach' },
-        ].map(({ key, Icon, label }) => (
-          <div key={key} className="nav-item" onClick={() => handleBottomNav(key)}>
-            <Icon size={20} color="#6B7280" />
-            <span className="nav-label">{label}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };

@@ -59,11 +59,39 @@ export const chatParser = {
     let currentMerchant = '';
     let currentCategory = '';
     let currentAmount = 0;
+    let lastMeaningfulWord = '';
     
     const isNumber = (str) => !isNaN(str) && !isNaN(parseFloat(str));
+    const isAmount = (str) => !isNaN(parseFloat(str)) && parseFloat(str) > 0;
+    const stopWords = new Set([
+      'i', 'was', 'is', 'a', 'the', 'for', 'on', 'at', 'to',
+      'my', 'me', 'and', 'in', 'of', 'spent', 'paid', 'bought'
+    ]);
+    const inferCategory = (word) => {
+      const map = {
+        food: 'Food & Dining',
+        grocery: 'Groceries',
+        groceries: 'Groceries',
+        electricity: 'Utilities',
+        bill: 'Utilities',
+        rent: 'Housing',
+        travel: 'Transport',
+        cab: 'Transport',
+        movie: 'Entertainment',
+        medicine: 'Healthcare',
+        doctor: 'Healthcare',
+        clothes: 'Shopping',
+        shopping: 'Shopping',
+      };
+      return map[word?.toLowerCase()] || 'Other';
+    };
 
     for (let i = 0; i < parts.length; i++) {
-      const part = parts[i].toLowerCase();
+      const rawPart = parts[i];
+      const part = rawPart.toLowerCase();
+      if (!stopWords.has(part)) {
+        lastMeaningfulWord = rawPart;
+      }
       
       // Check if it's a merchant name
       const category = chatParser.merchantCategoryMap[part];
@@ -85,6 +113,18 @@ export const chatParser = {
       // Check if it's a number (amount)
       else if (isNumber(part)) {
         currentAmount = parseFloat(part);
+        if (isAmount(part) && !currentMerchant) {
+          const next = (parts[i + 1] || '').toLowerCase();
+          if (next === 'on' || next === 'for' || next === 'at') {
+            currentMerchant = (parts[i + 2] || 'other').toLowerCase();
+            i += 2;
+          } else {
+            currentMerchant = (lastMeaningfulWord || 'other').toLowerCase();
+          }
+          if (!currentCategory) {
+            currentCategory = inferCategory(currentMerchant);
+          }
+        }
       }
       // If we have a merchant but no category yet, treat as merchant name
       else if (currentMerchant && !currentCategory && !isNumber(part)) {
@@ -96,8 +136,9 @@ export const chatParser = {
     if (currentMerchant && currentAmount > 0) {
       transactions.push({
         merchant: currentMerchant.charAt(0).toUpperCase() + currentMerchant.slice(1),
-        category: currentCategory,
-        amount: currentAmount
+        category: currentCategory || 'Other',
+        amount: currentAmount,
+        type: 'expense'
       });
     }
     

@@ -3,8 +3,10 @@ from .loan_risk import LoanRiskAnalyzer
 from .repayment_simulator import RepaymentSimulator
 import sqlite3
 from datetime import datetime
+import os
 
-DB_PATH = 'expertease.db'
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(_THIS_DIR, '..', '..', '..', 'data', 'money_service.db')
 
 def _get_conn():
     """Open a fresh per-request SQLite connection."""
@@ -85,10 +87,12 @@ class LoanEngine:
                     'monthly_fixed_expenses': plan['fixed_expenses_total'],
                     'disposable_income': plan['disposable_income']
                 }
-            return {'monthly_income': 50000, 'monthly_fixed_expenses': 20000, 'disposable_income': 30000}
+            print(f"Warning: Could not load user financial profile for user_id={user_id}")
+            return {'monthly_income': 0, 'monthly_fixed_expenses': 0, 'disposable_income': 0}
         except Exception as e:
             print(f"Error getting financial data: {e}")
-            return {'monthly_income': 50000, 'monthly_fixed_expenses': 20000, 'disposable_income': 30000}
+            print(f"Warning: Could not load user financial profile for user_id={user_id}")
+            return {'monthly_income': 0, 'monthly_fixed_expenses': 0, 'disposable_income': 0}
         finally:
             conn.close()
 

@@ -51,7 +51,11 @@ const TransferLeftoverModal = ({ isOpen, onClose, goals, onTransferComplete }) =
       }
     } catch (error) {
       console.error('Transfer error:', error);
-      showToast('Failed to transfer. Try again.');
+      if (error?.response?.status === 401) {
+        showToast('Session expired. Please log in again.');
+      } else {
+        showToast(error?.response?.data?.message || 'Failed to transfer. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

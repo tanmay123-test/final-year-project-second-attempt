@@ -781,19 +781,48 @@ def worker_dashboard_stats(worker_id):
 def worker_status(worker_id):
     """Get or update worker status"""
     if request.method == "GET":
-        # For now, return a default status
-        # In production, you'd store this in database
-        return jsonify({"status": "online"}), 200
+        try:
+            conn = worker_db.get_conn()
+            cursor = conn.cursor()
+            if worker_db.use_postgres:
+                cursor.execute("SELECT status FROM workers WHERE id = %s", (worker_id,))
+            else:
+                cursor.execute("SELECT status FROM workers WHERE id = ?", (worker_id,))
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                status_value = row[0] if not isinstance(row, dict) else row.get("status")
+                return jsonify({"status": status_value or "offline"}), 200
+            return jsonify({"status": "offline"}), 200
+        except Exception as e:
+            print(f"worker_status GET error: {e}")
+            return jsonify({"status": "offline"}), 200
     
     elif request.method == "POST":
-        # Update worker status
-        data = request.json
-        new_status = data.get("status", "online")
-        
-        # Here you would update the database
-        # For now, just return success
-        print(f"  Worker {worker_id} status changed to {new_status}")
-        return jsonify({"status": new_status, "message": "Status updated successfully"}), 200
+        data = request.get_json() or {}
+        new_status = data.get("status", "offline")
+        try:
+            conn = worker_db.get_conn()
+            cursor = conn.cursor()
+            if worker_db.use_postgres:
+                cursor.execute(
+                    "UPDATE workers SET status = %s WHERE id = %s",
+                    (new_status, worker_id)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE workers SET status = ? WHERE id = ?",
+                    (new_status, worker_id)
+                )
+            conn.commit()
+            conn.close()
+            return jsonify({
+                "success": True,
+                "status": new_status
+            }), 200
+        except Exception as e:
+            print(f"update_worker_status POST error: {e}")
+            return jsonify({"success": False, "error": "Failed to update status"}), 500
 
 
 # ================= ACCEPT / REJECT =================

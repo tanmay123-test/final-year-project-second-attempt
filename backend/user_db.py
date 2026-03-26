@@ -131,7 +131,7 @@ class UserDB:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
             cursor.execute(
-                "SELECT email, is_verified FROM users WHERE email=%s",
+                "SELECT id, email, is_verified FROM users WHERE email=%s",
                 (email,)
             )
             row = cursor.fetchone()

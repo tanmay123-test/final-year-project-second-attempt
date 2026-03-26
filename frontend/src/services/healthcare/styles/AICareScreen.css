@@ -536,4 +536,62 @@
     max-width: 600px;
     margin: 0 auto 10px auto;
   }
+
+  /* Headache Quick Action Styles */
+  .headache-quick-action {
+    max-width: 600px;
+    margin: 0 auto 20px auto;
+    text-align: center;
+  }
+
+  .headache-special-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%);
+    color: white;
+    border: none;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .headache-special-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(142, 68, 173, 0.4);
+    background: linear-gradient(135deg, #9B59B6 0%, #8E44AD 100%);
+  }
+
+  .headache-special-btn:active {
+    transform: translateY(0);
+  }
+
+  .headache-hint {
+    margin-top: 8px;
+    color: #666;
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* Speaking indicator animation */
+  .speaking-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #8E44AD;
+    border-radius: 50%;
+    margin-left: 8px;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+  }
 }

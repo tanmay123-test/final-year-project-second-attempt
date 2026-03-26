@@ -11,12 +11,24 @@ def get_current_user_id():
     if not auth_header or not auth_header.startswith('Bearer '):
         return None
     token = auth_header.split(' ')[1]
-    username = verify_token(token)
-    if not username:
+    from auth_utils import verify_token
+    username_or_email = verify_token(token)
+    if not username_or_email:
         return None
-    user_db = UserDB()
-    user_id = user_db.get_user_by_username(username)
-    return user_id
+    try:
+        from user_db import UserDB
+        user_db = UserDB()
+        # Try username first
+        user_id = user_db.get_user_by_username(username_or_email)
+        if not user_id:
+            # Try email fallback
+            user = user_db.get_user_by_email(username_or_email)
+            if user:
+                user_id = user.get('id') or user.get('user_id')
+        return user_id
+    except Exception as e:
+        print(f"get_current_user_id error: {e}")
+        return None
 
 @money_bp.route('/api/money/dashboard', methods=['GET'])
 def get_dashboard_data():
@@ -144,7 +156,8 @@ def get_monthly_analytics():
         return jsonify({"error": "Unauthorized"}), 401
     
     try:
-        analytics = money_service.get_monthly_analytics(user_id)
+        months = request.args.get('months', 6, type=int)
+        analytics = money_service.get_monthly_analytics(user_id, months)
         return jsonify(analytics), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, HelpCircle, Home, PiggyBank, Calculator, Target, Brain } from 'lucide-react';
+import { ArrowLeft, HelpCircle } from 'lucide-react';
 import { chatApi } from '../api/chatApi';
 import ChatAssistant from '../components/ChatAssistant';
 import TodaySummary from '../components/TodaySummary';
@@ -62,34 +62,8 @@ const ChatModePage = () => {
     navigate('/finny/chat/examples');
   };
 
-  const bottomNavItems = [
-    { icon: Home, label: 'Finny', active: false },
-    { icon: PiggyBank, label: 'Budget', active: false },
-    { icon: Calculator, label: 'Loan', active: false },
-    { icon: Target, label: 'Goal Jar', active: false },
-    { icon: Brain, label: 'AI Coach', active: false }
-  ];
-
   return (
-    <div className="finny-page-layout">
-      {/* Sidebar for Desktop */}
-      <aside className="finny-sidebar">
-        <div className="sidebar-header">
-          <h1 className="sidebar-title">Finny</h1>
-          <p className="sidebar-subtitle">Smart Tracker</p>
-        </div>
-        <nav className="sidebar-nav">
-          {bottomNavItems.map((item, index) => (
-            <div key={index} className={`sidebar-item ${item.label === 'Finny' ? 'active' : ''}`}>
-              <item.icon size={20} color={item.label === 'Finny' ? '#F4B400' : '#6B7280'} />
-              <span className="sidebar-label">{item.label}</span>
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      <div className="finny-page-content">
-        <div className="chat-mode-page">
+    <div className="chat-mode-page">
           {/* Header */}
           <div className="header">
             <div className="header-content">
@@ -138,22 +112,6 @@ const ChatModePage = () => {
             <ChatInput onSendMessage={handleSendMessage} loading={loading} />
           </div>
 
-          {/* Bottom Navigation for Mobile */}
-          <div className="finny-bottom-nav">
-            {bottomNavItems.map((item, index) => (
-              <div key={index} className={`nav-item ${item.active ? 'active' : ''}`}>
-                <item.icon 
-                  size={20} 
-                  color={item.active ? '#F4B400' : '#6B7280'} 
-                />
-                <span className={`nav-label ${item.active ? 'active' : ''}`}>
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
