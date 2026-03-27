@@ -55,7 +55,13 @@ video_db.create_table()
 from datetime import datetime
 
 app = Flask(__name__)
-CORS(app, origins=["VERCEL_URL_HERE"])  # replace after Vercel deploy
+from flask_cors import CORS
+
+CORS(app, resources={r"/*": {
+    "origins": "https://final-year-project-second-attempt.vercel.app",
+    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"]
+}})
 
 @app.route("/")
 def root():
