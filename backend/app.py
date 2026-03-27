@@ -57,6 +57,10 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app, origins=["VERCEL_URL_HERE"])  # replace after Vercel deploy
 
+@app.route("/")
+def root():
+    return jsonify({"message": "Backend is running!"}), 200
+
 # Register subscription blueprint
 app.register_blueprint(subscription_bp)
 
