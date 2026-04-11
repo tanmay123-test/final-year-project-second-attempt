@@ -37,51 +37,33 @@ const DoctorLogin = () => {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    console.log('Attempting login with:', { email: formData.email, password: '***' });
-
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/doctor/login`, {
+      const response = await fetch('http://localhost:5000/worker/healthcare/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      console.log('Login response status:', response.status);
-      
-      const data = await response.json();
-      console.log('Login response data:', data);
-
-      if (response.ok) {
-        // Store token
-        localStorage.setItem('doctorToken', data.token);
-        localStorage.setItem('doctorInfo', JSON.stringify({
-          id: data.doctor_id,
-          name: data.name,
-          service: data.service,
-          specialization: data.specialization
-        }));
-        
-        console.log('Login successful, redirecting to dashboard...');
-        // Redirect to healthcare dashboard instead of doctor dashboard
-        navigate('/healthcare/home');
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      })
+      const data = await response.json()
+      if (data.token || data.success) {
+        localStorage.setItem('workerToken', data.token)
+        localStorage.setItem('workerData', JSON.stringify(data.worker || data))
+        navigate('/worker/dashboard')
       } else {
-        console.error('Login failed:', data.error);
-        setError(data.error || 'Login failed');
+        setError(data.error || 'Login failed. Check your credentials.')
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Network error. Please make sure the backend server is running on localhost:5000');
+    } catch (err) {
+      setError('Cannot connect to server. Make sure backend is running.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="doctor-login-container">
@@ -139,7 +121,7 @@ const DoctorLogin = () => {
         </div>
 
         {/* Form */}
-        <form className="doctor-login-form" onSubmit={handleSubmit}>
+        <form className="doctor-login-form" onSubmit={handleLogin}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input

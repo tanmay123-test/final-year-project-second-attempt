@@ -413,7 +413,7 @@ const App = () => {
           
           {/* Healthcare */}
           <Route path="/worker/healthcare/login" element={<DoctorLogin />} />
-          <Route path="/worker/healthcare/signup" element={<WorkerSignup serviceType="healthcare" />} />
+          <Route path="/worker/healthcare/signup" element={<WorkerSignupPage />} />
           
           {/* Freelance */}
           <Route path="/worker/freelance/login" element={<WorkerLogin serviceType="freelance" />} />

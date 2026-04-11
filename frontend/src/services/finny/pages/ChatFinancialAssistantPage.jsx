@@ -133,7 +133,7 @@ const ChatFinancialAssistantPage = () => {
 
     try {
       const res = await api.post('/api/money/chat', { message: msg });
-      const aiContent = res.data.response || res.data.ai_response || 'No response received.';
+      const aiContent = res.data.ai_response || 'No response received.';
       const aiMsgId = Date.now() + 1;
       const aiMsg = {
         id: aiMsgId,

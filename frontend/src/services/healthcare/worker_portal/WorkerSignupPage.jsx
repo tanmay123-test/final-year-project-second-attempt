@@ -25,7 +25,15 @@ const WorkerSignupPage = () => {
     specialization: '',
     experience: '',
     clinic_location: '',
+    license_number: '',
+    password: '',
   });
+
+  // Add these state variables
+  const [profilePhoto, setProfilePhoto] = useState(null)
+  const [aadhaarCard, setAadhaarCard] = useState(null)
+  const [degreeCertificate, setDegreeCertificate] = useState(null)
+  const [medicalLicense, setMedicalLicense] = useState(null)
 
   const onChange = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -34,14 +42,23 @@ const WorkerSignupPage = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.post('/worker/healthcare/signup', {
-        full_name: form.full_name,
-        email: form.email,
-        phone: form.phone,
-        specialization: form.specialization,
-        experience: Number(form.experience || 0),
-        clinic_location: form.clinic_location,
-      });
+      const formData = new FormData()
+      formData.append('full_name', form.full_name)
+      formData.append('email', form.email)
+      formData.append('phone', form.phone)
+      formData.append('specialization', form.specialization)
+      formData.append('experience', form.experience)
+      formData.append('clinic_location', form.clinic_location)
+      formData.append('license_number', form.license_number)
+      formData.append('password', form.password)
+      formData.append('profile_photo', profilePhoto)
+      formData.append('aadhaar', aadhaarCard)
+      formData.append('degree_certificate', degreeCertificate)
+      formData.append('medical_license', medicalLicense)
+
+      const { data } = await api.post('/worker/healthcare/signup', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       setSuccessData({
         worker_id: data.worker_id || data.id || data.worker?.worker_id,
         worker_token: data.token || data.worker_token || data.access_token,
@@ -118,6 +135,66 @@ const WorkerSignupPage = () => {
                   <MapPin className="wp-input-icon" size={18} />
                   <input className="wp-input" placeholder="e.g. Mumbai, Andheri West" value={form.clinic_location} onChange={(e) => onChange('clinic_location', e.target.value)} required />
                 </div>
+              </div>
+              <div className="wp-field">
+                <label className="wp-label">License Number</label>
+                <div className="wp-input-wrap">
+                  <Award className="wp-input-icon" size={18} />
+                  <input className="wp-input" placeholder="Medical License Number" value={form.license_number} onChange={(e) => onChange('license_number', e.target.value)} required />
+                </div>
+              </div>
+              <div className="wp-field">
+                <label className="wp-label">Password</label>
+                <div className="wp-input-wrap">
+                  <User className="wp-input-icon" size={18} />
+                  <input type="password" className="wp-input" placeholder="Create Password" value={form.password} onChange={(e) => onChange('password', e.target.value)} required />
+                </div>
+              </div>
+
+              <div className="wp-section-title" style={{ marginTop: 20 }}>Document Upload</div>
+              
+              <div className="wp-field">
+                <label className="wp-label">Profile Photo *</label>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={e => setProfilePhoto(e.target.files[0])}
+                  className="wp-input"
+                  required
+                />
+              </div>
+
+              <div className="wp-field">
+                <label className="wp-label">Aadhaar Card *</label>
+                <input 
+                  type="file" 
+                  accept=".pdf,image/*"
+                  onChange={e => setAadhaarCard(e.target.files[0])}
+                  className="wp-input"
+                  required
+                />
+              </div>
+
+              <div className="wp-field">
+                <label className="wp-label">Degree Certificate *</label>
+                <input 
+                  type="file" 
+                  accept=".pdf,image/*"
+                  onChange={e => setDegreeCertificate(e.target.files[0])}
+                  className="wp-input"
+                  required
+                />
+              </div>
+
+              <div className="wp-field">
+                <label className="wp-label">Medical License *</label>
+                <input 
+                  type="file" 
+                  accept=".pdf,image/*"
+                  onChange={e => setMedicalLicense(e.target.files[0])}
+                  className="wp-input"
+                  required
+                />
               </div>
 
               <div className="wp-info-box">

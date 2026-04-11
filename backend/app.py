@@ -58,7 +58,7 @@ app = Flask(__name__)
 from flask_cors import CORS
 
 CORS(app, resources={r"/*": {
-    "origins": "https://final-year-project-second-attempt.vercel.app",
+    "origins": ["https://final-year-project-second-attempt.vercel.app", "http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"],
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "allow_headers": ["Content-Type", "Authorization"]
 }})
@@ -652,16 +652,75 @@ def worker_register():
 
 @app.route("/worker/healthcare/signup", methods=["POST"])
 def worker_signup():
-    d = request.json
+    import os
+    from werkzeug.utils import secure_filename
+    
+    UPLOAD_FOLDER = 'uploads/healthcare/'
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    
+    def save_file(file, prefix):
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            unique_filename = f"{prefix}_{filename}"
+            path = os.path.join(UPLOAD_FOLDER, unique_filename)
+            file.save(path)
+            return path
+        return None
+    
+    # Handle form data
+    full_name = request.form.get('full_name')
+    email = request.form.get('email')
+    phone = request.form.get('phone')
+    specialization = request.form.get('specialization')
+    experience = request.form.get('experience')
+    clinic_location = request.form.get('clinic_location', '')
+    license_number = request.form.get('license_number')
+    password = request.form.get('password')
+    
+    # Handle file uploads
+    profile_photo_path = save_file(request.files.get('profile_photo'), 'photo')
+    aadhaar_path = save_file(request.files.get('aadhaar'), 'aadhaar')
+    degree_path = save_file(request.files.get('degree_certificate'), 'degree')
+    license_path = save_file(request.files.get('medical_license'), 'license')
+    
     wid = worker_db.register_worker(
-        d["full_name"], d["email"], d["phone"],
-        "healthcare", d["specialization"],
-        d["experience"], d.get("clinic_location", ""),
-        d.get("license_number"), d.get("password")
+        full_name,
+        email,
+        phone,
+        "healthcare",
+        specialization,
+        experience,
+        clinic_location,
+        license_number,
+        password,
+        None,
+        None,
+        None,
+        None,
+        None,
+        profile_photo_path,
+        aadhaar_path,
+        degree_path,
+        license_path
     )
+    
     if wid is None:
         return jsonify({"error": "Worker already exists"}), 400
     return jsonify({"worker_id": wid}), 201
+
+
+@app.route('/worker/healthcare/login', methods=['POST'])
+def healthcare_worker_login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    worker = worker_db.get_worker_by_email(email)
+    if not worker:
+        return jsonify({'error': 'Worker not found'}), 404
+    if worker['password'] != password:
+        return jsonify({'error': 'Invalid password'}), 401
+    token = generate_token(email)
+    return jsonify({'token': token, 'worker': dict(worker), 'success': True})
 
 
 @app.route("/worker/login", methods=["POST"])
@@ -1945,4 +2004,10 @@ def handle_exception(e):
 
 # ================= RUN =================
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    print(f"\n🚀 Starting ExpertEase Backend...")
+    print(f"📍 Server running on: http://localhost:{port}")
+    print(f"📍 Server running on: http://127.0.0.1:{port}")
+    print(f"🌐 Access from browser: http://localhost:{port}")
+    print("="*50)
+    app.run(host="0.0.0.0", port=port)

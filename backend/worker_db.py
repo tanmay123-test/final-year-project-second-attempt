@@ -149,7 +149,7 @@ class WorkerDB:
         # Basic regex for email validation
         return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
 
-    def register_worker(self, full_name, email, phone, service, specialization, experience, clinic_location="", license_number=None, password=None, aadhaar=None, id_proof=None, skills=None, hourly_rate=None, bio=None):
+    def register_worker(self, full_name, email, phone, service, specialization, experience, clinic_location="", license_number=None, password=None, aadhaar=None, id_proof=None, skills=None, hourly_rate=None, bio=None, profile_photo_path=None, aadhaar_path=None, degree_certificate_path=None, medical_license_path=None):
         # Validate email format
         if not self.is_valid_email(email):
             print(f"  Registration failed: Invalid email format '{email}'")
@@ -211,10 +211,10 @@ class WorkerDB:
             status = "approved" if service == "healthcare" else "pending"
             
             cursor.execute("""
-                INSERT INTO workers (full_name, email, phone, service, specialization, experience, clinic_location, license_number, password, aadhaar_number, id_proof_url, skills, hourly_rate, bio, status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO workers (full_name, email, phone, service, specialization, experience, clinic_location, license_number, password, aadhaar_number, id_proof_url, skills, hourly_rate, bio, status, profile_photo_path, aadhaar_path, degree_certificate_path, medical_license_path)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
-            """, (full_name, email, phone, service, specialization, int(experience or 0), clinic_location or "", license_number, hashed_pw, aadhaar, id_proof, skills, hourly_rate, bio, status))
+            """, (full_name, email, phone, service, specialization, int(experience or 0), clinic_location or "", license_number, hashed_pw, aadhaar, id_proof, skills, hourly_rate, bio, status, profile_photo_path, aadhaar_path, degree_certificate_path, medical_license_path))
             worker_id = cursor.fetchone()['id']
             conn.commit()
             return worker_id
