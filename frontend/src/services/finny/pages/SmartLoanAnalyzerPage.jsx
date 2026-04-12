@@ -73,13 +73,10 @@ const SmartLoanAnalyzerPage = () => {
         <button className="back-button" onClick={handleBackClick}>
           <ArrowLeft size={20} color="white" />
         </button>
-        <div className="header-content">
-          <div className="header-title-section">
-            <Calculator size={22} color="white" />
-            <div className="header-text">
-              <h1 className="header-title">Smart Loan Analyzer</h1>
-              <p className="header-subtitle">Analyze loan affordability, risks, and repayment strategies.</p>
-            </div>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Smart Loan Analyzer</h1>
+            <p className="loan-header-subtitle">Analyze loan affordability, risks, and repayment strategies.</p>
           </div>
         </div>
         <div className="header-actions">
@@ -109,7 +106,7 @@ const SmartLoanAnalyzerPage = () => {
               <p className="card-subtitle">{feature.subtitle}</p>
             </div>
             <div className="card-right">
-              <div className="card-badge">{feature.badge}</div>
+              <button className="card-badge">{feature.badge}</button>
             </div>
           </div>
         ))}

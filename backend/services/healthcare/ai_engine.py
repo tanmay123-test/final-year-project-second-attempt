@@ -24,7 +24,7 @@ class AIEngine:
             
             if self.gemini_api_key and self.gemini_api_key != 'YOUR_GEMINI_API_KEY':
                 genai.configure(api_key=self.gemini_api_key)
-                self.model = genai.GenerativeModel('gemini-1.5-flash')
+                self.model = genai.GenerativeModel('gemini-2.0-flash')
                 print("✅ Gemini AI initialized successfully")
             else:
                 print("⚠️ Gemini API key not configured, using fallback mode")

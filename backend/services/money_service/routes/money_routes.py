@@ -175,7 +175,16 @@ def chat_with_ai():
         return jsonify({"error": "Message is required"}), 400
     
     try:
-        response = money_service.chat_with_ai(user_id, message)
-        return jsonify({"response": response}), 200
+        result = money_service.chat_with_ai(user_id, message)
+        # result is a dict from ai_chat_service — extract the text response
+        if isinstance(result, dict):
+            ai_text = result.get('ai_response') or result.get('response') or 'No response received.'
+            return jsonify({
+                "response": ai_text,
+                "ai_response": ai_text,
+                "message_type": result.get('message_type', 'general_query'),
+                "success": result.get('success', True)
+            }), 200
+        return jsonify({"response": str(result), "ai_response": str(result)}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400

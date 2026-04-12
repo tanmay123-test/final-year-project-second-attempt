@@ -392,59 +392,57 @@ This information is for educational purposes only and not financial advice.
     def _extract_stock_symbol(self, message: str) -> Optional[str]:
         import re
         # Expanded Indian + global company → NSE/BSE/NYSE symbol map
+        # Note: Indian stocks append .NS (NSE) or .BO (BSE) for Finnhub
         symbol_map = {
-            # Indian large caps
-            'hdfc': 'HDFCBANK', 'hdfc bank': 'HDFCBANK',
-            'icici': 'ICICIBANK', 'icici bank': 'ICICIBANK',
-            'sbi': 'SBIN', 'state bank': 'SBIN',
-            'reliance': 'RELIANCE', 'ril': 'RELIANCE',
-            'tcs': 'TCS', 'tata consultancy': 'TCS',
-            'infosys': 'INFY', 'infy': 'INFY',
-            'wipro': 'WIPRO',
-            'tatamotors': 'TATAMOTORS', 'tata motors': 'TATAMOTORS',
-            'bajaj': 'BAJFINANCE', 'bajaj finance': 'BAJFINANCE',
-            'kotak': 'KOTAKBANK', 'kotak bank': 'KOTAKBANK',
-            'axis bank': 'AXISBANK', 'axis': 'AXISBANK',
-            'hul': 'HINDUNILVR', 'hindustan unilever': 'HINDUNILVR',
-            'itc': 'ITC',
-            'maruti': 'MARUTI', 'maruti suzuki': 'MARUTI',
-            'sun pharma': 'SUNPHARMA', 'sun pharmaceutical': 'SUNPHARMA',
-            'dr reddy': 'DRREDDY', "dr. reddy": 'DRREDDY',
-            'cipla': 'CIPLA',
-            'adani': 'ADANIENT', 'adani enterprises': 'ADANIENT',
-            'adani ports': 'ADANIPORTS',
-            'adani green': 'ADANIGREEN',
-            'adani power': 'ADANIPOWER',
-            'ongc': 'ONGC',
-            'ntpc': 'NTPC',
-            'power grid': 'POWERGRID',
-            'bhel': 'BHEL',
-            'coal india': 'COALINDIA',
-            'hindalco': 'HINDALCO',
-            'jsw steel': 'JSWSTEEL', 'jsw': 'JSWSTEEL',
-            'tata steel': 'TATASTEEL',
-            'ultratech': 'ULTRACEMCO', 'ultratech cement': 'ULTRACEMCO',
-            'asian paints': 'ASIANPAINT',
-            'nestle': 'NESTLEIND',
-            'britannia': 'BRITANNIA',
-            'titan': 'TITAN',
-            'dmart': 'DMART', 'avenue supermarts': 'DMART',
-            'nykaa': 'NYKAA', 'fss': 'NYKAA',
-            'paytm': 'PAYTM', 'one97': 'PAYTM',
-            'zomato': 'ZOMATO',
-            'swiggy': 'SWIGGY',
-            'ola': 'OLA',
-            'policybazaar': 'POLICYBZR',
-            'freshworks': 'FRSH',
-            'indigo': 'INDIGO', 'interglobe': 'INDIGO',
-            'spicejet': 'SPICEJET',
-            'irctc': 'IRCTC',
-            'lti': 'LTIM', 'ltimindtree': 'LTIM',
-            'hcl': 'HCLTECH', 'hcl tech': 'HCLTECH',
-            'tech mahindra': 'TECHM',
-            'mphasis': 'MPHASIS',
-            'persistent': 'PERSISTENT',
-            'coforge': 'COFORGE',
+            # Indian Large Caps (NSE)
+            'hdfc': 'HDFCBANK.NS', 'hdfc bank': 'HDFCBANK.NS', 'hdfcbank': 'HDFCBANK.NS',
+            'icici': 'ICICIBANK.NS', 'icici bank': 'ICICIBANK.NS', 'icicibank': 'ICICIBANK.NS',
+            'sbi': 'SBIN.NS', 'state bank': 'SBIN.NS', 'sbin': 'SBIN.NS',
+            'reliance': 'RELIANCE.NS', 'ril': 'RELIANCE.NS',
+            'tcs': 'TCS.NS', 'tata consultancy': 'TCS.NS',
+            'infosys': 'INFY.NS', 'infy': 'INFY.NS',
+            'wipro': 'WIPRO.NS',
+            'tatamotors': 'TATAMOTORS.NS', 'tata motors': 'TATAMOTORS.NS',
+            'bajaj': 'BAJFINANCE.NS', 'bajaj finance': 'BAJFINANCE.NS', 'bajfinance': 'BAJFINANCE.NS',
+            'kotak': 'KOTAKBANK.NS', 'kotak bank': 'KOTAKBANK.NS', 'kotakbank': 'KOTAKBANK.NS',
+            'axis bank': 'AXISBANK.NS', 'axis': 'AXISBANK.NS', 'axisbank': 'AXISBANK.NS',
+            'hul': 'HINDUNILVR.NS', 'hindustan unilever': 'HINDUNILVR.NS', 'hindunilvr': 'HINDUNILVR.NS',
+            'itc': 'ITC.NS',
+            'maruti': 'MARUTI.NS', 'maruti suzuki': 'MARUTI.NS',
+            'sun pharma': 'SUNPHARMA.NS', 'sun pharmaceutical': 'SUNPHARMA.NS', 'sunpharma': 'SUNPHARMA.NS',
+            'dr reddy': 'DRREDDY.NS', "dr. reddy": 'DRREDDY.NS', 'drreddy': 'DRREDDY.NS',
+            'cipla': 'CIPLA.NS',
+            'adani': 'ADANIENT.NS', 'adani enterprises': 'ADANIENT.NS', 'adanient': 'ADANIENT.NS',
+            'adani ports': 'ADANIPORTS.NS', 'adaniports': 'ADANIPORTS.NS',
+            'adani green': 'ADANIGREEN.NS', 'adanigreen': 'ADANIGREEN.NS',
+            'adani power': 'ADANIPOWER.NS', 'adanipower': 'ADANIPOWER.NS',
+            'ongc': 'ONGC.NS',
+            'ntpc': 'NTPC.NS',
+            'power grid': 'POWERGRID.NS', 'powergrid': 'POWERGRID.NS',
+            'bhel': 'BHEL.NS',
+            'coal india': 'COALINDIA.NS', 'coalindia': 'COALINDIA.NS',
+            'hindalco': 'HINDALCO.NS',
+            'jsw steel': 'JSWSTEEL.NS', 'jsw': 'JSWSTEEL.NS', 'jswsteel': 'JSWSTEEL.NS',
+            'tata steel': 'TATASTEEL.NS', 'tatasteel': 'TATASTEEL.NS',
+            'ultratech': 'ULTRACEMCO.NS', 'ultratech cement': 'ULTRACEMCO.NS', 'ultracemco': 'ULTRACEMCO.NS',
+            'asian paints': 'ASIANPAINT.NS', 'asianpaint': 'ASIANPAINT.NS',
+            'nestle': 'NESTLEIND.NS', 'nestleind': 'NESTLEIND.NS',
+            'britannia': 'BRITANNIA.NS',
+            'titan': 'TITAN.NS',
+            'dmart': 'DMART.NS', 'avenue supermarts': 'DMART.NS',
+            'nykaa': 'NYKAA.NS',
+            'paytm': 'PAYTM.NS', 'one97': 'PAYTM.NS',
+            'zomato': 'ZOMATO.NS',
+            'policybazaar': 'POLICYBZR.NS', 'policybzr': 'POLICYBZR.NS',
+            'indigo': 'INDIGO.NS', 'interglobe': 'INDIGO.NS',
+            'spicejet': 'SPICEJET.NS',
+            'irctc': 'IRCTC.NS',
+            'lti': 'LTIM.NS', 'ltimindtree': 'LTIM.NS', 'ltim': 'LTIM.NS',
+            'hcl': 'HCLTECH.NS', 'hcl tech': 'HCLTECH.NS', 'hcltech': 'HCLTECH.NS',
+            'tech mahindra': 'TECHM.NS', 'techm': 'TECHM.NS',
+            'mphasis': 'MPHASIS.NS',
+            'persistent': 'PERSISTENT.NS',
+            'coforge': 'COFORGE.NS',
             # Global
             'apple': 'AAPL',
             'tesla': 'TSLA',
@@ -477,40 +475,32 @@ This information is for educational purposes only and not financial advice.
     def _format_stock_response(self, analysis: Dict[str, Any]) -> str:
         """Format stock analysis response"""
         try:
-            # Handle different response structures
-            if 'analysis' in analysis:
-                # New format with nested analysis
-                stock_data = analysis.get('stock_data', {})
-                ai_analysis = analysis.get('analysis', '')
-                
-                symbol = stock_data.get('symbol', 'Unknown')
-                price = stock_data.get('price', 0)
-                change = stock_data.get('change', 0)
-                change_percent = stock_data.get('change_percent', 0)
-                
-                response = f"  {symbol} Stock Analysis\n\n"
-                response += f"Current Price:  {price:.2f}\n"
-                response += f"Change:  {change:.2f} ({change_percent:.2f}%)\n\n"
-                response += f"AI Analysis:\n{ai_analysis}\n"
-                
-            else:
-                # Legacy format
-                symbol = analysis.get('symbol', 'Unknown')
-                price = analysis.get('price', 0)
-                change = analysis.get('change', 0)
-                change_percent = analysis.get('change_percent', 0)
-                insights = analysis.get('insights', [])
-                
-                response = f"  {symbol} Stock Analysis\n\n"
-                response += f"Current Price:  {price:.2f}\n"
-                response += f"Change:  {change:.2f} ({change_percent:.2f}%)\n\n"
-                
-                response += "Key Insights:\n"
-                for insight in insights[:3]:  # Show top 3 insights
-                    response += f"  {insight}\n"
+            stock_data = analysis.get('stock_data')
+            ai_analysis = analysis.get('analysis', '')
             
-            response += "\n  This analysis is for educational purposes only and not financial advice."
-            response += "\n  Data provided by financial APIs"
+            # Case: Live data unavailable
+            if not stock_data or stock_data.get('price', 0) <= 0:
+                company_name = analysis.get('company_name', analysis.get('symbol', 'Unknown'))
+                symbol = analysis.get('symbol', 'Unknown')
+                
+                response = f"📊 {company_name} ({symbol})\n"
+                response += "⚠️ Live price data unavailable right now.\n\n"
+                response += ai_analysis
+                return response
+
+            # Case: Live data available
+            symbol = stock_data.get('symbol', 'Unknown')
+            price = stock_data.get('price', 0)
+            change = stock_data.get('change', 0)
+            change_percent = stock_data.get('change_percent', 0)
+            
+            response = f"📊 {symbol} Stock Analysis\n\n"
+            response += f"Current Price: ₹{price:.2f}\n"
+            response += f"Change: {change:+.2f} ({change_percent:+.2f}%)\n\n"
+            response += f"AI Analysis:\n{ai_analysis}\n"
+            
+            response += "\n💡 This analysis is for educational purposes only and not financial advice."
+            response += "\n📡 Data provided by Finnhub API"
             
             return response
             

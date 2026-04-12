@@ -205,10 +205,12 @@ class MoneyModel:
                 SELECT t.category, SUM(t.amount) as amount, c.color
                 FROM transactions t
                 LEFT JOIN categories c ON t.category = c.name
-                WHERE t.user_id = ? AND strftime('%Y-%m', t.date) = ? AND t.type = 'expense'
+                WHERE t.user_id = ? 
+                AND (strftime('%Y-%m', t.date) = ? OR substr(t.date, 1, 7) = ?)
+                AND t.type = 'expense'
                 GROUP BY t.category
                 ORDER BY amount DESC
-            ''', (user_id, month))
+            ''', (user_id, month, month))
             
             results = cursor.fetchall()
             return [

@@ -63,16 +63,18 @@ const BudgetGamificationPage = () => {
   return (
     <div className="budget-gamification-page">
       {/* Header */}
-      <div className="gamification-header">
+      <div className="budget-status-header">
         <button 
           className="back-button"
           onClick={handleBackClick}
         >
           <ArrowLeft size={20} color="white" />
         </button>
-        <div className="header-title-with-icon">
-          <span className="header-icon">🏆</span>
-          <span className="page-title">Budget Gamification</span>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Budget Gamification</h1>
+            <p className="loan-header-subtitle">Earn rewards for smart budgeting and saving habits.</p>
+          </div>
         </div>
       </div>
 

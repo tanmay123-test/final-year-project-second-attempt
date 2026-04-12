@@ -320,10 +320,17 @@
 /* ─── DESKTOP ─── */
 @media (min-width: 769px) {
   .goal-jar-page {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 32px;
-    padding-bottom: 40px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 32px 40px 32px;
+  }
+
+  .goal-jar-page .header-content,
+  .goal-jar-page .main-content {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
   }
 
   .main-content {
@@ -371,5 +378,18 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .goal-jar-page {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 24px 40px 24px;
+  }
+
+  .goal-jar-page .main-content {
+    padding: 0;
   }
 }

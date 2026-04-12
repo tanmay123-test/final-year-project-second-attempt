@@ -1,19 +1,12 @@
 from flask import Flask, request, jsonify
 from .goal_engine import GoalEngine
 from datetime import datetime, timedelta
-from auth_utils import verify_token
+from auth_utils import verify_token, get_current_user_id
 from user_db import UserDB
 
 def _get_user_id_from_token():
-    """Extract authenticated user_id from JWT token"""
-    auth = request.headers.get('Authorization', '')
-    if not auth.startswith('Bearer '):
-        return None
-    token = auth.split(' ')[1]
-    username = verify_token(token)
-    if not username:
-        return None
-    return UserDB().get_user_by_username(username)
+    """Extract authenticated user_id from JWT token — delegates to shared auth_utils"""
+    return get_current_user_id()
 
 class GoalAPI:
     """REST API endpoints for goal jar management"""
@@ -117,6 +110,98 @@ class GoalAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
         
+        @self.app.route('/api/goal/payment/create-order', methods=['POST'])
+        def goal_create_payment_order():
+            """Create Razorpay order for goal savings"""
+            try:
+                user_id = _get_user_id_from_token()
+                if not user_id:
+                    # Debug: check what the token contains
+                    auth = request.headers.get('Authorization', '')
+                    print(f"[goal payment] Auth header present: {bool(auth)}, user_id resolved: {user_id}")
+                    return jsonify({'error': 'Authentication failed — please log in again'}), 401
+
+                data = request.get_json() or {}
+                amount = data.get('amount')
+                goal_id = data.get('goal_id')
+
+                if not amount or not goal_id:
+                    return jsonify({'error': 'amount and goal_id are required'}), 400
+
+                amount = float(amount)
+                if amount <= 0:
+                    return jsonify({'error': 'Amount must be positive'}), 400
+
+                import sys, os as _os
+                _backend = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))))
+                if _backend not in sys.path:
+                    sys.path.insert(0, _backend)
+                
+                # Import config for the key
+                try:
+                    from config import RAZORPAY_KEY_ID
+                except ImportError:
+                    RAZORPAY_KEY_ID = _os.getenv('RAZORPAY_KEY_ID')
+
+                from payment.payments.razor_service import create_order
+
+                order = create_order(int(amount), f'goal_{goal_id}_user_{user_id}')
+                return jsonify({
+                    'success': True,
+                    'order_id': order['id'],
+                    'amount': int(amount),
+                    'currency': 'INR',
+                    'key': RAZORPAY_KEY_ID,
+                })
+            except Exception as e:
+                print(f"Goal Payment Order Error: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+
+        @self.app.route('/api/goal/payment/verify', methods=['POST'])
+        def goal_verify_payment():
+            """Verify Razorpay signature and record savings"""
+            try:
+                user_id = _get_user_id_from_token()
+                if not user_id:
+                    return jsonify({'error': 'Unauthorized'}), 401
+
+                data = request.get_json() or {}
+                order_id   = data.get('razorpay_order_id')
+                payment_id = data.get('razorpay_payment_id')
+                signature  = data.get('razorpay_signature')
+                goal_id    = data.get('goal_id')
+                amount     = data.get('amount')
+
+                if not all([order_id, payment_id, signature, goal_id, amount]):
+                    return jsonify({'error': 'Missing required fields'}), 400
+
+                import hmac, hashlib, os as _os
+                
+                # Try to get secret from config
+                try:
+                    from config import RAZORPAY_KEY_SECRET
+                    key_secret = RAZORPAY_KEY_SECRET
+                except ImportError:
+                    key_secret = _os.getenv('RAZORPAY_KEY_SECRET', '')
+
+                body = f"{order_id}|{payment_id}"
+                expected = hmac.new(key_secret.encode(), body.encode(), hashlib.sha256).hexdigest()
+
+                if expected != signature:
+                    return jsonify({'error': 'Payment verification failed'}), 400
+
+                # Record savings
+                self.goal_engine.add_savings(
+                    user_id=user_id,
+                    goal_id=int(goal_id),
+                    amount=float(amount),
+                    payment_method='razorpay',
+                    notes=f'Razorpay {payment_id}'
+                )
+                return jsonify({'success': True, 'message': f'₹{amount} added to your goal!'})
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+
         @self.app.route('/api/goal/simulate', methods=['POST'])
         def simulate_goal():
             try:

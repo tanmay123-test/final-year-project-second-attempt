@@ -134,109 +134,103 @@ const CompareLoansPage = () => {
   return (
     <div className="compare-loans-page">
       {/* Header */}
-      <div className="loan-header">
+      <div className="loan-header-section">
         <button className="back-button" onClick={handleBackClick}>
           <ArrowLeft size={20} color="white" />
         </button>
-        <div className="header-content">
-          <div className="header-title-section">
-            <ArrowUpDown size={20} color="#F59E0B" />
-            <div className="header-text">
-              <h1 className="header-title">Compare Two Loans</h1>
-            </div>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Compare Two Loans</h1>
+            <p className="loan-header-subtitle">Compare different loan options to find the best deal.</p>
           </div>
         </div>
       </div>
 
-      {/* Form Section */}
       <div className="compare-form-section">
         <div className="loans-grid">
-          {/* Loan 1 Card */}
-          <div className="loan-card">
-            <h3 className="loan-card-title">Loan 1</h3>
-            
+          <div className="loan-card-form">
+            <h3 className="section-title">Loan Option 1</h3>
             <div className="form-field">
-              <label className="field-label">Amount (₹)</label>
+              <label className="field-label">Loan Amount (₹)</label>
               <div className="input-wrapper">
                 <span className="input-prefix">₹</span>
                 <input
                   type="number"
-                  value={loan1.amount}
-                  onChange={(e) => handleLoan1Change('amount', e.target.value)}
                   className="form-input with-prefix"
+                  placeholder="e.g. 500000"
+                  value={loan1.amount}
+                  onChange={(e) => setLoan1({...loan1, amount: e.target.value})}
                 />
               </div>
             </div>
-
             <div className="form-field">
-              <label className="field-label">Rate (%)</label>
+              <label className="field-label">Interest Rate (% p.a.)</label>
               <input
                 type="number"
+                className="form-input"
+                placeholder="e.g. 8.5"
                 step="0.1"
                 value={loan1.rate}
-                onChange={(e) => handleLoan1Change('rate', e.target.value)}
-                className="form-input"
+                onChange={(e) => setLoan1({...loan1, rate: e.target.value})}
               />
             </div>
-
             <div className="form-field">
-              <label className="field-label">Tenure (months)</label>
+              <label className="field-label">Tenure (Months)</label>
               <input
                 type="number"
-                value={loan1.tenure}
-                onChange={(e) => handleLoan1Change('tenure', e.target.value)}
                 className="form-input"
+                placeholder="e.g. 24"
+                value={loan1.tenure}
+                onChange={(e) => setLoan1({...loan1, tenure: e.target.value})}
               />
             </div>
           </div>
 
-          {/* Loan 2 Card */}
-          <div className="loan-card">
-            <h3 className="loan-card-title">Loan 2</h3>
-            
+          <div className="loan-card-form">
+            <h3 className="section-title">Loan Option 2</h3>
             <div className="form-field">
-              <label className="field-label">Amount (₹)</label>
+              <label className="field-label">Loan Amount (₹)</label>
               <div className="input-wrapper">
                 <span className="input-prefix">₹</span>
                 <input
                   type="number"
-                  value={loan2.amount}
-                  onChange={(e) => handleLoan2Change('amount', e.target.value)}
                   className="form-input with-prefix"
+                  placeholder="e.g. 500000"
+                  value={loan2.amount}
+                  onChange={(e) => setLoan2({...loan2, amount: e.target.value})}
                 />
               </div>
             </div>
-
             <div className="form-field">
-              <label className="field-label">Rate (%)</label>
+              <label className="field-label">Interest Rate (% p.a.)</label>
               <input
                 type="number"
+                className="form-input"
+                placeholder="e.g. 9.0"
                 step="0.1"
                 value={loan2.rate}
-                onChange={(e) => handleLoan2Change('rate', e.target.value)}
-                className="form-input"
+                onChange={(e) => setLoan2({...loan2, rate: e.target.value})}
               />
             </div>
-
             <div className="form-field">
-              <label className="field-label">Tenure (months)</label>
+              <label className="field-label">Tenure (Months)</label>
               <input
                 type="number"
-                value={loan2.tenure}
-                onChange={(e) => handleLoan2Change('tenure', e.target.value)}
                 className="form-input"
+                placeholder="e.g. 36"
+                value={loan2.tenure}
+                onChange={(e) => setLoan2({...loan2, tenure: e.target.value})}
               />
             </div>
           </div>
         </div>
 
-        {/* Compare Button */}
-        <button className="compare-button" onClick={handleCompare} disabled={loading}>
-          {loading ? (
-            <div className="loading-spinner"></div>
-          ) : (
-            'Compare Loans'
-          )}
+        <button
+          className="compare-button"
+          onClick={handleCompare}
+          disabled={loading}
+        >
+          {loading ? <div className="loading-spinner" /> : "Compare Loans"}
         </button>
 
         {/* Error Message */}
@@ -261,11 +255,11 @@ const CompareLoansPage = () => {
               
               <div className="table-row">
                 <div className="metric-cell">Monthly EMI</div>
-                <div className={`value-cell ${getBetterValue(results.loan1?.emi ?? 0, results.loan2?.emi ?? 0) === (results.loan1?.emi ?? 0) ? 'better-value' : ''}`}>
-                  {formatAmount(results.loan1?.emi ?? 0)}
+                <div className={`value-cell ${getBetterValue(results.loan1?.monthly_emi ?? results.loan1?.emi ?? 0, results.loan2?.monthly_emi ?? results.loan2?.emi ?? 0) === (results.loan1?.monthly_emi ?? results.loan1?.emi ?? 0) ? 'better-value' : ''}`}>
+                  {formatAmount(results.loan1?.monthly_emi ?? results.loan1?.emi ?? 0)}
                 </div>
-                <div className={`value-cell ${getBetterValue(results.loan1?.emi ?? 0, results.loan2?.emi ?? 0) === (results.loan2?.emi ?? 0) ? 'better-value' : ''}`}>
-                  {formatAmount(results.loan2?.emi ?? 0)}
+                <div className={`value-cell ${getBetterValue(results.loan1?.monthly_emi ?? results.loan1?.emi ?? 0, results.loan2?.monthly_emi ?? results.loan2?.emi ?? 0) === (results.loan2?.monthly_emi ?? results.loan2?.emi ?? 0) ? 'better-value' : ''}`}>
+                  {formatAmount(results.loan2?.monthly_emi ?? results.loan2?.emi ?? 0)}
                 </div>
               </div>
               
@@ -281,11 +275,11 @@ const CompareLoansPage = () => {
               
               <div className="table-row">
                 <div className="metric-cell">Total Repayment</div>
-                <div className={`value-cell ${getBetterValue(results.loan1?.total_payment ?? 0, results.loan2?.total_payment ?? 0) === (results.loan1?.total_payment ?? 0) ? 'better-value' : ''}`}>
-                  {formatAmount(results.loan1?.total_payment ?? 0)}
+                <div className={`value-cell ${getBetterValue(results.loan1?.total_repayment ?? results.loan1?.total_payment ?? 0, results.loan2?.total_repayment ?? results.loan2?.total_payment ?? 0) === (results.loan1?.total_repayment ?? results.loan1?.total_payment ?? 0) ? 'better-value' : ''}`}>
+                  {formatAmount(results.loan1?.total_repayment ?? results.loan1?.total_payment ?? 0)}
                 </div>
-                <div className={`value-cell ${getBetterValue(results.loan1?.total_payment ?? 0, results.loan2?.total_payment ?? 0) === (results.loan2?.total_payment ?? 0) ? 'better-value' : ''}`}>
-                  {formatAmount(results.loan2?.total_payment ?? 0)}
+                <div className={`value-cell ${getBetterValue(results.loan1?.total_repayment ?? results.loan1?.total_payment ?? 0, results.loan2?.total_repayment ?? results.loan2?.total_payment ?? 0) === (results.loan2?.total_repayment ?? results.loan2?.total_payment ?? 0) ? 'better-value' : ''}`}>
+                  {formatAmount(results.loan2?.total_repayment ?? results.loan2?.total_payment ?? 0)}
                 </div>
               </div>
             </div>
@@ -299,11 +293,11 @@ const CompareLoansPage = () => {
                 <span className="recommendation-title">Recommendation</span>
               </div>
               <div className="recommendation-body">
-                <div className="winner-text">
-                  Choose Loan {results.recommendation?.winner ?? '--'}
+                <div className="winner-text" style={{ fontSize: '18px', fontWeight: '600', color: '#1E293B' }}>
+                  {results.recommendation}
                 </div>
-                <div className="savings-text">
-                  You save {formatAmount(results.recommendation?.savings ?? 0)} in total repayment by choosing Loan {results.recommendation?.winner ?? '--'}.
+                <div className="savings-text" style={{ marginTop: '8px', color: '#64748B' }}>
+                  By choosing {results.cheaper_option}, you reduce your total interest burden and save significantly over the full tenure.
                 </div>
               </div>
             </div>

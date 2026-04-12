@@ -1,18 +1,38 @@
 import sqlite3
+import os
 from datetime import datetime, timedelta
 
 class GoalEngine:
     """Main engine for goal jar management"""
     
     def __init__(self):
-        self.conn = sqlite3.connect('expertease.db')
-        self.conn.row_factory = sqlite3.Row
-        self.create_goal_tables()
-        self._ensure_goal_schema()
-    
-    def create_goal_tables(self):
+        self.db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..', 'data', 'expertease.db')
+        # Fallback to cwd-relative path if data dir doesn't exist
+        if not os.path.exists(os.path.dirname(self.db_path)):
+            self.db_path = 'expertease.db'
+        self._init_tables()
+
+    def get_conn(self):
+        """Get a fresh thread-safe SQLite connection"""
+        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def _init_tables(self):
+        """Create tables on first run"""
+        conn = self.get_conn()
+        try:
+            self.create_goal_tables(conn)
+            self._ensure_goal_schema(conn)
+        finally:
+            conn.close()
+
+    def create_goal_tables(self, conn=None):
         """Create goal jars tables"""
-        cursor = self.conn.cursor()
+        close_after = conn is None
+        if conn is None:
+            conn = self.get_conn()
+        cursor = conn.cursor()
         
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS goal_jars (
@@ -61,11 +81,16 @@ class GoalEngine:
         )
         """)
         
-        self.conn.commit()
+        conn.commit()
+        if close_after:
+            conn.close()
     
-    def _ensure_goal_schema(self):
+    def _ensure_goal_schema(self, conn=None):
         """Safely migrate goal_jars schema if older DB exists without new columns"""
-        cursor = self.conn.cursor()
+        close_after = conn is None
+        if conn is None:
+            conn = self.get_conn()
+        cursor = conn.cursor()
         try:
             cursor.execute("PRAGMA table_info(goal_jars)")
             existing = {row[1] for row in cursor.fetchall()}
@@ -77,15 +102,18 @@ class GoalEngine:
                 cursor.execute("ALTER TABLE goal_jars ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
             if 'target_date' not in existing:
                 cursor.execute("ALTER TABLE goal_jars ADD COLUMN target_date TEXT")
-            self.conn.commit()
+            conn.commit()
         except Exception:
             pass
         finally:
             cursor.close()
+            if close_after:
+                conn.close()
     
     def create_goal(self, user_id, goal_name, target_amount, monthly_contribution, target_date=None):
         """Create a new goal"""
-        cursor = self.conn.cursor()
+        conn = self.get_conn()
+        cursor = conn.cursor()
         
         # Calculate feasibility
         months_required = int(target_amount / monthly_contribution) if monthly_contribution > 0 else 999
@@ -94,7 +122,6 @@ class GoalEngine:
         if not target_date:
             target_date = (datetime.now() + timedelta(days=months_required * 30)).strftime('%Y-%m-%d')
         else:
-            # Normalize provided date to YYYY-MM-DD string
             try:
                 target_date = datetime.strptime(str(target_date), '%Y-%m-%d').strftime('%Y-%m-%d')
             except Exception:
@@ -106,12 +133,15 @@ class GoalEngine:
         VALUES (?, ?, ?, ?, ?)
         """, (user_id, goal_name, target_amount, monthly_contribution, target_date))
         
-        self.conn.commit()
-        return cursor.lastrowid
+        conn.commit()
+        goal_id = cursor.lastrowid
+        conn.close()
+        return goal_id
     
     def get_user_goals(self, user_id):
         """Get all goals for a user"""
-        cursor = self.conn.cursor()
+        conn = self.get_conn()
+        cursor = conn.cursor()
         cursor.execute("""
         SELECT * FROM goal_jars 
         WHERE user_id=? 
@@ -121,26 +151,27 @@ class GoalEngine:
         goals = []
         for row in cursor.fetchall():
             goal = dict(row)
-            # Calculate progress
             goal['progress_percentage'] = (goal['current_amount'] / goal['target_amount'] * 100) if goal['target_amount'] > 0 else 0
             goal['remaining_amount'] = goal['target_amount'] - goal['current_amount']
             goal['months_remaining'] = max(0, int(goal['remaining_amount'] / goal['monthly_contribution'])) if goal['monthly_contribution'] > 0 else 999
-            
-            # Calculate months passed
             if goal['target_date']:
-                target_date = datetime.strptime(goal['target_date'], '%Y-%m-%d')
-                months_passed = max(0, (datetime.now() - target_date).days // 30)
-                goal['months_passed'] = months_passed
+                try:
+                    target_date = datetime.strptime(goal['target_date'], '%Y-%m-%d')
+                    months_passed = max(0, (datetime.now() - target_date).days // 30)
+                    goal['months_passed'] = months_passed
+                except Exception:
+                    goal['months_passed'] = 0
             else:
                 goal['months_passed'] = 0
-            
             goals.append(goal)
         
+        conn.close()
         return goals
     
     def add_savings(self, user_id, goal_id, amount, payment_method='online', notes=''):
         """Add savings to a goal"""
-        cursor = self.conn.cursor()
+        conn = self.get_conn()
+        cursor = conn.cursor()
         
         cursor.execute("""
         INSERT INTO goal_savings 
@@ -148,44 +179,35 @@ class GoalEngine:
         VALUES (?, ?, ?, ?, ?, ?)
         """, (goal_id, user_id, amount, datetime.now().date(), payment_method, notes))
         
-        # Update goal current amount
         cursor.execute("""
         UPDATE goal_jars 
         SET current_amount = current_amount + ?, updated_at = CURRENT_TIMESTAMP
         WHERE id=? AND user_id=?
         """, (amount, goal_id, user_id))
         
-        self.conn.commit()
+        conn.commit()
+        conn.close()
         return True
     
     def get_goal_progress(self, user_id, goal_id):
         """Get detailed progress for a specific goal"""
-        cursor = self.conn.cursor()
+        conn = self.get_conn()
+        cursor = conn.cursor()
         
-        # Get goal details
-        cursor.execute("""
-        SELECT * FROM goal_jars 
-        WHERE id=? AND user_id=?
-        """, (goal_id, user_id))
+        cursor.execute("SELECT * FROM goal_jars WHERE id=? AND user_id=?", (goal_id, user_id))
         goal = cursor.fetchone()
-        
         if not goal:
+            conn.close()
             return None
-        
         goal = dict(goal)
-        
-        # Get savings history
         cursor.execute("""
-        SELECT * FROM goal_savings 
-        WHERE goal_id=? AND user_id=?
-        ORDER BY transaction_date DESC
+        SELECT * FROM goal_savings WHERE goal_id=? AND user_id=? ORDER BY transaction_date DESC
         """, (goal_id, user_id))
         savings_history = [dict(row) for row in cursor.fetchall()]
-        
+        conn.close()
         goal['savings_history'] = savings_history
         goal['progress_percentage'] = (goal['current_amount'] / goal['target_amount'] * 100) if goal['target_amount'] > 0 else 0
         goal['remaining_amount'] = goal['target_amount'] - goal['current_amount']
-        
         return goal
     
     def simulate_timeline(self, target_amount, monthly_contribution):
@@ -214,52 +236,39 @@ class GoalEngine:
     
     def transfer_leftover_to_goal(self, user_id, goal_id, amount, source_category):
         """Transfer leftover budget to goal"""
-        cursor = self.conn.cursor()
-        
-        # Add to goal savings
+        conn = self.get_conn()
+        cursor = conn.cursor()
         cursor.execute("""
-        INSERT INTO goal_savings 
-        (goal_id, user_id, amount, transaction_date, payment_method, notes)
+        INSERT INTO goal_savings (goal_id, user_id, amount, transaction_date, payment_method, notes)
         VALUES (?, ?, ?, ?, ?, ?)
         """, (goal_id, user_id, amount, datetime.now().date(), 'budget_transfer', f"Transfer from {source_category}"))
-        
-        # Update goal amount
         cursor.execute("""
-        UPDATE goal_jars 
-        SET current_amount = current_amount + ?, updated_at = CURRENT_TIMESTAMP
+        UPDATE goal_jars SET current_amount = current_amount + ?, updated_at = CURRENT_TIMESTAMP
         WHERE id=? AND user_id=?
         """, (amount, goal_id, user_id))
-        
-        self.conn.commit()
+        conn.commit()
+        conn.close()
         return True
     
     def get_goal_acceleration_suggestions(self, user_id):
         """Analyze spending and suggest goal acceleration"""
-        cursor = self.conn.cursor()
+        conn = self.get_conn()
+        cursor = conn.cursor()
         
-        # Get recent transactions (last 3 months)
         three_months_ago = datetime.now() - timedelta(days=90)
         cursor.execute("""
         SELECT category, SUM(amount) as total_spent, COUNT(*) as transaction_count
-        FROM transactions 
-        WHERE user_id=? AND date >= ?
-        GROUP BY category
-        ORDER BY total_spent DESC
+        FROM transactions WHERE user_id=? AND date >= ? GROUP BY category ORDER BY total_spent DESC
         """, (user_id, three_months_ago.date()))
-        
         spending_data = cursor.fetchall()
-        
+        conn.close()
         suggestions = []
-        
         for spending in spending_data:
             category = spending['category']
-            monthly_avg = spending['total_spent'] / 3  # Average over 3 months
-            
-            # Suggest reduction strategies
-            if monthly_avg > 2000:  # High spending category
+            monthly_avg = spending['total_spent'] / 3
+            if monthly_avg > 2000:
                 reduction_20 = monthly_avg * 0.8
                 savings_potential = monthly_avg - reduction_20
-                
                 suggestions.append({
                     'category': category,
                     'current_monthly_avg': monthly_avg,
@@ -267,67 +276,56 @@ class GoalEngine:
                     'monthly_savings': savings_potential,
                     'strategy': f"Reduce {category} spending by 20%"
                 })
-        
         return suggestions
     
     def schedule_goal_notification(self, user_id, goal_id, notification_type, message, scheduled_date):
         """Schedule a goal notification"""
-        cursor = self.conn.cursor()
-        
+        conn = self.get_conn()
+        cursor = conn.cursor()
         cursor.execute("""
-        INSERT INTO goal_notifications 
-        (user_id, goal_id, notification_type, message, scheduled_date)
+        INSERT INTO goal_notifications (user_id, goal_id, notification_type, message, scheduled_date)
         VALUES (?, ?, ?, ?, ?)
         """, (user_id, goal_id, notification_type, message, scheduled_date))
-        
-        self.conn.commit()
-        return cursor.lastrowid
+        conn.commit()
+        notif_id = cursor.lastrowid
+        conn.close()
+        return notif_id
     
     def get_pending_notifications(self, user_id):
         """Get pending notifications to send"""
-        cursor = self.conn.cursor()
-        
+        conn = self.get_conn()
+        cursor = conn.cursor()
         cursor.execute("""
         SELECT * FROM goal_notifications 
-        WHERE user_id=? AND is_sent=0 AND scheduled_date <= date('now')
-        ORDER BY scheduled_date ASC
+        WHERE user_id=? AND is_sent=0 AND scheduled_date <= date('now') ORDER BY scheduled_date ASC
         """, (user_id,))
-        
-        return [dict(row) for row in cursor.fetchall()]
+        result = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return result
     
     def mark_notification_sent(self, notification_id):
         """Mark notification as sent"""
-        cursor = self.conn.cursor()
-        
-        cursor.execute("""
-        UPDATE goal_notifications 
-        SET is_sent=1 
-        WHERE id=?
-        """, (notification_id,))
-        
-        self.conn.commit()
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE goal_notifications SET is_sent=1 WHERE id=?", (notification_id,))
+        conn.commit()
+        conn.close()
         return True
     
     def calculate_savings_projection(self, user_id, goal_id, projection_months=24):
         """Calculate savings projection for a goal"""
-        cursor = self.conn.cursor()
-        
+        conn = self.get_conn()
+        cursor = conn.cursor()
         cursor.execute("""
-        SELECT monthly_contribution, current_amount 
-        FROM goal_jars 
-        WHERE id=? AND user_id=?
+        SELECT monthly_contribution, current_amount FROM goal_jars WHERE id=? AND user_id=?
         """, (goal_id, user_id))
-        
         goal = cursor.fetchone()
-        
+        conn.close()
         if not goal:
             return None
-        
         monthly_contribution = goal['monthly_contribution']
         current_amount = goal['current_amount']
-        
         projections = []
-        
         for months in [6, 12, 24]:
             future_amount = current_amount + (monthly_contribution * months)
             projections.append({
@@ -335,7 +333,6 @@ class GoalEngine:
                 'future_amount': future_amount,
                 'projection_date': (datetime.now() + timedelta(days=months*30)).strftime('%Y-%m-%d')
             })
-        
         return projections
     
     def get_goal_summary(self, user_id):

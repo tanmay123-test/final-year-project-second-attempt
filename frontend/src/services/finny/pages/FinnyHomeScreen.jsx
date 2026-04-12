@@ -68,11 +68,15 @@ const FinnyHomeScreen = () => {
   }));
 
   const createDonutPath = (data, index, total) => {
-    const startAngle = index === 0 ? 0 : data.slice(0, index).reduce((acc, curr) => acc + curr.percentage, 0);
-    const endAngle = startAngle + data[index].percentage;
+    const startPercentage = index === 0 ? 0 : data.slice(0, index).reduce((acc, curr) => acc + curr.percentage, 0);
+    const endPercentage = startPercentage + data[index].percentage;
     
-    const startAngleRad = (startAngle * 3.14159) / 180;
-    const endAngleRad = (endAngle * 3.14159) / 180;
+    // Convert percentages (0-100) to degrees (0-360) then to radians
+    const startAngle = (startPercentage * 360) / 100;
+    const endAngle = (endPercentage * 360) / 100;
+    
+    const startAngleRad = (startAngle * Math.PI) / 180;
+    const endAngleRad = (endAngle * Math.PI) / 180;
     
     const x1 = 50 + 40 * Math.cos(startAngleRad - 3.14159 / 2);
     const y1 = 50 + 40 * Math.sin(startAngleRad - 3.14159 / 2);

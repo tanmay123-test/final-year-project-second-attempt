@@ -5,6 +5,7 @@ Handles communication with Google Gemini API for financial education assistant
 
 import os
 import json
+import logging
 import httpx
 from typing import Optional, Dict, Any
 from datetime import datetime
@@ -12,6 +13,9 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+MODEL_NAME = "gemini-2.0-flash"
+
 
 class GeminiClient:
     """
@@ -35,7 +39,8 @@ class GeminiClient:
             print("✅ Gemini API key loaded successfully")
             
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
-        self.model = "gemini-1.5-flash"  # Fast and efficient model
+        self.model = MODEL_NAME
+        logging.info(f"Gemini client initialized with model: {MODEL_NAME}")
         
         # Financial education prompt template
         self.system_prompt = """You are a financial education assistant inside a community group.
@@ -290,6 +295,11 @@ Provide a helpful educational response:"""
             elif response.status_code == 429:
                 return "I'm receiving too many requests right now. Please wait a moment and try again."
 
+            elif response.status_code == 404:
+                raise ValueError(
+                    f"Gemini model not found. Check model name. Error: {response.text}"
+                )
+
             else:
                 print(f"Gemini error {response.status_code}: {response.text[:300]}")
                 return "I'm experiencing technical difficulties. Please try again later."
@@ -300,9 +310,15 @@ Provide a helpful educational response:"""
         except httpx.RequestError as e:
             print(f"Gemini connection error: {e}")
             return "I'm having trouble connecting to my services. Please try again later."
+        except ValueError:
+            raise
         except Exception as e:
-            print(f"Gemini generate_response error: {type(e).__name__}: {e}")
-            return "I encountered an unexpected error. Please try again."
+            error_msg = str(e)
+            if "404" in error_msg or "not found" in error_msg.lower():
+                raise ValueError(
+                    f"Gemini model not found. Check model name. Error: {error_msg}"
+                )
+            raise
 
     def _run_async(self, message: str) -> str:
         """Helper method to run async function in thread (kept for backward compat)"""

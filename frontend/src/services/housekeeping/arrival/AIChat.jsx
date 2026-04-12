@@ -286,6 +286,21 @@ const AIChat = () => {
         zIndex: 0
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+          <button 
+            onClick={() => navigate('/housekeeping/home')}
+            style={{ 
+              background: 'rgba(255,255,255,0.2)', 
+              border: 'none', 
+              borderRadius: '12px', 
+              padding: '8px', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <ArrowLeft size={20} color="white" />
+          </button>
           <div style={{ 
             width: '48px', height: '48px', 
             backgroundColor: 'rgba(255,255,255,0.2)', 

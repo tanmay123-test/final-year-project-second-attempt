@@ -47,22 +47,28 @@ const LoanRiskPage = () => {
         interest_rate: Number(formData.interestRate),
         loan_tenure: Number(formData.tenure),
         monthly_income: Number(formData.monthlyIncome),
-        monthly_fixed_expenses: Number(formData.fixedExpenses)
+        monthly_fixed_expenses: Number(formData.fixedExpenses),
+        existing_emi: Number(formData.existingEmis)
       };
 
-      console.log('Sending loan risk assessment request:', payload);
+      console.log('Sending risk assessment request:', payload);
       const response = await loanApi.assessRisk(payload);
-      console.log('Loan risk assessment response:', response);
+      console.log('Risk assessment response:', response);
       
       if (response.success) {
-        // Calculate additional metrics if not provided by backend
-        const enhancedResults = {
-          ...response.data,
-          dti_ratio: response.data.dti_ratio || calculateDTI(response.data.new_emi),
-          emi_pct_income: response.data.emi_pct_income || calculateEMIPctIncome(response.data.new_emi)
+        // Map backend nested data to flat structure expected by frontend
+        const data = response.data;
+        const mappedResults = {
+          dti_ratio: Number(data.dti_analysis?.dti_percentage || calculateDTI(data.loan_details?.monthly_emi || 0)).toFixed(1),
+          emi_pct_income: Number(data.affordability?.emi_percentage || calculateEMIPctIncome(data.loan_details?.monthly_emi || 0)).toFixed(1),
+          new_emi: data.loan_details?.monthly_emi || 0,
+          affordable: data.affordability?.is_affordable,
+          risk_score: Math.round(data.risk_analysis?.risk_score || 0),
+          risk_level: data.risk_analysis?.risk_level || 'Unknown',
+          recommendation: data.recommendation || 'No recommendation available'
         };
         
-        setResults(enhancedResults);
+        setResults(mappedResults);
         
         // Scroll results into view
         setTimeout(() => {
@@ -234,16 +240,14 @@ const LoanRiskPage = () => {
   return (
     <div className="loan-risk-page">
       {/* Header */}
-      <div className="loan-header">
+      <div className="budget-status-header">
         <button className="back-button" onClick={handleBackClick}>
           <ArrowLeft size={20} color="white" />
         </button>
-        <div className="header-content">
-          <div className="header-title-section">
-            <Shield size={20} color="#F59E0B" />
-            <div className="header-text">
-              <h1 className="header-title">Loan Risk Assessment</h1>
-            </div>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Loan Risk Assessment</h1>
+            <p className="loan-header-subtitle">Identify potential risks based on your income and expenses.</p>
           </div>
         </div>
       </div>
@@ -252,83 +256,85 @@ const LoanRiskPage = () => {
       <div className="loan-risk-form-section">
         <div className="loan-risk-form-card">
           <form onSubmit={handleAssess}>
-            <div className="form-field">
-              <label className="field-label">Monthly Income (₹)</label>
-              <div className="input-wrapper">
-                <span className="input-prefix">₹</span>
+            <div className="loan-form-grid">
+              <div className="form-field">
+                <label className="field-label">Monthly Income (₹)</label>
+                <div className="input-wrapper">
+                  <span className="input-prefix">₹</span>
+                  <input
+                    type="number"
+                    value={formData.monthlyIncome}
+                    onChange={(e) => handleInputChange('monthlyIncome', e.target.value)}
+                    className="form-input with-prefix"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="field-label">Fixed Expenses (₹)</label>
+                <div className="input-wrapper">
+                  <span className="input-prefix">₹</span>
+                  <input
+                    type="number"
+                    value={formData.fixedExpenses}
+                    onChange={(e) => handleInputChange('fixedExpenses', e.target.value)}
+                    className="form-input with-prefix"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="field-label">Existing EMIs (₹)</label>
+                <div className="input-wrapper">
+                  <span className="input-prefix">₹</span>
+                  <input
+                    type="number"
+                    value={formData.existingEmis}
+                    onChange={(e) => handleInputChange('existingEmis', e.target.value)}
+                    className="form-input with-prefix"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="field-label">New Loan Amount (₹)</label>
+                <div className="input-wrapper">
+                  <span className="input-prefix">₹</span>
+                  <input
+                    type="number"
+                    value={formData.newLoanAmount}
+                    onChange={(e) => handleInputChange('newLoanAmount', e.target.value)}
+                    className="form-input with-prefix"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="field-label">Interest Rate (%)</label>
                 <input
                   type="number"
-                  value={formData.monthlyIncome}
-                  onChange={(e) => handleInputChange('monthlyIncome', e.target.value)}
-                  className="form-input with-prefix"
+                  step="0.1"
+                  value={formData.interestRate}
+                  onChange={(e) => handleInputChange('interestRate', e.target.value)}
+                  className="form-input"
                   required
                 />
               </div>
-            </div>
 
-            <div className="form-field">
-              <label className="field-label">Fixed Expenses (₹)</label>
-              <div className="input-wrapper">
-                <span className="input-prefix">₹</span>
+              <div className="form-field">
+                <label className="field-label">Tenure (Months)</label>
                 <input
                   type="number"
-                  value={formData.fixedExpenses}
-                  onChange={(e) => handleInputChange('fixedExpenses', e.target.value)}
-                  className="form-input with-prefix"
+                  value={formData.tenure}
+                  onChange={(e) => handleInputChange('tenure', e.target.value)}
+                  className="form-input"
                   required
                 />
               </div>
-            </div>
-
-            <div className="form-field">
-              <label className="field-label">Existing EMIs (₹)</label>
-              <div className="input-wrapper">
-                <span className="input-prefix">₹</span>
-                <input
-                  type="number"
-                  value={formData.existingEmis}
-                  onChange={(e) => handleInputChange('existingEmis', e.target.value)}
-                  className="form-input with-prefix"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-field">
-              <label className="field-label">New Loan Amount (₹)</label>
-              <div className="input-wrapper">
-                <span className="input-prefix">₹</span>
-                <input
-                  type="number"
-                  value={formData.newLoanAmount}
-                  onChange={(e) => handleInputChange('newLoanAmount', e.target.value)}
-                  className="form-input with-prefix"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-field">
-              <label className="field-label">Interest Rate (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={formData.interestRate}
-                onChange={(e) => handleInputChange('interestRate', e.target.value)}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-field">
-              <label className="field-label">Tenure (Months)</label>
-              <input
-                type="number"
-                value={formData.tenure}
-                onChange={(e) => handleInputChange('tenure', e.target.value)}
-                className="form-input"
-                required
-              />
             </div>
 
             <button type="submit" className="assess-button" disabled={loading}>

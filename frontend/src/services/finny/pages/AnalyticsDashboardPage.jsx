@@ -178,7 +178,6 @@ const AnalyticsDashboardPage = () => {
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
-    if (tab === 'budget') navigate('/finny/budget');
   };
 
   const formatAmount = (val) => `₹${(val || 0).toLocaleString('en-IN')}`;
@@ -286,6 +285,7 @@ const AnalyticsDashboardPage = () => {
           </>
         )}
 
+        {activeTab === 'budget' && <BudgetPage />}
         {activeTab === 'weekly' && <WeeklyView weeklySpending={weeklySpending} />}
         {activeTab === 'predict' && <Prediction />}
         {activeTab === 'health' && <FinancialHealth />}

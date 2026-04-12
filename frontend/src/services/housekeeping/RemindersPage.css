@@ -1,0 +1,238 @@
+.reminders-page {
+  width: 100%;
+  height: calc(100vh - 64px);
+  background-color: #F9FAFB;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Header Styles */
+.reminders-header {
+  background-color: #8E44AD;
+  padding: 20px 20px 24px 20px;
+  border-bottom-left-radius: 32px;
+  border-bottom-right-radius: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.reminders-header .header-center h1 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  text-align: center;
+}
+
+.reminders-header .header-center p {
+  font-size: 12px;
+  margin: 4px 0 0 0;
+  opacity: 0.8;
+  text-align: center;
+}
+
+.icon-btn-circle.active {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Body Styles */
+.reminders-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 20px;
+}
+
+.reminders-section-title {
+  margin-bottom: 20px;
+}
+
+.reminders-section-title h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.reminders-section-title span {
+  font-size: 12px;
+  color: #6B7280;
+}
+
+.reminders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reminder-card {
+  background: white;
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  border: 1px solid #F3F4F6;
+  transition: transform 0.2s;
+}
+
+.reminder-card:active {
+  transform: scale(0.98);
+}
+
+.reminder-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.high .reminder-icon { background-color: #FEE2E2; }
+.medium .reminder-icon { background-color: #FEF3C7; }
+.low .reminder-icon { background-color: #D1FAE5; }
+
+.reminder-content {
+  flex: 1;
+}
+
+.reminder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.reminder-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.urgency-tag {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.high .urgency-tag { background: #FEE2E2; color: #EF4444; }
+.medium .urgency-tag { background: #FEF3C7; color: #F59E0B; }
+.low .urgency-tag { background: #D1FAE5; color: #10B981; }
+
+.reminder-msg {
+  font-size: 13px;
+  color: #4B5563;
+  margin: 0 0 16px 0;
+  line-height: 1.4;
+}
+
+.reminder-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.hygiene-score-mini {
+  flex: 1;
+}
+
+.hygiene-score-mini .label {
+  font-size: 10px;
+  color: #9CA3AF;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.score-bar-bg {
+  height: 6px;
+  background: #F3F4F6;
+  border-radius: 3px;
+  width: 100%;
+  max-width: 100px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease-out;
+}
+
+.score-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.book-shortcut-btn {
+  background-color: #8E44AD;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* States */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  color: #6B7280;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #F3F4F6;
+  border-top: 3px solid #8E44AD;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-reminders {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.empty-reminders h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  margin: 16px 0 8px 0;
+}
+
+.empty-reminders p {
+  font-size: 14px;
+  color: #6B7280;
+}
+
+/* Desktop Styles */
+@media (min-width: 768px) {
+  .reminders-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    border-left: 1px solid #F3F4F6;
+    border-right: 1px solid #F3F4F6;
+  }
+}

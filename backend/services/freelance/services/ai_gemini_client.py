@@ -12,7 +12,7 @@ class FreelanceGeminiClient:
     def __init__(self):
         self.api_key = GEMINI_API_KEY
         self.base_url = "https://generativelanguage.googleapis.com/v1beta"
-        self.model = "gemini-1.5-flash"
+        self.model = "gemini-2.0-flash"
 
     async def generate_ai_response(self, message: str, system_prompt: Optional[str] = None) -> str:
         """

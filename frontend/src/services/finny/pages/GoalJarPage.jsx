@@ -30,6 +30,13 @@ const GoalJarPage = () => {
 
   useEffect(() => {
     fetchGoals();
+    // Load Razorpay checkout script
+    if (!document.getElementById('razorpay-script')) {
+      const script = document.createElement('script');
+      script.id = 'razorpay-script';
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      document.body.appendChild(script);
+    }
   }, []);
 
   const fetchGoals = async () => {
@@ -82,26 +89,60 @@ const GoalJarPage = () => {
   };
 
   const handleAddSavings = async (goalId) => {
-    if (!savingsAmount || isNaN(savingsAmount)) return;
+    if (!savingsAmount || isNaN(savingsAmount) || parseFloat(savingsAmount) <= 0) return;
+    const amount = parseFloat(savingsAmount);
+
     try {
-      setAddingSavings(goalId);
-      const userId = user?.user_id || user?.id;
-      await moneyService.addGoalSavings({
-        user_id: userId,
+      // 1. Create Razorpay order
+      const orderRes = await moneyService.createGoalPaymentOrder({
         goal_id: goalId,
-        amount: parseFloat(savingsAmount)
+        amount,
+        goal_name: goals.find(g => g.id === goalId)?.goal_name || 'Goal Jar'
       });
-      setSavingsAmount('');
-      setAddingSavings(null);
-      fetchGoals();
+
+      const { order_id, key } = orderRes.data;
+
+      // 2. Open Razorpay checkout
+      const options = {
+        key,
+        amount: amount * 100,
+        currency: 'INR',
+        name: 'ExpertEase',
+        description: 'Goal Jar Savings',
+        order_id,
+        handler: async (response) => {
+          // 3. Verify payment and record savings
+          try {
+            await moneyService.verifyGoalPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              goal_id: goalId,
+              amount,
+            });
+            setSavingsAmount('');
+            setAddingSavings(null);
+            fetchGoals();
+          } catch (err) {
+            alert('Payment received but failed to record. Please contact support.');
+          }
+        },
+        prefill: {
+          name: user?.user_name || '',
+          email: user?.email || '',
+        },
+        theme: { color: '#1F5F7A' },
+        modal: {
+          ondismiss: () => setAddingSavings(goalId) // keep input open if dismissed
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
     } catch (err) {
-      console.error('Failed to add savings:', err);
-      if (err?.response?.status === 401) {
-        alert('Session expired. Please log in again.');
-      } else {
-        alert(err?.response?.data?.message || 'Failed to add savings. Please try again.');
-      }
-      setAddingSavings(null);
+      console.error('Payment error:', err);
+      alert(err?.response?.data?.error || 'Failed to initiate payment. Please try again.');
     }
   };
 

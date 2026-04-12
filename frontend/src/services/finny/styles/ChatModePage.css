@@ -352,10 +352,16 @@
 /* ─── DESKTOP ─── */
 @media (min-width: 769px) {
   .chat-mode-page {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 32px;
-    padding-bottom: 40px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 24px 40px 24px;
+  }
+
+  .chat-input-form {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
   }
 
   .main-content {
@@ -401,6 +407,13 @@
 @media (min-width: 769px) and (max-width: 1024px) {
   .content-grid {
     grid-template-columns: 1fr;
+  }
+
+  .chat-mode-page {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 24px 40px 24px;
   }
 }
 

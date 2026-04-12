@@ -1,4 +1,5 @@
-import razorpay, os
+import razorpay
+import os
 from dotenv import load_dotenv
 load_dotenv()
 

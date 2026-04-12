@@ -22,24 +22,24 @@ class LoanAPI:
         def analyze_loan():
             """Analyze a single loan"""
             try:
-                data = request.get_json()
+                data = request.get_json() or {}
                 
                 required_fields = ['user_id', 'loan_amount', 'interest_rate', 'loan_tenure']
                 for field in required_fields:
-                    if field not in data:
+                    if field not in data or data.get(field) is None:
                         return jsonify({'error': f'Missing required field: {field}'}), 400
                 
                 user_id = data['user_id']
-                loan_amount = float(data['loan_amount'])
-                interest_rate = float(data['interest_rate'])
-                loan_tenure = int(data['loan_tenure'])
+                loan_amount = float(data.get('loan_amount') or 0)
+                interest_rate = float(data.get('interest_rate') or 0)
+                loan_tenure = int(data.get('loan_tenure') or 0)
                 
                 # Optional financial profile (used for affordability/impact analysis)
-                monthly_income = float(data.get('monthly_income', 0))
-                monthly_fixed_expenses = float(data.get('monthly_fixed_expenses', 0))
+                monthly_income = float(data.get('monthly_income') or 0)
+                monthly_fixed_expenses = float(data.get('monthly_fixed_expenses') or 0)
                 
                 if loan_amount <= 0 or interest_rate < 0 or loan_tenure <= 0:
-                    return jsonify({'error': 'Invalid input values'}), 400
+                    return jsonify({'error': 'Invalid input values. Amount and tenure must be positive.'}), 400
                 
                 # Inject financial data into engine so it doesn't rely on empty DB
                 if monthly_income > 0:
@@ -58,26 +58,10 @@ class LoanAPI:
                     'success': True,
                     'data': {
                         'loan_details': analysis['loan_details'],
-                        'affordability': {
-                            'is_affordable': analysis['affordability']['is_affordable'],
-                            'emi_percentage': analysis['affordability']['emi_percentage'],
-                            'warning': analysis['affordability']['warning']
-                        },
-                        'dti_analysis': {
-                            'dti_percentage': analysis['dti_analysis']['dti_percentage'],
-                            'risk_level': analysis['dti_analysis']['risk_level'],
-                            'recommendation': analysis['dti_analysis']['recommendation']
-                        },
-                        'impact_analysis': {
-                            'disposable_income': analysis['impact_analysis']['disposable_income'],
-                            'remaining_after_emi': analysis['impact_analysis']['remaining_after_emi'],
-                            'is_sustainable': analysis['impact_analysis']['is_sustainable']
-                        },
-                        'risk_analysis': {
-                            'risk_score': analysis['risk_analysis']['risk_score'],
-                            'risk_level': analysis['risk_analysis']['risk_level'],
-                            'recommendation': analysis['risk_analysis']['recommendation']
-                        },
+                        'affordability': analysis['affordability'],
+                        'dti_analysis': analysis['dti_analysis'],
+                        'impact_analysis': analysis['impact_analysis'],
+                        'risk_analysis': analysis['risk_analysis'],
                         'recommendation': analysis['recommendation']
                     }
                 })
@@ -91,12 +75,12 @@ class LoanAPI:
         def compare_loans():
             """Compare two loan offers"""
             try:
-                data = request.get_json()
+                data = request.get_json() or {}
                 
                 # Validate required fields
                 required_fields = ['user_id', 'loan1', 'loan2']
                 for field in required_fields:
-                    if field not in data:
+                    if field not in data or data.get(field) is None:
                         return jsonify({'error': f'Missing required field: {field}'}), 400
                 
                 user_id = data['user_id']
@@ -107,10 +91,10 @@ class LoanAPI:
                 for i, loan in enumerate([loan1, loan2], 1):
                     loan_fields = ['amount', 'rate', 'tenure']
                     for field in loan_fields:
-                        if field not in loan:
+                        if field not in loan or loan.get(field) is None:
                             return jsonify({'error': f'Missing field {field} in loan{i}'}), 400
                     
-                    if loan['amount'] <= 0 or loan['rate'] < 0 or loan['tenure'] <= 0:
+                    if float(loan.get('amount') or 0) <= 0 or float(loan.get('rate') or 0) < 0 or int(loan.get('tenure') or 0) <= 0:
                         return jsonify({'error': f'Invalid values in loan{i}'}), 400
                 
                 # Perform comparison
@@ -118,35 +102,31 @@ class LoanAPI:
                 
                 return jsonify({
                     'success': True,
-                    'data': {
-                        'loan1': comparison['loan1'],
-                        'loan2': comparison['loan2'],
-                        'cheaper_option': comparison['cheaper_option'],
-                        'savings': comparison['savings'],
-                        'recommendation': comparison['recommendation']
-                    }
+                    'data': comparison
                 })
                 
             except Exception as e:
+                import traceback
+                print(f"Loan compare error: {traceback.format_exc()}")
                 return jsonify({'error': str(e)}), 500
         
         @self.app.route('/api/loan/impact', methods=['POST'])
         def calculate_impact():
             """Calculate loan impact on finances"""
             try:
-                data = request.get_json()
+                data = request.get_json() or {}
                 
                 # Validate required fields
                 required_fields = ['monthly_income', 'monthly_fixed_expenses', 'loan_amount', 'interest_rate', 'loan_tenure']
                 for field in required_fields:
-                    if field not in data:
+                    if field not in data or data.get(field) is None:
                         return jsonify({'error': f'Missing required field: {field}'}), 400
                 
-                monthly_income = float(data['monthly_income'])
-                monthly_fixed_expenses = float(data['monthly_fixed_expenses'])
-                loan_amount = float(data['loan_amount'])
-                interest_rate = float(data['interest_rate'])
-                loan_tenure = int(data['loan_tenure'])
+                monthly_income = float(data.get('monthly_income') or 0)
+                monthly_fixed_expenses = float(data.get('monthly_fixed_expenses') or 0)
+                loan_amount = float(data.get('loan_amount') or 0)
+                interest_rate = float(data.get('interest_rate') or 0)
+                loan_tenure = int(data.get('loan_tenure') or 0)
                 
                 # Calculate EMI
                 from .emi_calculator import EMICalculator
@@ -175,18 +155,18 @@ class LoanAPI:
         def repayment_simulation():
             """Simulate early repayment"""
             try:
-                data = request.get_json()
+                data = request.get_json() or {}
                 
                 # Validate required fields
                 required_fields = ['loan_amount', 'interest_rate', 'loan_tenure', 'extra_payment']
                 for field in required_fields:
-                    if field not in data:
+                    if field not in data or data.get(field) is None:
                         return jsonify({'error': f'Missing required field: {field}'}), 400
                 
-                loan_amount = float(data['loan_amount'])
-                interest_rate = float(data['interest_rate'])
-                loan_tenure = int(data['loan_tenure'])
-                extra_payment = float(data['extra_payment'])
+                loan_amount = float(data.get('loan_amount') or 0)
+                interest_rate = float(data.get('interest_rate') or 0)
+                loan_tenure = int(data.get('loan_tenure') or 0)
+                extra_payment = float(data.get('extra_payment') or 0)
                 
                 # Perform simulation
                 simulation = self.loan_engine.simulate_early_repayment(
@@ -195,17 +175,7 @@ class LoanAPI:
                 
                 return jsonify({
                     'success': True,
-                    'data': {
-                        'months_saved': simulation['months_saved'],
-                        'interest_saved': simulation['interest_saved'],
-                        'new_tenure': simulation['new_tenure'],
-                        'original_interest': simulation['original_interest'],
-                        'new_interest': simulation['new_interest'],
-                        'total_savings': simulation['total_savings'],
-                        'original_emi': simulation['original_emi'],
-                        'new_emi': simulation['new_emi'],
-                        'extra_payment': simulation['extra_payment']
-                    }
+                    'data': simulation
                 })
                 
             except Exception as e:
@@ -215,19 +185,23 @@ class LoanAPI:
         def generate_schedule():
             """Generate repayment schedule"""
             try:
-                data = request.get_json()
+                data = request.get_json() or {}
                 
                 # Validate required fields
                 required_fields = ['loan_amount', 'interest_rate', 'loan_tenure']
                 for field in required_fields:
-                    if field not in data:
+                    if field not in data or data.get(field) is None:
                         return jsonify({'error': f'Missing required field: {field}'}), 400
                 
-                loan_amount = float(data['loan_amount'])
-                interest_rate = float(data['interest_rate'])
-                loan_tenure = int(data['loan_tenure'])
-                extra_payment = float(data.get('extra_payment', 0))
+                loan_amount = float(data.get('loan_amount') or 0)
+                interest_rate = float(data.get('interest_rate') or 0)
+                loan_tenure = int(data.get('loan_tenure') or 0)
+                extra_payment = float(data.get('extra_payment') or 0)
                 
+                # Calculate EMI and totals for summary
+                from .emi_calculator import EMICalculator
+                emi, total_interest, total_payment = EMICalculator.calculate_emi(loan_amount, interest_rate, loan_tenure)
+
                 # Generate schedule
                 schedule = self.loan_engine.generate_repayment_schedule(
                     loan_amount, interest_rate, loan_tenure, extra_payment
@@ -237,7 +211,10 @@ class LoanAPI:
                     'success': True,
                     'data': {
                         'schedule': schedule,
-                        'total_months': len(schedule)
+                        'total_months': len(schedule),
+                        'emi': emi,
+                        'total_interest': total_interest,
+                        'total_payment': total_payment
                     }
                 })
                 

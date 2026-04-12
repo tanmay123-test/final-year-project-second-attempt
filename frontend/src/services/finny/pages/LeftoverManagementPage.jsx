@@ -94,16 +94,18 @@ const LeftoverManagementPage = () => {
   return (
     <div className="leftover-management-page">
       {/* Header */}
-      <div className="leftover-header">
+      <div className="budget-status-header">
         <button 
           className="back-button"
           onClick={() => navigate('/finny/budget')}
         >
           <ArrowLeft size={20} color="white" />
         </button>
-        <div className="header-title-with-icon">
-          <span className="header-icon">🔄</span>
-          <span className="page-title">Leftover Management</span>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Leftover Management</h1>
+            <p className="loan-header-subtitle">Optimize remaining budget and move to goal jars.</p>
+          </div>
         </div>
       </div>
 

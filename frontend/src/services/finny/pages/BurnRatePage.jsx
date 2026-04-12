@@ -28,19 +28,26 @@ const BurnRatePage = () => {
     setLoading(false);
   }, []);
 
-  const formatINR = (n) => "₹" + Math.round(n).toLocaleString('en-IN');
+  const formatINR = (n) => {
+    if (n === undefined || n === null || isNaN(n)) return "₹0";
+    return "₹" + Math.round(n).toLocaleString('en-IN');
+  };
 
   const calculateBurnRate = (spent, budget) => {
+    if (!budget) return 0;
     return Math.round((spent / budget) * 100);
   };
 
   const calculateOverallBurnRate = () => {
-    const totalSpent = categoryData.reduce((sum, cat) => sum + cat.spent, 0);
-    const totalBudget = categoryData.reduce((sum, cat) => sum + cat.budget, 0);
+    if (!categoryData || !Array.isArray(categoryData) || categoryData.length === 0) return 0;
+    const totalSpent = categoryData.reduce((sum, cat) => sum + (cat.spent || 0), 0);
+    const totalBudget = categoryData.reduce((sum, cat) => sum + (cat.budget || 0), 0);
+    if (!totalBudget) return 0;
     return Math.round((totalSpent / totalBudget) * 100);
   };
 
   const getBurnTrend = (burnRate, daysElapsed, daysInMonth) => {
+    if (!daysInMonth) return 'down';
     const expectedRate = (daysElapsed / daysInMonth) * 100;
     return burnRate > expectedRate ? 'up' : 'down';
   };
@@ -62,16 +69,21 @@ const BurnRatePage = () => {
   };
 
   const calculatePredictions = (spent, budget) => {
-    const daysElapsed = new Date().getDate();
-    const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+    const now = new Date();
+    const daysElapsed = Math.max(1, now.getDate());
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     
-    const expected = Math.round((budget / daysInMonth) * daysElapsed);
-    const predicted = Math.round((spent / daysElapsed) * daysInMonth);
+    const expected = Math.round(((budget || 0) / daysInMonth) * daysElapsed);
+    const predicted = Math.round(((spent || 0) / daysElapsed) * daysInMonth);
     
     return { expected, predicted, daysElapsed, daysInMonth };
   };
 
   const overallBurnRate = calculateOverallBurnRate();
+  const now = new Date();
+  const daysElapsed = Math.max(1, now.getDate());
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const overallTrend = getBurnTrend(overallBurnRate, daysElapsed, daysInMonth);
 
   if (loading) {
     return (
@@ -91,74 +103,63 @@ const BurnRatePage = () => {
         >
           <ArrowLeft size={20} color="white" />
         </button>
-        <h1 className="page-title">Burn Rate Analysis</h1>
+        <div className="header-content">
+          <div className="header-text">
+            <h1 className="header-title">Burn Rate Analysis</h1>
+            <p className="header-subtitle">Predict if you'll stay within budget based on current spending speed.</p>
+          </div>
+        </div>
       </div>
 
       {/* Overall Burn Rate Card */}
       <div className="overall-burn-card">
-        <div className="overall-burn-label">Overall Burn Rate</div>
+        <div className="overall-burn-label">Overall Budget Burn Rate</div>
         <div className="overall-burn-value">{overallBurnRate}%</div>
         <div className="burn-rate-bar-track">
           <div 
-            className="burn-rate-bar-fill"
+            className="burn-rate-bar-fill" 
             style={{ width: `${overallBurnRate}%` }}
           ></div>
         </div>
+        <div className="burn-stats-row">
+          <div className="burn-stat-item">Elapsed: <span>{daysElapsed}/{daysInMonth} days</span></div>
+          <div className="burn-stat-item">Trend: <span className={overallTrend}>{overallTrend === 'up' ? '▲ High' : '▼ Normal'}</span></div>
+        </div>
       </div>
 
-      {/* Category Burn Rate Cards */}
       <div className="category-cards-container">
         {categoryData.map((category, index) => {
           const burnRate = calculateBurnRate(category.spent, category.budget);
-          const { expected, predicted, daysElapsed, daysInMonth } = calculatePredictions(category.spent, category.budget);
+          const { expected, predicted } = calculatePredictions(category.spent, category.budget);
           const trend = getBurnTrend(burnRate, daysElapsed, daysInMonth);
-          const progressColor = getProgressColor(burnRate);
           const insight = getInsightMessage(burnRate);
-
+          
           return (
             <div key={index} className="burn-card">
-              {/* Title + Burn Rate % */}
               <div className="burn-card-header">
-                <div className="burn-category-name">{category.name}</div>
-                <div className={`burn-rate-pct ${trend}`}>
-                  {trend === 'up' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
-                  {burnRate}%
-                </div>
+                <span className="burn-category-name">{category.name}</span>
+                <span className={`burn-rate-pct ${trend}`}>
+                  {burnRate}% {trend === 'up' ? '▲' : '▼'}
+                </span>
               </div>
-
-              {/* 2x2 Stats Grid */}
+              
               <div className="burn-stats-grid">
-                <div className="burn-stat-item">
-                  Budget: <span>{formatINR(category.budget)}</span>
-                </div>
-                <div className="burn-stat-item">
-                  Expected: <span>{formatINR(expected)}</span>
-                </div>
-                <div className="burn-stat-item">
-                  Spent: <span>{formatINR(category.spent)}</span>
-                </div>
-                <div className="burn-stat-item">
-                  Predicted: 
-                  <span className={predicted > category.budget ? 'predicted-over' : ''}>
-                    {formatINR(predicted)}
-                  </span>
-                </div>
+                <div className="burn-stat-item">Budget: <span>{formatINR(category.budget)}</span></div>
+                <div className="burn-stat-item">Spent: <span>{formatINR(category.spent)}</span></div>
+                <div className="burn-stat-item">Expected: <span>{formatINR(expected)}</span></div>
+                <div className="burn-stat-item">Predicted: <span className={predicted > category.budget ? 'predicted-over' : ''}>{formatINR(predicted)}</span></div>
               </div>
 
-              {/* Progress Bar */}
               <div className="burn-progress-track">
                 <div 
-                  className={`burn-progress-fill ${progressColor}`}
-                  style={{ width: `${burnRate}%` }}
+                  className={`burn-progress-fill ${getProgressColor(burnRate)}`}
+                  style={{ width: `${Math.min(100, burnRate)}%` }}
                 ></div>
               </div>
 
-              {/* Insight Message */}
-              {burnRate < 60 && (
-                <div className={`burn-insight ${insight.class}`}>
-                  {insight.text}
-                </div>
-              )}
+              <div className={`burn-insight ${insight.class}`}>
+                {insight.text}
+              </div>
             </div>
           );
         })}

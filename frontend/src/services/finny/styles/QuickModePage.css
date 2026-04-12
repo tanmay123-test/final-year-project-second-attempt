@@ -394,10 +394,10 @@
 /* ─── DESKTOP ─── */
 @media (min-width: 769px) {
   .quick-mode-page {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 32px;
-    padding-bottom: 40px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 32px 40px 32px;
   }
 
   .main-section {
@@ -546,6 +546,9 @@
     grid-template-columns: 1fr;
   }
   .quick-mode-page {
-    padding: 24px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 24px 40px 24px;
   }
 }

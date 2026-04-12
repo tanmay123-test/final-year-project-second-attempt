@@ -12,14 +12,14 @@ try:
     from google import genai as genai_new
     client = genai_new.Client(api_key=api_key)
     def _gen_text(prompt: str) -> str:
-        resp = client.responses.generate(model="gemini-1.5-flash", input=prompt)
+        resp = client.responses.generate(model="gemini-2.0-flash", input=prompt)
         return (getattr(resp, "output_text", None) or "").strip()
     _USE_NEW_GENAI = True
 except Exception:
     try:
         import google.generativeai as genai_old
         genai_old.configure(api_key=api_key)
-        model = genai_old.GenerativeModel("gemini-1.5-flash")
+        model = genai_old.GenerativeModel("gemini-2.0-flash")
         def _gen_text(prompt: str) -> str:
             r = model.generate_content(prompt)
             return (getattr(r, "text", None) or "").strip()

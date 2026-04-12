@@ -79,7 +79,8 @@ const BudgetPage = () => {
   };
 
   const formatCurrency = (amount) => {
-    return `₹${amount.toLocaleString()}`;
+    if (amount === undefined || amount === null) return '₹0';
+    return `₹${amount.toLocaleString('en-IN')}`;
   };
 
   const getProgressBarClass = (percentage) => {

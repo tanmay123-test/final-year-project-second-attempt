@@ -53,6 +53,7 @@ const RepaymentSchedulePage = () => {
       
       if (response.success) {
         setResults(response.data);
+        console.log('Schedule results:', response.data);
         // Scroll results into view
         setTimeout(() => {
           const resultsElement = document.getElementById('results-section');
@@ -146,16 +147,14 @@ const RepaymentSchedulePage = () => {
   return (
     <div className="repayment-schedule-page">
       {/* Header */}
-      <div className="loan-header">
+      <div className="budget-status-header">
         <button className="back-button" onClick={handleBackClick}>
           <ArrowLeft size={20} color="white" />
         </button>
-        <div className="header-content">
-          <div className="header-title-section">
-            <FileText size={20} color="#F59E0B" />
-            <div className="header-text">
-              <h1 className="header-title">Repayment Schedule</h1>
-            </div>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Repayment Schedule</h1>
+            <p className="loan-header-subtitle">Detailed month-by-month breakdown of principal and interest.</p>
           </div>
         </div>
       </div>
@@ -164,41 +163,43 @@ const RepaymentSchedulePage = () => {
       <div className="repayment-schedule-form-section">
         <div className="repayment-schedule-form-card">
           <form onSubmit={handleGenerate}>
-            <div className="form-field">
-              <label className="field-label">Loan Amount (₹)</label>
-              <div className="input-wrapper">
-                <span className="input-prefix">₹</span>
+            <div className="loan-form-grid">
+              <div className="form-field">
+                <label className="field-label">Loan Amount (₹)</label>
+                <div className="input-wrapper">
+                  <span className="input-prefix">₹</span>
+                  <input
+                    type="number"
+                    value={formData.loanAmount}
+                    onChange={(e) => handleInputChange('loanAmount', e.target.value)}
+                    className="form-input with-prefix"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="field-label">Interest Rate (%)</label>
                 <input
                   type="number"
-                  value={formData.loanAmount}
-                  onChange={(e) => handleInputChange('loanAmount', e.target.value)}
-                  className="form-input with-prefix"
+                  step="0.1"
+                  value={formData.interestRate}
+                  onChange={(e) => handleInputChange('interestRate', e.target.value)}
+                  className="form-input"
                   required
                 />
               </div>
-            </div>
 
-            <div className="form-field">
-              <label className="field-label">Interest Rate (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={formData.interestRate}
-                onChange={(e) => handleInputChange('interestRate', e.target.value)}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-field">
-              <label className="field-label">Tenure (Months)</label>
-              <input
-                type="number"
-                value={formData.tenure}
-                onChange={(e) => handleInputChange('tenure', e.target.value)}
-                className="form-input"
-                required
-              />
+              <div className="form-field">
+                <label className="field-label">Tenure (Months)</label>
+                <input
+                  type="number"
+                  value={formData.tenure}
+                  onChange={(e) => handleInputChange('tenure', e.target.value)}
+                  className="form-input"
+                  required
+                />
+              </div>
             </div>
 
             <div className="form-field">

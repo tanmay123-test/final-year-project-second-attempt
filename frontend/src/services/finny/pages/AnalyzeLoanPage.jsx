@@ -230,99 +230,103 @@ const AnalyzeLoanPage = () => {
     return (
       <div className="analyze-loan-page">
         {/* Header */}
-        <div className="loan-header">
-          <button className="back-button" onClick={handleBackClick}>
-            <ArrowLeft size={20} color="white" />
-          </button>
-          <div className="header-content">
-            <div className="header-title-section">
-              <Calculator size={22} color="white" />
-              <div className="header-text">
-                <h1 className="header-title">Analyze Single Loan</h1>
-              </div>
-            </div>
+      <div className="budget-status-header">
+        <button className="back-button" onClick={handleBackClick}>
+          <ArrowLeft size={20} color="white" />
+        </button>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Analyze Single Loan</h1>
+            <p className="loan-header-subtitle">Evaluate your loan affordability and EMI breakdown.</p>
           </div>
         </div>
+      </div>
 
         {/* Form Card */}
         <div className="loan-form-card">
           <form onSubmit={handleSubmit}>
-            {/* Section 1 - Loan Details */}
-            <div className="form-section">
-              <h3 className="section-title">Loan Details</h3>
-              
-              <div className="form-field">
-                <label className="field-label">Loan Amount (₹)</label>
-                <div className="input-wrapper">
-                  <span className="input-prefix">₹</span>
-                  <input
-                    type="number"
-                    placeholder="500000"
-                    value={formData.loanAmount}
-                    onChange={(e) => handleInputChange('loanAmount', e.target.value)}
-                    className="form-input with-prefix"
-                    required
-                  />
+            <div className="loan-form-grid">
+              {/* Section 1 - Loan Details */}
+              <div className="form-section">
+                <h3 className="section-title">Loan Details</h3>
+                
+                <div className="form-field">
+                  <label className="field-label">Loan Amount (₹)</label>
+                  <div className="input-wrapper">
+                    <span className="input-prefix">₹</span>
+                    <input
+                      type="number"
+                      placeholder="e.g. 1000000"
+                      value={formData.loanAmount}
+                      onChange={(e) => handleInputChange('loanAmount', e.target.value)}
+                      className="form-input with-prefix"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Interest Rate (% p.a.)</label>
+                  <div className="input-wrapper">
+                    <input
+                      type="number"
+                      placeholder="e.g. 8.5"
+                      step="0.1"
+                      value={formData.interestRate}
+                      onChange={(e) => handleInputChange('interestRate', e.target.value)}
+                      className="form-input"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Loan Tenure (Months)</label>
+                  <div className="input-wrapper">
+                    <input
+                      type="number"
+                      placeholder="e.g. 24"
+                      value={formData.tenure}
+                      onChange={(e) => handleInputChange('tenure', e.target.value)}
+                      className="form-input"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="form-field">
-                <label className="field-label">Interest Rate (%)</label>
-                <input
-                  type="number"
-                  placeholder="10"
-                  step="0.1"
-                  value={formData.interestRate}
-                  onChange={(e) => handleInputChange('interestRate', e.target.value)}
-                  className="form-input"
-                  required
-                />
-              </div>
-
-              <div className="form-field">
-                <label className="field-label">Tenure (Months)</label>
-                <input
-                  type="number"
-                  placeholder="24"
-                  value={formData.tenure}
-                  onChange={(e) => handleInputChange('tenure', e.target.value)}
-                  className="form-input"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Section 2 - Financial Profile */}
-            <div className="form-section">
-              <h3 className="section-title">Financial Profile</h3>
-              
-              <div className="form-field">
-                <label className="field-label">Monthly Income (₹)</label>
-                <div className="input-wrapper">
-                  <span className="input-prefix">₹</span>
-                  <input
-                    type="number"
-                    placeholder="50000"
-                    value={formData.monthlyIncome}
-                    onChange={(e) => handleInputChange('monthlyIncome', e.target.value)}
-                    className="form-input with-prefix"
-                    required
-                  />
+              {/* Section 2 - Financial Profile */}
+              <div className="form-section">
+                <h3 className="section-title">Financial Profile</h3>
+                
+                <div className="form-field">
+                  <label className="field-label">Monthly Take-home Pay (₹)</label>
+                  <div className="input-wrapper">
+                    <span className="input-prefix">₹</span>
+                    <input
+                      type="number"
+                      placeholder="e.g. 75000"
+                      value={formData.monthlyIncome}
+                      onChange={(e) => handleInputChange('monthlyIncome', e.target.value)}
+                      className="form-input with-prefix"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="form-field">
-                <label className="field-label">Fixed Expenses (₹)</label>
-                <div className="input-wrapper">
-                  <span className="input-prefix">₹</span>
-                  <input
-                    type="number"
-                    placeholder="20000"
-                    value={formData.fixedExpenses}
-                    onChange={(e) => handleInputChange('fixedExpenses', e.target.value)}
-                    className="form-input with-prefix"
-                    required
-                  />
+                <div className="form-field">
+                  <label className="field-label">Fixed Expenses (₹)</label>
+                  <div className="input-wrapper">
+                    <span className="input-prefix">₹</span>
+                    <input
+                      type="number"
+                      placeholder="e.g. 20000"
+                      value={formData.fixedExpenses}
+                      onChange={(e) => handleInputChange('fixedExpenses', e.target.value)}
+                      className="form-input with-prefix"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -385,16 +389,14 @@ const AnalyzeLoanPage = () => {
   return (
     <div className="analyze-loan-page">
       {/* Header */}
-      <div className="loan-header">
+      <div className="budget-status-header">
         <button className="back-button" onClick={handleBackClick}>
           <ArrowLeft size={20} color="white" />
         </button>
-        <div className="header-content">
-          <div className="header-title-section">
-            <Calculator size={22} color="white" />
-            <div className="header-text">
-              <h1 className="header-title">Analyze Single Loan</h1>
-            </div>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Loan Analysis Results</h1>
+            <p className="loan-header-subtitle">Review your affordability and risk breakdown.</p>
           </div>
         </div>
       </div>

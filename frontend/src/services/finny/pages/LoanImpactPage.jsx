@@ -14,7 +14,8 @@ const LoanImpactPage = () => {
   const [formData, setFormData] = useState({
     monthlyIncome: '50000',
     fixedExpenses: '20000',
-    loanAmount: '300000',
+    currentEmi: '0',
+    newLoanAmount: '300000',
     interestRate: '10',
     tenure: '24'
   });
@@ -43,8 +44,8 @@ const LoanImpactPage = () => {
       const payload = {
         user_id: user_id,
         monthly_income: Number(formData.monthlyIncome),
-        monthly_fixed_expenses: Number(formData.fixedExpenses),
-        loan_amount: Number(formData.loanAmount),
+        monthly_fixed_expenses: Number(formData.fixedExpenses || formData.currentEmi),
+        loan_amount: Number(formData.newLoanAmount),
         interest_rate: Number(formData.interestRate),
         loan_tenure: Number(formData.tenure)
       };
@@ -155,16 +156,14 @@ const LoanImpactPage = () => {
   return (
     <div className="loan-impact-page">
       {/* Header */}
-      <div className="loan-header">
+      <div className="budget-status-header">
         <button className="back-button" onClick={handleBackClick}>
           <ArrowLeft size={20} color="white" />
         </button>
-        <div className="header-content">
-          <div className="header-title-section">
-            <TrendingDown size={20} color="#F59E0B" />
-            <div className="header-text">
-              <h1 className="header-title">Loan Impact Simulation</h1>
-            </div>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Loan Impact Simulation</h1>
+            <p className="loan-header-subtitle">Simulate how a new loan affects your monthly disposable income.</p>
           </div>
         </div>
       </div>
@@ -173,69 +172,71 @@ const LoanImpactPage = () => {
       <div className="impact-form-section">
         <div className="impact-form-card">
           <form onSubmit={handleSimulate}>
-            <div className="form-field">
-              <label className="field-label">Monthly Income (₹)</label>
-              <div className="input-wrapper">
-                <span className="input-prefix">₹</span>
+            <div className="loan-form-grid">
+              <div className="form-field">
+                <label className="field-label">Current EMI (₹)</label>
+                <div className="input-wrapper">
+                  <span className="input-prefix">₹</span>
+                  <input
+                    type="number"
+                    value={formData.currentEmi}
+                    onChange={(e) => handleInputChange('currentEmi', e.target.value)}
+                    className="form-input with-prefix"
+                    placeholder="e.g. 15000"
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="field-label">Monthly Income (₹)</label>
+                <div className="input-wrapper">
+                  <span className="input-prefix">₹</span>
+                  <input
+                    type="number"
+                    value={formData.monthlyIncome}
+                    onChange={(e) => handleInputChange('monthlyIncome', e.target.value)}
+                    className="form-input with-prefix"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="field-label">New Loan Amount (₹)</label>
+                <div className="input-wrapper">
+                  <span className="input-prefix">₹</span>
+                  <input
+                    type="number"
+                    value={formData.newLoanAmount}
+                    onChange={(e) => handleInputChange('newLoanAmount', e.target.value)}
+                    className="form-input with-prefix"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label className="field-label">Interest Rate (% p.a.)</label>
                 <input
                   type="number"
-                  value={formData.monthlyIncome}
-                  onChange={(e) => handleInputChange('monthlyIncome', e.target.value)}
-                  className="form-input with-prefix"
+                  step="0.1"
+                  value={formData.interestRate}
+                  onChange={(e) => handleInputChange('interestRate', e.target.value)}
+                  className="form-input"
                   required
                 />
               </div>
-            </div>
 
-            <div className="form-field">
-              <label className="field-label">Fixed Expenses (₹)</label>
-              <div className="input-wrapper">
-                <span className="input-prefix">₹</span>
+              <div className="form-field">
+                <label className="field-label">Tenure (Months)</label>
                 <input
                   type="number"
-                  value={formData.fixedExpenses}
-                  onChange={(e) => handleInputChange('fixedExpenses', e.target.value)}
-                  className="form-input with-prefix"
+                  value={formData.tenure}
+                  onChange={(e) => handleInputChange('tenure', e.target.value)}
+                  className="form-input"
                   required
                 />
               </div>
-            </div>
-
-            <div className="form-field">
-              <label className="field-label">Loan Amount (₹)</label>
-              <div className="input-wrapper">
-                <span className="input-prefix">₹</span>
-                <input
-                  type="number"
-                  value={formData.loanAmount}
-                  onChange={(e) => handleInputChange('loanAmount', e.target.value)}
-                  className="form-input with-prefix"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-field">
-              <label className="field-label">Interest Rate (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={formData.interestRate}
-                onChange={(e) => handleInputChange('interestRate', e.target.value)}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-field">
-              <label className="field-label">Tenure (Months)</label>
-              <input
-                type="number"
-                value={formData.tenure}
-                onChange={(e) => handleInputChange('tenure', e.target.value)}
-                className="form-input"
-                required
-              />
             </div>
 
             <button type="submit" className="simulate-button" disabled={loading}>
@@ -262,7 +263,7 @@ const LoanImpactPage = () => {
           {/* Result Card 1 - Disposable Income Hero */}
           <div className="disposable-income-hero">
             <div className="hero-label">Disposable Income After EMI</div>
-            <div className="hero-value">{formatAmount(results.disposable_income_after)}</div>
+            <div className="hero-value">{formatAmount(results.remaining_after_emi || results.disposable_income_after)}</div>
             <div className="hero-impact">Impact: {results.impact_percentage}% of disposable income</div>
           </div>
 
@@ -274,21 +275,21 @@ const LoanImpactPage = () => {
             </div>
             <div className="table-row">
               <span className="row-label">Fixed Expenses</span>
-              <span className="row-value">{formatAmount(formData.fixedExpenses)}</span>
+              <span className="row-value">{formatAmount(formData.fixedExpenses || formData.currentEmi)}</span>
             </div>
             <div className="table-row">
               <span className="row-label">Disposable Income</span>
               <span className="row-value">
-                {formatAmount(Number(formData.monthlyIncome) - Number(formData.fixedExpenses))}
+                {formatAmount(results.disposable_income)}
               </span>
             </div>
             <div className="table-row">
               <span className="row-label">Loan EMI</span>
-              <span className="row-value">{formatAmount(results.emi)}</span>
+              <span className="row-value">{formatAmount(results.monthly_emi || results.emi)}</span>
             </div>
             <div className="table-row">
               <span className="row-label">Remaining</span>
-              <span className="row-value">{formatAmount(results.disposable_income_after)}</span>
+              <span className="row-value">{formatAmount(results.remaining_after_emi || results.disposable_income_after)}</span>
             </div>
           </div>
 

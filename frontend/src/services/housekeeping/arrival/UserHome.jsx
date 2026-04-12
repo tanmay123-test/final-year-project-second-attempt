@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, MapPin, Star, Clock, X } from 'lucide-react';
+import { Search, Bell, MapPin, Star, Clock, X, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../shared/api';
 import { useAuth } from '../../../context/AuthContext';
@@ -12,7 +12,25 @@ const UserHome = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedSpecialization, setSelectedSpecialization] = useState(null);
+  const [recommendation, setRecommendation] = useState(null);
   
+  // Fetch AI Recommendation
+  useEffect(() => {
+    const fetchRecommendation = async () => {
+      const userId = user?.id || user?.user_id;
+      if (!userId) return;
+      try {
+        const response = await api.get(`/api/ai/recommendations?user_id=${userId}`);
+        if (response.data && response.data.length > 0) {
+          setRecommendation(response.data[0]); // Top recommendation
+        }
+      } catch (error) {
+        console.error('Failed to fetch AI recommendations', error);
+      }
+    };
+    fetchRecommendation();
+  }, [user]);
+
   // Debounce search query
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -135,7 +153,7 @@ const UserHome = () => {
             <p style={{ margin: 0, opacity: 0.9, fontSize: '14px' }}>Welcome back 👋</p>
             <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold' }}>{user?.username || 'Guest'}</h1>
           </div>
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => navigate('/housekeeping/ai-chat')}>
             <Bell size={24} />
             <span style={{ position: 'absolute', top: -2, right: -2, width: '8px', height: '8px', backgroundColor: '#FF5252', borderRadius: '50%' }}></span>
           </div>
@@ -164,7 +182,92 @@ const UserHome = () => {
 
       <div style={{ padding: '0 20px', marginTop: '-30px' }}>
         
-        {/* Specializations */}
+        {/* AI Recommendation Card */}
+        {recommendation && (
+          <div style={{ 
+            backgroundColor: '#FFFFFF', 
+            borderRadius: '24px', 
+            padding: '20px', 
+            marginBottom: '24px',
+            boxShadow: '0 12px 30px rgba(124, 58, 237, 0.1)',
+            border: '1px solid rgba(142, 68, 173, 0.1)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{ position: 'absolute', top: 0, right: 0, padding: '8px 16px', background: recommendation.urgency === 'HIGH' ? '#FEE2E2' : '#F3E8FF', color: recommendation.urgency === 'HIGH' ? '#EF4444' : '#8E44AD', fontSize: '10px', fontWeight: 'bold', borderBottomLeftRadius: '16px' }}>
+              {recommendation.urgency} URGENCY
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ background: '#F3E8FF', padding: '10px', borderRadius: '12px' }}>
+                <Bot size={24} color="#8E44AD" />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#111827' }}>Smart Recommendation</h3>
+                <p style={{ margin: 0, fontSize: '12px', color: '#6B7280' }}>Based on your cleaning history</p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: '14px', color: '#374151', margin: '0 0 16px 0', lineHeight: '1.5' }}>
+              {recommendation.message}
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '10px', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Hygiene Score</span>
+                <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#8E44AD' }}>{recommendation.score}/10</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <span style={{ fontSize: '10px', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Cleaned</span>
+                <span style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>{recommendation.days_since_last ? `${recommendation.days_since_last} days ago` : 'Never'}</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => navigate('/housekeeping/booking/create', { state: { service: recommendation.service } })}
+                style={{ flex: 2, background: '#8E44AD', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                Book Now
+              </button>
+              <button 
+                onClick={() => setRecommendation(null)}
+                style={{ flex: 1, background: '#F3F4F6', color: '#4B5563', border: 'none', padding: '12px', borderRadius: '12px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Later
+              </button>
+            </div>
+          </div>
+        )}
+
+      {/* Floating AI Assistant Button */}
+      <button 
+        onClick={() => navigate('/housekeeping/ai-assistant')}
+        style={{
+          position: 'fixed',
+          bottom: '100px',
+          right: '20px',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%)',
+          color: 'white',
+          border: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 8px 24px rgba(142, 68, 173, 0.3)',
+          cursor: 'pointer',
+          zIndex: 1000,
+          transition: 'transform 0.2s ease'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+      >
+        <Bot size={28} />
+      </button>
+
+      {/* Specializations */}
         <div style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: '#111827' }}>Specializations</h2>

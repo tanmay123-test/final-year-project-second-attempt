@@ -62,30 +62,27 @@ const SmartBudgetPlannerPage = () => {
   return (
     <div className="smart-budget-page">
       {/* Header */}
-      <div className="smart-budget-header">
-        <div className="header-left">
-          <button className="back-btn" onClick={handleBackClick}>
-            <ArrowLeft size={20} color="white" />
-          </button>
-          <div className="header-title-section">
-            <div className="header-title">
-              <span className="header-icon">📋</span>
-              Smart Budget Planner
-            </div>
-            <div className="header-subtitle">U-Plan Financial System</div>
+      <div className="budget-status-header">
+        <button className="back-button" onClick={handleBackClick}>
+          <ArrowLeft size={20} color="white" />
+        </button>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Smart Budget Planner</h1>
+            <p className="loan-header-subtitle">U-Plan Financial System</p>
           </div>
         </div>
         
-        <div className="header-right">
-          <button className="header-icon-btn">
-            <Bell size={18} />
+        <div className="header-actions">
+          <button className="icon-button">
+            <Bell size={20} color="white" />
           </button>
-          <button className="header-icon-btn">
-            <Settings size={18} />
+          <button className="icon-button">
+            <Settings size={20} color="white" />
           </button>
-          <button className="header-icon-btn profile">
-            <User size={18} />
-          </button>
+          <div className="user-avatar">
+            <User size={16} color="white" />
+          </div>
         </div>
       </div>
 

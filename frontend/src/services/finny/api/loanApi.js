@@ -51,7 +51,7 @@ export const loanApi = {
       console.log('Making loan analysis request to:', '/api/loan/analyze', loanData);
       const response = await api.post('/api/loan/analyze', loanData);
       console.log('Loan analysis response:', response);
-      return { success: true, data: response.data };
+      return { success: true, data: response.data.data };
     } catch (error) {
       console.error('Loan analysis API error:', error);
       
@@ -88,7 +88,7 @@ export const loanApi = {
   compareLoans: async (loanComparison) => {
     try {
       const response = await api.post('/api/loan/compare', loanComparison);
-      return { success: true, data: response.data };
+      return { success: true, data: response.data.data };
     } catch (error) {
       return { 
         success: false, 
@@ -101,7 +101,7 @@ export const loanApi = {
   simulateImpact: async (impactData) => {
     try {
       const response = await api.post('/api/loan/impact', impactData);
-      return { success: true, data: response.data };
+      return { success: true, data: response.data.data };
     } catch (error) {
       return { 
         success: false, 
@@ -114,7 +114,7 @@ export const loanApi = {
   simulateEarlyRepayment: async (repaymentData) => {
     try {
       const response = await api.post('/api/loan/repayment-simulation', repaymentData);
-      return { success: true, data: response.data };
+      return { success: true, data: response.data.data };
     } catch (error) {
       return { 
         success: false, 
@@ -127,7 +127,7 @@ export const loanApi = {
   generateSchedule: async (scheduleData) => {
     try {
       const response = await api.post('/api/loan/schedule', scheduleData);
-      return { success: true, data: response.data };
+      return { success: true, data: response.data.data };
     } catch (error) {
       return { 
         success: false, 
@@ -140,7 +140,7 @@ export const loanApi = {
   assessRisk: async (riskData) => {
     try {
       const response = await api.post('/api/loan/analyze', riskData);
-      return { success: true, data: response.data };
+      return { success: true, data: response.data.data };
     } catch (error) {
       return { 
         success: false, 
@@ -154,7 +154,7 @@ export const loanApi = {
     const userId = localStorage.getItem('user_id');
     try {
       const response = await api.get(`/api/loan/history/${userId}`);
-      return { success: true, data: response.data };
+      return { success: true, data: response.data.data };
     } catch (error) {
       return { 
         success: false, 

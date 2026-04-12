@@ -20,8 +20,9 @@ const TYPE_BADGE = {
   general_query:      { label: 'General',        color: '#6B7280' },
 };
 
-const stripMarkdown = (text) =>
-  text
+const stripMarkdown = (text) => {
+  if (!text || typeof text !== 'string') return '';
+  return text
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/\*(.*?)\*/g, '$1')
     .replace(/#{1,6}\s/g, '')
@@ -30,6 +31,7 @@ const stripMarkdown = (text) =>
     .replace(/^\s*[-•]\s/gm, '')
     .replace(/\n{2,}/g, '. ')
     .trim();
+};
 
 const TypingIndicator = () => (
   <div className="typing-bubble">
@@ -133,7 +135,12 @@ const ChatFinancialAssistantPage = () => {
 
     try {
       const res = await api.post('/api/money/chat', { message: msg });
-      const aiContent = res.data.ai_response || 'No response received.';
+      const rawResponse = res.data.ai_response || res.data.response;
+      const aiContent = typeof rawResponse === 'string'
+        ? rawResponse
+        : rawResponse
+          ? JSON.stringify(rawResponse)
+          : 'No response received.';
       const aiMsgId = Date.now() + 1;
       const aiMsg = {
         id: aiMsgId,

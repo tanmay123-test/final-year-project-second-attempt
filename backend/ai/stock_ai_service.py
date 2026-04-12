@@ -693,46 +693,46 @@ Provide an educational comparison that helps the user understand the differences
             symbol_match = re.search(r'analyze stock\s+([A-Z0-9.]+)', user_message, re.IGNORECASE)
             symbol = symbol_match.group(1).upper() if symbol_match else user_message.upper().strip()
 
-            # Try fallback data first (fast, no network)
-            stock_data = self.stock_service._get_fallback_data(symbol)
+            stock_data = None
+            company_name = symbol # Default
 
-            # If no fallback, try Finnhub synchronously
-            if not stock_data:
-                try:
-                    api_key = self.stock_service.api_key
-                    base_url = self.stock_service.base_url
+            # Try Finnhub synchronously
+            try:
+                api_key = self.stock_service.api_key
+                base_url = self.stock_service.base_url
 
-                    with httpx.Client(timeout=10.0) as client:
-                        quote_resp    = client.get(f"{base_url}/quote",          params={"symbol": symbol, "token": api_key})
-                        profile_resp  = client.get(f"{base_url}/stock/profile2", params={"symbol": symbol, "token": api_key})
+                with httpx.Client(timeout=10.0) as client:
+                    quote_resp    = client.get(f"{base_url}/quote",          params={"symbol": symbol, "token": api_key})
+                    profile_resp  = client.get(f"{base_url}/stock/profile2", params={"symbol": symbol, "token": api_key})
 
-                    quote   = quote_resp.json()   if quote_resp.status_code   == 200 else {}
-                    profile = profile_resp.json() if profile_resp.status_code == 200 else {}
+                quote   = quote_resp.json()   if quote_resp.status_code   == 200 else {}
+                profile = profile_resp.json() if profile_resp.status_code == 200 else {}
 
-                    price = quote.get("c", 0)
-                    if price and price > 0:
-                        stock_data = {
-                            "symbol":       symbol,
-                            "company_name": profile.get("name", symbol),
-                            "price":        price,
-                            "change":       quote.get("d", 0),
-                            "change_percent": quote.get("dp", 0),
-                            "previous_close": quote.get("pc", 0),
-                            "market_cap":   profile.get("marketCapitalization", 0),
-                            "sector":       profile.get("finnhubIndustry", "Unknown"),
-                            "industry":     profile.get("finnhubIndustry", "Unknown"),
-                            "description":  profile.get("description", ""),
-                            "pe_ratio": 0, "pb_ratio": 0, "roe": 0,
-                            "revenue_growth": 0, "net_margin": 0,
-                            "debt_to_equity": 0, "beta": 0,
-                            "low_52w": quote.get("l", 0),
-                            "high_52w": quote.get("h", 0),
-                            "data_source": "Finnhub API",
-                        }
-                except Exception as e:
-                    print(f"Finnhub sync fetch error: {e}")
+                price = quote.get("c", 0)
+                company_name = profile.get("name", symbol)
+                if price and price > 0:
+                    stock_data = {
+                        "symbol":       symbol,
+                        "company_name": company_name,
+                        "price":        price,
+                        "change":       quote.get("d", 0),
+                        "change_percent": quote.get("dp", 0),
+                        "previous_close": quote.get("pc", 0),
+                        "market_cap":   profile.get("marketCapitalization", 0),
+                        "sector":       profile.get("finnhubIndustry", "Unknown"),
+                        "industry":     profile.get("finnhubIndustry", "Unknown"),
+                        "description":  profile.get("description", ""),
+                        "pe_ratio": 0, "pb_ratio": 0, "roe": 0,
+                        "revenue_growth": 0, "net_margin": 0,
+                        "debt_to_equity": 0, "beta": 0,
+                        "low_52w": quote.get("l", 0),
+                        "high_52w": quote.get("h", 0),
+                        "data_source": "Finnhub API",
+                    }
+            except Exception as e:
+                print(f"Finnhub sync fetch error: {e}")
 
-            if stock_data and not stock_data.get("error"):
+            if stock_data and stock_data.get("price", 0) > 0:
                 # Build Gemini prompt with available data
                 try:
                     formatted = self._format_stock_data_for_prompt(stock_data)
@@ -742,9 +742,7 @@ Provide an educational comparison that helps the user understand the differences
                 except (KeyError, ValueError) as fmt_err:
                     print(f"Prompt format error: {fmt_err}")
                     # Fall back to a simple prompt
-                    symbol = stock_data.get("symbol", "Unknown")
-                    company = stock_data.get("company_name", symbol)
-                    prompt = (f"Provide an educational overview of {company} ({symbol}) stock. "
+                    prompt = (f"Provide an educational overview of {company_name} ({symbol}) stock. "
                               f"Include business model, sector, and key financial characteristics. "
                               f"No investment advice. End with educational disclaimer.")
                 ai_text = self.gemini_client.generate_response(prompt)
@@ -755,15 +753,30 @@ Provide an educational comparison that helps the user understand the differences
                     "timestamp": datetime.utcnow().isoformat(),
                 }
 
-            # No stock data at all — ask Gemini for general company info
-            prompt = f"""Provide an educational overview of the company or stock symbol "{symbol}".
-Include: what the company does, its sector, market position, and key financial characteristics if known.
-Rules: no investment advice, no buy/sell recommendations. End with an educational disclaimer."""
+            # No stock data or price is 0 — ask Gemini for general educational info
+            prompt = f"""
+The user is asking about {symbol} ({company_name}). 
+No live price data is available right now from the market feed. 
+
+Give a helpful educational response that covers: 
+- What this company does and what sector it operates in 
+- General factors that typically affect this stock 
+- Where the user can check the live price (NSE/BSE for Indian 
+stocks, relevant exchange for others) 
+- A clear note that you are not providing a current price 
+because live data is unavailable 
+
+Do NOT invent or estimate a price. Do NOT say the price is 
+any specific number. 
+Keep the response concise, informative, and honest. 
+"""
             ai_text = self.gemini_client.generate_response(prompt)
             return {
                 "success": True,
                 "analysis": ai_text,
-                "stock_data": {"symbol": symbol, "data_source": "Gemini AI (no live data)"},
+                "stock_data": None, # Signal that live data is unavailable
+                "company_name": company_name,
+                "symbol": symbol,
                 "timestamp": datetime.utcnow().isoformat(),
             }
 

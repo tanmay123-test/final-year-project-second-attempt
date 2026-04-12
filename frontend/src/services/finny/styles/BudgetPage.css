@@ -83,6 +83,99 @@
   margin-top: 4px;
 }
 
+/* ─── DESKTOP RESPONSIVENESS ─── */
+@media (min-width: 768px) {
+  /* Outer Containers */
+  .budget-page,
+  .create-plan-page,
+  .budget-status-page,
+  .burn-rate-page,
+  .monthly-report-page,
+  .budget-gamification-page,
+  .leftover-page {
+    width: 100%;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 0 100px 0;
+  }
+
+  /* Headers */
+  .create-plan-header,
+  .budget-status-header,
+  .burn-rate-header,
+  .monthly-report-header,
+  .gamification-header,
+  .leftover-header {
+    padding: 24px 40px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Main Step Content & Centered Form Cards */
+  .step-page,
+  .loan-form-card,
+  .overall-burn-card,
+  .exec-summary-card,
+  .insights-card,
+  .category-breakdown-card,
+  .budget-performance-card {
+    max-width: 800px;
+    margin: 32px auto;
+    padding: 32px;
+    border-radius: 20px;
+  }
+
+  /* Grid Layouts for Cards */
+  .budget-cards,
+  .category-cards-container,
+  .reward-cards-container,
+  .stats-grid,
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    padding: 0 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* Full-width Stats Row Desktop */
+  .budget-stats-row,
+  .exec-summary-card {
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 32px 40px;
+  }
+
+  /* Specific Grid Overrides */
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr); /* 4 stats in one row on desktop */
+  }
+
+  .insights-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .category-breakdown-card {
+    grid-column: 1 / -1; /* Spans full width even in grid */
+  }
+
+  /* Success Screen Desktop */
+  .success-title {
+    font-size: 28px;
+  }
+  .back-to-dashboard-btn {
+    max-width: 400px;
+    margin: 32px auto;
+  }
+
+  /* Allocation Layout */
+  .allocation-toggle {
+    max-width: 600px;
+    margin: 0 auto 32px auto;
+  }
+}
+
 /* Loading and Error States */
 .loading-state,
 .error-state {

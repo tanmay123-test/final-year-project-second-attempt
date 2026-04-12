@@ -19,6 +19,9 @@ class LoanEngine:
     """Main loan analysis engine integrating all loan analysis components"""
 
     def __init__(self):
+        self.emi_calc = EMICalculator()
+        self.loan_risk = LoanRiskAnalyzer()
+        self.repayment_sim = RepaymentSimulator()
         self._override_financial_data = None  # set by API when income is passed in request
         self.create_loan_tables()
 

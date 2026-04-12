@@ -27,6 +27,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 // Housekeeping Arrival Pages
 import UserHome from './services/housekeeping/arrival/UserHome';
 import AIChat from './services/housekeeping/arrival/AIChat';
+import AIAssistantPage from './services/housekeeping/AIAssistantPage';
 import UserBookings from './services/housekeeping/arrival/UserBookings';
 import UserProfile from './services/housekeeping/arrival/UserProfile';
 import BookingFlow from './services/housekeeping/arrival/BookingFlow';
@@ -363,6 +364,7 @@ const App = () => {
           <Route element={<ProtectedRoute><HousekeepingClientLayout /></ProtectedRoute>}>
             <Route path="/housekeeping/home" element={<UserHome />} />
             <Route path="/housekeeping/ai-chat" element={<AIChat />} />
+            <Route path="/housekeeping/ai-assistant" element={<AIAssistantPage />} />
             <Route path="/housekeeping/bookings" element={<UserBookings />} />
             <Route path="/housekeeping/profile" element={<UserProfile />} />
             <Route path="/housekeeping/explore" element={<UserHome />} />

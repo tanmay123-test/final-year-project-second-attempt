@@ -182,8 +182,8 @@ const LoanHistoryPage = () => {
         <div className="search-container">
           <input
             type="text"
-            placeholder="Filter by date or amount..."
             className="search-input"
+            placeholder="Search analysis history..."
             value={searchFilter}
             onChange={(e) => setSearchFilter(e.target.value)}
           />
@@ -237,16 +237,14 @@ const LoanHistoryPage = () => {
   return (
     <div className="loan-history-page">
       {/* Header */}
-      <div className="loan-header">
+      <div className="budget-status-header">
         <button className="back-button" onClick={handleBackClick}>
           <ArrowLeft size={20} color="white" />
         </button>
-        <div className="header-content">
-          <div className="header-title-section">
-            <Clock size={20} color="#F59E0B" />
-            <div className="header-text">
-              <h1 className="header-title">Loan Analysis History</h1>
-            </div>
+        <div className="loan-header-content">
+          <div className="loan-header-text">
+            <h1 className="loan-header-title">Loan Analysis History</h1>
+            <p className="loan-header-subtitle">Review your past loan simulations and assessments.</p>
           </div>
         </div>
       </div>

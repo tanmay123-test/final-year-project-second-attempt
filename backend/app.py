@@ -126,6 +126,11 @@ try:
     app.register_blueprint(provider_auth_bp, url_prefix='/api/provider')
     app.register_blueprint(housekeeping_bp, url_prefix='/api/housekeeping')
     app.register_blueprint(ai_advisor_bp, url_prefix='/api/ai')
+    
+    # Register New AI Features blueprint
+    from housekeeping.ai_features.ai_routes import ai_features_bp
+    app.register_blueprint(ai_features_bp)
+    
     print("  Housekeeping blueprints registered")
 except ImportError as e:
     print(f"   Could not register housekeeping blueprints: {e}")

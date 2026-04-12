@@ -162,6 +162,8 @@ export const moneyService = {
   createGoal: (data) => api.post('/api/goal/create', data),
   getGoals: () => api.get('/api/goal/list'),
   addGoalSavings: (data) => api.post('/api/goal/add-savings', data),
+  createGoalPaymentOrder: (data) => api.post('/api/goal/payment/create-order', data),
+  verifyGoalPayment: (data) => api.post('/api/goal/payment/verify', data),
   getMonthlyAnalytics: (months = 6) => api.get('/api/money/analytics/monthly', { params: { months } }),
   chatWithAI: (message) => api.post('/api/money/chat', { message }),
 };
