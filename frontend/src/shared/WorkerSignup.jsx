@@ -150,6 +150,8 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
         skills: skillsStr, // Maintain backward compatibility
         skill_ids: formData.selectedSkills.map(s => s.id) // Phase 1 junction storage
       };
+      console.log('Sending payload:', payload);
+      console.log('Password in payload:', payload.password);
       let response;
       if (serviceType === 'healthcare') {
         response = await workerService.registerHealthcare(payload);
@@ -305,6 +307,14 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
               <div className="input-wrapper">
                 <Phone className="input-icon" size={20} />
                 <input id="phone" type="tel" name="phone" value={formData.phone} onChange={handleChange} required placeholder="9876543210" />
+              </div>
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="password">Password *</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" size={20} />
+                <input id="password" type="password" name="password" value={formData.password} onChange={handleChange} required placeholder="Create a password" />
               </div>
             </div>
 

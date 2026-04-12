@@ -44,14 +44,14 @@ const MyCareScreen = () => {
 
   return (
     <HealthcareSidebarLayout>
-      <div className="page-inner-content">
-        <div className="my-care-screen my-care-page">
-          <div className="my-care-header">
+      <div className="page-inner-content" style={{ width: '100%', boxSizing: 'border-box' }}>
+        <div className="my-care-screen my-care-page" style={{ maxWidth: 'none', margin: 0, padding: '24px' }}>
+          <div className="my-care-header" style={{ background: 'linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%)', borderRadius: '24px', padding: '32px', color: 'white', boxShadow: '0 8px 32px rgba(142, 68, 173, 0.15)' }}>
             <div className="my-care-header-row">
-              <span className="my-care-header-icon">♡</span>
-              <h1 className="my-care-header-title">My Care</h1>
+              <span className="my-care-header-icon" style={{ color: 'white', border: '2px solid rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.1)' }}>♡</span>
+              <h1 className="my-care-header-title" style={{ color: 'white' }}>My Care</h1>
             </div>
-            <p className="my-care-header-subtitle">Manage your appointments & consultations</p>
+            <p className="my-care-header-subtitle" style={{ color: 'rgba(255,255,255,0.9)' }}>Manage your appointments & consultations</p>
           </div>
 
           <div className="my-care-menu-container">

@@ -76,8 +76,8 @@ const ServiceSelection = ({ mode = 'user' }) => {
                   
                   if (mode === 'worker') {
                     if (service.id === 'healthcare') {
-                      navigate('/worker/healthcare/login');
-                      return;
+                      navigate('/worker/healthcare/login')
+                      return
                     }
                     if (service.id === 'housekeeping') {
                       navigate('/worker/housekeeping/login');

@@ -59,12 +59,12 @@ def get_pending_healthcare_workers():
         # Enrich with document information
         enriched_workers = []
         for worker in pending_workers:
-            # Simulate document paths (in real implementation, these would be stored in database)
+            # Use real document paths from database
             documents = {
-                "profile_photo": f"/uploads/worker_{worker['id']}_profile.jpg",
-                "aadhaar": f"/uploads/worker_{worker['id']}_aadhaar.jpg",
-                "degree_certificate": f"/uploads/worker_{worker['id']}_degree.pdf",
-                "medical_license": f"/uploads/worker_{worker['id']}_license.pdf"
+                "profile_photo": worker.get('profile_photo_path'),
+                "aadhaar": worker.get('aadhaar_path'),
+                "degree_certificate": worker.get('degree_certificate_path'),
+                "medical_license": worker.get('medical_license_path')
             }
             
             enriched_worker = dict(worker)
@@ -141,10 +141,9 @@ def reject_healthcare_worker(worker_id):
             return jsonify({"error": "Worker is not in pending status"}), 400
         
         # Reject the worker
-        worker_db.reject_worker(worker_id)
-        
-        # Store rejection reason (in real implementation, this would go to database)
         rejection_reason = data.get('rejection_reason')
+        worker_db.reject_worker(worker_id, rejection_reason)
+        
         print(f"Worker {worker_id} rejected. Reason: {rejection_reason}")
         
         return jsonify({

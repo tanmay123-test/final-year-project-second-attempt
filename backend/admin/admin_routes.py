@@ -9,6 +9,14 @@ import jwt
 from datetime import datetime, timedelta
 import os
 
+# Import database instances
+from user_db import UserDB
+from worker_db import WorkerDB
+
+# Initialize database instances
+user_db = UserDB()
+worker_db = WorkerDB()
+
 # Hardcoded admin credentials (simple authentication)
 ADMIN_CREDENTIALS = {
     "username": "admin",
@@ -19,6 +27,47 @@ ADMIN_CREDENTIALS = {
 JWT_SECRET = os.environ.get('JWT_SECRET', 'admin_secret_key_change_in_production')
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+@admin_bp.route('/stats', methods=['GET'])
+@admin_auth_required
+def get_dashboard_stats():
+    """Get global dashboard statistics for admin"""
+    try:
+        total_workers = worker_db.get_worker_count()
+        pending_approvals = worker_db.get_worker_count(status='pending')
+        total_users = user_db.get_user_count()
+        
+        # Service-specific counts
+        healthcare_total = worker_db.get_worker_count(service_type='healthcare')
+        healthcare_pending = worker_db.get_worker_count(status='pending', service_type='healthcare')
+        
+        car_total = worker_db.get_worker_count(service_type='car')
+        car_pending = worker_db.get_worker_count(status='pending', service_type='car')
+        
+        housekeeping_total = worker_db.get_worker_count(service_type='housekeeping')
+        housekeeping_pending = worker_db.get_worker_count(status='pending', service_type='housekeeping')
+        
+        freelance_total = worker_db.get_worker_count(service_type='freelance')
+        freelance_pending = worker_db.get_worker_count(status='pending', service_type='freelance')
+        
+        money_total = worker_db.get_worker_count(service_type='money')
+        money_pending = worker_db.get_worker_count(status='pending', service_type='money')
+
+        return jsonify({
+            "total_workers": total_workers,
+            "pending_approvals": pending_approvals,
+            "total_users": total_users,
+            "active_services": 5,
+            "services": {
+                "healthcare": {"total": healthcare_total, "pending": healthcare_pending},
+                "car_service": {"total": car_total, "pending": car_pending},
+                "housekeeping": {"total": housekeeping_total, "pending": housekeeping_pending},
+                "freelance": {"total": freelance_total, "pending": freelance_pending},
+                "money_management": {"total": money_total, "pending": money_pending}
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch stats: {str(e)}"}), 500
 
 def admin_auth_required(f):
     """Decorator to require admin authentication"""

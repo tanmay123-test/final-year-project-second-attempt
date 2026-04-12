@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import api from '../../../shared/api';
 import './WorkerPortal.css';
+import './WorkerSignupResponsive.css';
 
 const WorkerSignupPage = () => {
   const navigate = useNavigate();
@@ -81,7 +82,7 @@ const WorkerSignupPage = () => {
       <div className="wp-mobile-shell">
         <div className="wp-dark-header">
           <div className="wp-header-row">
-            <button className="wp-back-btn" onClick={() => navigate('/worker')}>
+            <button className="wp-back-btn" onClick={() => navigate('/worker/healthcare/login')}>
               <ArrowLeft size={18} />
             </button>
             <div className="wp-header-title">Register as Doctor</div>
@@ -118,7 +119,7 @@ const WorkerSignupPage = () => {
               <div className="wp-field">
                 <label className="wp-label">Specialization</label>
                 <div className="wp-input-wrap">
-                  <Stethoscope className="wp-input-icon" size={18} />
+                  <Stethoscope className="wp-input-icon" size={18} color="#9B59B6" />
                   <input className="wp-input" placeholder="e.g. Cardiologist, Dentist, General Physician" value={form.specialization} onChange={(e) => onChange('specialization', e.target.value)} required />
                 </div>
               </div>
@@ -214,7 +215,7 @@ const WorkerSignupPage = () => {
                 <CheckCircle2 size={28} />
               </div>
               <h2 style={{ margin: '14px 0 0', color: '#0f172a' }}>Registration Successful!</h2>
-              <div style={{ marginTop: 8, color: '#1F5F7A', fontSize: 16, fontWeight: 600 }}>
+              <div style={{ marginTop: 8, color: '#8E44AD', fontSize: 16, fontWeight: 600 }}>
                 Worker ID: {successData.worker_id || 'N/A'}
               </div>
               <div style={{ marginTop: 8, color: '#16A34A', fontSize: 14 }}>

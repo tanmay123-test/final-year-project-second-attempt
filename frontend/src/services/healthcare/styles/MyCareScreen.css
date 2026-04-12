@@ -177,10 +177,12 @@
 /* Desktop (769px+) */
 @media (min-width: 768px) {
   .my-care-page {
-    max-width: 800px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
     padding: 32px;
     padding-bottom: 32px;
+    box-sizing: border-box;
   }
 
   .my-care-header {

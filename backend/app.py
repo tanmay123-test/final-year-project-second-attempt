@@ -1,9 +1,17 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from werkzeug.utils import secure_filename
 import os
-from datetime import datetime
+import re
+import json
+import bcrypt
+import psycopg2
+import psycopg2.extras
+from datetime import datetime, timedelta
+from functools import wraps
+import requests
+import logging
 import time
 from data.meeting_utils import generate_meeting_link as create_meeting_link
 import random
@@ -14,7 +22,6 @@ from subscription_db import SubscriptionDB
 from message_db import MessageDB
 from availability_db import AvailabilityDB
 from event_db import EventDB
-import sqlite3
 from emergency_detector import is_emergency
 
 from auth_utils import generate_token, verify_token
@@ -67,201 +74,151 @@ CORS(app, resources={r"/*": {
 def root():
     return jsonify({"message": "Backend is running!"}), 200
 
-# Register subscription blueprint
-app.register_blueprint(subscription_bp)
+@app.errorhandler(404)
+def not_found(e):
+    print(f"  [404 ERROR] {request.method} {request.path}")
+    return jsonify({"error": "Not Found", "path": request.path}), 404
 
-# Register payment blueprint
-try:
-    from services.payment.payments.payment_route import payment_bp
-    app.register_blueprint(payment_bp)
-    print("  Payment blueprint registered")
-except ImportError as e:
-    print(f"   Could not register payment blueprint: {e}")
-    print("  Subscription will use demo mode")
-
-# Register freelance blueprint
-app.register_blueprint(freelance_bp)
-print("  Freelance marketplace blueprint registered")
-
-# Register money management blueprint
-app.register_blueprint(money_bp)
-print("  Money management blueprint registered")
-
-# Register loan analyzer blueprint
-try:
-    from services.money_service.loan_analyzer import create_loan_api
-    create_loan_api(app)
-    print("✅ Loan analyzer blueprint registered")
-except Exception as e:
-    print(f"⚠️ Could not register loan analyzer blueprint: {e}")
-
-# Register Goal Jar API
-try:
-    from services.money_service.goal_jar.goal_api import create_goal_api
-    create_goal_api(app)
-    print("✅ Goal Jar API registered")
-except Exception as e:
-    print(f"⚠️ Could not register Goal Jar API: {e}")
-
-# Register AI Coach API
-try:
-    from services.money_service.ai_coach_api import create_ai_coach_api
-    create_ai_coach_api(app)
-    print("✅ AI Coach API registered")
-except Exception as e:
-    print(f"⚠️ Could not register AI Coach API: {e}")
-
-# Register video consultation blueprint
-app.register_blueprint(video_bp)
-print("  Video consultation blueprint registered")
-
-# Register Housekeeping blueprints
-try:
-    from services.housekeeping.arrival.backend.controllers.arrival_controller import arrival_bp
-    from services.housekeeping.provider.backend.controllers.auth_controller import provider_auth_bp
-    from services.housekeeping.controllers.booking_controller import housekeeping_bp
-    from services.housekeeping.arrival.backend.controllers.ai_advisor_controller import ai_advisor_bp
+def register_blueprints(app):
+    """Register all blueprints with detailed logging"""
+    print("\n📦 Registering Blueprints...")
     
-    app.register_blueprint(arrival_bp, url_prefix='/api/arrival')
-    app.register_blueprint(provider_auth_bp, url_prefix='/api/provider')
-    app.register_blueprint(housekeeping_bp, url_prefix='/api/housekeeping')
-    app.register_blueprint(ai_advisor_bp, url_prefix='/api/ai')
+    # Register subscription blueprint
+    try:
+        app.register_blueprint(subscription_bp)
+        print("  ✅ Subscription blueprint registered")
+    except Exception as e:
+        print(f"  ❌ Failed to register subscription blueprint: {e}")
+
+    # Register payment blueprint
+    try:
+        from services.payment.payments.payment_route import payment_bp
+        app.register_blueprint(payment_bp)
+        print("  ✅ Payment blueprint registered")
+    except ImportError as e:
+        print(f"  ⚠️ Could not register payment blueprint: {e} (Using demo mode)")
+    except Exception as e:
+        print(f"  ❌ Error registering payment blueprint: {e}")
+
+    # Register freelance blueprint
+    try:
+        app.register_blueprint(freelance_bp)
+        print("  ✅ Freelance marketplace blueprint registered")
+    except Exception as e:
+        print(f"  ❌ Failed to register freelance blueprint: {e}")
+
+    # Register money management blueprint
+    try:
+        app.register_blueprint(money_bp)
+        print("  ✅ Money management blueprint registered")
+    except Exception as e:
+        print(f"  ❌ Failed to register money management blueprint: {e}")
+
+    # Register healthcare blueprints
+    try:
+        from services.healthcare.routes.healthcare_routes import healthcare_bp
+        from services.healthcare.doctor_routes import doctor_bp
+        app.register_blueprint(healthcare_bp)
+        app.register_blueprint(doctor_bp)
+        print("  ✅ Healthcare blueprints registered")
+    except Exception as e:
+        print(f"  ❌ Could not register healthcare blueprints: {e}")
+
+    # Register video consultation blueprint
+    try:
+        app.register_blueprint(video_bp)
+        print("  ✅ Video consultation blueprint registered")
+    except Exception as e:
+        print(f"  ❌ Failed to register video consultation blueprint: {e}")
+
+    # Register Housekeeping blueprints
+    print("  🏠 Housekeeping:")
+    try:
+        from services.housekeeping.arrival.backend.controllers.arrival_controller import arrival_bp
+        app.register_blueprint(arrival_bp, url_prefix='/api/arrival')
+        print("    ✅ Arrival blueprint registered")
+    except Exception as e:
+        print(f"    ❌ Could not register Arrival blueprint: {e}")
+
+    try:
+        from services.housekeeping.provider.backend.controllers.auth_controller import provider_auth_bp
+        app.register_blueprint(provider_auth_bp, url_prefix='/api/provider')
+        print("    ✅ Provider Auth blueprint registered")
+    except Exception as e:
+        print(f"    ❌ Could not register Provider Auth blueprint: {e}")
+
+    try:
+        from services.housekeeping.controllers.booking_controller import housekeeping_bp
+        app.register_blueprint(housekeeping_bp, url_prefix='/api/housekeeping')
+        print("    ✅ Booking blueprint registered")
+    except Exception as e:
+        print(f"    ❌ Could not register Housekeeping Booking blueprint: {e}")
+
+    try:
+        from services.housekeeping.arrival.backend.controllers.ai_advisor_controller import ai_advisor_bp
+        app.register_blueprint(ai_advisor_bp, url_prefix='/api/ai')
+        print("    ✅ AI Advisor blueprint registered")
+    except Exception as e:
+        print(f"    ❌ Could not register AI Advisor blueprint: {e}")
+
+    try:
+        from housekeeping.ai_features.ai_routes import ai_features_bp
+        app.register_blueprint(ai_features_bp)
+        print("    ✅ AI Features blueprint registered")
+    except Exception as e:
+        print(f"    ❌ Could not register AI Features blueprint: {e}")
+
+    # Register car service blueprints
+    print("  🚗 Car Service:")
+    try:
+        from car_service.car_routes import car_bp
+        app.register_blueprint(car_bp)
+        print("    ✅ Car routes blueprint registered")
+    except Exception as e:
+        print(f"    ❌ Could not register car service blueprint: {e}")
+
+    try:
+        from car_service.car_service_worker_routes import car_service_worker_bp
+        app.register_blueprint(car_service_worker_bp)
+        print("    ✅ Unified worker routes blueprint registered")
+    except Exception as e:
+        print(f"    ❌ Could not register unified worker routes blueprint: {e}")
+
+    # Register other car service blueprints (consolidated)
+    car_blueprints = [
+        ('trip_routes', 'trip_bp', 'Trip planner'),
+        ('worker_routes', 'worker_bp', 'Worker routes'),
+        ('mechanic_routes', 'mechanic_bp', 'Mechanic routes'),
+        ('dispatch.routes', 'dispatch_bp', 'Dispatch routes'),
+        ('dispatch.active_routes', 'active_bp', 'Active job routes'),
+        ('dispatch.earnings_routes', 'earnings_bp', 'Earnings routes'),
+        ('dispatch.performance_routes', 'performance_bp', 'Performance routes'),
+        ('smart_search_routes', 'smart_search_bp', 'Smart search routes'),
+        ('truck_operator_routes', 'truck_operator_bp', 'Truck operator routes'),
+        ('automobile_expert_routes', 'automobile_expert_bp', 'Automobile Expert'),
+        ('expert_availability_routes', 'expert_availability_bp', 'Expert Availability'),
+        ('consultation_session_routes', 'consultation_session_bp', 'Consultation Session'),
+        ('expert_history_routes', 'expert_history_bp', 'Expert History')
+    ]
     
-    # Register New AI Features blueprint
-    from housekeeping.ai_features.ai_routes import ai_features_bp
-    app.register_blueprint(ai_features_bp)
-    
-    print("  Housekeeping blueprints registered")
-except ImportError as e:
-    print(f"   Could not register housekeeping blueprints: {e}")
-# Register car service blueprint
-try:
-    from car_service.car_routes import car_bp
-    app.register_blueprint(car_bp)
-    print("  Car service blueprint registered")
-except Exception as e:
-    print(f"   Could not register car service blueprint: {e}")
+    for module, bp_name, label in car_blueprints:
+        try:
+            exec(f"from car_service.{module} import {bp_name}")
+            exec(f"app.register_blueprint({bp_name})")
+            print(f"    ✅ {label} blueprint registered")
+        except Exception as e:
+            print(f"    ❌ Could not register {label} blueprint: {e}")
 
-# Register trip planner blueprint
-try:
-    from car_service.trip_routes import trip_bp
-    app.register_blueprint(trip_bp)
-    print("  Trip planner blueprint registered")
-except Exception as e:
-    print(f"   Could not register trip planner blueprint: {e}")
+    # Special case for Ask Expert (needs init)
+    try:
+        from car_service.ask_expert import ask_expert_bp, init_ask_expert_db
+        app.register_blueprint(ask_expert_bp)
+        init_ask_expert_db(app)
+        print("    ✅ Ask Expert blueprint registered and initialized")
+    except Exception as e:
+        print(f"    ❌ Could not register Ask Expert blueprint: {e}")
 
-# Register worker routes blueprint
-try:
-    from car_service.worker_routes import worker_bp
-    app.register_blueprint(worker_bp)
-    print("  Worker routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register worker routes blueprint: {e}")
-
-# Register mechanic routes blueprint
-try:
-    from car_service.mechanic_routes import mechanic_bp
-    app.register_blueprint(mechanic_bp)
-    print("  Mechanic routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register mechanic routes blueprint: {e}")
-
-# Register unified car service worker routes blueprint
-try:
-    from car_service.car_service_worker_routes import car_service_worker_bp
-    app.register_blueprint(car_service_worker_bp)
-    print("  Unified car service worker routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register unified car service worker routes blueprint: {e}")
-
-# Register dispatch routes blueprint
-try:
-    from car_service.dispatch.routes import dispatch_bp
-    app.register_blueprint(dispatch_bp)
-    print("  Dispatch routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register dispatch routes blueprint: {e}")
-
-# Register active job routes blueprint
-try:
-    from car_service.dispatch.active_routes import active_bp
-    app.register_blueprint(active_bp)
-    print("  Active job routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register active job routes blueprint: {e}")
-
-# Register earnings routes blueprint
-try:
-    from car_service.dispatch.earnings_routes import earnings_bp
-    app.register_blueprint(earnings_bp)
-    print("  Earnings routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register earnings routes blueprint: {e}")
-
-# Register performance routes blueprint
-try:
-    from car_service.dispatch.performance_routes import performance_bp
-    app.register_blueprint(performance_bp)
-    print("  Performance routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register performance routes blueprint: {e}")
-
-# Register smart search routes blueprint
-try:
-    from car_service.smart_search_routes import smart_search_bp
-    app.register_blueprint(smart_search_bp)
-    print("  Smart search routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register smart search routes blueprint: {e}")
-
-# Register truck operator routes blueprint
-try:
-    from car_service.truck_operator_routes import truck_operator_bp
-    app.register_blueprint(truck_operator_bp)
-    print("  Truck operator routes blueprint registered")
-except Exception as e:
-    print(f"   Could not register truck operator routes blueprint: {e}")
-
-# Register Ask Expert blueprint
-try:
-    from car_service.ask_expert import ask_expert_bp, init_ask_expert_db
-    app.register_blueprint(ask_expert_bp)
-    init_ask_expert_db(app)
-    print("  Ask Expert blueprint registered")
-except Exception as e:
-    print(f"   Could not register Ask Expert blueprint: {e}")
-
-# Register Automobile Expert blueprint
-try:
-    from car_service.automobile_expert_routes import automobile_expert_bp
-    app.register_blueprint(automobile_expert_bp)
-    print("  Automobile Expert blueprint registered")
-except Exception as e:
-    print(f"   Could not register Automobile Expert blueprint: {e}")
-
-# Register Expert Availability blueprint
-try:
-    from car_service.expert_availability_routes import expert_availability_bp
-    app.register_blueprint(expert_availability_bp)
-    print("  Expert Availability blueprint registered")
-except Exception as e:
-    print(f"   Could not register Expert Availability blueprint: {e}")
-
-# Register Consultation Session blueprint
-try:
-    from car_service.consultation_session_routes import consultation_session_bp
-    app.register_blueprint(consultation_session_bp)
-    print("  Consultation Session blueprint registered")
-except Exception as e:
-    print(f"   Could not register Consultation Session blueprint: {e}")
-
-# Register Expert History blueprint
-try:
-    from car_service.expert_history_routes import expert_history_bp
-    app.register_blueprint(expert_history_bp)
-    print("  Expert History blueprint registered")
-except Exception as e:
-    print(f"   Could not register Expert History blueprint: {e}")
+register_blueprints(app)
 
 # Register Fuel Delivery blueprint
 try:
@@ -304,6 +261,17 @@ try:
     print("  Housekeeping socket initialized")
 except Exception as e:
     print(f"   Could not initialize housekeeping socket: {e}")
+
+# Initialize Healthcare Socket
+try:
+    from services.healthcare.socket_handlers import init_healthcare_socket, emit_new_appointment, emit_appointment_update
+    init_healthcare_socket(socketio)
+    print("  Healthcare socket initialized")
+except Exception as e:
+    print(f"   Could not initialize healthcare socket: {e}")
+    # Provide fallback empty functions to avoid NameErrors
+    def emit_new_appointment(*args, **kwargs): pass
+    def emit_appointment_update(*args, **kwargs): pass
 
 # Initialize Freelance Socket
 try:
@@ -359,13 +327,19 @@ def get_services():
 # ================= USER AUTH =================
 @app.route("/signup", methods=["POST"])
 def signup():
-    d = request.json
-    if user_db.user_exists(d["username"], d["email"]):
-        return jsonify({"error": "User exists"}), 400
+    try:
+        d = request.json
+        if user_db.user_exists(d["username"], d["email"]):
+            return jsonify({"error": "User exists"}), 400
 
-    user_db.create_user(d["name"], d["username"], d["password"], d["email"])
-    send_otp(d["email"])
-    return jsonify({"msg": "OTP sent"}), 201
+        user_db.create_user(d["name"], d["username"], d["password"], d["email"])
+        send_otp(d["email"])
+        return jsonify({"msg": "OTP sent"}), 201
+    except Exception as e:
+        print(f"User signup error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/verify-otp", methods=["POST"])
@@ -483,6 +457,7 @@ def get_worker_availability(worker_id):
         for slot in availability:
             try:
                 # Check for conflicts in housekeeping bookings
+                # Use standard ? placeholder for SQLite which hk_booking_service uses
                 cursor.execute("""
                     SELECT count(*) FROM bookings 
                     WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
@@ -580,6 +555,22 @@ def book_clinic():
     except Exception as e:
         print(f"   Failed to send clinic booking email: {e}")
 
+    # Emit socket event to doctor
+    try:
+        appointment_data = {
+            "id": result,
+            "user_id": d["user_id"],
+            "user_name": d["user_name"],
+            "symptoms": d["symptoms"],
+            "date": d["date"],
+            "time_slot": d["time_slot"],
+            "appointment_type": "clinic",
+            "status": "pending"
+        }
+        emit_new_appointment(socketio, appointment_data, d["worker_id"])
+    except Exception as e:
+        print(f"   Failed to emit clinic booking socket event: {e}")
+
     return jsonify({"success": True, "appointment_id": result}), 201
 
 
@@ -599,6 +590,12 @@ def video_request():
 
     # Optional insurance
     insurance_details = d.get("insurance_details")
+
+    # Check appointment limit
+    can_book, message = subscription_db.check_appointment_limit(d["worker_id"])
+    if not can_book:
+        print(f"  Subscription limit exceeded: {message}")
+        return jsonify({"error": message}), 402
 
     apt_id = appt_db.book_video(
         d["user_id"],
@@ -620,6 +617,20 @@ def video_request():
     except Exception as e:
         print(f"   Failed to send video consultation email: {e}")
 
+    # Emit socket event to doctor
+    try:
+        appointment_data = {
+            "id": apt_id,
+            "user_id": d["user_id"],
+            "user_name": d["user_name"],
+            "symptoms": d["symptoms"],
+            "appointment_type": "video",
+            "status": "pending"
+        }
+        emit_new_appointment(socketio, appointment_data, d["worker_id"])
+    except Exception as e:
+        print(f"   Failed to emit video booking socket event: {e}")
+
     return jsonify({"appointment_id": apt_id}), 201
 
 
@@ -637,22 +648,28 @@ def user_appointments():
 # ================= WORKER AUTH =================
 @app.route("/worker/signup", methods=["POST"])
 def worker_register():
-    d = request.json
-    service_type = d.get("service", "healthcare").lower()
-    
-    # Handle specialization based on service type
-    specialization = d.get("specialization", "")
-    if service_type != "healthcare" and not specialization:
-        specialization = "General"
+    try:
+        d = request.json
+        service_type = d.get("service", "healthcare").lower()
+        
+        # Handle specialization based on service type
+        specialization = d.get("specialization", "")
+        if service_type != "healthcare" and not specialization:
+            specialization = "General"
 
-    wid = worker_db.register_worker(
-        d["full_name"], d["email"], d["phone"],
-        service_type, specialization,
-        d.get("experience", ""), d.get("clinic_location", "")
-    )
-    if wid is None:
-        return jsonify({"error": "Worker already exists"}), 400
-    return jsonify({"worker_id": wid}), 201
+        wid = worker_db.register_worker(
+            d["full_name"], d["email"], d["phone"],
+            service_type, specialization,
+            d.get("experience", ""), d.get("clinic_location", ""),
+            None,  # license_number
+            d.get("password", "")
+        )
+        if wid is None:
+            return jsonify({"error": "Worker already exists for this service"}), 400
+        return jsonify({"worker_id": wid}), 201
+    except Exception as e:
+        print(f"Worker signup error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/worker/healthcare/signup", methods=["POST"])
@@ -719,19 +736,45 @@ def healthcare_worker_login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-    worker = worker_db.get_worker_by_email(email)
-    if not worker:
+    
+    # Use the same verification method as general worker login
+    w = worker_db.verify_worker_login(email, password)
+    if not w:
         return jsonify({'error': 'Worker not found'}), 404
-    if worker['password'] != password:
-        return jsonify({'error': 'Invalid password'}), 401
+    
+    wid, status, svc, spec, name = w
+    
+    # Healthcare workers are auto-approved
     token = generate_token(email)
-    return jsonify({'token': token, 'worker': dict(worker), 'success': True})
+    return jsonify({'token': token, 'worker': {'id': wid, 'email': email, 'service': svc, 'specialization': spec, 'full_name': name}, 'success': True})
 
+
+@app.route("/debug/workers", methods=["GET"])
+def debug_workers():
+    """Debug endpoint to see all workers in database"""
+    try:
+        workers = worker_db.get_workers_by_service('housekeeping')
+        
+        result = []
+        for w in workers:
+            result.append({
+                'email': w['email'],
+                'service': w['service'], 
+                'specialization': w['specialization'],
+                'status': w['status'],
+                'has_password': w.get('password') is not None
+            })
+        
+        return jsonify({"workers": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/worker/login", methods=["POST"])
 def worker_login():
     email = request.json["email"]
     password = request.json.get("password")
+    
+    print(f"Login attempt: email={email}, password={'provided' if password else 'not provided'}")
     
     w = worker_db.verify_worker_login(email, password)
     if not w:
@@ -784,118 +827,33 @@ def worker_appointments(worker_id):
 @app.route("/worker/<int:worker_id>/history", methods=["GET"])
 def worker_history(worker_id):
     """Get completed consultation history for a worker"""
-    conn = appt_db.get_conn()
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-        SELECT id, user_name, booking_date, time_slot, appointment_type, created_at
-        FROM appointments
-        WHERE worker_id=? AND status='completed'
-        ORDER BY created_at DESC
-    """, (worker_id,))
-    
-    rows = cursor.fetchall()
-    keys = [d[0] for d in cursor.description]
-    conn.close()
-    
-    history = [dict(zip(keys, r)) for r in rows]
+    history = appt_db.get_history(worker_id)
     return jsonify({"history": history}), 200
 
 
 @app.route("/worker/<int:worker_id>/dashboard/stats", methods=["GET"])
 def worker_dashboard_stats(worker_id):
     """Get dashboard statistics for a worker"""
-    conn = appt_db.get_conn()
-    cursor = conn.cursor()
-    
-    # Get pending requests
-    cursor.execute("SELECT COUNT(*) FROM appointments WHERE worker_id=? AND status='pending'", (worker_id,))
-    pending_count = cursor.fetchone()[0]
-    
-    # Get today's appointments
-    from datetime import datetime
-    today = datetime.now().strftime('%Y-%m-%d')
-    cursor.execute("""
-        SELECT COUNT(*) FROM appointments 
-        WHERE worker_id=? AND DATE(booking_date)=?
-    """, (worker_id, today))
-    today_count = cursor.fetchone()[0]
-    
-    # Get accepted appointments
-    cursor.execute("SELECT COUNT(*) FROM appointments WHERE worker_id=? AND status='accepted'", (worker_id,))
-    accepted_count = cursor.fetchone()[0]
-    
-    # Get total appointments
-    cursor.execute("SELECT COUNT(*) FROM appointments WHERE worker_id=?", (worker_id,))
-    total_count = cursor.fetchone()[0]
-    
-    # Get today's appointment list
-    cursor.execute("""
-        SELECT id, user_name, booking_date, patient_symptoms, status
-        FROM appointments 
-        WHERE worker_id=? AND DATE(booking_date)=?
-        ORDER BY booking_date ASC
-    """, (worker_id, today))
-    today_list = cursor.fetchall()
-    keys = [d[0] for d in cursor.description]
-    today_appointments = [dict(zip(keys, r)) for r in today_list]
-    
-    conn.close()
-    
-    return jsonify({
-        "pending_requests": pending_count,
-        "today_appointments": today_count,
-        "accepted_appointments": accepted_count,
-        "total_appointments": total_count,
-        "today_appointments_list": today_appointments
-    }), 200
+    stats = appt_db.get_dashboard_stats(worker_id)
+    return jsonify(stats), 200
 
 
 @app.route("/worker/<int:worker_id>/status", methods=["GET", "POST"])
 def worker_status(worker_id):
     """Get or update worker status"""
     if request.method == "GET":
-        try:
-            conn = worker_db.get_conn()
-            cursor = conn.cursor()
-            if worker_db.use_postgres:
-                cursor.execute("SELECT status FROM workers WHERE id = %s", (worker_id,))
-            else:
-                cursor.execute("SELECT status FROM workers WHERE id = ?", (worker_id,))
-            row = cursor.fetchone()
-            conn.close()
-            if row:
-                status_value = row[0] if not isinstance(row, dict) else row.get("status")
-                return jsonify({"status": status_value or "offline"}), 200
-            return jsonify({"status": "offline"}), 200
-        except Exception as e:
-            print(f"worker_status GET error: {e}")
-            return jsonify({"status": "offline"}), 200
+        status = worker_db.get_worker_status(worker_id)
+        return jsonify({"status": status or "offline"}), 200
     
     elif request.method == "POST":
         data = request.get_json() or {}
         new_status = data.get("status", "offline")
-        try:
-            conn = worker_db.get_conn()
-            cursor = conn.cursor()
-            if worker_db.use_postgres:
-                cursor.execute(
-                    "UPDATE workers SET status = %s WHERE id = %s",
-                    (new_status, worker_id)
-                )
-            else:
-                cursor.execute(
-                    "UPDATE workers SET status = ? WHERE id = ?",
-                    (new_status, worker_id)
-                )
-            conn.commit()
-            conn.close()
+        if worker_db.update_worker_status(worker_id, new_status):
             return jsonify({
                 "success": True,
                 "status": new_status
             }), 200
-        except Exception as e:
-            print(f"update_worker_status POST error: {e}")
+        else:
             return jsonify({"success": False, "error": "Failed to update status"}), 500
 
 
@@ -936,21 +894,19 @@ def respond():
     appt_db.respond(appointment_id, status)
     print(f"  Appointment {appointment_id} status updated to {status}")
 
+    # Emit socket event to user
+    try:
+        emit_appointment_update(socketio, appointment_id, status, user_id=appointment["user_id"])
+    except Exception as e:
+        print(f"   Failed to emit appointment update socket event: {e}")
+
     # ===== PAYMENT REQUIRED FLOW =====
     if status == "accepted":
         # Get doctor consultation fee
         doctor_fee = worker_db.get_worker_consultation_fee(appointment["worker_id"])
         
         # Update appointment with payment pending status
-        conn = appt_db.get_conn()
-        cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE appointments 
-            SET status='payment_pending', payment_status='pending'
-            WHERE id=?
-        """, (appointment_id,))
-        conn.commit()
-        conn.close()
+        appt_db.set_payment_pending(appointment_id, payment_amount=int(doctor_fee))
         
         print(f"  Payment required for appointment {appointment_id}")
         print(f"   Doctor fee:  {doctor_fee}")
@@ -1101,31 +1057,22 @@ def start_video_call():
 
 @app.route("/worker/video_appointments")
 def worker_video_appointments():
-    conn = sqlite3.connect("expertease.db")
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
+    conn = appt_db.get_conn()
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    cur.execute("""
+    cursor.execute("""
         SELECT id, user_name, status
         FROM appointments
         WHERE appointment_type='video' AND status='accepted'
         ORDER BY id DESC
     """)
 
-    rows = [dict(r) for r in cur.fetchall()]
+    rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return jsonify(rows)
 
 # ================= AI CARE - TRUE AI-DRIVEN SYSTEM =================
 from services.healthcare.ai_engine import analyze_symptoms_conversational
-
-# ================= DOCTOR DASHBOARD ROUTES =================
-try:
-    from services.healthcare.doctor_routes import doctor_bp
-    app.register_blueprint(doctor_bp)
-    print("  Doctor dashboard blueprint registered")
-except ImportError as e:
-    print(f"   Could not register doctor dashboard blueprint: {e}")
 
 @app.route("/healthcare/ai-care", methods=["POST"])
 def ai_care():
@@ -1416,6 +1363,14 @@ def confirm_payment():
         # Get appointment details for video consultation setup
         appointment = appt_db.get_by_id(appointment_id)
         
+        # Emit socket event to doctor and user about payment confirmation
+        try:
+            emit_appointment_update(socketio, appointment_id, 'confirmed', 
+                                    worker_id=appointment["worker_id"], 
+                                    user_id=appointment["user_id"])
+        except Exception as e:
+            print(f"   Failed to emit payment confirmation socket event: {e}")
+
         # If it's a video consultation, generate meeting details now
         if appointment["appointment_type"] == "video":
             meeting_link, otp, video_room = appt_db.set_video_details(appointment_id)
@@ -1472,10 +1427,11 @@ def update_consultation_fee():
         return jsonify({"error": "Invalid or expired token"}), 401
     
     # Get doctor ID from email
-    worker_id = worker_db.get_worker_by_email(doctor_email)
-    if not worker_id:
+    worker = worker_db.get_worker_by_email(doctor_email)
+    if not worker:
         return jsonify({"error": "Doctor not found"}), 404
     
+    worker_id = worker['id']
     data = request.json
     consultation_fee = data.get("consultation_fee")
     
@@ -1511,9 +1467,11 @@ def get_doctor_profile():
         return jsonify({"error": "Invalid or expired token"}), 401
     
     # Get doctor ID from email
-    worker_id = worker_db.get_worker_by_email(doctor_email)
-    if not worker_id:
+    worker = worker_db.get_worker_by_email(doctor_email)
+    if not worker:
         return jsonify({"error": "Doctor not found"}), 404
+    
+    worker_id = worker['id']
     
     # Get doctor profile
     profile = worker_db.get_worker_profile(worker_id)
@@ -2008,6 +1966,10 @@ def handle_exception(e):
 
 
 # ================= RUN =================
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory('uploads', filename)
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"\n🚀 Starting ExpertEase Backend...")
@@ -2015,4 +1977,4 @@ if __name__ == "__main__":
     print(f"📍 Server running on: http://127.0.0.1:{port}")
     print(f"🌐 Access from browser: http://localhost:{port}")
     print("="*50)
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=True)

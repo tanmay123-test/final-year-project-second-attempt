@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import HealthcareSidebarLayout from '../components/HealthcareSidebarLayout';
 import HealthcareBottomNav from '../components/HealthcareBottomNav';
+import healthcareSocket from '../../healthcareSocket';
 import '../styles/healthcare-shared.css';
 
 const AppointmentsPage = () => {
@@ -11,68 +12,95 @@ const AppointmentsPage = () => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Mock data for now
-    const mockAppointments = [
-      {
-        id: 1,
-        doctorName: 'Dr. Sarah Johnson',
-        specialization: 'Cardiology',
-        date: '2024-03-28',
-        time: '10:00 AM',
-        status: 'upcoming',
-        fee: 800
-      },
-      {
-        id: 2,
-        doctorName: 'Dr. Michael Chen',
-        specialization: 'Dermatology',
-        date: '2024-03-25',
-        time: '2:00 PM',
-        status: 'completed',
-        fee: 600
-      }
-    ];
-    
-    setTimeout(() => {
-      setAppointments(mockAppointments);
+  const token = localStorage.getItem('token');
+  const userId = user?.id || JSON.parse(localStorage.getItem('user'))?.id;
+
+  const fetchAppointments = async () => {
+    if (!userId) return;
+    try {
+      setLoading(true);
+      const res = await fetch(`/user/appointments`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      setAppointments(data.appointments || []);
+    } catch (err) {
+      console.error('Failed to fetch appointments:', err);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppointments();
+    
+    if (userId) {
+      healthcareSocket.connect();
+      healthcareSocket.joinRoom('user', userId);
+
+      const handleUpdate = (data) => {
+        console.log('🔄 Real-time appointment update:', data);
+        // Refresh list
+        fetchAppointments();
+        
+        // Show notification
+        if (Notification.permission === "granted") {
+          new Notification("Appointment Update", {
+            body: `Your appointment status has been updated to ${data.status}`
+          });
+        }
+      };
+
+      healthcareSocket.on('appointment_update', handleUpdate);
+
+      return () => {
+        healthcareSocket.off('appointment_update', handleUpdate);
+        healthcareSocket.leaveRoom('user', userId);
+      };
+    }
+  }, [userId]);
 
   const getStatusColor = (status) => {
-    switch(status) {
+    switch(status?.toLowerCase()) {
+      case 'accepted': 
+      case 'confirmed': 
       case 'upcoming': return '#10B981';
       case 'completed': return '#6B7280';
+      case 'pending': return '#F59E0B';
+      case 'rejected':
       case 'cancelled': return '#EF4444';
+      case 'payment_pending': return '#8E44AD';
       default: return '#6B7280';
     }
   };
 
   return (
     <HealthcareSidebarLayout>
-      <div className="page-inner-content">
+      <div className="page-inner-content" style={{ width: '100%', boxSizing: 'border-box' }}>
         <div
           style={{
             minHeight: '100vh',
             backgroundColor: '#f8f8f8',
-            padding: '20px',
-            paddingBottom: '80px',
-            maxWidth: '900px',
-            margin: '0 auto',
+            padding: '0',
+            paddingBottom: '100px',
+            width: '100%',
+            boxSizing: 'border-box'
           }}
         >
           <div
             style={{
-              background: 'linear-gradient(135deg, #7B2FBE 0%, #9B59B6 100%)',
-              padding: '20px',
-              borderRadius: '16px',
-              marginBottom: '20px',
+              background: 'linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%)',
+              padding: '32px',
+              borderRadius: '0',
+              marginBottom: '32px',
               color: 'white',
+              boxShadow: '0 8px 32px rgba(142, 68, 173, 0.15)'
             }}
           >
-            <h1 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>My Appointments</h1>
-            <p style={{ fontSize: '14px', opacity: 0.9, margin: '4px 0 0 0' }}>Manage your healthcare appointments</p>
+            <h1 style={{ fontSize: '28px', fontWeight: '800', margin: 0 }}>My Appointments</h1>
+            <p style={{ fontSize: '15px', opacity: 0.9, margin: '8px 0 0 0' }}>Manage your healthcare appointments</p>
           </div>
 
           {loading ? (
@@ -131,29 +159,48 @@ const AppointmentsPage = () => {
                         margin: '0 0 4px 0',
                       }}
                     >
-                      {appointment.doctorName}
+                      {appointment.doctor_name || appointment.doctorName || appointment.name || 'Doctor'}
                     </h3>
                     <p style={{ fontSize: '13px', color: '#666', margin: '0 0 8px 0' }}>{appointment.specialization}</p>
                     <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#888' }}>
-                      <span>📅 {appointment.date}</span>
-                      <span>🕐 {appointment.time}</span>
-                      <span>₹{appointment.fee}</span>
+                      <span>📅 {appointment.booking_date || appointment.date}</span>
+                      <span>🕐 {appointment.time_slot || appointment.time}</span>
+                      <span>₹{appointment.fee || appointment.consultation_fee || 500}</span>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span
-                      style={{
-                        background: getStatusColor(appointment.status),
-                        color: 'white',
-                        padding: '4px 12px',
-                        borderRadius: '99px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {appointment.status}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                      <span
+                        style={{
+                          background: getStatusColor(appointment.status),
+                          color: 'white',
+                          padding: '4px 12px',
+                          borderRadius: '99px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {appointment.status}
+                      </span>
+                      {appointment.status === 'payment_pending' && (
+                        <button
+                          onClick={() => navigate(`/healthcare/payment/${appointment.id}`)}
+                          style={{
+                            background: '#8E44AD',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Pay Now
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

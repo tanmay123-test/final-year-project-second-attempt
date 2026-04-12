@@ -418,11 +418,12 @@
 @media (min-width: 768px) {
   .profile-page,
   .healthcare-profile {
-    margin-left: 0 !important;
-    max-width: 900px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
     padding: 32px;
     padding-bottom: 32px;
+    box-sizing: border-box;
   }
 
   .profile-header {
@@ -468,7 +469,8 @@
 /* Large Desktop (1200px+) */
 @media (min-width: 1200px) {
   .healthcare-profile-page {
-    max-width: 1200px;
+    width: 100%;
+    max-width: none;
   }
   
   .user-info-card {

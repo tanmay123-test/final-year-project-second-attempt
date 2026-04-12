@@ -12,6 +12,12 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      // Skip auth check for worker portal
+      if (window.location.pathname.startsWith('/worker')) {
+        setLoading(false);
+        return;
+      }
+      
       const token = localStorage.getItem('token');
       
       if (token) {
@@ -82,6 +88,8 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         localStorage.setItem('token', token); 
         localStorage.setItem('workerToken', token); // For car service workers
+        localStorage.setItem('doctorToken', token); // For DoctorDashboard
+        localStorage.setItem('worker_token', token); // For WorkerDashboardPage
       }
       
       const workerData = {
@@ -111,6 +119,10 @@ export const AuthProvider = ({ children }) => {
     // Worker logout
     localStorage.removeItem('worker_id');
     localStorage.removeItem('worker_email');
+    localStorage.removeItem('workerToken');
+    localStorage.removeItem('doctorToken');
+    localStorage.removeItem('worker_token');
+    localStorage.removeItem('workerData');
     setWorker(null);
   };
 

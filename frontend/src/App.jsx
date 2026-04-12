@@ -150,6 +150,10 @@ import WorkerLoginPage from './services/healthcare/worker_portal/WorkerLoginPage
 import WorkerDashboardPage from './services/healthcare/worker_portal/WorkerDashboardPage';
 import WorkerPortalProtectedRoute from './services/healthcare/worker_portal/WorkerPortalProtectedRoute';
 import experteaseELogo from './assets/expertease-e.png';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminHealthcare from './pages/admin/AdminHealthcare';
+import AdminHousekeeping from './pages/admin/AdminHousekeeping';
+import { AdminCarService, AdminFreelance, AdminUsers } from './pages/admin/AdminPlaceholders';
 
 const ProtectedWorkerRoute = ({ children }) => {
   const [worker, setWorker] = useState(null);
@@ -166,12 +170,8 @@ const ProtectedWorkerRoute = ({ children }) => {
       token = localStorage.getItem('automobileExpertToken');
       workerData = localStorage.getItem('automobileExpertData');
     } else if (location.pathname.startsWith('/freelancer/') || location.pathname.startsWith('/doctor/') || location.pathname.startsWith('/worker/housekeeping/')) {
-      token = localStorage.getItem('token');
-      // For these types, worker data might be in worker_id or user info
-      const workerId = localStorage.getItem('worker_id');
-      if (token && workerId) {
-        workerData = JSON.stringify({ id: workerId, email: localStorage.getItem('worker_email') });
-      }
+      token = localStorage.getItem('workerToken');
+      workerData = localStorage.getItem('workerData');
     } else {
       token = localStorage.getItem('workerToken');
       workerData = localStorage.getItem('workerData');
@@ -257,7 +257,11 @@ const App = () => {
                        location.pathname.startsWith('/freelancer/') || 
                        location.pathname.startsWith('/doctor/');
 
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   const isFreelanceRoute = location.pathname.startsWith('/freelance');
+
+  const isHealthcareUserRoute = location.pathname.startsWith('/healthcare');
 
   useEffect(() => {
     const timer = setTimeout(() => setShowStartupSplash(false), 3200);
@@ -315,8 +319,8 @@ const App = () => {
 
   return (
     <div className="app">
-      {!isCarServiceUserRoute && !isHousekeepingRoute && !isWorkerRoute && !isFreelanceRoute && <Navbar />}
-      <div className={isCarServiceUserRoute || isHousekeepingRoute || isWorkerRoute || isFreelanceRoute ? "" : "main-content"}>
+      {!isCarServiceUserRoute && !isHousekeepingRoute && !isWorkerRoute && !isFreelanceRoute && !isAdminRoute && !isHealthcareUserRoute && <Navbar />}
+      <div className={isCarServiceUserRoute || isHousekeepingRoute || isWorkerRoute || isFreelanceRoute || isAdminRoute || isHealthcareUserRoute ? "" : "main-content"}>
         <Routes>
           <Route path="/" element={<Landing />} />
           
@@ -324,6 +328,12 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/healthcare" element={<AdminHealthcare />} />
+          <Route path="/admin/housekeeping" element={<AdminHousekeeping />} />
+          <Route path="/admin/car-service" element={<AdminCarService />} />
+          <Route path="/admin/freelance" element={<AdminFreelance />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
           
           {/* Authenticated User Layout */}
           <Route element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
@@ -406,17 +416,6 @@ const App = () => {
           <Route path="/healthcare/video-consultations" element={<ProtectedRoute><VideoConsultationsPage /></ProtectedRoute>} />
           <Route path="/healthcare/profile" element={<ProtectedRoute><HealthcareProfile /></ProtectedRoute>} />
           
-          {/* Healthcare Doctor Routes */}
-          <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
-          <Route path="/doctor/availability" element={<DoctorDashboard />} />
-          <Route path="/doctor/requests" element={<DoctorDashboard />} />
-          <Route path="/doctor/appointments" element={<DoctorDashboard />} />
-          <Route path="/doctor/profile" element={<DoctorDashboard />} />
-          
-          {/* Healthcare */}
-          <Route path="/worker/healthcare/login" element={<DoctorLogin />} />
-          <Route path="/worker/healthcare/signup" element={<WorkerSignupPage />} />
-          
           {/* Freelance */}
           <Route path="/worker/freelance/login" element={<WorkerLogin serviceType="freelance" />} />
           <Route path="/worker/freelance/signup" element={<WorkerSignup serviceType="freelance" />} />
@@ -460,6 +459,8 @@ const App = () => {
               </ProtectedWorkerRoute>
             } 
           />
+          
+          {/* Healthcare Doctor Routes */}
           <Route 
             path="/doctor/dashboard" 
             element={
@@ -713,9 +714,6 @@ const App = () => {
           <Route path="/worker/resource/signup" element={<WorkerSignup serviceType="resource" />} />
 
           {/* Healthcare Worker Portal */}
-          <Route path="/worker" element={<WorkerLandingPage />} />
-          <Route path="/worker/login" element={<WorkerLoginPage />} />
-          <Route path="/worker/signup" element={<WorkerSignupPage />} />
           <Route
             path="/worker/dashboard"
             element={
@@ -724,6 +722,11 @@ const App = () => {
               </WorkerPortalProtectedRoute>
             }
           />
+          <Route path="/worker/healthcare/login" element={<DoctorLogin />} />
+          <Route path="/worker/healthcare/signup" element={<WorkerSignupPage />} />
+          <Route path="/worker/login" element={<WorkerLoginPage />} />
+          <Route path="/worker/signup" element={<WorkerSignupPage />} />
+          <Route path="/worker" element={<WorkerLandingPage />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />

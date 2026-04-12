@@ -1,15 +1,15 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import React from 'react'
+import { Navigate } from 'react-router-dom'
 
 const WorkerPortalProtectedRoute = ({ children }) => {
-  const location = useLocation();
-  const workerToken = localStorage.getItem('worker_token');
-
-  if (!workerToken) {
-    return <Navigate to="/worker/login" state={{ from: location }} replace />;
+  const token = localStorage.getItem('workerToken')
+  console.log('WorkerPortalProtectedRoute checking token:', token)
+  if (!token) {
+    console.log('No workerToken found - redirecting to login')
+    return <Navigate to="/worker/healthcare/login" replace />
   }
-  return children;
-};
+  return children
+}
 
-export default WorkerPortalProtectedRoute;
+export default WorkerPortalProtectedRoute
 

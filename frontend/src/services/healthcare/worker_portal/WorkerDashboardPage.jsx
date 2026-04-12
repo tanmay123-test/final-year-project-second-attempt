@@ -27,15 +27,16 @@ import {
   Phone,
 } from 'lucide-react';
 import api from '../../../shared/api';
+import healthcareSocket from '../../healthcareSocket';
 import './WorkerPortal.css';
 
 const MAIN_TABS = [
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { key: 'dashboard', label: 'Home', icon: LayoutDashboard },
   { key: 'availability', label: 'Availability', icon: Calendar },
-  { key: 'consults', label: 'Consults', icon: ClipboardList },
-  { key: 'video', label: 'Video', icon: Video },
+  { key: 'consults', label: 'Consultations', icon: ClipboardList },
+  { key: 'video', label: 'Video Call', icon: Video },
   { key: 'profile', label: 'Profile', icon: User },
-  { key: 'subscription', label: 'Subscription', icon: CreditCard },
+  { key: 'subscription', label: 'Plan', icon: CreditCard },
 ];
 
 const CONSULT_SUBTABS = ['pending', 'accepted', 'video', 'history'];
@@ -111,7 +112,7 @@ const WorkerDashboardPage = () => {
     window.setTimeout(() => setToast(toastInit), 3000);
   };
 
-  const typeBadgeClass = (type) => (type === 'VIDEO' || String(type || '').toLowerCase() === 'video' ? { bg: '#F5F3FF', color: '#7C3AED' } : { bg: '#EFF6FF', color: '#2563EB' });
+  const typeBadgeClass = (type) => (type === 'VIDEO' || String(type || '').toLowerCase() === 'video' ? { bg: '#F5F3FF', color: '#8E44AD' } : { bg: '#FDF7FF', color: '#9B59B6' });
 
   const fetchDashboard = async () => {
     if (!workerId) return;
@@ -222,6 +223,36 @@ const WorkerDashboardPage = () => {
     fetchConsultations();
     fetchProfile();
     fetchSubscription();
+    
+    // Initialize Socket
+    if (workerId) {
+      healthcareSocket.connect();
+      healthcareSocket.joinRoom('worker', workerId);
+
+      const handleNewAppointment = (newAppt) => {
+        console.log('🔔 Real-time new appointment:', newAppt);
+        setRequests(prev => [newAppt, ...prev]);
+        showToast('success', `New appointment from ${newAppt.user_name}`);
+        
+        // Browser notification
+        if (Notification.permission === "granted") {
+          new Notification("New Appointment Request", {
+            body: `You have a new appointment from ${newAppt.user_name}`
+          });
+        }
+      };
+
+      healthcareSocket.on('new_appointment', handleNewAppointment);
+
+      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+
+      return () => {
+        healthcareSocket.off('new_appointment', handleNewAppointment);
+        healthcareSocket.leaveRoom('worker', workerId);
+      };
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workerId]);
 
@@ -473,7 +504,7 @@ const WorkerDashboardPage = () => {
         <div className="wp-dash-fixed-header">
           <div className="wp-dash-header-row">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Stethoscope size={18} color="#F4B400" />
+              <Stethoscope size={18} color="#FFC107" />
               <strong>Dr. Dashboard</strong>
             </div>
             <div className="wp-status-chip" onClick={() => setStatusModal(true)} style={{ color: status === 'online' ? '#16A34A' : '#94A3B8' }}>
@@ -499,10 +530,10 @@ const WorkerDashboardPage = () => {
               ) : (
                 <div className="wp-stats-grid">
                   {[
-                    { key: 'pending_requests', label: 'Pending', icon: Clock, color: '#D97706' },
-                    { key: 'today_appointments', label: 'Today', icon: Calendar, color: '#1F5F7A' },
+                    { key: 'pending_requests', label: 'Pending', icon: Clock, color: '#FFC107' },
+                    { key: 'today_appointments', label: 'Today', icon: Calendar, color: '#8E44AD' },
                     { key: 'accepted', label: 'Accepted', icon: Check, color: '#16A34A' },
-                    { key: 'total_appointments', label: 'Total', icon: Activity, color: '#1a2744' },
+                    { key: 'total_appointments', label: 'Total', icon: Activity, color: '#9B59B6' },
                   ].map((item) => {
                     const Icon = item.icon;
                     return (
@@ -537,10 +568,10 @@ const WorkerDashboardPage = () => {
                 todayAppointments.map((a, i) => {
                   const s = String(a.status || '').toLowerCase();
                   const leftIcon =
-                    s === 'pending' ? <Clock size={15} color="#D97706" /> :
+                    s === 'pending' ? <Clock size={15} color="#FFC107" /> :
                     s === 'accepted' ? <CheckCircle2 size={15} color="#16A34A" /> :
-                    s === 'in_consultation' ? <Video size={15} color="#1F5F7A" /> :
-                    <Check size={15} color="#1a2744" />;
+                    s === 'in_consultation' ? <Video size={15} color="#8E44AD" /> :
+                    <Check size={15} color="#9B59B6" />;
                   const badge = typeBadgeClass(a.appointment_type || a.type);
                   return (
                     <div key={i} className="wp-card" style={{ padding: 12, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -567,7 +598,7 @@ const WorkerDashboardPage = () => {
 
               <div className="wp-card" style={{ padding: 16, marginBottom: 12 }}>
                 <div className="wp-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <Calendar size={16} color="#1F5F7A" /> Add Time Slot
+                  <Calendar size={16} color="#8E44AD" /> Add Time Slot
                 </div>
                 <div className="wp-field">
                   <label className="wp-label">Date</label>
@@ -578,27 +609,27 @@ const WorkerDashboardPage = () => {
                   <input className="wp-input no-icon" placeholder="09:00-10:00" value={slotAdd.time_slot} onChange={(e) => setSlotAdd((p) => ({ ...p, time_slot: e.target.value }))} />
                   <div style={{ fontSize: 11, color: '#94a3b8' }}>Format: HH:MM-HH:MM</div>
                 </div>
-                <button className="wp-primary-btn" style={{ height: 44, background: '#1F5F7A' }} onClick={addSlot} disabled={slotBusy}>
+                <button className="wp-primary-btn" style={{ height: 44, background: '#8E44AD' }} onClick={addSlot} disabled={slotBusy}>
                   {slotBusy ? 'Adding...' : 'Add Slot'}
                 </button>
               </div>
 
               <div className="wp-card" style={{ padding: 16, marginBottom: 12 }}>
-                <div className="wp-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <X size={16} color="#DC2626" /> Remove Time Slot
+                  <div className="wp-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <X size={16} color="#DC2626" /> Remove Time Slot
+                  </div>
+                  <div className="wp-field">
+                    <label className="wp-label">Date</label>
+                    <input className="wp-input no-icon" type="date" value={slotRemove.date} onChange={(e) => setSlotRemove((p) => ({ ...p, date: e.target.value }))} />
+                  </div>
+                  <div className="wp-field">
+                    <label className="wp-label">Time Slot</label>
+                    <input className="wp-input no-icon" placeholder="09:00-10:00" value={slotRemove.time_slot} onChange={(e) => setSlotRemove((p) => ({ ...p, time_slot: e.target.value }))} />
+                  </div>
+                  <button className="wp-primary-btn" style={{ height: 44, background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA' }} onClick={removeSlot} disabled={slotBusy}>
+                    {slotBusy ? 'Removing...' : 'Remove Slot'}
+                  </button>
                 </div>
-                <div className="wp-field">
-                  <label className="wp-label">Date</label>
-                  <input className="wp-input no-icon" type="date" value={slotRemove.date} onChange={(e) => setSlotRemove((p) => ({ ...p, date: e.target.value }))} />
-                </div>
-                <div className="wp-field">
-                  <label className="wp-label">Time Slot</label>
-                  <input className="wp-input no-icon" placeholder="09:00-10:00" value={slotRemove.time_slot} onChange={(e) => setSlotRemove((p) => ({ ...p, time_slot: e.target.value }))} />
-                </div>
-                <button className="wp-primary-btn" style={{ height: 44, background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA' }} onClick={removeSlot} disabled={slotBusy}>
-                  {slotBusy ? 'Removing...' : 'Remove Slot'}
-                </button>
-              </div>
 
               <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Your Available Slots</div>
               {availabilityLoading ? (
@@ -611,10 +642,10 @@ const WorkerDashboardPage = () => {
               ) : (
                 Object.entries(availability).map(([date, slots]) => (
                   <div key={date} className="wp-card" style={{ padding: 12, marginBottom: 10 }}>
-                    <div style={{ fontWeight: 700, color: '#1F5F7A', background: '#F0F9FF', borderRadius: 8, padding: '8px 10px', marginBottom: 10 }}>{date}</div>
+                    <div style={{ fontWeight: 700, color: '#8E44AD', background: '#F5F3FF', borderRadius: 8, padding: '8px 10px', marginBottom: 10 }}>{date}</div>
                     <div>
                       {slots.map((slot, i) => (
-                        <span key={i} style={{ display: 'inline-block', margin: '4px', background: '#EFF6FF', color: '#2563EB', borderRadius: 20, padding: '6px 14px', fontSize: 13 }}>
+                        <span key={i} style={{ display: 'inline-block', margin: '4px', background: '#FDF7FF', color: '#8E44AD', borderRadius: 20, padding: '6px 14px', fontSize: 13, border: '1px solid #eee1ff' }}>
                           {slot}
                         </span>
                       ))}
@@ -690,13 +721,13 @@ const WorkerDashboardPage = () => {
                           <div style={{ fontWeight: 700, color: '#0f172a', marginTop: 4 }}>{a.patient_name || 'Patient'}</div>
                           <div style={{ fontSize: 13, color: '#64748b' }}>📅 {a.booking_date || '-'}  🕐 {a.time_slot || '-'}</div>
                           {isVideo ? (
-                            <button className="wp-primary-btn" style={{ marginTop: 10, height: 44, background: '#7C3AED' }} onClick={() => joinCall(a.appointment_id || a.id)}>
+                            <button className="wp-primary-btn" style={{ marginTop: 10, height: 44, background: '#9B59B6' }} onClick={() => joinCall(a.appointment_id || a.id)}>
                               Join Video Consultation
                             </button>
                           ) : null}
                           <button
                             className="wp-primary-btn"
-                            style={{ marginTop: 8, height: 40, background: '#F5F6FA', border: '1px solid #E2E8F0', color: '#1a2744' }}
+                            style={{ marginTop: 8, height: 40, background: '#FDF7FF', border: '1px solid #eee1ff', color: '#8E44AD' }}
                             onClick={() => openMessageModal(a.appointment_id || a.id, a.patient_name || 'Patient')}
                           >
                             Message Patient
@@ -717,11 +748,11 @@ const WorkerDashboardPage = () => {
                       <div key={i} className="wp-card" style={{ padding: 16, marginBottom: 10 }}>
                         <div style={{ color: '#94a3b8', fontSize: 11 }}>Consult #{a.appointment_id || a.id}</div>
                         <div style={{ fontWeight: 700, color: '#0f172a', marginTop: 4 }}>{a.patient_name || 'Patient'}</div>
-                        <span style={{ display: 'inline-block', marginTop: 6, borderRadius: 12, padding: '4px 8px', fontSize: 11, background: a.status === 'accepted' ? '#DCFCE7' : a.status === 'in_consultation' ? '#E0F2FE' : '#F1F5F9', color: a.status === 'accepted' ? '#16A34A' : a.status === 'in_consultation' ? '#1F5F7A' : '#64748B' }}>
+                        <span style={{ display: 'inline-block', marginTop: 6, borderRadius: 12, padding: '4px 8px', fontSize: 11, background: a.status === 'accepted' ? '#DCFCE7' : a.status === 'in_consultation' ? '#F5F3FF' : '#F1F5F9', color: a.status === 'accepted' ? '#16A34A' : a.status === 'in_consultation' ? '#8E44AD' : '#64748B' }}>
                           {a.status === 'in_consultation' ? 'In Progress' : (a.status || 'accepted')}
                         </span>
                         {String(a.status || '').toLowerCase() === 'accepted' ? (
-                          <button className="wp-primary-btn" style={{ marginTop: 10, height: 44, background: '#7C3AED' }} onClick={() => joinCall(a.appointment_id || a.id)}>
+                          <button className="wp-primary-btn" style={{ marginTop: 10, height: 44, background: '#9B59B6' }} onClick={() => joinCall(a.appointment_id || a.id)}>
                             Join Video Call
                           </button>
                         ) : null}
@@ -766,7 +797,7 @@ const WorkerDashboardPage = () => {
 
               <div className="wp-card" style={{ padding: 16, marginBottom: 10 }}>
                 <div className="wp-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Video size={16} color="#1F5F7A" /> Start Video Call
+                  <Video size={16} color="#8E44AD" /> Start Video Call
                 </div>
                 <div style={{ color: '#64748b', fontSize: 13, marginBottom: 10 }}>Enter OTP to begin consultation</div>
                 <div className="wp-field">
@@ -777,7 +808,7 @@ const WorkerDashboardPage = () => {
                   <label className="wp-label">OTP</label>
                   <input className="wp-input no-icon" type="number" placeholder="6-digit OTP" value={videoStart.otp} onChange={(e) => setVideoStart((p) => ({ ...p, otp: e.target.value }))} />
                 </div>
-                <button className="wp-primary-btn" style={{ background: '#1F5F7A', height: 44 }} onClick={startVideoWithOtp} disabled={videoBusy}>
+                <button className="wp-primary-btn" style={{ background: '#8E44AD', height: 44 }} onClick={startVideoWithOtp} disabled={videoBusy}>
                   {videoBusy ? 'Starting...' : 'Start Consultation'}
                 </button>
               </div>
@@ -798,14 +829,14 @@ const WorkerDashboardPage = () => {
 
               <div className="wp-card" style={{ padding: 16 }}>
                 <div className="wp-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <ExternalLink size={16} color="#7C3AED" /> Join Active Call
+                  <ExternalLink size={16} color="#9B59B6" /> Join Active Call
                 </div>
                 <div style={{ color: '#64748b', fontSize: 13, marginBottom: 10 }}>Open video call in browser</div>
                 <div className="wp-field">
                   <label className="wp-label">Appointment ID</label>
                   <input className="wp-input no-icon" type="number" value={videoJoin.appointment_id} onChange={(e) => setVideoJoin({ appointment_id: e.target.value })} />
                 </div>
-                <button className="wp-primary-btn" style={{ background: '#7C3AED', height: 44 }} onClick={() => joinCall(videoJoin.appointment_id)}>
+                <button className="wp-primary-btn" style={{ background: '#9B59B6', height: 44 }} onClick={() => joinCall(videoJoin.appointment_id)}>
                   Join Call
                 </button>
               </div>
@@ -819,15 +850,15 @@ const WorkerDashboardPage = () => {
                 <div className="wp-card wp-skeleton" style={{ height: 180 }} />
               ) : (
                 <>
-                  <div className="wp-card" style={{ background: '#1a2744', color: 'white', padding: 20, marginBottom: 12 }}>
-                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#7C3AED', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div className="wp-card" style={{ background: '#8E44AD', color: 'white', padding: 20, marginBottom: 12 }}>
+                    <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#9B59B6', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <User size={32} />
                     </div>
                     <div style={{ textAlign: 'center', marginTop: 12, fontSize: 18, fontWeight: 700 }}>{profile?.full_name || profile?.name || 'Doctor'}</div>
-                    <div style={{ textAlign: 'center', marginTop: 4, color: '#F4B400', fontSize: 14 }}>{profile?.specialization || specialization}</div>
+                    <div style={{ textAlign: 'center', marginTop: 4, color: '#FFC107', fontSize: 14 }}>{profile?.specialization || specialization}</div>
                     <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 16, fontSize: 13 }}>
                       <span>⭐ {profile?.rating || '4.8'}</span>
-                      <span style={{ color: '#16A34A' }}>✓ Approved</span>
+                      <span style={{ color: '#DCFCE7' }}>✓ Approved</span>
                       <span>{profile?.experience || 0} yrs exp</span>
                     </div>
                   </div>
@@ -845,7 +876,7 @@ const WorkerDashboardPage = () => {
                       return (
                         <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: idx < arr.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#64748b', fontSize: 13 }}>
-                            <Icon size={16} color="#94a3b8" />
+                            <Icon size={16} color="#9B59B6" />
                             {row.label}
                           </div>
                           <div style={{ color: '#0f172a', fontWeight: 700, fontSize: 13 }}>{row.value}</div>
@@ -855,7 +886,7 @@ const WorkerDashboardPage = () => {
                   </div>
 
                   <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <button className="wp-primary-btn" style={{ background: '#F5F6FA', border: '1px solid #E2E8F0', color: '#1a2744', height: 44 }} onClick={() => setTab('subscription')}>
+                    <button className="wp-primary-btn" style={{ background: '#F8F7FF', border: '1px solid #eee1ff', color: '#8E44AD', height: 44 }} onClick={() => setTab('subscription')}>
                       View Subscription
                     </button>
                     <button className="wp-primary-btn" style={{ background: '#FEE2E2', border: '1px solid #FECACA', color: '#DC2626', height: 44 }} onClick={doLogout}>
@@ -876,7 +907,7 @@ const WorkerDashboardPage = () => {
                 <div className="wp-card wp-skeleton" style={{ height: 140 }} />
               ) : (
                 <>
-                  <div className="wp-card" style={{ background: '#1F5F7A', color: 'white', padding: 16, marginBottom: 12 }}>
+                  <div className="wp-card" style={{ background: '#8E44AD', color: 'white', padding: 16, marginBottom: 12 }}>
                     <div style={{ fontSize: 12 }}>Current Plan</div>
                     <div style={{ fontSize: 20, fontWeight: 800 }}>{subscriptionCurrent?.plan_name || 'Free'}</div>
                     <div style={{ marginTop: 12, fontSize: 12 }}>📅 Expires: {subscriptionCurrent?.end_date || '-'}</div>
@@ -893,7 +924,7 @@ const WorkerDashboardPage = () => {
                             style={{
                               height: 6,
                               width: `${Math.min(100, (((subscriptionCurrent?.today_usage || 0) / Math.max(1, subscriptionCurrent?.daily_limit || 1)) * 100))}%`,
-                              background: '#F4B400',
+                              background: '#FFC107',
                               borderRadius: 999,
                             }}
                           />
@@ -914,13 +945,13 @@ const WorkerDashboardPage = () => {
                       price === 0
                         ? { bg: '#DCFCE7', color: '#16A34A', text: 'Free' }
                         : price <= 29.99
-                          ? { bg: '#EFF6FF', color: '#2563EB', text: `₹${price}/mo` }
+                          ? { bg: '#FDF7FF', color: '#8E44AD', text: `₹${price}/mo` }
                           : price <= 59.99
                             ? { bg: '#FEF3C7', color: '#D97706', text: `₹${price}/mo` }
-                            : { bg: '#F5F3FF', color: '#7C3AED', text: `₹${price}/mo` };
+                            : { bg: '#F5F3FF', color: '#9B59B6', text: `₹${price}/mo` };
 
                     return (
-                      <div key={planId} className="wp-card" style={{ padding: 16, marginBottom: 10, border: isCurrent ? '2px solid #1F5F7A' : '2px solid transparent' }}>
+                      <div key={planId} className="wp-card" style={{ padding: 16, marginBottom: 10, border: isCurrent ? '2px solid #8E44AD' : '2px solid transparent' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 16 }}>{plan.plan_name}</div>
                           <span style={{ borderRadius: 12, padding: '4px 8px', background: badge.bg, color: badge.color, fontSize: 12 }}>
@@ -937,7 +968,7 @@ const WorkerDashboardPage = () => {
                         </div>
                         <button
                           className="wp-primary-btn"
-                          style={{ marginTop: 8, height: 40, background: isCurrent ? '#F1F5F9' : '#1a2744', color: isCurrent ? '#64748B' : '#fff' }}
+                          style={{ marginTop: 8, height: 40, background: isCurrent ? '#F1F5F9' : '#8E44AD', color: isCurrent ? '#64748B' : '#fff' }}
                           disabled={isCurrent || subBusy}
                           onClick={() => subscribePlan(plan)}
                         >
@@ -1058,7 +1089,7 @@ const WorkerDashboardPage = () => {
               <button
                 onClick={sendMessage}
                 disabled={msgSending}
-                style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: '#1F5F7A', color: '#fff' }}
+                style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', background: '#8E44AD', color: '#fff' }}
               >
                 <SendHorizontal size={16} />
               </button>
@@ -1073,7 +1104,7 @@ const WorkerDashboardPage = () => {
           <div className="wp-sheet" style={{ padding: 16 }}>
             <div style={{ color: '#16A34A', fontWeight: 700, marginBottom: 8 }}>Appointment Accepted!</div>
             <div style={{ fontSize: 13, color: '#64748b' }}>Your OTP:</div>
-            <div style={{ marginTop: 6, letterSpacing: 4, fontWeight: 800, color: '#1F5F7A', background: '#EFF6FF', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+            <div style={{ marginTop: 6, letterSpacing: 4, fontWeight: 800, color: '#8E44AD', background: '#F5F3FF', borderRadius: 12, padding: 16, textAlign: 'center', border: '1px solid #eee1ff' }}>
               {otpModal.doctor_otp}
             </div>
             {otpModal.join_url ? (

@@ -136,6 +136,8 @@
   min-height: 100vh;
   overflow-y: auto;
   background: #f8f8f8;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* Desktop: sidebar visible, bottom nav hidden */

@@ -1,15 +1,41 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../shared/api';
+import healthcareSocket from '../services/healthcareSocket';
 
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all'); // 'all' | 'active' | 'completed' | 'cancelled'
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchAllBookings();
-  }, []);
+    
+    // Initialize Healthcare Socket for real-time updates
+    if (user?.user_id) {
+      healthcareSocket.connect();
+      healthcareSocket.joinRoom('user', user.user_id);
+
+      const handleUpdate = (data) => {
+        console.log('🔄 Real-time booking update:', data);
+        fetchAllBookings(); // Refresh all
+        
+        if (Notification.permission === "granted") {
+          new Notification("Booking Update", {
+            body: `Your booking status has been updated to ${data.status}`
+          });
+        }
+      };
+
+      healthcareSocket.on('appointment_update', handleUpdate);
+
+      return () => {
+        healthcareSocket.off('appointment_update', handleUpdate);
+        healthcareSocket.leaveRoom('user', user.user_id);
+      };
+    }
+  }, [user]);
 
   const fetchAllBookings = async () => {
     try {

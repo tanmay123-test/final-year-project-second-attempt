@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { appointmentService } from '../shared/api';
+import healthcareSocket from '../services/healthcareSocket';
 
 const WorkerDashboard = () => {
   const { worker } = useAuth();
@@ -10,6 +11,35 @@ const WorkerDashboard = () => {
   useEffect(() => {
     if (worker?.worker_id) {
       fetchAppointments();
+      
+      // Initialize Socket
+      healthcareSocket.connect();
+      healthcareSocket.joinRoom('worker', worker.worker_id);
+
+      // Listen for new appointments
+      const handleNewAppointment = (newAppt) => {
+        console.log('🔔 Real-time new appointment:', newAppt);
+        setAppointments(prev => [newAppt, ...prev]);
+        
+        // Optional: Show browser notification
+        if (Notification.permission === "granted") {
+          new Notification("New Appointment Request", {
+            body: `You have a new appointment from ${newAppt.user_name}`
+          });
+        }
+      };
+
+      healthcareSocket.on('new_appointment', handleNewAppointment);
+
+      // Request notification permission
+      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+
+      return () => {
+        healthcareSocket.off('new_appointment', handleNewAppointment);
+        healthcareSocket.leaveRoom('worker', worker.worker_id);
+      };
     }
   }, [worker]);
 

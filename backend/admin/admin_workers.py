@@ -215,9 +215,10 @@ def reject_worker(worker_id):
         if worker.get('status') != 'pending':
             return jsonify({"error": "Worker is not in pending status"}), 400
         
-        worker_db.reject_worker(worker_id)
-        
+        # Reject the worker
         rejection_reason = data.get('rejection_reason')
+        worker_db.reject_worker(worker_id, rejection_reason)
+        
         print(f"Worker {worker_id} rejected. Reason: {rejection_reason}")
         
         return jsonify({

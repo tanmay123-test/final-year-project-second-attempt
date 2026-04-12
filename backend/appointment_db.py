@@ -246,6 +246,72 @@ class AppointmentDB:
             cursor.close()
             conn.close()
 
+    def get_history(self, worker_id):
+        conn = self.get_conn()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            cursor.execute("""
+                SELECT id, user_name, booking_date, time_slot, appointment_type, created_at
+                FROM appointments
+                WHERE worker_id=%s AND status='completed'
+                ORDER BY created_at DESC
+            """, (worker_id,))
+            rows = cursor.fetchall()
+            return [dict(r) for r in rows]
+        except Exception as e:
+            print(f"DB Error: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+
+    def get_dashboard_stats(self, worker_id):
+        conn = self.get_conn()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        try:
+            # Get pending requests
+            cursor.execute("SELECT COUNT(*) FROM appointments WHERE worker_id=%s AND status='pending'", (worker_id,))
+            pending_count = cursor.fetchone()['count']
+            
+            # Get today's appointments
+            today = datetime.now().strftime('%Y-%m-%d')
+            cursor.execute("""
+                SELECT COUNT(*) FROM appointments 
+                WHERE worker_id=%s AND booking_date=%s
+            """, (worker_id, today))
+            today_count = cursor.fetchone()['count']
+            
+            # Get accepted appointments
+            cursor.execute("SELECT COUNT(*) FROM appointments WHERE worker_id=%s AND status='accepted'", (worker_id,))
+            accepted_count = cursor.fetchone()['count']
+            
+            # Get total appointments
+            cursor.execute("SELECT COUNT(*) FROM appointments WHERE worker_id=%s", (worker_id,))
+            total_count = cursor.fetchone()['count']
+            
+            # Get today's appointment list
+            cursor.execute("""
+                SELECT id, user_name, booking_date, patient_symptoms, status
+                FROM appointments 
+                WHERE worker_id=%s AND booking_date=%s
+                ORDER BY created_at ASC
+            """, (worker_id, today))
+            today_appointments = [dict(r) for r in cursor.fetchall()]
+            
+            return {
+                "pending_requests": pending_count,
+                "today_appointments": today_count,
+                "accepted_appointments": accepted_count,
+                "total_appointments": total_count,
+                "today_appointments_list": today_appointments
+            }
+        except Exception as e:
+            print(f"DB Error: {e}")
+            return {}
+        finally:
+            cursor.close()
+            conn.close()
+
     # =========================================================
     # GET APPOINTMENTS BY USER
     # =========================================================
@@ -312,12 +378,34 @@ class AppointmentDB:
             cursor.close()
             conn.close()
 
-    # =========================================================
-    # SAVE MEETING LINK + OTP (WHEN DOCTOR ACCEPTS)
-    # =========================================================
+    def set_payment_pending(self, appointment_id, payment_amount=None):
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        try:
+            if payment_amount is not None:
+                cursor.execute("""
+                    UPDATE appointments 
+                    SET status='payment_pending', payment_status='pending', payment_amount=%s
+                    WHERE id=%s
+                """, (payment_amount, appointment_id))
+            else:
+                cursor.execute("""
+                    UPDATE appointments 
+                    SET status='payment_pending', payment_status='pending'
+                    WHERE id=%s
+                """, (appointment_id,))
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
     def set_video_details(self, appointment_id):
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn = self.get_conn()
         cursor = conn.cursor()
         try:
             # Get current video room
@@ -335,17 +423,33 @@ class AppointmentDB:
             """, (meeting_link, otp, appointment_id))
 
             conn.commit()
-            
-            print(f"  Setting video details for appointment {appointment_id}")
-            print(f"  Meeting Link: {meeting_link}")
-            print(f"  Generated OTP: {otp}")
-            print(f"  Video Room: {video_room}")
-            
             return meeting_link, otp, video_room
         except Exception as e:
             conn.rollback()
             print(f"DB Error: {e}")
             raise
+        finally:
+            cursor.close()
+            conn.close()
+
+    # =========================================================
+    # VERIFY OTP
+    # =========================================================
+    def verify_otp(self, appointment_id, otp):
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT doctor_otp FROM appointments WHERE id=%s", (appointment_id,))
+            result = cursor.fetchone()
+            if result and result[0] == str(otp):
+                cursor.execute("UPDATE appointments SET otp_verified=TRUE WHERE id=%s", (appointment_id,))
+                conn.commit()
+                return True
+            return False
+        except Exception as e:
+            conn.rollback()
+            print(f"DB Error: {e}")
+            return False
         finally:
             cursor.close()
             conn.close()

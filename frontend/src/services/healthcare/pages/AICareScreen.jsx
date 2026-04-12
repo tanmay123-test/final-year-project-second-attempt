@@ -308,10 +308,10 @@ Based on your symptoms, this may require immediate medical attention.
 
   return (
     <HealthcareSidebarLayout>
-      <div className="page-inner-content">
-        <div className="ai-care-page">
-          <div className="ai-care-header">
-            <div className="ai-header-icon">🤖</div>
+      <div className="page-inner-content" style={{ width: '100%', boxSizing: 'border-box' }}>
+        <div className="ai-care-page" style={{ maxWidth: 'none', margin: 0 }}>
+          <div className="ai-care-header" style={{ borderBottom: '1px solid #eee1ff' }}>
+            <div className="ai-header-icon" style={{ background: '#8E44AD' }}>🤖</div>
             <div className="ai-header-content">
               <div className="ai-header-title">AI Health Assistant</div>
               <div className="ai-header-subtitle">Powered by AI • Not a diagnosis</div>

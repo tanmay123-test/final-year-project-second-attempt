@@ -1,0 +1,64 @@
+/* Desktop */
+.signup-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F3F4F6;
+  padding: 20px;
+}
+
+.signup-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .signup-wrapper {
+    align-items: flex-start;
+    padding: 0;
+  }
+  .signup-card {
+    border-radius: 0;
+    min-height: 100vh;
+    padding: 24px 20px;
+    box-shadow: none;
+  }
+}
+
+/* Ensure worker portal signup is responsive */
+.wp-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F3F4F6;
+  padding: 20px;
+}
+
+.wp-form-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+@media (max-width: 768px) {
+  .wp-page {
+    align-items: flex-start;
+    padding: 0;
+  }
+  .wp-form-card {
+    border-radius: 0;
+    min-height: 100vh;
+    padding: 24px 20px;
+    box-shadow: none;
+  }
+}

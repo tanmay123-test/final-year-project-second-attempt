@@ -116,9 +116,9 @@ const HealthcareProfile = () => {
 
   return (
     <HealthcareSidebarLayout>
-      <div className="profile-page">
-        <div className="profile-header">
-          <h1 className="profile-header-title">My Profile</h1>
+      <div className="profile-page" style={{ width: '100%', maxWidth: 'none', margin: 0, padding: '24px', boxSizing: 'border-box' }}>
+        <div className="profile-header" style={{ background: 'linear-gradient(135deg, #8E44AD 0%, #9B59B6 100%)', borderRadius: '24px', padding: '32px', color: 'white', boxShadow: '0 8px 32px rgba(142, 68, 173, 0.15)', marginBottom: '32px' }}>
+          <h1 className="profile-header-title" style={{ color: 'white', margin: 0 }}>My Profile</h1>
         </div>
 
         <div className="profile-desktop-grid">

@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Stethoscope, Home, Briefcase, Car, Wallet, Mail, Loader2, ChevronLeft, Lock } from 'lucide-react';
+import './WorkerLogin.css';
 
 const SERVICE_CONFIG = {
-  healthcare: { label: 'Healthcare', icon: Stethoscope, color: '#8E44AD' },
-  housekeeping: { label: 'Housekeeping', icon: Home, color: '#8E44AD' },
-  freelance: { label: 'Freelance Marketplace', icon: Briefcase, color: '#7c3aed' },
-  car: { label: 'Car Services', icon: Car, color: '#9B59B6' },
+  healthcare: { label: 'Healthcare', icon: Stethoscope, color: '#7C3AED' },
+  housekeeping: { label: 'Housekeeping', icon: Home, color: '#7C3AED' },
+  freelance: { label: 'Freelance Marketplace', icon: Briefcase, color: '#7C3AED' },
+  car: { label: 'Car Services', icon: Car, color: '#7C3AED' },
   money: { label: 'Money Management', icon: Wallet, color: '#2ECC71' }
 };
 
@@ -15,7 +16,7 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
   const config = SERVICE_CONFIG[serviceType] || SERVICE_CONFIG.healthcare;
   const ServiceIcon = config.icon;
 
-  const isPurple = config.color === '#8E44AD';
+  const isPurple = config.color === '#7C3AED';
   const bgStyle = { background: isPurple ? 'var(--medical-gradient)' : config.color };
 
   const [email, setEmail] = useState('');
@@ -25,31 +26,59 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
   const { workerLogin } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
     try {
-      await workerLogin(email, password, serviceType);
+      // Use different login endpoints based on service type
+      let loginUrl = 'http://localhost:5000/worker/login'
+      if (serviceType === 'healthcare') {
+        loginUrl = 'http://localhost:5000/worker/healthcare/login'
+      }
+      
+      const response = await fetch(loginUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      })
+      const data = await response.json()
+      console.log('Login response:', data)
+      console.log('Token received:', data.token)
+      
+      // Redirect to correct dashboard based on service type
+      let dashboardPath = '/worker/dashboard'
       if (serviceType === 'housekeeping') {
-        navigate('/worker/housekeeping/dashboard');
+        dashboardPath = '/worker/housekeeping/dashboard'
       } else if (serviceType === 'healthcare') {
-        navigate('/doctor/dashboard');
+        dashboardPath = '/worker/dashboard'
       } else if (serviceType === 'freelance') {
-        navigate('/freelancer/dashboard');
+        dashboardPath = '/freelancer/dashboard'
       } else if (serviceType === 'car') {
-        // For car service, redirect to service selection so they can choose their specific dashboard
-        // unless we have specific data in the response
-        navigate('/worker/car/services');
+        dashboardPath = '/worker/car/dashboard'
+      } else if (serviceType === 'money') {
+        dashboardPath = '/worker/money/dashboard'
+      }
+      
+      console.log('Navigating to:', dashboardPath)
+      
+      if (data.token) {
+        localStorage.setItem('workerToken', data.token)
+        console.log('Token stored:', localStorage.getItem('workerToken'))
+        localStorage.setItem('workerData', JSON.stringify(data.worker || {}))
+        navigate(dashboardPath)
       } else {
-        navigate('/worker/dashboard');
+        setError(data.error || 'Invalid email or password')
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to login. Please check your email/password or approval status.');
+      setError('Cannot connect to server. Make sure backend is running.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const isHealthcare = serviceType === 'healthcare';
 
@@ -86,7 +115,7 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
 
         {error && <div className="error-message">{error}</div>}
         
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleLogin} className="auth-form">
           <div className="input-group">
             <label htmlFor="email">{isHealthcare ? 'Email Address' : 'Registered Email'}</label>
             <div className="input-wrapper">
@@ -137,9 +166,18 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
         <div className="auth-footer">
           <p>
             {isHealthcare ? 'Not registered as a doctor? ' : 'New to ExpertEase? '}
-            <Link to={`/worker/${serviceType}/signup`} className="auth-link" style={{ color: config.color }}>
-              {isHealthcare ? 'Apply here' : 'Join as a Provider'}
-            </Link>
+            {isHealthcare ? (
+              <span
+                onClick={() => navigate('/worker/healthcare/signup')}
+                style={{color:'#7C3AED', fontWeight:'600', cursor:'pointer'}}
+              >
+                Apply here
+              </span>
+            ) : (
+              <Link to={`/worker/${serviceType}/signup`} className="auth-link" style={{ color: config.color }}>
+                Join as a Provider
+              </Link>
+            )}
           </p>
         </div>
       </div>

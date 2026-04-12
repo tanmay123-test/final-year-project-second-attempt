@@ -119,9 +119,9 @@
 /* Welcome Card */
 .welcome-card {
   background: #f3eeff;
-  border-radius: 16px;
+  border-radius: 0;
   padding: 16px;
-  margin: 16px;
+  margin: 0;
 }
 
 .welcome-card-title {
@@ -469,20 +469,22 @@
 
 @media (min-width: 1200px) {
   .ai-care-content {
-    max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
   }
 }
 
-/* Desktop fixes: constrain layout + unfix input bar */
 @media (min-width: 768px) {
   .ai-care-page {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    max-width: 800px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
+    margin: 0;
     padding-bottom: 0;
+    box-sizing: border-box;
   }
 
   .ai-care-header {

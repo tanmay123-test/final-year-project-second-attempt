@@ -11,9 +11,11 @@ class UserDB:
         # Initial table creation
         self.create_table()
 
+    def get_conn(self):
+        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+
     def create_table(self):
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn = self.get_conn()
         cursor = conn.cursor()
         try:
             cursor.execute("""
@@ -36,8 +38,7 @@ class UserDB:
             conn.close()
 
     def user_exists(self, username, email):
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn = self.get_conn()
         cursor = conn.cursor()
         try:
             cursor.execute(
@@ -54,8 +55,7 @@ class UserDB:
             conn.close()
 
     def create_user(self, name, username, password, email):
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn = self.get_conn()
         cursor = conn.cursor()
         try:
             hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
@@ -75,8 +75,7 @@ class UserDB:
             conn.close()
 
     def mark_verified(self, email):
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn = self.get_conn()
         cursor = conn.cursor()
         try:
             cursor.execute(
@@ -93,21 +92,15 @@ class UserDB:
             conn.close()
 
     def verify_user(self, username, password):
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn = self.get_conn()
         cursor = conn.cursor()
         try:
-            cursor.execute("""
-            SELECT password, is_verified FROM users WHERE username=%s
-            """, (username,))
+            cursor.execute("SELECT password, is_verified FROM users WHERE username=%s", (username,))
             row = cursor.fetchone()
-
             if not row:
                 return False, "User not found"
-
+            
             hashed_pw, is_verified = row
-
-            # Convert memoryview/bytes from BYTEA if necessary, bcrypt handles bytes
             if isinstance(hashed_pw, memoryview):
                 hashed_pw = hashed_pw.tobytes()
 
@@ -126,18 +119,12 @@ class UserDB:
             conn.close()
 
     def get_user_by_email(self, email):
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn = self.get_conn()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
-            cursor.execute(
-                "SELECT id, email, is_verified FROM users WHERE email=%s",
-                (email,)
-            )
+            cursor.execute("SELECT id, email, is_verified FROM users WHERE email=%s", (email,))
             row = cursor.fetchone()
-            if not row:
-                return None
-            return dict(row)
+            return dict(row) if row else None
         except Exception as e:
             print(f"DB Error: {e}")
             return None
@@ -145,20 +132,26 @@ class UserDB:
             cursor.close()
             conn.close()
 
-    def get_user_by_username(self, username):
-        """Get user ID by username for JWT authentication"""
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+    def get_user_count(self):
+        conn = self.get_conn()
         cursor = conn.cursor()
         try:
-            cursor.execute(
-                "SELECT id FROM users WHERE username=%s",
-                (username,)
-            )
+            cursor.execute("SELECT COUNT(*) FROM users")
+            return cursor.fetchone()[0]
+        except Exception as e:
+            print(f"DB Error: {e}")
+            return 0
+        finally:
+            cursor.close()
+            conn.close()
+
+    def get_user_by_username(self, username):
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
             row = cursor.fetchone()
-            if not row:
-                return None
-            return row[0]
+            return row[0] if row else None
         except Exception as e:
             print(f"DB Error: {e}")
             return None
@@ -167,18 +160,12 @@ class UserDB:
             conn.close()
 
     def get_user_by_id(self, user_id):
-        load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn = self.get_conn()
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         try:
-            cursor.execute(
-                "SELECT id, name, username, email, is_verified FROM users WHERE id=%s",
-                (user_id,)
-            )
+            cursor.execute("SELECT id, name, username, email, is_verified FROM users WHERE id=%s", (user_id,))
             row = cursor.fetchone()
-            if not row:
-                return None
-            return dict(row)
+            return dict(row) if row else None
         except Exception as e:
             print(f"DB Error: {e}")
             return None

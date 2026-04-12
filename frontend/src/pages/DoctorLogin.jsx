@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Stethoscope, Loader2, ChevronLeft, Mail } from 'lucide-react';
+import { Stethoscope, Loader2, ChevronLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 const DoctorLogin = () => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { workerLogin } = useAuth();
@@ -15,10 +17,10 @@ const DoctorLogin = () => {
     setError('');
     setLoading(true);
     try {
-      await workerLogin(email);
-      navigate('/doctor/dashboard');
+      await workerLogin(email, password, 'healthcare');
+      navigate('/worker/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to login. Please check your email.');
+      setError(err.response?.data?.error || 'Failed to login. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -68,6 +70,29 @@ const DoctorLogin = () => {
                 required
                 placeholder="doctor@example.com"
               />
+            </div>
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <div className="input-wrapper">
+              <Lock className="input-icon" size={20} />
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
           </div>
           
