@@ -2,10 +2,12 @@ import sqlite3
 from datetime import datetime, timedelta
 from services.housekeeping.models.database import housekeeping_db
 from notification_service import notify_user
+from ai.gemini_client import GeminiClient
 
 class AIAdvisorService:
     def __init__(self):
         self.db = housekeeping_db
+        self.gemini_client = GeminiClient()
         self._ensure_schema()
 
     def _ensure_schema(self):
@@ -279,113 +281,62 @@ ExpertEase Housekeeping Team
         
         return {"show_upgrade": False, "message": ""}
 
-    def chat_with_ai(self, user_id, message):
-        """
-        AI Chat functionality for housekeeping assistance
-        Returns intelligent responses to user queries
-        """
-        import re
-        from datetime import datetime, timedelta
-        
-        # Convert message to lowercase for easier matching
-        msg_lower = message.lower().strip()
-        
-        # Get user context for personalized responses
+    def chat_with_ai(self, user_id: str, message: str):
         try:
-            user_context = self.get_cleaning_status(user_id)
-            user_reminders = self.get_user_reminders(user_id)
-        except:
-            user_context = None
-            user_reminders = []
-        
-        # Smart response patterns
-        responses = {
-            # Greetings
-            r'hello|hi|hey|good morning|good evening': {
-                'text': "Hello! I'm your ExpertEase Housekeeping Assistant! 🧹 I can help you with:\n\n• Booking cleaning services\n• Setting cleaning reminders\n• Checking your hygiene score\n• Getting cleaning tips\n• Price estimates\n\nHow can I assist you today?",
-                'quick_replies': ['Book Cleaning', 'Check Hygiene Score', 'Set Reminder', 'Get Price Quote']
-            },
-            
-            # Cleaning frequency advice
-            r'how often|frequency|when should|regular cleaning': {
-                'text': "Here's a recommended cleaning schedule:\n\n🏠 **General Cleaning**: Every 15 days\n🍳 **Kitchen**: Weekly\n🚿 **Bathroom**: Weekly\n🛋️ **Deep Cleaning**: Every 2-3 months\n\nBased on your hygiene score, I can give personalized recommendations. Would you like me to check your current cleaning status?",
-                'quick_replies': ['Check My Status', 'Book Deep Cleaning', 'Set Weekly Reminder']
-            },
-            
-            # Service types
-            r'what services|service types|cleaning types|deep cleaning|basic cleaning': {
-                'text': "We offer several cleaning services:\n\n🧹 **Basic Cleaning**\n• Dusting, sweeping, mopping\n• Kitchen & bathroom cleaning\n• ₹300-500\n\n🌟 **Deep Cleaning**\n• Everything in basic +\n• Inside cabinets, windows, fans\n• Stain removal, sanitization\n• ₹800-1200\n\n🏢 **Post-Construction**\n• Complete cleanup after renovation\n• Starting from ₹1500\n\nWhich service interests you?",
-                'quick_replies': ['Book Basic Cleaning', 'Book Deep Cleaning', 'Get Price Quote', 'Compare Services']
-            },
-            
-            # Booking related
-            r'book|schedule|appointment|available': {
-                'text': "I can help you book a cleaning service! 📅\n\nTo proceed, I'll need:\n• Preferred date and time\n• Service type (Basic/Deep)\n• Your address\n\nOr you can visit the booking section for real-time availability. Would you like me to check available slots?",
-                'quick_replies': ['Check Availability', 'Book Basic - ₹300', 'Book Deep - ₹800', 'View Calendar']
-            },
-            
-            # Pricing
-            r'price|cost|rates|how much|charge': {
-                'text': "💰 **Our Pricing:**\n\n🧹 **Basic Cleaning**: ₹300-500\n• 1-2 BHK: ₹300\n• 3 BHK: ₹400\n• 4+ BHK: ₹500\n\n🌟 **Deep Cleaning**: ₹800-1200\n• 1-2 BHK: ₹800\n• 3 BHK: ₹1000\n• 4+ BHK: ₹1200\n\n🏢 **Post-Construction**: Starting ₹1500\n\nPrices vary based on size and condition. Want a precise quote?",
-                'quick_replies': ['Get Exact Quote', 'Book Basic Cleaning', 'Book Deep Cleaning']
-            },
-            
-            # Hygiene score
-            r'hygiene score|my score|cleaning score|how clean': {
-                'text': f"Let me check your current hygiene score... 📊\n\n{user_context['recommendation'] if user_context else 'Please check your cleaning status first.'}\n\nYour score updates after each cleaning. Regular cleaning helps maintain high scores!",
-                'quick_replies': ['Book Cleaning Now', 'View My Bookings', 'Set Cleaning Reminder']
-            },
-            
-            # Reminders
-            r'remind|reminder|notify|alert': {
-                'text': "I can set up cleaning reminders for you! ⏰\n\nOptions:\n• Every 15 days (Regular)\n• Every 30 days (Monthly)\n• Every 60 days (Bi-monthly)\n• Custom date\n\nYou'll get email notifications! When would you like to be reminded?",
-                'quick_replies': ['Set 15-Day Reminder', 'Set 30-Day Reminder', 'Set Custom Date', 'View My Reminders']
-            },
-            
-            # Tips and advice
-            r'tips|advice|how to|best way|clean properly': {
-                'text': "🧼 **Expert Cleaning Tips:**\n\n🏠 **Daily**: Make bed, wipe surfaces\n📅 **Weekly**: Vacuum, mop, clean bathroom\n🗓️ **Monthly**: Deep clean kitchen, wash windows\n🌟 **Seasonal**: Professional deep cleaning\n\n💡 **Pro Tip**: Clean top to bottom, dry to wet!\n\nNeed specific tips for any area?",
-                'quick_replies': ['Kitchen Tips', 'Bathroom Tips', 'Bedroom Tips', 'Book Professional']
-            },
-            
-            # Emergency/urgent
-            r'urgent|emergency|asap|today|now': {
-                'text': "For urgent cleaning needs, I recommend:\n\n🚀 **Express Service** (Same day)\n• Available in major cities\n• Additional 20% charge\n• Call: 📞 1800-CLEAN-NOW\n\nOr check if we have same-day slots available. Should I check availability for today?",
-                "quick_replies": ["Check Today's Slots", "Call Emergency", "Book Tomorrow", "Regular Booking"]
-            },
-            
-            # Payment
-            r'payment|pay|cash|card|online': {
-                'text': "💳 **Payment Options:**\n\n• **Cash** - Pay after service\n• **Card** - Credit/Debit accepted\n• **UPI** - GPay, PhonePe, PayTM\n• **Online** - Pay during booking\n\nPayment is only confirmed after service completion. Pay directly to the service provider!",
-                'quick_replies': ['Book Now Pay Later', 'Pay Online', 'Cash on Service']
-            }
-        }
-        
-        # Check for matching patterns
-        for pattern, response in responses.items():
-            if re.search(pattern, msg_lower):
-                return {
-                    'message': response['text'],
-                    'quick_replies': response['quick_replies'],
-                    'type': 'text'
-                }
-        
-        # Context-aware responses
-        if user_context:
-            days_ago = user_context.get('days_ago', 0)
-            if days_ago > 30:
-                return {
-                    'message': f"I notice it's been {days_ago} days since your last cleaning. Your hygiene score is {user_context.get('hygiene_score', 'N/A')}/10. Would you like to book a cleaning service? I can help you find available slots! 📅",
-                    'quick_replies': ['Book Cleaning Now', 'Check Availability', 'Set Reminder', 'View My Status'],
-                    'type': 'text'
-                }
-        
-        # Default response
-        return {
-            'message': "I'm here to help with your housekeeping needs! 🧹\n\nI can assist with:\n• Booking cleaning services\n• Setting reminders\n• Checking your hygiene score\n• Getting cleaning tips\n• Price estimates\n\nWhat would you like to know?",
-            'quick_replies': ['Book Cleaning', 'Check Hygiene Score', 'Set Reminder', 'Get Price Quote'],
-            'type': 'text'
-        }
+            prompt = f"""You are a smart home assistant for a housekeeping service app. 
+The user has asked: "{message}" 
+
+Respond helpfully and specifically to exactly what they asked. 
+- If it is a recipe request, give the actual recipe with ingredients and steps. 
+- If it is a cleaning problem, give specific cleaning solution for that exact problem. 
+- If it is a home hack or tip, give practical actionable advice. 
+- If it relates to booking a service, recommend the most relevant housekeeping service. 
+
+Detect and return the mode as one of: cooking, cleaning, general, service. 
+Format your response clearly with numbered steps where applicable. 
+Use **bold** for key terms. Add a 💡 Pro tip at the end where relevant. 
+Keep response concise and practical.""" 
+
+            response_text = self.gemini_client.generate_response(prompt)
+
+            # Detect mode from message content 
+            lower = message.lower() 
+            if any(word in lower for word in ["recipe", "cook", "make", "food", "dish", "ingredients"]): 
+                mode = "cooking" 
+            elif any(word in lower for word in ["clean", "stain", "wash", "scrub", "remove", "dirt", "dust"]): 
+                mode = "cleaning" 
+            elif any(word in lower for word in ["book", "service", "dirty", "schedule", "hire"]): 
+                mode = "service" 
+            else: 
+                mode = "general" 
+
+            # Secondary fallback if Gemini is hitting rate limits (429)
+            if "too many requests" in response_text.lower() or "technical difficulties" in response_text.lower():
+                # Specialized fallback based on query content
+                if any(word in lower for word in ["coffee", "tea", "drink"]):
+                    response_text = "**Coffee Stain Removal** ☕\n\n1. Blot the stain with a **dry cloth** (don't rub!)\n2. Mix **dish soap, white vinegar, & water**\n3. Sponge the solution onto the stain\n4. Blot until the liquid is absorbed\n5. Rinse with cold water and dry\n\n💡 *Pro tip: Act fast! Fresh stains are 90% easier to remove.*"
+                elif any(word in lower for word in ["carpet", "rug"]):
+                    response_text = "**Carpet Cleaning Tip** 🧹\n\n1. Sprinkle **baking soda** over the area\n2. Let it sit for 15-20 minutes\n3. Vacuum thoroughly\n4. For stains, use a dedicated carpet cleaner\n\n💡 *Pro tip: Vacuum in multiple directions!*"
+                elif mode == "cleaning":
+                    response_text = "**General Cleaning Tips** 🧹\n\n1. Use **microfiber cloths** for dust\n2. Clean from **top to bottom**\n3. Let cleaners sit for 5-10 mins to work\n4. Open windows for ventilation\n\n💡 *Pro tip: A tidy home leads to a tidy mind!*"
+                elif mode == "cooking":
+                    response_text = "**Quick Cooking Tip** 🍳\n\n1. Prep all ingredients before starting (**Mise en place**)\n2. Keep your knives sharp for safety\n3. Season as you go, not just at the end\n4. Use a timer to avoid overcooking\n\n💡 *Pro tip: Fresh herbs make any dish better!*"
+                elif mode == "service":
+                    response_text = "**Recommended Services** 🛎\n\nBased on your home needs:\n• **Kitchen Deep Cleaning** — HIGH priority\n• **Chimney Cleaning** — MEDIUM priority\n• **Bathroom Scrub** — MEDIUM priority\n\n💡 *Tap Book Now to schedule any service!*"
+                else:
+                    response_text = "**Home Management Tip** 🏠\n\n1. Declutter one drawer a day\n2. Set a 15-minute timer for daily tidy-up\n3. Use vertical space for storage\n4. Label your storage boxes\n\n💡 *Pro tip: Less is more!*"
+
+            return { 
+                "response": response_text, 
+                "mode": mode 
+            } 
+
+        except Exception as e: 
+            print(f"Chat error: {e}")
+            return { 
+                "response": "Sorry, I couldn't process your request right now. Please try again.", 
+                "mode": "general" 
+            } 
 
     def process_due_reminders(self):
         """

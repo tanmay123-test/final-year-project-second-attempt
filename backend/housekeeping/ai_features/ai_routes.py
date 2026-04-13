@@ -1,8 +1,10 @@
 from flask import Blueprint, request, jsonify
-from housekeeping.ai_features.ai_advisor_service import get_user_recommendations, process_home_query
+from housekeeping.ai_features.ai_advisor_service import get_user_recommendations
+from services.housekeeping.arrival.backend.services.ai_advisor_service import AIAdvisorService
 
 # Create blueprint
 ai_features_bp = Blueprint('housekeeping_ai', __name__)
+ai_service = AIAdvisorService()
 
 @ai_features_bp.route('/api/ai/recommendations', methods=['GET'])
 def recommendations():
@@ -26,19 +28,18 @@ def recommendations():
 def chat():
     """
     POST /api/ai/chat
-    Accepts { "query": "...", "user_id": "..." }
+    Accepts { "message": "...", "user_id": "..." }
     Returns { "response": "...", "mode": "cooking|cleaning|service|general" }
     """
     data = request.get_json()
-    if not data or 'query' not in data:
-        return jsonify({"error": "query is required"}), 400
+    if not data or 'message' not in data:
+        return jsonify({"error": "message is required"}), 400
         
-    query = data.get('query')
-    # user_id is provided in request but not strictly needed for basic stateless chat logic yet
-    # but we can pass it if we want to personalize in the future.
+    message = data.get('message')
+    user_id = data.get('user_id')
     
     try:
-        response_data = process_home_query(query)
+        response_data = ai_service.chat_with_ai(user_id=user_id, message=message)
         return jsonify(response_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bot, Bell, Send } from 'lucide-react';
+import { ArrowLeft, Bot, Bell, Send, User, Sparkles } from 'lucide-react';
 import './AIAssistantPage.css';
 
 import api from '../../shared/api';
@@ -40,41 +40,61 @@ const AIAssistantPage = () => {
     try {
       const userId = user?.id || user?.user_id;
       const response = await api.post('/api/ai/chat', {
-        query: text,
+        message: text,
         user_id: userId
       });
 
-      const { response: aiResponse, mode } = response.data;
+      // Backend returns { message, mode, quick_replies, type }
+      const { message: aiResponse, mode } = response.data;
       
       let modeIcon = "🏠";
       if (mode === "cooking") modeIcon = "🍳";
       else if (mode === "cleaning") modeIcon = "🧹";
       else if (mode === "service") modeIcon = "🛎️";
+      else if (mode === "general") modeIcon = "🏠";
 
       const aiMessage = { 
-        text: aiResponse, 
+        text: aiResponse || "I'm here to help with your home! Try asking about cleaning tips, recipes, or booking a service.", 
         sender: 'ai', 
-        mode, 
-        modeIcon 
+        mode: mode || 'general', 
+        modeIcon,
+        quickReplies: response.data.quick_replies || []
       };
-      setMessages(prev => [...prev, aiMessage]);
-      setIsLoading(false);
+      
+      // Artificial delay to match the "Thinking..." experience shown in screenshot
+      setTimeout(() => {
+        setMessages(prev => [...prev, aiMessage]);
+        setIsLoading(false);
+      }, 800);
+
     } catch (error) {
       console.error("Chat error:", error);
-      const errorMessage = {
-        text: "Sorry, I'm having trouble connecting right now. Please try again later.",
-        sender: 'ai',
-        mode: 'error',
-        modeIcon: '❌'
-      };
-      setMessages(prev => [...prev, errorMessage]);
-      setIsLoading(false);
+      // Fallback to connection error message
+      setTimeout(() => {
+        const aiMessage = { 
+          text: "Sorry, I couldn't connect to the assistant right now. Please try again.", 
+          sender: 'ai', 
+          mode: 'general', 
+          modeIcon: "🏠" 
+        };
+        setMessages(prev => [...prev, aiMessage]);
+        setIsLoading(false);
+      }, 1000);
     }
   };
 
   const handleChipClick = (suggestion) => {
-    setQuery(suggestion);
     handleSend(suggestion);
+  };
+
+  const renderTextWithBold = (text) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index}>{part.substring(2, part.length - 2)}</strong>;
+      }
+      return part;
+    });
   };
 
   return (
@@ -128,23 +148,55 @@ const AIAssistantPage = () => {
             </div>
           </div>
         ) : (
-          <div className="messages-container">
+          <div className="messages-container active-chat">
             {messages.map((msg, idx) => (
-              <div key={idx} className={`message-wrapper ${msg.sender}`}>
+              <div key={idx} className={`message-row ${msg.sender}-row`}>
                 {msg.sender === 'ai' && (
-                  <div className="mode-tag">
-                    {msg.modeIcon} {msg.mode.charAt(0).toUpperCase() + msg.mode.slice(1)}
+                  <div className="avatar-circle ai-avatar">
+                    <Sparkles size={16} color="white" />
                   </div>
                 )}
-                <div className="message-bubble">
-                  {msg.text}
+                
+                <div className={`message-wrapper ${msg.sender}`}>
+                  {msg.sender === 'ai' && (
+                    <div className="mode-tag-pill">
+                      {msg.modeIcon} {msg.mode.charAt(0).toUpperCase() + msg.mode.slice(1)}
+                    </div>
+                  )}
+                  <div className={msg.sender === 'ai' ? "ai-card" : "user-bubble"}>
+                    {msg.sender === 'ai' ? (
+                      <div className="ai-content">
+                        {msg.text.split('\n').map((line, lIdx) => (
+                          <div key={lIdx} style={{ 
+                            marginBottom: line.trim() === '' ? '12px' : '4px',
+                            fontStyle: line.startsWith('💡') ? 'italic' : 'normal'
+                          }}>
+                            {renderTextWithBold(line)}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      msg.text
+                    )}
+                  </div>
                 </div>
+
+                {msg.sender === 'user' && (
+                  <div className="avatar-circle user-avatar">
+                    <User size={16} color="white" />
+                  </div>
+                )}
               </div>
             ))}
             {isLoading && (
-              <div className="message-wrapper ai">
-                <div className="message-bubble loading">
-                  Thinking...
+              <div className="message-row ai-row">
+                <div className="avatar-circle ai-avatar">
+                  <Sparkles size={16} color="#8E44AD" />
+                </div>
+                <div className="message-wrapper ai">
+                  <div className="ai-card loading">
+                    Thinking...
+                  </div>
                 </div>
               </div>
             )}
@@ -155,6 +207,15 @@ const AIAssistantPage = () => {
 
       {/* Input Area */}
       <div className="ai-input-container">
+        {messages.length > 0 && (
+          <div className="active-chips-container">
+            {quickSuggestions.map(s => (
+              <button key={s} className="chip mini-chip" onClick={() => handleChipClick(s)}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="pill-input-wrapper">
           <input 
             type="text" 
@@ -163,7 +224,11 @@ const AIAssistantPage = () => {
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
           />
-          <button className="send-btn" onClick={() => handleSend()}>
+          <button 
+            className={`send-btn ${!query.trim() ? 'disabled' : ''}`} 
+            onClick={() => handleSend()}
+            disabled={!query.trim()}
+          >
             <Send size={20} color="white" />
           </button>
         </div>

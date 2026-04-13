@@ -132,7 +132,7 @@ const HousekeepingNavigation = () => {
   const navItems = [
     { icon: Home, label: 'Home', path: '/housekeeping/home' },
     { icon: Search, label: 'Book', path: '/housekeeping/booking/create' },
-    { icon: Bot, label: 'AI Chat', path: '/housekeeping/ai-chat' },
+    { icon: Bot, label: 'AI Chat', path: '/housekeeping/ai-assistant' },
     { icon: Calendar, label: 'Bookings', path: '/housekeeping/bookings' },
     { icon: User, label: 'Profile', path: '/housekeeping/profile' },
   ];
