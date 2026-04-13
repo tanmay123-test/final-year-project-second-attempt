@@ -2,7 +2,7 @@
 .hc-layout {
   display: flex;
   min-height: 100vh;
-  background: #f8f8f8;
+  background: #fbf4ff;
 }
 
 /* ─── SIDEBAR ─── */
@@ -13,12 +13,12 @@
   position: fixed;
   left: 0;
   top: 0;
-  background: white;
-  border-right: 1px solid #f0f0f0;
+  background: #fbf4ff;
+  border-right: none;
   display: flex;
   flex-direction: column;
   z-index: 100;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.03);
 }
 
 .hc-sidebar-brand {
@@ -135,7 +135,7 @@
   flex: 1;
   min-height: 100vh;
   overflow-y: auto;
-  background: #f8f8f8;
+  background: white;
   padding: 0 !important;
   margin: 0 !important;
 }

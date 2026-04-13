@@ -80,5 +80,3 @@ const AdminPlaceholder = ({ title, icon }) => {
 };
 
 export const AdminCarService = () => <AdminPlaceholder title="Car Service" icon="directions_car" />;
-export const AdminFreelance = () => <AdminPlaceholder title="Freelance" icon="work" />;
-export const AdminUsers = () => <AdminPlaceholder title="Users" icon="group" />;

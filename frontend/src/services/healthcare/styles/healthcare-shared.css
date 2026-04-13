@@ -36,7 +36,7 @@
     width: 6px;
   }
   .hc-main-content::-webkit-scrollbar-track {
-    background: #f8f8f8;
+    background: transparent;
   }
   .hc-main-content::-webkit-scrollbar-thumb {
     background: #d4b8f0;

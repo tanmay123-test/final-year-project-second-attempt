@@ -153,7 +153,9 @@ import experteaseELogo from './assets/expertease-e.png';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminHealthcare from './pages/admin/AdminHealthcare';
 import AdminHousekeeping from './pages/admin/AdminHousekeeping';
-import { AdminCarService, AdminFreelance, AdminUsers } from './pages/admin/AdminPlaceholders';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminFreelance from './pages/admin/AdminFreelance';
+import { AdminCarService } from './pages/admin/AdminPlaceholders';
 
 const ProtectedWorkerRoute = ({ children }) => {
   const [worker, setWorker] = useState(null);

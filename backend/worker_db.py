@@ -30,7 +30,7 @@ class WorkerDB:
                     service TEXT,
                     specialization TEXT,
                     bio TEXT,
-                    experience_years INTEGER,
+                    experience INTEGER,
                     education TEXT,
                     license_number TEXT,
                     address TEXT,
@@ -57,7 +57,11 @@ class WorkerDB:
                     skills TEXT,
                     profile_photo_path TEXT,
                     degree_certificate_path TEXT,
-                    medical_license_path TEXT
+                    medical_license_path TEXT,
+                    aadhaar_path TEXT,
+                    police_verification_path TEXT,
+                    portfolio_path TEXT,
+                    skill_certificate_path TEXT
                 )
             """)
             conn.commit()
@@ -79,7 +83,7 @@ class WorkerDB:
     def is_valid_email(self, email):
         return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
 
-    def register_worker(self, full_name, email, phone, service, specialization, experience, clinic_location="", license_number=None, password=None, aadhaar=None, id_proof=None, skills=None, hourly_rate=None, bio=None, profile_photo_path=None, aadhaar_path=None, degree_certificate_path=None, medical_license_path=None):
+    def register_worker(self, full_name, email, phone, service, specialization, experience, clinic_location="", license_number=None, password=None, aadhaar=None, id_proof=None, skills=None, hourly_rate=None, bio=None, profile_photo_path=None, aadhaar_path=None, degree_certificate_path=None, medical_license_path=None, police_verification_path=None, portfolio_path=None, skill_certificate_path=None):
         print(f"register_worker called with: email={email}, service={service}")
         
         if not self.is_valid_email(email):
@@ -90,64 +94,53 @@ class WorkerDB:
         cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         
         try:
-            cursor.execute("SELECT id, service, specialization FROM workers WHERE email = %s", (email,))
-            existing_worker = cursor.fetchone()
-            
-            if existing_worker:
-                worker_id = existing_worker['id']
-                existing_services = existing_worker['service'] or ""
-                existing_specialization = existing_worker['specialization'] or ""
-                service_list = [s.strip() for s in existing_services.split(',') if s.strip()]
+            # For freelancers, allow different emails to register for same service
+            if service.lower() != 'freelancer':
+                cursor.execute("SELECT id, service, specialization FROM workers WHERE email = %s", (email,))
+                existing_worker = cursor.fetchone()
                 
-                if service not in service_list:
-                    service_list.append(service)
-                    new_service_str = ",".join(service_list)
+                if existing_worker:
+                    worker_id = existing_worker['id']
+                    existing_services = existing_worker['service'] or ""
+                    existing_specialization = existing_worker['specialization'] or ""
+                    service_list = [s.strip() for s in existing_services.split(',') if s.strip()]
                     
-                    update_fields = ["service = %s"]
-                    params = [new_service_str]
-                    
-                    if service == 'freelance':
-                        if aadhaar: 
-                            update_fields.append("aadhaar_number = %s")
-                            params.append(aadhaar)
-                        if skills:
-                            update_fields.append("skills = %s")
-                            params.append(skills)
-                        if hourly_rate:
-                            update_fields.append("hourly_rate = %s")
-                            params.append(hourly_rate)
-                        if bio:
-                            update_fields.append("bio = %s")
-                            params.append(bio)
-                    
-                    params.append(worker_id)
-                    cursor.execute(f"UPDATE workers SET {', '.join(update_fields)} WHERE id = %s", params)
-                    conn.commit()
-                    return worker_id
-                else:
-                    if service == 'housekeeping' and existing_specialization != specialization:
-                        cursor.execute("UPDATE workers SET specialization = %s WHERE id = %s", (specialization, worker_id))
+                    if service not in service_list:
+                        new_services = f"{existing_services}, {service}" if existing_services else service
+                        new_specialization = f"{existing_specialization}, {specialization}" if existing_specialization else specialization
+                        cursor.execute("UPDATE workers SET service = %s, specialization = %s WHERE id = %s", (new_services, new_specialization, worker_id))
                         conn.commit()
                         return worker_id
-                    else:
-                        return None
+                    return None
 
-            hashed_pw = None
-            if password:
-                hashed_pw = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode('utf-8')
-                
-            status = "pending"
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8') if password else None
+            
+            # Use 0 if experience is not a number
+            try:
+                exp_years = int(experience)
+            except (ValueError, TypeError):
+                exp_years = 0
+
             cursor.execute("""
-                INSERT INTO workers (full_name, email, phone, service, specialization, experience_years, clinic_location, license_number, password, aadhaar_number, id_proof_url, skills, hourly_rate, bio, status, profile_photo_path, degree_certificate_path, medical_license_path)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO workers (
+                    full_name, email, phone, service, specialization, experience, 
+                    clinic_location, license_number, password, aadhaar_number, 
+                    skills, hourly_rate, bio, profile_photo_path, degree_certificate_path, 
+                    medical_license_path
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
-            """, (full_name, email, phone, service, specialization, int(experience or 0), clinic_location or "", license_number, hashed_pw, aadhaar, id_proof, skills, hourly_rate, bio, status, profile_photo_path, degree_certificate_path, medical_license_path))
+            """, (
+                full_name, email, phone, service, specialization, exp_years, 
+                clinic_location, license_number, hashed_password, aadhaar, 
+                skills, hourly_rate, bio, profile_photo_path, degree_certificate_path, 
+                medical_license_path
+            ))
             worker_id = cursor.fetchone()['id']
             conn.commit()
             return worker_id
         except Exception as e:
             conn.rollback()
-            print(f"DB Error: {e}")
+            print(f"Registration failed: {e}")
             return None
         finally:
             cursor.close()

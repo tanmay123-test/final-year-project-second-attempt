@@ -1,3 +1,11 @@
+import sys
+
+# Configure stdout and stderr for UTF-8 output to fix emoji printing issues on Windows
+if sys.platform == 'win32':
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
@@ -73,6 +81,10 @@ CORS(app, resources={r"/*": {
 @app.route("/")
 def root():
     return jsonify({"message": "Backend is running!"}), 200
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory('uploads', filename)
 
 @app.errorhandler(404)
 def not_found(e):
@@ -203,9 +215,16 @@ def register_blueprints(app):
     
     for module, bp_name, label in car_blueprints:
         try:
-            exec(f"from car_service.{module} import {bp_name}")
-            exec(f"app.register_blueprint({bp_name})")
-            print(f"    ✅ {label} blueprint registered")
+            # First try to import from car_service
+            try:
+                exec(f"from car_service.{module} import {bp_name}")
+                exec(f"app.register_blueprint({bp_name})")
+                print(f"    ✅ {label} blueprint registered from car_service")
+            except ImportError:
+                # If that fails, try to import from services.car_service
+                exec(f"from services.car_service.{module} import {bp_name}")
+                exec(f"app.register_blueprint({bp_name})")
+                print(f"    ✅ {label} blueprint registered from services.car_service")
         except Exception as e:
             print(f"    ❌ Could not register {label} blueprint: {e}")
 
@@ -231,10 +250,20 @@ except Exception as e:
 # Register Admin blueprint
 try:
     from admin.admin_routes import admin_bp
+    from admin.admin_users import users_admin_bp
+    from admin.admin_workers import workers_admin_bp
+    from admin.admin_appointments import appts_admin_bp
+    from admin.admin_healthcare import healthcare_admin_bp
+    
     app.register_blueprint(admin_bp)
-    print("  Admin blueprint registered")
+    app.register_blueprint(users_admin_bp, url_prefix='/admin/users')
+    app.register_blueprint(workers_admin_bp, url_prefix='/admin/workers')
+    app.register_blueprint(appts_admin_bp, url_prefix='/admin/appointments')
+    app.register_blueprint(healthcare_admin_bp, url_prefix='/admin/healthcare-mgmt')
+    
+    print("  ✅ All Admin blueprints registered")
 except Exception as e:
-    print(f"   Could not register Admin blueprint: {e}")
+    print(f"   ❌ Could not register Admin blueprints: {e}")
 
 # Register Tow Truck blueprint
 try:
@@ -649,7 +678,29 @@ def user_appointments():
 @app.route("/worker/signup", methods=["POST"])
 def worker_register():
     try:
-        d = request.json
+        import os
+        from werkzeug.utils import secure_filename
+        
+        UPLOAD_FOLDER = 'uploads/workers/'
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        
+        def save_file(file, prefix):
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                unique_filename = f"{prefix}_{filename}"
+                path = os.path.join(UPLOAD_FOLDER, unique_filename)
+                file.save(path)
+                return path
+            return None
+
+        # Check if request is JSON or Form Data
+        if request.is_json:
+            d = request.json
+            files = {}
+        else:
+            d = request.form
+            files = request.files
+
         service_type = d.get("service", "healthcare").lower()
         
         # Handle specialization based on service type
@@ -657,18 +708,41 @@ def worker_register():
         if service_type != "healthcare" and not specialization:
             specialization = "General"
 
+        # Handle file uploads for all services (especially housekeeping and freelance)
+        profile_photo_path = save_file(files.get('profile_photo'), 'photo')
+        aadhaar_path = save_file(files.get('aadhaar_card'), 'aadhaar')
+        police_verification_path = save_file(files.get('police_verification'), 'police')
+        portfolio_path = save_file(files.get('portfolio'), 'portfolio')
+        skill_certificate_path = save_file(files.get('skill_certificate'), 'skill')
+
         wid = worker_db.register_worker(
-            d["full_name"], d["email"], d["phone"],
-            service_type, specialization,
-            d.get("experience", ""), d.get("clinic_location", ""),
-            None,  # license_number
-            d.get("password", "")
+            full_name=d["full_name"], 
+            email=d["email"], 
+            phone=d["phone"],
+            service=service_type, 
+            specialization=specialization,
+            experience=d.get("experience", ""), 
+            clinic_location=d.get("clinic_location", ""),
+            license_number=d.get("license_number"), 
+            password=d.get("password", ""),
+            aadhaar=d.get("aadhaar"),
+            skills=d.get("skills", ""),
+            hourly_rate=d.get("hourly_rate", None),
+            bio=d.get("bio", ""),
+            profile_photo_path=profile_photo_path,
+            aadhaar_path=aadhaar_path,
+            police_verification_path=police_verification_path,
+            portfolio_path=portfolio_path,
+            skill_certificate_path=skill_certificate_path
         )
+        
         if wid is None:
             return jsonify({"error": "Worker already exists for this service"}), 400
         return jsonify({"worker_id": wid}), 201
     except Exception as e:
         print(f"Worker signup error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
@@ -1225,26 +1299,36 @@ def freelance_signup():
     d = request.json
     skill_ids = d.get("skill_ids", [])
     
+    print(f"Freelance signup request: {d}")
+    
     if not skill_ids:
         return jsonify({"error": "At least one skill must be selected"}), 400
 
-    worker_id = worker_db.register_worker(
-        full_name=d["full_name"],
-        email=d["email"],
-        phone=d["phone"],
-        service="freelance",
-        specialization=d.get("skills", ""),
-        experience=0,
-        clinic_location="",
-        password=None,
-        aadhaar=d.get("aadhaar"),
-        id_proof=d.get("id_proof"),
-        skills=d.get("skills"),
-        hourly_rate=d.get("hourly_rate"),
-        bio=d.get("bio")
-    )
-    if not worker_id:
-        return jsonify({"error": "Freelancer exists"}), 400
+    try:
+        worker_id = worker_db.register_worker(
+            full_name=d["full_name"],
+            email=d["email"],
+            phone=d["phone"],
+            service="freelance",
+            specialization=d.get("skills", ""),
+            experience=0,
+            clinic_location="",
+            password=None,
+            aadhaar=d.get("aadhaar"),
+            id_proof=d.get("id_proof"),
+            skills=d.get("skills"),
+            hourly_rate=d.get("hourly_rate"),
+            bio=d.get("bio")
+        )
+        print(f"Worker registration result: {worker_id}")
+        
+        if not worker_id:
+            return jsonify({"error": "Freelancer exists"}), 400
+    except Exception as e:
+        print(f"Freelance registration error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Registration failed: {str(e)}"}), 500
         
     # Phase 1: Store skills in junction table
     from services.freelance.services.freelance_service import freelance_service
@@ -1966,10 +2050,6 @@ def handle_exception(e):
 
 
 # ================= RUN =================
-@app.route('/uploads/<path:filename>')
-def uploaded_file(filename):
-    return send_from_directory('uploads', filename)
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"\n🚀 Starting ExpertEase Backend...")

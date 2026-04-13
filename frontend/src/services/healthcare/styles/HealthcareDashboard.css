@@ -2,7 +2,7 @@
 
 /* Page Background */
 .healthcare-dashboard {
-  background-color: #f8f8f8;
+  background-color: white;
   min-height: 100vh;
   padding-bottom: 80px;
 }
@@ -208,6 +208,14 @@
   gap: 12px;
   padding: 0 16px 8px 16px;
   scrollbar-width: none;
+  cursor: grab;
+  user-select: none;
+  scroll-behavior: smooth;
+}
+
+.spec-scroll-row.dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
 }
 
 .spec-scroll-row::-webkit-scrollbar { 

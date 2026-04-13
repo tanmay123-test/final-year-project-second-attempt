@@ -28,6 +28,31 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'admin_secret_key_change_in_production
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+def admin_auth_required(f):
+    """Decorator to require admin authentication"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({"error": "No authorization token provided"}), 401
+        
+        try:
+            # Remove 'Bearer ' prefix if present
+            if token.startswith('Bearer '):
+                token = token[7:]
+            
+            # Verify JWT token
+            payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+            if payload.get('role') != 'admin':
+                return jsonify({"error": "Invalid token role"}), 401
+                
+            return f(*args, **kwargs)
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Token has expired"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+    return decorated_function
+
 @admin_bp.route('/stats', methods=['GET'])
 @admin_auth_required
 def get_dashboard_stats():
@@ -68,31 +93,6 @@ def get_dashboard_stats():
         }), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch stats: {str(e)}"}), 500
-
-def admin_auth_required(f):
-    """Decorator to require admin authentication"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({"error": "No authorization token provided"}), 401
-        
-        try:
-            # Remove 'Bearer ' prefix if present
-            if token.startswith('Bearer '):
-                token = token[7:]
-            
-            # Verify JWT token
-            payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
-            if payload.get('role') != 'admin':
-                return jsonify({"error": "Invalid token role"}), 401
-                
-            return f(*args, **kwargs)
-        except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Token has expired"}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({"error": "Invalid token"}), 401
-    return decorated_function
 
 @admin_bp.route('/login', methods=['POST'])
 def admin_login():

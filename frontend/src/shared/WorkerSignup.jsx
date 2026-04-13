@@ -21,6 +21,16 @@ const SERVICE_DEFAULT_RATES = {
   money: '100'
 };
 
+const DEFAULT_FREELANCE_SKILLS = [
+  { id: 'web_dev', name: 'Web Developer', category: 'IT' },
+  { id: 'mobile_dev', name: 'Mobile App Developer', category: 'IT' },
+  { id: 'ui_ux', name: 'UI/UX Designer', category: 'Design' },
+  { id: 'graphic_design', name: 'Graphic Designer', category: 'Design' },
+  { id: 'video_edit', name: 'Video Editor', category: 'Media' },
+  { id: 'photographer', name: 'Photographer', category: 'Media' },
+  { id: 'content_writer', name: 'Content Writer', category: 'Writing' }
+];
+
 const WorkerSignup = ({ serviceType = 'healthcare' }) => {
   const config = SERVICE_CONFIG[serviceType] || SERVICE_CONFIG.healthcare;
   const ServiceIcon = config.icon;
@@ -43,7 +53,12 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
     selectedSkills: [], // Multi-select skill IDs
     hourly_rate: '',
     bio: '',
-    id_proof: ''
+    id_proof: '',
+    profile_photo: null,
+    aadhaar_card: null,
+    police_verification: null,
+    portfolio: null,
+    skill_certificate: null
   });
   const [availableSkills, setAvailableSkills] = useState([]);
   const [skillSearch, setSkillSearch] = useState('');
@@ -59,9 +74,14 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
       const fetchSkills = async () => {
         try {
           const res = await api.get('/api/freelance/skills');
-          setAvailableSkills(res.data.skills);
+          if (res.data.skills && res.data.skills.length > 0) {
+            setAvailableSkills(res.data.skills);
+          } else {
+            setAvailableSkills(DEFAULT_FREELANCE_SKILLS);
+          }
         } catch (err) {
           console.error("Failed to load skills", err);
+          setAvailableSkills(DEFAULT_FREELANCE_SKILLS);
         }
       };
       fetchSkills();
@@ -142,25 +162,45 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
 
     setLoading(true);
     
-      try {
-      const skillsStr = formData.selectedSkills.map(s => s.name).join(', ');
-      const payload = { 
-        ...formData, 
-        service: serviceType,
-        skills: skillsStr, // Maintain backward compatibility
-        skill_ids: formData.selectedSkills.map(s => s.id) // Phase 1 junction storage
-      };
-      console.log('Sending payload:', payload);
-      console.log('Password in payload:', payload.password);
+    try {
       let response;
-      if (serviceType === 'healthcare') {
-        response = await workerService.registerHealthcare(payload);
-      } else if (serviceType === 'freelance') {
-        // Direct call to freelance signup endpoint
-        response = await api.post('/worker/freelance/signup', payload);
+      
+      if (serviceType === 'housekeeping' || serviceType === 'freelance') {
+        const formDataPayload = new FormData();
+        // Append all form fields
+        Object.keys(formData).forEach(key => {
+          if (formData[key] !== null) {
+            if (key === 'selectedSkills') {
+              formDataPayload.append('skills', formData.selectedSkills.map(s => s.name).join(', '));
+            } else {
+              formDataPayload.append(key, formData[key]);
+            }
+          }
+        });
+        formDataPayload.append('service', serviceType);
+        
+        response = await api.post('/worker/signup', formDataPayload, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
       } else {
-        response = await workerService.register(payload);
+        const skillsStr = formData.selectedSkills.map(s => s.name).join(', ');
+        const payload = { 
+          ...formData, 
+          service: serviceType,
+          skills: skillsStr, // Maintain backward compatibility
+          skill_ids: formData.selectedSkills.map(s => s.id) // Phase 1 junction storage
+        };
+        console.log('Sending payload:', payload);
+        
+        if (serviceType === 'healthcare') {
+          response = await workerService.registerHealthcare(payload);
+        } else if (serviceType === 'freelance') {
+          response = await api.post('/worker/freelance/signup', payload);
+        } else {
+          response = await workerService.register(payload);
+        }
       }
+      
       setSuccess(`Registration successful! Your ID is ${response.data.worker_id}.`);
       setTimeout(() => navigate(`/worker/${serviceType}/login`), 2000);
     } catch (err) {
@@ -245,7 +285,16 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
                             {skill.name} <span className="skill-cat">({skill.category})</span>
                           </div>
                         )) : (
-                          <div className="skill-no-results">No matching skills found</div>
+                          <div className="skill-no-results">No matching skills found. Add as custom:</div>
+                        )}
+                        {skillSearch.trim() && !filteredSkills.find(s => s.name.toLowerCase() === skillSearch.trim().toLowerCase()) && (
+                          <div 
+                            className="skill-option add-custom"
+                            style={{ borderTop: '1px solid #eee', color: '#8E44AD', fontWeight: '500' }}
+                            onClick={() => toggleSkill({ id: `custom_${Date.now()}`, name: skillSearch.trim(), category: 'Custom' })}
+                          >
+                            + Add "{skillSearch.trim()}"
+                          </div>
                         )}
                       </div>
                     )}
@@ -378,6 +427,97 @@ const WorkerSignup = ({ serviceType = 'healthcare' }) => {
                 <input id="clinic_location" name="clinic_location" value={formData.clinic_location} onChange={handleChange} placeholder={isHealthcare ? "Apollo Hospital, Delhi" : "City, Area"} />
               </div>
             </div>
+
+            {/* Housekeeping Specific Fields */}
+             {serviceType === 'housekeeping' && (
+               <div className="space-y-4 pt-4 border-t border-gray-100" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
+                 <h3 className="text-sm font-semibold text-gray-700" style={{ fontSize: '14px', fontWeight: '600', marginBottom: '1rem' }}>Verification Documents</h3>
+                 
+                 <div className="input-group">
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Profile Photo</label>
+                   <input 
+                     type="file" 
+                     accept="image/*"
+                     onChange={(e) => setFormData({...formData, profile_photo: e.target.files[0]})}
+                     className="w-full text-sm text-gray-500"
+                     required
+                   />
+                 </div>
+
+                 <div className="input-group">
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Card (PDF/Image)</label>
+                   <input 
+                     type="file" 
+                     accept="image/*,.pdf"
+                     onChange={(e) => setFormData({...formData, aadhaar_card: e.target.files[0]})}
+                     className="w-full text-sm text-gray-500"
+                     required
+                   />
+                 </div>
+
+                 <div className="input-group">
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Police Verification Certificate (PDF/Image)</label>
+                   <input 
+                     type="file" 
+                     accept="image/*,.pdf"
+                     onChange={(e) => setFormData({...formData, police_verification: e.target.files[0]})}
+                     className="w-full text-sm text-gray-500"
+                     required
+                   />
+                 </div>
+               </div>
+             )}
+
+             {/* Freelance Specific Fields */}
+             {serviceType === 'freelance' && (
+               <div className="space-y-4 pt-4 border-t border-gray-100" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
+                 <h3 className="text-sm font-semibold text-gray-700" style={{ fontSize: '14px', fontWeight: '600', marginBottom: '1rem' }}>Professional Verification</h3>
+                 
+                 <div className="input-group">
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Profile Photo</label>
+                   <input 
+                     type="file" 
+                     accept="image/*"
+                     onChange={(e) => setFormData({...formData, profile_photo: e.target.files[0]})}
+                     className="w-full text-sm text-gray-500"
+                     required
+                   />
+                 </div>
+
+                 <div className="input-group">
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Aadhaar Card (PDF/Image)</label>
+                   <input 
+                     type="file" 
+                     accept="image/*,.pdf"
+                     onChange={(e) => setFormData({...formData, aadhaar_card: e.target.files[0]})}
+                     className="w-full text-sm text-gray-500"
+                     required
+                   />
+                 </div>
+
+                 <div className="input-group">
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Portfolio/Work Samples (PDF/Image)</label>
+                   <input 
+                     type="file" 
+                     accept="image/*,.pdf"
+                     onChange={(e) => setFormData({...formData, portfolio: e.target.files[0]})}
+                     className="w-full text-sm text-gray-500"
+                     required
+                   />
+                 </div>
+
+                 <div className="input-group">
+                   <label className="block text-sm font-medium text-gray-700 mb-1">Skill Certificate (PDF/Image)</label>
+                   <input 
+                     type="file" 
+                     accept="image/*,.pdf"
+                     onChange={(e) => setFormData({...formData, skill_certificate: e.target.files[0]})}
+                     className="w-full text-sm text-gray-500"
+                     required
+                   />
+                 </div>
+               </div>
+             )}
 
             <button type="submit" className="btn-primary" disabled={loading} style={bgStyle}>
               {loading ? (

@@ -135,7 +135,7 @@ class DatabaseManager:
             cursor.execute('''
                 SELECT * FROM workers 
                 WHERE service LIKE %s AND specialization = %s AND status = 'approved'
-                ORDER BY rating DESC, experience_years DESC
+                ORDER BY rating DESC, experience DESC
             ''', (f'%{service_type}%', specialization))
             
             workers = [dict(row) for row in cursor.fetchall()]

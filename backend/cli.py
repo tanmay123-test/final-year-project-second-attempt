@@ -3934,7 +3934,7 @@ def healthcare_pending_workers():
                 print(f"\n{i}. {worker.get('name', 'N/A')}")
                 print(f"   Email: {worker.get('email', 'N/A')}")
                 print(f"   Specialization: {worker.get('specialization', 'N/A')}")
-                print(f"   Experience: {worker.get('experience_years', 'N/A')} years")
+                print(f"   Experience: {worker.get('experience', 'N/A')} years")
                 print(f"   Applied: {worker.get('created_at', 'N/A')}")
         else:
             print(f"  Failed to fetch pending workers: {response.text}")

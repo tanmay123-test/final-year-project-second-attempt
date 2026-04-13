@@ -20,7 +20,7 @@ const HealthcareSidebarLayout = ({ children }) => {
   return (
     <div className="hc-layout">
       <aside className="hc-sidebar">
-        <div className="hc-sidebar-brand" onClick={() => navigate('/freelance/home')} style={{ cursor: 'pointer' }}>
+        <div className="hc-sidebar-brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
           <div className="hc-brand-icon">
             <Stethoscope size={24} color="white" />
           </div>

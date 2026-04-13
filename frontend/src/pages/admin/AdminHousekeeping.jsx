@@ -59,7 +59,7 @@ const AdminHousekeeping = () => {
 
   const handleApprove = async (workerId, name) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/worker/approve/${workerId}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/workers/${workerId}/approve`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -82,7 +82,7 @@ const AdminHousekeeping = () => {
     if (!reason) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/worker/reject/${workerId}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/workers/${workerId}/reject`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
@@ -260,9 +260,23 @@ const AdminHousekeeping = () => {
                 <div key={worker.id} className="bg-surface-container-lowest p-6 rounded-xl shadow-[0px_20px_40px_rgba(42,30,80,0.06)] group hover:translate-y-[-4px] transition-all duration-300">
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center text-primary text-xl font-bold">
-                        {worker.name?.charAt(0) || 'W'}
-                      </div>
+                      {worker.profile_photo_path ? (
+                        <img 
+                          src={`${API_BASE_URL}/${worker.profile_photo_path}`} 
+                          alt={worker.name} 
+                          className="w-14 h-14 rounded-xl object-cover shadow-sm"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '';
+                            e.target.className = 'w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center text-primary text-xl font-bold';
+                            e.target.parentElement.innerHTML = `<div class="w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center text-primary text-xl font-bold">${worker.name?.charAt(0) || 'W'}</div>`;
+                          }}
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center text-primary text-xl font-bold">
+                          {worker.name?.charAt(0) || 'W'}
+                        </div>
+                      )}
                       <div>
                         <h4 className="font-bold text-on-surface">{worker.name}</h4>
                         <p className="text-xs text-on-surface-variant">{worker.specialization || 'Housekeeper'}</p>
@@ -288,13 +302,21 @@ const AdminHousekeeping = () => {
                         <p className="text-sm font-bold">{worker.experience_years || '0'} Years</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase text-on-surface-variant mb-1">Documents</p>
-                        <div className="flex gap-1">
-                          <span className="material-symbols-outlined text-green-500 text-sm" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
-                          <span className="material-symbols-outlined text-green-500 text-sm" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
-                          <span className={`material-symbols-outlined text-sm ${worker.status === 'approved' ? 'text-green-500' : 'text-on-surface-variant/30'}`} style={{fontVariationSettings: worker.status === 'approved' ? "'FILL' 1" : ""}}>
-                            {worker.status === 'approved' ? 'check_circle' : 'pending'}
-                          </span>
+                        <p className="text-[10px] uppercase text-on-surface-variant mb-1">Verification</p>
+                        <div className="flex gap-2">
+                          {worker.aadhaar_path && (
+                            <a href={`${API_BASE_URL}/${worker.aadhaar_path}`} target="_blank" rel="noreferrer" title="Aadhaar Card">
+                              <span className="material-symbols-outlined text-primary text-sm hover:scale-110 transition-transform">badge</span>
+                            </a>
+                          )}
+                          {worker.police_verification_path && (
+                            <a href={`${API_BASE_URL}/${worker.police_verification_path}`} target="_blank" rel="noreferrer" title="Police Verification">
+                              <span className="material-symbols-outlined text-tertiary text-sm hover:scale-110 transition-transform">policy</span>
+                            </a>
+                          )}
+                          {!worker.aadhaar_path && !worker.police_verification_path && (
+                            <span className="text-[10px] text-on-surface-variant/50 italic">No Docs</span>
+                          )}
                         </div>
                       </div>
                     </div>

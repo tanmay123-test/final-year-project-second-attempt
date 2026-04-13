@@ -322,8 +322,8 @@ def reject_agent():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # Availability Engine Routes
-@fuel_delivery_bp.route('/status', methods=['POST'])
-def update_agent_status():
+@fuel_delivery_bp.route('/agents/status', methods=['PUT'])
+def update_agent_status_engine():
     """Update agent online status (Go Online/Offline)"""
     try:
         data = request.get_json()
