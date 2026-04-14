@@ -126,14 +126,14 @@ class WorkerDB:
                     full_name, email, phone, service, specialization, experience, 
                     clinic_location, license_number, password, aadhaar_number, 
                     skills, hourly_rate, bio, profile_photo_path, degree_certificate_path, 
-                    medical_license_path
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    medical_license_path, status
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
                 full_name, email, phone, service, specialization, exp_years, 
                 clinic_location, license_number, hashed_password, aadhaar, 
                 skills, hourly_rate, bio, profile_photo_path, degree_certificate_path, 
-                medical_license_path
+                medical_license_path, 'pending'
             ))
             worker_id = cursor.fetchone()['id']
             conn.commit()
@@ -396,11 +396,9 @@ class WorkerDB:
         try:
             query = """
                 SELECT * FROM workers 
-                WHERE (service ILIKE %s OR specialization ILIKE %s OR service ILIKE %s OR specialization ILIKE %s)
+                WHERE service = %s AND status = 'approved'
             """
-            pattern1 = f"%{service_type}%"
-            pattern2 = "%cleaning%"
-            cursor.execute(query, (pattern1, pattern1, pattern2, pattern2))
+            cursor.execute(query, (service_type,))
             rows = cursor.fetchall()
             return [self._row_to_dict(r) for r in rows]
         except Exception as e:

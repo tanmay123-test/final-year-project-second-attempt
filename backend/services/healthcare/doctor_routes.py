@@ -80,9 +80,9 @@ def doctor_login():
         if service != 'healthcare':
             return jsonify({'error': 'Not a healthcare provider'}), 403
 
-        # Auto-approve healthcare workers (consistent with main login)
+        # Check if worker is approved
         if status != 'approved':
-            status = 'approved'
+            return jsonify({'error': 'Worker not approved yet. Please wait for admin approval.'}), 403
 
         # Generate token
         token = generate_token(email, doctor_id)

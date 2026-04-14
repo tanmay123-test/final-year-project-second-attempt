@@ -199,9 +199,9 @@ const WorkerSignupPage = () => {
               </div>
 
               <div className="wp-info-box">
-                {'\u2713'} Healthcare workers are approved instantly.
+                {'\u2713'} Registration submitted for admin approval.
                 <br />
-                You can start accepting appointments immediately.
+                You will be notified once your account is approved.
               </div>
 
               <button className="wp-primary-btn" type="submit" disabled={loading}>
@@ -214,15 +214,18 @@ const WorkerSignupPage = () => {
               <div style={{ width: 56, height: 56, borderRadius: '50%', margin: '0 auto', background: '#DCFCE7', color: '#16A34A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CheckCircle2 size={28} />
               </div>
-              <h2 style={{ margin: '14px 0 0', color: '#0f172a' }}>Registration Successful!</h2>
+              <h2 style={{ margin: '14px 0 0', color: '#0f172a' }}>Registration Submitted!</h2>
               <div style={{ marginTop: 8, color: '#8E44AD', fontSize: 16, fontWeight: 600 }}>
                 Worker ID: {successData.worker_id || 'N/A'}
               </div>
-              <div style={{ marginTop: 8, color: '#16A34A', fontSize: 14 }}>
-                Status: {'\u2713'} Approved - Ready to work immediately
+              <div style={{ marginTop: 8, color: '#F59E0B', fontSize: 14 }}>
+                Status: ⏳ Pending Admin Approval
               </div>
-              <button className="wp-primary-btn" style={{ marginTop: 16 }} onClick={onGoDashboard}>
-                Go to Dashboard
+              <div style={{ marginTop: 12, color: '#64748b', fontSize: 13 }}>
+                Please wait for admin to review and approve your application.
+              </div>
+              <button className="wp-primary-btn" style={{ marginTop: 16 }} onClick={() => navigate('/worker/healthcare/login')}>
+                Back to Login
               </button>
             </div>
           )}

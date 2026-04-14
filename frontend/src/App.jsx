@@ -21,6 +21,7 @@ import AICareScreen from './services/healthcare/pages/AICareScreen';
 import HealthcareProfile from './services/healthcare/pages/HealthcareProfile';
 import MyCareScreen from './services/healthcare/pages/MyCareScreen';
 import VideoConsultationsPage from './services/healthcare/pages/VideoConsultationsPage';
+import BookAppointment from './services/healthcare/pages/BookAppointment';
 import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -417,6 +418,7 @@ const App = () => {
           <Route path="/healthcare/my-care" element={<ProtectedRoute><MyCareScreen /></ProtectedRoute>} />
           <Route path="/healthcare/video-consultations" element={<ProtectedRoute><VideoConsultationsPage /></ProtectedRoute>} />
           <Route path="/healthcare/profile" element={<ProtectedRoute><HealthcareProfile /></ProtectedRoute>} />
+          <Route path="/healthcare/book/:doctorId" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} />
           
           {/* Freelance */}
           <Route path="/worker/freelance/login" element={<WorkerLogin serviceType="freelance" />} />

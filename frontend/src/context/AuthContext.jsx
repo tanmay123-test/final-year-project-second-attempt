@@ -53,13 +53,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await authService.login({ username, password });
-      const { token, user_id } = response.data;
+      // Try login with email (new backend format)
+      const response = await authService.login({ email: username, password });
+      const { token, id, name, email } = response.data;
       localStorage.setItem('token', token);
-      localStorage.setItem('user_id', user_id);
+      localStorage.setItem('user_id', id);
       
-      const userInfo = await authService.getUserInfo();
-      setUser(userInfo.data);
+      // Set user data directly from login response
+      setUser({ id, name, email });
       return true;
     } catch (error) {
       console.error('Login failed:', error);

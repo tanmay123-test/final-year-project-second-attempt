@@ -90,7 +90,7 @@ export const workerService = {
 
 export const doctorService = {
   // Auth
-  login: (credentials) => api.post('/doctor/login', credentials),
+  login: (credentials) => api.post('/worker/healthcare/login', credentials),
   
   // Doctor Info
   getAllDoctors: () => api.get('/healthcare/doctors'),

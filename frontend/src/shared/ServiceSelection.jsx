@@ -8,7 +8,7 @@ const ServiceSelection = ({ mode = 'user' }) => {
   const navigate = useNavigate();
   
   const defaultServices = [
-    { id: 'healthcare', label: 'Healthcare', path: '/services/healthcare' },
+    { id: 'healthcare', label: 'Healthcare', path: '/healthcare/home' },
     { id: 'housekeeping', label: 'Housekeeping', path: '/housekeeping/home' },
     { id: 'freelance', label: 'Freelance Marketplace', path: '/freelance/home' },
     { id: 'car', label: 'Car Services', path: '/car-service/setup' },

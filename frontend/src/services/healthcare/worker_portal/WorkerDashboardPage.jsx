@@ -54,6 +54,27 @@ const WorkerDashboardPage = () => {
   const workerId = localStorage.getItem('worker_id');
   const specialization = localStorage.getItem('worker_specialization') || 'Healthcare Worker';
 
+  // Redirect to login if workerId is not available
+  React.useEffect(() => {
+    if (!workerId || workerId === 'undefined' || workerId === 'null') {
+      console.error('Worker ID not found or invalid in localStorage');
+      
+      // Clear old cache and redirect to login
+      localStorage.removeItem('worker_id');
+      localStorage.removeItem('worker_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('doctorToken');
+      localStorage.removeItem('workerToken');
+      
+      // Show alert to user
+      alert('Session expired or invalid. Please login again.');
+      
+      // Redirect to login
+      window.location.href = '/worker/healthcare/login';
+      return;
+    }
+  }, [workerId]);
+
   const [tab, setTab] = useState('dashboard');
   const [consultSubtab, setConsultSubtab] = useState('pending');
   const [toast, setToast] = useState(toastInit);
@@ -270,16 +291,106 @@ const WorkerDashboardPage = () => {
     }
   };
 
+  // Convert time slot format from "09:00 AM" to "09:00-10:00"
+  const convertToTimeRange = (timeSlot) => {
+    const timeMap = {
+      '09:00 AM': '09:00-10:00',
+      '10:00 AM': '10:00-11:00',
+      '11:00 AM': '11:00-12:00',
+      '12:00 PM': '12:00-01:00',
+      '01:00 PM': '13:00-14:00',
+      '02:00 PM': '14:00-15:00',
+      '03:00 PM': '15:00-16:00',
+      '04:00 PM': '16:00-17:00',
+      '05:00 PM': '17:00-18:00',
+      '06:00 PM': '18:00-19:00',
+      '07:00 PM': '19:00-20:00',
+      '08:00 PM': '20:00-21:00'
+    };
+    
+    return timeMap[timeSlot] || timeSlot;
+  };
+
+  const convertToReadableTime = (timeRange) => {
+    const timeMap = {
+      '09:00-10:00': '09:00 AM',
+      '10:00-11:00': '10:00 AM',
+      '11:00-12:00': '11:00 AM',
+      '12:00-01:00': '12:00 PM',
+      '13:00-14:00': '01:00 PM',
+      '14:00-15:00': '02:00 PM',
+      '15:00-16:00': '03:00 PM',
+      '16:00-17:00': '04:00 PM',
+      '17:00-18:00': '05:00 PM',
+      '18:00-19:00': '06:00 PM',
+      '19:00-20:00': '07:00 PM',
+      '20:00-21:00': '08:00 PM'
+    };
+    
+    return timeMap[timeRange] || timeRange;
+  };
+
   const addSlot = async () => {
-    if (!slotAdd.date || !slotAdd.time_slot) return;
+    if (!slotAdd.date || !slotAdd.time_slot) {
+      showToast('error', 'Please select both date and time slot');
+      return;
+    }
+    
+    if (!workerId) {
+      showToast('error', 'Worker session expired. Please login again.');
+      setTimeout(() => {
+        window.location.href = '/worker/healthcare/login';
+      }, 2000);
+      return;
+    }
+    
+    const timeRange = convertToTimeRange(slotAdd.time_slot);
+    
+    // Check if already 2 slots exist for this date
+    const existingSlots = availability[slotAdd.date] || [];
+    if (existingSlots.length >= 2) {
+      showToast('error', 'Maximum 2 slots allowed per date!');
+      return;
+    }
+    
+    // Check if this time slot already exists for this date
+    if (existingSlots.includes(timeRange)) {
+      showToast('error', 'This time slot already exists for this date!');
+      return;
+    }
+    
     try {
       setSlotBusy(true);
-      await api.post(`/worker/${workerId}/availability`, slotAdd, { headers: getHeaders() });
+      const slotData = {
+        date: slotAdd.date,
+        time_slot: timeRange
+      };
+      const response = await api.post(`/worker/${workerId}/availability`, slotData, { headers: getHeaders() });
       setSlotAdd({ date: '', time_slot: '' });
       showToast('success', 'Slot added!');
       fetchAvailability();
-    } catch {
-      showToast('error', 'Something went wrong. Try again.');
+    } catch (error) {
+      console.error('Add slot error:', error);
+      
+      // Show specific error message from backend if available
+      if (error.response && error.response.data && error.response.data.error) {
+        const errorMessage = error.response.data.error;
+        if (errorMessage.includes('Date is required')) {
+          showToast('error', 'Please select a date');
+        } else if (errorMessage.includes('Time slot is required')) {
+          showToast('error', 'Please select a time slot');
+        } else if (errorMessage.includes('Invalid time slot format')) {
+          showToast('error', 'Invalid time format. Please try again.');
+        } else if (errorMessage.includes('Invalid date format')) {
+          showToast('error', 'Invalid date format. Please try again.');
+        } else if (errorMessage.includes('already added')) {
+          showToast('error', 'This time slot already exists');
+        } else {
+          showToast('error', errorMessage);
+        }
+      } else {
+        showToast('error', 'Something went wrong. Try again.');
+      }
     } finally {
       setSlotBusy(false);
     }
@@ -507,8 +618,21 @@ const WorkerDashboardPage = () => {
               <Stethoscope size={18} color="#FFC107" />
               <strong>Dr. Dashboard</strong>
             </div>
-            <div className="wp-status-chip" onClick={() => setStatusModal(true)} style={{ color: status === 'online' ? '#16A34A' : '#94A3B8' }}>
-              ● {status === 'online' ? 'Online' : 'Offline'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="wp-bottom-tabs">
+                {MAIN_TABS.map((t) => {
+                  const Icon = t.icon;
+                  return (
+                    <button key={t.key} className={`wp-bottom-tab ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
+                      <Icon size={16} />
+                      <span>{t.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="wp-status-chip" onClick={() => setStatusModal(true)} style={{ color: status === 'online' ? '#16A34A' : '#94A3B8' }}>
+                ● {status === 'online' ? 'Online' : 'Offline'}
+              </div>
             </div>
           </div>
         </div>
@@ -606,8 +730,22 @@ const WorkerDashboardPage = () => {
                 </div>
                 <div className="wp-field">
                   <label className="wp-label">Time Slot</label>
-                  <input className="wp-input no-icon" placeholder="09:00-10:00" value={slotAdd.time_slot} onChange={(e) => setSlotAdd((p) => ({ ...p, time_slot: e.target.value }))} />
-                  <div style={{ fontSize: 11, color: '#94a3b8' }}>Format: HH:MM-HH:MM</div>
+                  <select className="wp-input no-icon" value={slotAdd.time_slot} onChange={(e) => setSlotAdd((p) => ({ ...p, time_slot: e.target.value }))}>
+                    <option value="">Select time</option>
+                    <option value="09:00 AM">09:00 AM</option>
+                    <option value="10:00 AM">10:00 AM</option>
+                    <option value="11:00 AM">11:00 AM</option>
+                    <option value="12:00 PM">12:00 PM</option>
+                    <option value="01:00 PM">01:00 PM</option>
+                    <option value="02:00 PM">02:00 PM</option>
+                    <option value="03:00 PM">03:00 PM</option>
+                    <option value="04:00 PM">04:00 PM</option>
+                    <option value="05:00 PM">05:00 PM</option>
+                    <option value="06:00 PM">06:00 PM</option>
+                    <option value="07:00 PM">07:00 PM</option>
+                    <option value="08:00 PM">08:00 PM</option>
+                  </select>
+                  <div style={{ fontSize: 11, color: '#94a3b8' }}>Maximum 2 slots per date</div>
                 </div>
                 <button className="wp-primary-btn" style={{ height: 44, background: '#8E44AD' }} onClick={addSlot} disabled={slotBusy}>
                   {slotBusy ? 'Adding...' : 'Add Slot'}
@@ -620,11 +758,21 @@ const WorkerDashboardPage = () => {
                   </div>
                   <div className="wp-field">
                     <label className="wp-label">Date</label>
-                    <input className="wp-input no-icon" type="date" value={slotRemove.date} onChange={(e) => setSlotRemove((p) => ({ ...p, date: e.target.value }))} />
+                    <select className="wp-input no-icon" value={slotRemove.date} onChange={(e) => setSlotRemove((p) => ({ ...p, date: e.target.value, time_slot: '' }))}>
+                      <option value="">Select date</option>
+                      {Object.keys(availability).sort().map(date => (
+                        <option key={date} value={date}>{date}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="wp-field">
                     <label className="wp-label">Time Slot</label>
-                    <input className="wp-input no-icon" placeholder="09:00-10:00" value={slotRemove.time_slot} onChange={(e) => setSlotRemove((p) => ({ ...p, time_slot: e.target.value }))} />
+                    <select className="wp-input no-icon" value={slotRemove.time_slot} onChange={(e) => setSlotRemove((p) => ({ ...p, time_slot: e.target.value }))} disabled={!slotRemove.date}>
+                      <option value="">Select time</option>
+                      {slotRemove.date && availability[slotRemove.date]?.map(time => (
+                        <option key={time} value={time}>{convertToReadableTime(time)}</option>
+                      ))}
+                    </select>
                   </div>
                   <button className="wp-primary-btn" style={{ height: 44, background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA' }} onClick={removeSlot} disabled={slotBusy}>
                     {slotBusy ? 'Removing...' : 'Remove Slot'}
@@ -646,7 +794,7 @@ const WorkerDashboardPage = () => {
                     <div>
                       {slots.map((slot, i) => (
                         <span key={i} style={{ display: 'inline-block', margin: '4px', background: '#FDF7FF', color: '#8E44AD', borderRadius: 20, padding: '6px 14px', fontSize: 13, border: '1px solid #eee1ff' }}>
-                          {slot}
+                          {convertToReadableTime(slot)}
                         </span>
                       ))}
                     </div>
@@ -1002,18 +1150,6 @@ const WorkerDashboardPage = () => {
               )}
             </div>
           )}
-        </div>
-
-        <div className="wp-bottom-tabs">
-          {MAIN_TABS.map((t) => {
-            const Icon = t.icon;
-            return (
-              <button key={t.key} className={`wp-bottom-tab ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
-                <Icon size={16} />
-                <span>{t.label}</span>
-              </button>
-            );
-          })}
         </div>
       </div>
 

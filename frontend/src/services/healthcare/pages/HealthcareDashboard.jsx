@@ -110,9 +110,9 @@ const HealthcareDashboard = () => {
     fetch('/healthcare/doctors', { headers })
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          const sorted = data
-            .filter(d => d.is_approved !== false)
+        if (data.doctors && Array.isArray(data.doctors) && data.doctors.length > 0) {
+          const sorted = data.doctors
+            .filter(d => d.status === 'approved')
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
             .slice(0, 6);
           setDoctors(sorted);
@@ -281,20 +281,20 @@ const HealthcareDashboard = () => {
                 {doctors.map((doctor) => (
                   <div key={doctor.id} className="doctor-card">
                     <div className="doctor-card-top">
-                      <div className="doctor-avatar">{doctor.initial}</div>
+                      <div className="doctor-avatar">{doctor.full_name ? doctor.full_name.charAt(0).toUpperCase() : 'D'}</div>
                       <div className="doctor-info">
-                        <div className="doctor-name">{doctor.name}</div>
+                        <div className="doctor-name">{doctor.full_name || doctor.name}</div>
                         <div className="doctor-spec">{doctor.specialization}</div>
                         <div className="doctor-meta-row">
                           <span>⭐ {doctor.rating || '4.5'}</span>
                           <span>🕐 {doctor.experience || '5'} yrs</span>
                         </div>
-                        <div className="doctor-location">📍 {doctor.location || 'City Hospital'}</div>
+                        <div className="doctor-location">📍 {doctor.clinic_location || 'City Hospital'}</div>
                       </div>
                     </div>
                     <div className="doctor-card-bottom">
                       <div className="doctor-fee">
-                        ₹{doctor.fee || 500}
+                        ₹{doctor.hourly_rate || 500}
                         <span>/ visit</span>
                       </div>
                       <button className="book-now-btn" onClick={() => handleBookNow(doctor.id)}>

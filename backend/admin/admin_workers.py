@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 from worker_db import WorkerDB
 
-workers_admin_bp = Blueprint('workers_admin', __name__, url_prefix='/workers')
+workers_admin_bp = Blueprint('workers_admin', __name__)
 worker_db = WorkerDB()
 
 def get_db_connection():
@@ -48,7 +48,7 @@ def get_all_workers():
         
         if service_filter:
             conditions.append("w.service ILIKE %s")
-            params.append(f"%{service_filter}%")
+            params.append(f"%{service_filter.lower()}%")
         
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
@@ -78,7 +78,7 @@ def get_pending_workers():
         params = []
         if service_filter:
             query += " AND service ILIKE %s"
-            params.append(f"%{service_filter}%")
+            params.append(f"%{service_filter.lower()}%")
         
         cursor.execute(query, params)
         workers = [dict(row) for row in cursor.fetchall()]
@@ -99,7 +99,7 @@ def get_approved_workers():
         params = []
         if service_filter:
             query += " AND service ILIKE %s"
-            params.append(f"%{service_filter}%")
+            params.append(f"%{service_filter.lower()}%")
         
         cursor.execute(query, params)
         workers = [dict(row) for row in cursor.fetchall()]

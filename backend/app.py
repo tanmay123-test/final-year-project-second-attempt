@@ -6,7 +6,7 @@ if sys.platform == 'win32':
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, session, send_file, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from werkzeug.utils import secure_filename
@@ -358,10 +358,15 @@ def get_services():
 def signup():
     try:
         d = request.json
-        if user_db.user_exists(d["username"], d["email"]):
+        
+        # Handle both name and username fields
+        name = d.get("name", "")
+        username = d.get("username") or d.get("email", "").split("@")[0]  # Use email prefix as username
+        
+        if user_db.user_exists(username, d["email"]):
             return jsonify({"error": "User exists"}), 400
 
-        user_db.create_user(d["name"], d["username"], d["password"], d["email"])
+        user_db.create_user(name, username, d["password"], d["email"])
         send_otp(d["email"])
         return jsonify({"msg": "OTP sent"}), 201
     except Exception as e:
@@ -388,16 +393,61 @@ def resend_user_otp():
 
 @app.route("/login", methods=["POST"])
 def login():
-    ok, msg = user_db.verify_user(
-        request.json["username"],
-        request.json["password"]
-    )
+    # Accept both email and username for flexibility
+    email = request.json.get("email") or request.json.get("username")
+    password = request.json["password"]
+    
+    if not email or not password:
+        return jsonify({"error": "Email and password are required"}), 400
+    
+    ok, msg = user_db.verify_user(email, password)
     if not ok:
         return jsonify({"error": msg}), 401
 
+    user_data = user_db.get_user_by_username(email)
+    print(f"User data from get_user_by_username: {user_data}")  # Debug log
+    
+    # Handle different possible return formats
+    if user_data is None:
+        return jsonify({"error": "User data not found"}), 404
+    
+    # If user_data is an integer (ID), create basic user info
+    if isinstance(user_data, int):
+        return jsonify({
+            "token": generate_token(email),
+            "id": user_data,
+            "name": email.split("@")[0],  # Use email prefix as name
+            "email": email,
+            "success": True
+        }), 200
+    
+    # If user_data is a list/tuple, extract values
+    if isinstance(user_data, (list, tuple)) and len(user_data) >= 2:
+        return jsonify({
+            "token": generate_token(email),
+            "id": user_data[0],
+            "name": user_data[1],
+            "email": email,
+            "success": True
+        }), 200
+    
+    # If user_data is a dictionary, extract values
+    if isinstance(user_data, dict):
+        return jsonify({
+            "token": generate_token(email),
+            "id": user_data.get("id"),
+            "name": user_data.get("name", email.split("@")[0]),
+            "email": email,
+            "success": True
+        }), 200
+    
+    # Fallback
     return jsonify({
-        "token": generate_token(request.json["username"]),
-        "user_id": user_db.get_user_by_username(request.json["username"])
+        "token": generate_token(email),
+        "id": None,
+        "name": email.split("@")[0],
+        "email": email,
+        "success": True
     }), 200
 
 
@@ -440,8 +490,11 @@ def get_specializations():
 def get_all_doctors():
     """Get all available doctors"""
     try:
-        doctors = worker_db.get_all_workers()
-        return jsonify({"doctors": doctors}), 200
+        # Only get healthcare workers
+        doctors = worker_db.get_workers_by_service("healthcare")
+        # Filter only approved workers
+        approved_doctors = [doctor for doctor in doctors if doctor.get('status') == 'approved']
+        return jsonify({"doctors": approved_doctors}), 200
     except Exception as e:
         print(f"  Error fetching doctors: {e}")
         return jsonify({"error": "Failed to fetch doctors", "doctors": []}), 500
@@ -450,11 +503,13 @@ def get_all_doctors():
 @app.route("/healthcare/doctors/<specialization>")
 def doctors_by_specialization(specialization):
     try:
-        return jsonify({
-            "doctors": worker_db.get_workers_by_specialization(
-                specialization.lower()
-            )
-        }), 200
+        # Get healthcare workers by specialization
+        all_doctors = worker_db.get_workers_by_specialization(
+            specialization.lower()
+        )
+        # Filter only healthcare workers and approved ones
+        healthcare_doctors = [doctor for doctor in all_doctors if doctor.get('service') == 'healthcare' and doctor.get('status') == 'approved']
+        return jsonify({"doctors": healthcare_doctors}), 200
     except Exception as e:
         print(f"  Error fetching doctors by specialization: {e}")
         return jsonify({"error": "Failed to fetch doctors", "doctors": []}), 500
@@ -514,8 +569,33 @@ def get_worker_availability(worker_id):
 @app.route("/worker/<int:worker_id>/availability", methods=["POST"])
 def add_worker_availability(worker_id):
     d = request.json
+    
+    # Validate input data
+    if not d:
+        return jsonify({"error": "No data provided"}), 400
+    
+    date = d.get("date", "").strip()
+    time_slot = d.get("time_slot", "").strip()
+    
+    # Validate date
+    if not date:
+        return jsonify({"error": "Date is required"}), 400
+    
+    # Validate time slot
+    if not time_slot:
+        return jsonify({"error": "Time slot is required"}), 400
+    
+    # Validate time slot format (should be HH:MM-HH:MM)
+    import re
+    if not re.match(r'^\d{2}:\d{2}-\d{2}:\d{2}$', time_slot):
+        return jsonify({"error": "Invalid time slot format. Use HH:MM-HH:MM format"}), 400
+    
+    # Validate date format (YYYY-MM-DD)
+    if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
+        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD format"}), 400
+    
     ok, msg = availability_db.add_availability(
-        worker_id, d["date"], d["time_slot"]
+        worker_id, date, time_slot
     )
     if not ok:
         return jsonify({"error": msg}), 400
@@ -802,8 +882,173 @@ def worker_signup():
     
     if wid is None:
         return jsonify({"error": "Worker already exists"}), 400
-    return jsonify({"worker_id": wid}), 201
+    
+    # Get worker data for socket notification
+    worker_data = {
+        'id': wid,
+        'full_name': full_name,
+        'email': email,
+        'specialization': specialization,
+        'status': 'pending'
+    }
+    
+    # Send socket notification to admin
+    try:
+        from healthcareSocket import notify_new_worker_registration
+        notify_new_worker_registration(worker_data)
+    except ImportError:
+        print("Socket not available for notification")
+    
+    return jsonify({"worker_id": wid, "status": "pending", "message": "Registration submitted. Waiting for admin approval."}), 201
 
+
+@app.route('/admin/healthcare/workers/pending', methods=['GET'])
+def get_pending_healthcare_workers():
+    """Get all pending healthcare workers for admin approval"""
+    try:
+        conn = worker_db.get_conn()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        cursor.execute("""
+            SELECT id, full_name, email, phone, specialization, experience, 
+                   clinic_location, license_number, status, created_at,
+                   profile_photo_path, aadhaar_number, degree_certificate_path, medical_license_path
+            FROM workers 
+            WHERE service = 'healthcare' AND status = 'pending'
+            ORDER BY created_at DESC
+        """)
+        
+        workers = cursor.fetchall()
+        
+        # Convert file paths to URLs
+        for worker in workers:
+            worker['profile_photo_url'] = f"/uploads/{worker['profile_photo_path'].split('/')[-1]}" if worker.get('profile_photo_path') else None
+            worker['aadhaar_url'] = f"/uploads/{worker['aadhaar_number'].split('/')[-1]}" if worker.get('aadhaar_number') else None
+            worker['degree_certificate_url'] = f"/uploads/{worker['degree_certificate_path'].split('/')[-1]}" if worker.get('degree_certificate_path') else None
+            worker['medical_license_url'] = f"/uploads/{worker['medical_license_path'].split('/')[-1]}" if worker.get('medical_license_path') else None
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"workers": workers}), 200
+        
+    except Exception as e:
+        print(f"Error fetching pending healthcare workers: {e}")
+        return jsonify({"error": "Failed to fetch pending workers"}), 500
+
+@app.route('/admin/healthcare/workers/approved', methods=['GET'])
+def get_approved_healthcare_workers():
+    """Get all approved healthcare workers"""
+    try:
+        conn = worker_db.get_conn()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        cursor.execute("""
+            SELECT id, full_name, email, phone, specialization, experience, 
+                   clinic_location, license_number, status, created_at
+            FROM workers 
+            WHERE service = 'healthcare' AND status = 'approved'
+            ORDER BY created_at DESC
+        """)
+        
+        workers = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"workers": workers}), 200
+        
+    except Exception as e:
+        print(f"Error fetching approved healthcare workers: {e}")
+        return jsonify({"error": "Failed to fetch approved workers"}), 500
+
+@app.route('/admin/healthcare/workers/approve/<int:worker_id>', methods=['POST'])
+def approve_healthcare_worker(worker_id):
+    """Approve a healthcare worker"""
+    try:
+        conn = worker_db.get_conn()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE workers 
+            SET status = 'approved' 
+            WHERE id = %s AND service = 'healthcare'
+        """, (worker_id,))
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "Worker not found"}), 404
+        
+        conn.commit()
+        
+        # Get worker details for notification
+        cursor.execute("""
+            SELECT full_name, email 
+            FROM workers 
+            WHERE id = %s
+        """, (worker_id,))
+        
+        worker = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        # Send socket notification
+        try:
+            from healthcareSocket import notify_worker_approval
+            notify_worker_approval(worker_id, worker[0], 'approved')
+        except ImportError:
+            print("Socket not available for notification")
+        
+        return jsonify({"message": f"Worker {worker[0]} approved successfully"}), 200
+        
+    except Exception as e:
+        print(f"Error approving healthcare worker: {e}")
+        return jsonify({"error": "Failed to approve worker"}), 500
+
+@app.route('/admin/healthcare/workers/reject/<int:worker_id>', methods=['POST'])
+def reject_healthcare_worker(worker_id):
+    """Reject a healthcare worker"""
+    try:
+        conn = worker_db.get_conn()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE workers 
+            SET status = 'rejected' 
+            WHERE id = %s AND service = 'healthcare'
+        """, (worker_id,))
+        
+        if cursor.rowcount == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "Worker not found"}), 404
+        
+        conn.commit()
+        
+        # Get worker details for notification
+        cursor.execute("""
+            SELECT full_name, email 
+            FROM workers 
+            WHERE id = %s
+        """, (worker_id,))
+        
+        worker = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        # Send socket notification
+        try:
+            from healthcareSocket import notify_worker_approval
+            notify_worker_approval(worker_id, worker[0], 'rejected')
+        except ImportError:
+            print("Socket not available for notification")
+        
+        return jsonify({"message": f"Worker {worker[0]} rejected successfully"}), 200
+        
+    except Exception as e:
+        print(f"Error rejecting healthcare worker: {e}")
+        return jsonify({"error": "Failed to reject worker"}), 500
 
 @app.route('/worker/healthcare/login', methods=['POST'])
 def healthcare_worker_login():
@@ -818,9 +1063,20 @@ def healthcare_worker_login():
     
     wid, status, svc, spec, name = w
     
-    # Healthcare workers are auto-approved
+    # Check if worker is approved
+    if status != 'approved':
+        return jsonify({'error': 'Worker not approved yet. Please wait for admin approval.'}), 403
+    
     token = generate_token(email)
-    return jsonify({'token': token, 'worker': {'id': wid, 'email': email, 'service': svc, 'specialization': spec, 'full_name': name}, 'success': True})
+    return jsonify({
+        'worker_id': wid,
+        'doctor_id': wid,  # For healthcare workers, doctor_id = worker_id
+        'service': svc,
+        'specialization': spec,
+        'name': name,
+        'token': token,
+        'status': status
+    })
 
 
 @app.route("/debug/workers", methods=["GET"])
@@ -856,12 +1112,9 @@ def worker_login():
 
     wid, status, svc, spec, name = w
     
-    # Auto-approve healthcare workers, but keep approval for other services
-    if svc == "healthcare":
-        # Auto-approve healthcare workers
-        status = "approved"
-    elif status != "approved":
-        return jsonify({"error": "Not approved"}), 403
+    # Check if worker is approved (all services require approval)
+    if status != "approved":
+        return jsonify({"error": "Worker not approved yet. Please wait for admin approval."}), 403
 
     # Generate token for worker
     token = generate_token(email)
@@ -1985,12 +2238,133 @@ def search_chat_messages(room_id):
         query = request.args.get("q", "")
         if not query.strip():
             return jsonify({"error": "Search query is required"}), 400
-        
-        messages = expert_chat_db.search_messages(room_id, query)
-        return jsonify({"messages": messages}), 200
+        # TODO: Implement search functionality
+        return jsonify({"messages": []}), 200
     except Exception as e:
         print(f"  Error searching chat messages: {e}")
         return jsonify({"error": "Failed to search messages", "messages": []}), 500
+
+
+@app.route("/healthcare/doctors/<int:doctor_id>")
+def get_doctor_details(doctor_id):
+    """Get specific doctor details"""
+    try:
+        doctor = worker_db.get_worker_by_id(doctor_id)
+        if doctor and doctor.get('service') == 'healthcare' and doctor.get('status') == 'approved':
+            return jsonify({"doctor": doctor}), 200
+        else:
+            return jsonify({"error": "Doctor not found"}), 404
+    except Exception as e:
+        print(f"  Error fetching doctor details: {e}")
+        return jsonify({"error": "Failed to fetch doctor details"}), 500
+
+
+@app.route("/healthcare/appointments", methods=["POST"])
+def create_appointment():
+    """Create a new appointment"""
+    try:
+        data = request.json
+        
+        # Get user details for the appointment
+        user_db = __import__('user_db').UserDB()
+        user = user_db.get_user_by_id(data["patient_id"])
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+            
+        appointment_id = appt_db.book_clinic(
+            user_id=data["patient_id"],
+            worker_id=data["doctor_id"],
+            user_name=user.get('name', 'Unknown User'),
+            symptoms=data["reason"],
+            date=data["date"],
+            time_slot=data["time"]
+        )
+        
+        if appointment_id and appointment_id[0]:
+            return jsonify({"appointment_id": appointment_id[1], "message": "Appointment created successfully"}), 201
+        else:
+            return jsonify({"error": f"Failed to create appointment: {appointment_id[1] if appointment_id else 'Unknown error'}"}), 500
+    except Exception as e:
+        print(f"  Error creating appointment: {e}")
+        return jsonify({"error": f"Failed to create appointment: {str(e)}"}), 500
+
+
+@app.route("/healthcare/appointments", methods=["GET"])
+def get_appointments():
+    """Get appointments for a user"""
+    try:
+        patient_id = request.args.get("patient_id")
+        doctor_id = request.args.get("doctor_id")
+        
+        if patient_id:
+            appointments = appointment_db.get_patient_appointments(patient_id)
+        elif doctor_id:
+            appointments = appointment_db.get_doctor_appointments(doctor_id)
+        else:
+            appointments = appointment_db.get_all_appointments()
+            
+        return jsonify({"appointments": appointments}), 200
+    except Exception as e:
+        print(f"  Error fetching appointments: {e}")
+        return jsonify({"error": "Failed to fetch appointments"}), 500
+
+
+@app.route("/healthcare/availability/<int:doctor_id>")
+def get_doctor_availability(doctor_id):
+    """Get available time slots for a doctor on a specific date"""
+    try:
+        date = request.args.get("date")
+        if not date:
+            return jsonify({"error": "Date parameter is required"}), 400
+        
+        # Get availability for the doctor
+        availability = appt_db.availability_db.get_availability(doctor_id, date)
+        
+        # Get existing appointments to filter out booked slots
+        appointments = appt_db.get_by_worker(doctor_id)
+        booked_slots = []
+        for apt in appointments:
+            if apt.get('booking_date') == date:
+                booked_slots.append(apt.get('time_slot'))
+        
+        # Filter available slots (remove booked ones)
+        available_slots = []
+        if availability:
+            for slot in availability:
+                if slot['time_slot'] not in booked_slots:
+                    available_slots.append(slot['time_slot'])
+        
+        return jsonify({"available_slots": available_slots}), 200
+    except Exception as e:
+        print(f"  Error fetching availability: {e}")
+        return jsonify({"error": "Failed to fetch availability"}), 500
+
+
+@app.route("/healthcare/availability/<int:doctor_id>", methods=["POST"])
+def set_doctor_availability(doctor_id):
+    """Set availability slots for a doctor"""
+    try:
+        data = request.json
+        date = data.get("date")
+        time_slots = data.get("time_slots", [])
+        
+        if not date or not time_slots:
+            return jsonify({"error": "Date and time_slots are required"}), 400
+        
+        # Clear existing availability for this date
+        appt_db.availability_db.remove_availability(doctor_id, date, None)
+        
+        # Add new availability slots
+        for time_slot in time_slots:
+            appt_db.availability_db.add_availability(doctor_id, date, time_slot)
+        
+        return jsonify({"message": f"Set {len(time_slots)} availability slots for {date}"}), 200
+    except Exception as e:
+        print(f"  Error setting availability: {e}")
+        return jsonify({"error": "Failed to set availability"}), 500
+
+
 
 
 # ================= EXPERT FILE UPLOAD =================
@@ -2050,11 +2424,58 @@ def handle_exception(e):
 
 
 # ================= RUN =================
+# Temporary approval/reject endpoints (until server restart)
+@app.route("/admin/workers/<int:worker_id>/approve", methods=["POST"])
+def temp_approve_worker(worker_id):
+    """Temporary approval endpoint"""
+    try:
+        worker = worker_db.get_worker_by_id(worker_id)
+        if not worker:
+            return jsonify({"error": "Worker not found"}), 404
+        
+        if worker.get('status') == 'approved':
+            return jsonify({"error": "Worker is already approved"}), 400
+        
+        worker_db.approve_worker(worker_id)
+        
+        return jsonify({
+            "message": "Worker approved successfully",
+            "worker_id": worker_id
+        }), 200
+        
+    except Exception as e:
+        print(f"Error approving worker: {e}")
+        return jsonify({"error": f"Failed to approve worker: {str(e)}"}), 500
+
+@app.route("/admin/workers/<int:worker_id>/reject", methods=["POST"])
+def temp_reject_worker(worker_id):
+    """Temporary rejection endpoint"""
+    try:
+        data = request.json or {}
+        reason = data.get('rejection_reason')
+        
+        worker = worker_db.get_worker_by_id(worker_id)
+        if not worker:
+            return jsonify({"error": "Worker not found"}), 404
+        
+        worker_db.reject_worker(worker_id, reason)
+        
+        return jsonify({
+            "message": "Worker rejected successfully",
+            "worker_id": worker_id
+        }), 200
+        
+    except Exception as e:
+        print(f"Error rejecting worker: {e}")
+        return jsonify({"error": f"Failed to reject worker: {str(e)}"}), 500
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"\n🚀 Starting ExpertEase Backend...")
+    print("🚀 Starting ExpertEase Backend...")
     print(f"📍 Server running on: http://localhost:{port}")
     print(f"📍 Server running on: http://127.0.0.1:{port}")
     print(f"🌐 Access from browser: http://localhost:{port}")
     print("="*50)
+    
+    # Run normally without socket for now
     app.run(host="0.0.0.0", port=port, debug=True)

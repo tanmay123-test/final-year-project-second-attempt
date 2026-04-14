@@ -14,6 +14,49 @@ const AdminHealthcare = () => {
   const token = localStorage.getItem('token');
   const API_BASE_URL = 'http://localhost:5000';
 
+  // Function to format phone number
+  const formatPhoneNumber = (phone) => {
+    if (!phone) return 'Not provided';
+    
+    // Remove all non-digit characters
+    const cleaned = phone.replace(/\D/g, '');
+    
+    // Check if it's a valid Indian number (10 digits)
+    if (cleaned.length === 10) {
+      return `${cleaned.slice(0, 5)}-${cleaned.slice(5)}`;
+    }
+    
+    // If it has country code (11-12 digits starting with 91)
+    if (cleaned.length === 11 && cleaned.startsWith('0')) {
+      return `+91 ${cleaned.slice(1, 6)}-${cleaned.slice(6)}`;
+    }
+    
+    if (cleaned.length === 12 && cleaned.startsWith('91')) {
+      return `+91 ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+    }
+    
+    // For other formats, just return as is
+    return phone;
+  };
+
+  // Function to format license number
+  const formatLicenseNumber = (license) => {
+    if (!license) return 'Not provided';
+    
+    // If license is long, add formatting
+    if (license.length > 10) {
+      return license.toUpperCase().match(/.{1,4}/g).join('-');
+    }
+    
+    return license.toUpperCase();
+  };
+
+  // Function to get experience display
+  const getExperienceDisplay = (experience) => {
+    if (!experience || experience === '0') return 'Fresher';
+    return `${experience} years`;
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -219,22 +262,32 @@ const AdminHealthcare = () => {
                   {/* Profile Column */}
                   <div className="flex-shrink-0">
                     <div className="w-24 h-32 rounded-xl overflow-hidden bg-surface-container shadow-inner">
-                      <img className="w-full h-full object-cover" src={getDocUrl(worker.documents?.profile_photo) || "https://via.placeholder.com/150"} alt={worker.full_name} />
+                      {worker.profile_photo_url ? (
+                        <img className="w-full h-full object-cover" src={worker.profile_photo_url} alt={worker.full_name} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#8E44AD] to-[#3498DB] text-white">
+                          <span className="text-3xl font-bold">{worker.full_name?.charAt(0)?.toUpperCase() || 'D'}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {/* Info Column */}
                   <div className="flex-grow">
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="flex justify-between items-start mb-3">
                       <div>
                         <h3 className="text-xl font-bold text-on-surface font-headline">{worker.full_name}</h3>
                         <p className="text-[#4c40df] font-semibold text-sm">{worker.specialization}</p>
                       </div>
-                      <span className="text-xs text-on-surface-variant font-medium bg-surface-container px-3 py-1 rounded-full">{worker.experience} yrs Exp.</span>
+                      <span className="text-xs text-on-surface-variant font-medium bg-surface-container px-3 py-1 rounded-full">{getExperienceDisplay(worker.experience)}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-y-3 gap-x-4 mt-4 text-sm">
+                    <div className="space-y-3 text-sm">
                       <div className="flex items-center gap-2 text-on-surface-variant">
                         <span className="material-symbols-outlined text-base">location_on</span>
-                        <span>{worker.clinic_location}</span>
+                        <span>{worker.clinic_location || 'Not specified'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-on-surface-variant">
+                        <span className="material-symbols-outlined text-base">badge</span>
+                        <span className="font-mono text-xs">{formatLicenseNumber(worker.license_number)}</span>
                       </div>
                       <div className="flex items-center gap-2 text-on-surface-variant">
                         <span className="material-symbols-outlined text-base">calendar_today</span>
@@ -242,29 +295,50 @@ const AdminHealthcare = () => {
                       </div>
                       <div className="flex items-center gap-2 text-on-surface-variant">
                         <span className="material-symbols-outlined text-base">mail</span>
-                        <span>{worker.email}</span>
+                        <span className="text-xs">{worker.email}</span>
                       </div>
                       <div className="flex items-center gap-2 text-on-surface-variant">
                         <span className="material-symbols-outlined text-base">phone</span>
-                        <span>{worker.phone}</span>
+                        <span className="font-mono">{formatPhoneNumber(worker.phone)}</span>
                       </div>
                     </div>
                     {/* Documents Section */}
                     <div className="mt-6 pt-4 border-t border-outline-variant/10">
                       <p className="text-xs uppercase tracking-widest font-bold text-on-surface-variant mb-3">Document Verification</p>
                       <div className="flex flex-wrap gap-4">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-green-600 text-lg">description</span>
-                          <a href={getDocUrl(worker.documents?.aadhaar)} target="_blank" rel="noopener noreferrer" className="doc-link text-xs">Aadhaar Card</a>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-green-600 text-lg">school</span>
-                          <a href={getDocUrl(worker.documents?.degree_certificate)} target="_blank" rel="noopener noreferrer" className="doc-link text-xs">Degree Certificate</a>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-green-600 text-lg">verified_user</span>
-                          <a href={getDocUrl(worker.documents?.medical_license)} target="_blank" rel="noopener noreferrer" className="doc-link text-xs">Medical License</a>
-                        </div>
+                        {worker.aadhaar_url ? (
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-green-600 text-lg">description</span>
+                            <a href={worker.aadhaar_url} target="_blank" rel="noopener noreferrer" className="doc-link text-xs">Aadhaar Card</a>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <span className="material-symbols-outlined text-lg">description</span>
+                            <span className="text-xs">Aadhaar Card (Not uploaded)</span>
+                          </div>
+                        )}
+                        {worker.degree_certificate_url ? (
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-green-600 text-lg">school</span>
+                            <a href={worker.degree_certificate_url} target="_blank" rel="noopener noreferrer" className="doc-link text-xs">Degree Certificate</a>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <span className="material-symbols-outlined text-lg">school</span>
+                            <span className="text-xs">Degree Certificate (Not uploaded)</span>
+                          </div>
+                        )}
+                        {worker.medical_license_url ? (
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-green-600 text-lg">verified_user</span>
+                            <a href={worker.medical_license_url} target="_blank" rel="noopener noreferrer" className="doc-link text-xs">Medical License</a>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <span className="material-symbols-outlined text-lg">verified_user</span>
+                            <span className="text-xs">Medical License (Not uploaded)</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     {/* Actions */}
