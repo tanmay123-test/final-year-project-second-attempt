@@ -1,10 +1,8 @@
 from flask import Blueprint, request, jsonify
-from housekeeping.ai_features.ai_advisor_service import get_user_recommendations
-from services.housekeeping.arrival.backend.services.ai_advisor_service import AIAdvisorService
+from housekeeping.ai_features.ai_advisor_service import process_home_query, get_user_recommendations
 
 # Create blueprint
 ai_features_bp = Blueprint('housekeeping_ai', __name__)
-ai_service = AIAdvisorService()
 
 @ai_features_bp.route('/api/ai/recommendations', methods=['GET'])
 def recommendations():
@@ -39,7 +37,10 @@ def chat():
     user_id = data.get('user_id')
     
     try:
-        response_data = ai_service.chat_with_ai(user_id=user_id, message=message)
-        return jsonify(response_data), 200
+        response_data = process_home_query(message)
+        return jsonify({
+            "response": response_data.get("response", ""),
+            "mode": response_data.get("mode", "general")
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

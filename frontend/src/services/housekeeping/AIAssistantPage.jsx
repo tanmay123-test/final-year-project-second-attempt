@@ -44,8 +44,7 @@ const AIAssistantPage = () => {
         user_id: userId
       });
 
-      // Backend returns { message, mode, quick_replies, type }
-      const { message: aiResponse, mode } = response.data;
+      const { response: aiResponse, mode } = response.data;
       
       let modeIcon = "🏠";
       if (mode === "cooking") modeIcon = "🍳";
@@ -54,11 +53,10 @@ const AIAssistantPage = () => {
       else if (mode === "general") modeIcon = "🏠";
 
       const aiMessage = { 
-        text: aiResponse || "I'm here to help with your home! Try asking about cleaning tips, recipes, or booking a service.", 
+        text: aiResponse, 
         sender: 'ai', 
         mode: mode || 'general', 
-        modeIcon,
-        quickReplies: response.data.quick_replies || []
+        modeIcon 
       };
       
       // Artificial delay to match the "Thinking..." experience shown in screenshot

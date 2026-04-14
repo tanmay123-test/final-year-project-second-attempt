@@ -167,18 +167,12 @@ def register_blueprints(app):
         print(f"    ❌ Could not register Housekeeping Booking blueprint: {e}")
 
     try:
-        from services.housekeeping.arrival.backend.controllers.ai_advisor_controller import ai_advisor_bp
-        app.register_blueprint(ai_advisor_bp, url_prefix='/api/ai')
-        print("    ✅ AI Advisor blueprint registered")
-    except Exception as e:
-        print(f"    ❌ Could not register AI Advisor blueprint: {e}")
-
-    try:
         from housekeeping.ai_features.ai_routes import ai_features_bp
         app.register_blueprint(ai_features_bp)
         print("    ✅ AI Features blueprint registered")
     except Exception as e:
-        print(f"    ❌ Could not register AI Features blueprint: {e}")
+        print(f"    ❌ AI Features blueprint failed to register: {e}")
+        raise
 
     # Register car service blueprints
     print("  🚗 Car Service:")

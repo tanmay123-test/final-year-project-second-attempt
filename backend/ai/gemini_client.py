@@ -293,6 +293,7 @@ Provide a helpful educational response:"""
                 return "I apologize, but I couldn't process that request. Please try asking in a different way."
 
             elif response.status_code == 429:
+                print(f"Gemini 429 error: {response.text[:300]}")
                 return "I'm receiving too many requests right now. Please wait a moment and try again."
 
             elif response.status_code == 404:

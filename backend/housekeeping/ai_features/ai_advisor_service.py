@@ -3,6 +3,7 @@ import httpx
 import json
 from datetime import datetime, timedelta
 from housekeeping.models.database import HousekeepingDatabase
+from ai.gemini_client import gemini_client
 
 # Initialize database
 db = HousekeepingDatabase()
@@ -119,70 +120,56 @@ def process_home_query(query):
     if not api_key:
         return {"response": "Gemini API key not configured.", "mode": "error"}
         
-    # Classification logic
     query_lower = query.lower()
-    if "recipe" in query_lower:
+
+    # Cooking mode
+    if any(word in query_lower for word in [
+        "recipe", "cook", "make", "food", "dish",
+        "ingredients", "prepare", "how to make", "bake", "fry"
+    ]):
         mode = "cooking"
-        system_prompt = "You are a helpful cooking assistant. Provide delicious recipes and kitchen tips."
-    elif "clean" in query_lower:
+        system_context = "You are a cooking assistant. Give a clear, specific recipe with ingredients and numbered steps for exactly what the user asked."
+
+    # Cleaning mode — use word boundary logic to avoid false matches
+    elif any(word in query_lower for word in [
+        "stain", "remove", "scrub", "wash", "wipe", "mop",
+        "disinfect", "sanitize", "polish", "tile", "grout", "floor"
+    ]) or ("clean" in query_lower and "cleaner" not in query_lower and "unclear" not in query_lower):
         mode = "cleaning"
-        system_prompt = "You are a professional cleaning expert. Provide efficient cleaning tips and home maintenance hacks."
-    elif "dirty" in query_lower or "problem" in query_lower:
+        system_context = "You are a home cleaning expert. Give specific cleaning advice for exactly what the user described — do not give generic tile cleaning tips unless tiles were mentioned."
+
+    # Service mode
+    elif any(word in query_lower for word in [
+        "book", "service", "schedule", "hire", "appointment",
+        "dirty", "mess", "professional", "deep clean"
+    ]):
         mode = "service"
-        system_prompt = "You are a home service advisor. Suggest appropriate housekeeping services based on the user's problem."
+        system_context = "You are a home service advisor. Recommend the most relevant housekeeping services based on what the user described."
+
+    # General mode
     else:
         mode = "general"
-        system_prompt = "You are a friendly home assistant. Help with general home management and organizational tasks."
-        
+        system_context = "You are a smart home assistant. Give practical, specific home advice for exactly what the user asked."
+
+    # Build the full prompt
+    prompt = f"""{system_context}
+
+User asked: "{query}"
+
+Respond specifically to this exact question. Do not give a generic response.
+Format with numbered steps where helpful.
+Use **bold** for key terms.
+Add a 💡 Pro tip at the end.
+Keep it concise and practical."""
+
     try:
-        # Prepare the prompt
-        full_prompt = f"{system_prompt}\n\nUser Question:\n{query}"
+        # Use existing gemini_client.generate_response(prompt) as used elsewhere in project
+        response_text = gemini_client.generate_response(prompt)
         
-        # Prepare API request
-        url = f"{GEMINI_BASE_URL}/models/{GEMINI_MODEL}:generateContent"
-        headers = {
-            "Content-Type": "application/json",
-            "x-goog-api-key": api_key
+        return {
+            "response": response_text,
+            "mode": mode
         }
-        
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": full_prompt
-                        }
-                    ]
-                }
-            ],
-            "generationConfig": {
-                "temperature": 0.7,
-                "topK": 40,
-                "topP": 0.95,
-                "maxOutputTokens": 1024,
-            }
-        }
-        
-        # Make API call synchronously for this simple implementation
-        with httpx.Client(timeout=30.0) as client:
-            response = client.post(url, headers=headers, json=payload)
-            
-            if response.status_code == 200:
-                result = response.json()
-                
-                # Extract the generated text
-                if "candidates" in result and len(result["candidates"]) > 0:
-                    candidate = result["candidates"][0]
-                    if "content" in candidate and "parts" in candidate["content"]:
-                        ai_text = candidate["content"]["parts"][0]["text"].strip()
-                        return {
-                            "response": ai_text,
-                            "mode": mode
-                        }
-                
-                return {"response": "I apologize, but I couldn't generate a response. Please try rephrasing your question.", "mode": mode}
-            
-            return {"response": f"Technical difficulties (Status: {response.status_code}). Please try again later.", "mode": "error"}
             
     except Exception as e:
         print(f"Error in process_home_query: {e}")
