@@ -28,6 +28,9 @@ class BookingService:
         """
         # Get all workers with 'housekeeping' service
         workers = self.worker_db.get_workers_by_service('housekeeping')
+        if not workers:
+            # Fallback to general cleaning if no specific housekeeping workers
+            workers = self.worker_db.get_workers_by_service('cleaning')
         
         # Enrich with online status
         for w in workers:
@@ -48,22 +51,18 @@ class BookingService:
     def _normalize_date(self, date_str):
         """
         Normalize date string to 'YYYY-MM-DD' format.
-        Extremely robust to handle various formats like DD-MM-YYYY, MM-DD-YYYY, etc.
         """
         if not date_str:
             return ""
         
-        # If already YYYY-MM-DD
         import re
         if re.match(r'^\d{4}-\d{2}-\d{2}$', str(date_str)):
             return date_str
 
         try:
-            # Common formats found in your UI
             for fmt in ("%d-%m-%Y", "%Y-%m-%d", "%m-%d-%Y", "%d/%m/%Y", "%Y/%m/%d"):
                 try:
                     res = datetime.strptime(date_str, fmt).strftime("%Y-%m-%d")
-                    print(f"[DEBUG] Normalized date '{date_str}' to '{res}' using format '{fmt}'")
                     return res
                 except ValueError:
                     continue
@@ -74,24 +73,20 @@ class BookingService:
 
     def _normalize_time(self, time_str):
         """
-        Normalize time string to 'HH:MM AM/PM' format (e.g., '9:00 AM' -> '09:00 AM')
+        Normalize time string to 'HH:MM AM/PM' format.
         """
         if not time_str:
             return ""
         try:
-            # Try to parse the time string
-            # It could be '9:00 AM', '09:00 AM', '13:00', etc.
             t = None
             time_str = time_str.strip().upper()
             
             if 'AM' in time_str or 'PM' in time_str:
-                # Handle AM/PM format
                 try:
                     t = datetime.strptime(time_str, "%I:%M %p")
                 except ValueError:
                     t = datetime.strptime(time_str, "%H:%M %p")
             else:
-                # Handle 24h format
                 t = datetime.strptime(time_str, "%H:%M")
                 
             if t:
@@ -104,12 +99,10 @@ class BookingService:
     def get_aggregated_slots(self, service_type, date, worker_id=None):
         """
         Get available time slots for a given date and service type.
-        Highly optimized to prevent timeouts by batching database calls.
         """
         date = self._normalize_date(date)
         standard_slots = ["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM"]
         
-        # 1. Fetch Candidates
         if worker_id:
             worker = self.worker_db.get_worker_by_id(worker_id)
             candidates = [worker] if worker else []
@@ -122,20 +115,13 @@ class BookingService:
             return []
 
         worker_ids = [w['id'] for w in candidates]
+        online_statuses = {w_id: self.db.get_worker_online_status(w_id) for w_id in worker_ids}
 
-        # 2. Batch Fetch Online Statuses (SQLite)
-        online_statuses = {}
-        for w_id in worker_ids:
-            online_statuses[w_id] = self.db.get_worker_online_status(w_id)
-
-        # 3. Batch Fetch Availability Slots (SQLite)
-        # We'll fetch for all candidates in one query if possible, or iterate once
         worker_slots_map = {w_id: [] for w_id in worker_ids}
         try:
-            # Raw query to batch fetch
             conn = self.availability_db.get_conn()
             cursor = conn.cursor()
-            query = "SELECT worker_id, time_slot FROM availability WHERE worker_id IN ({}) AND date = ?".format(','.join(['?']*len(worker_ids)))
+            query = "SELECT worker_id, time_slot FROM availability WHERE worker_id IN ({}) AND date = %s".format(','.join(['%s']*len(worker_ids)))
             cursor.execute(query, tuple(worker_ids) + (date,))
             for row in cursor.fetchall():
                 worker_slots_map[row[0]].append(self._normalize_time(row[1]))
@@ -143,14 +129,13 @@ class BookingService:
         except Exception as e:
             print(f"  Batch availability fetch error: {e}")
 
-        # 4. Batch Fetch Bookings (SQLite)
-        bookings_map = {} # (worker_id, time) -> count
+        bookings_map = {}
         try:
             conn = self.db.get_conn()
             cursor = conn.cursor()
             query = """
                 SELECT worker_id, time_slot FROM bookings 
-                WHERE booking_date = ? AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
+                WHERE booking_date = %s AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
             """
             cursor.execute(query, (date,))
             for row in cursor.fetchall():
@@ -160,7 +145,6 @@ class BookingService:
         except Exception as e:
             print(f"  Batch bookings fetch error: {e}")
 
-        # 5. Aggregate Slots
         all_potential_slots = set(standard_slots)
         for w_id, slots in worker_slots_map.items():
             for s in slots:
@@ -181,18 +165,15 @@ class BookingService:
                 w_slots = worker_slots_map.get(w_id, [])
                 has_explicit_slot = time in w_slots
                 
-                # Conflict check
                 if bookings_map.get((w_id, time), 0) > 0:
                     continue
 
-                # Logic check (Discovery vs Specific Worker)
                 if worker_id:
-                    if not (has_explicit_slot or is_online):
+                    if not has_explicit_slot:
                         continue
                 else:
-                    if not (is_online or has_explicit_slot or len(w_slots) == 0):
+                    if not has_explicit_slot:
                         continue
-                
                 count += 1
             
             if count > 0:
@@ -203,9 +184,7 @@ class BookingService:
     def check_availability(self, service_type, date, time, address=None, worker_id=None, booking_type='schedule'):
         """
         Check which workers are available for a given service, date, and time.
-        Optimized to batch database calls.
         """
-        # Handle 'Instant' marker from frontend
         if time == 'Instant':
             time = datetime.now().strftime("%I:%M %p")
             
@@ -224,16 +203,13 @@ class BookingService:
             return []
 
         worker_ids = [w['id'] for w in candidates]
-
-        # 1. Batch Fetch Online Statuses
         online_statuses = {w_id: self.db.get_worker_online_status(w_id) for w_id in worker_ids}
 
-        # 2. Batch Fetch Availability Slots
         worker_slots_map = {w_id: [] for w_id in worker_ids}
         try:
             conn = self.availability_db.get_conn()
             cursor = conn.cursor()
-            query = "SELECT worker_id, time_slot FROM availability WHERE worker_id IN ({}) AND date = ?".format(','.join(['?']*len(worker_ids)))
+            query = "SELECT worker_id, time_slot FROM availability WHERE worker_id IN ({}) AND date = %s".format(','.join(['%s']*len(worker_ids)))
             cursor.execute(query, tuple(worker_ids) + (date,))
             for row in cursor.fetchall():
                 worker_slots_map[row[0]].append(self._normalize_time(row[1]))
@@ -241,14 +217,13 @@ class BookingService:
         except Exception as e:
             print(f"  check_availability batch slots error: {e}")
 
-        # 3. Batch Fetch Bookings
         bookings_map = {}
         try:
             conn = self.db.get_conn()
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT worker_id FROM bookings 
-                WHERE booking_date = ? AND time_slot = ? 
+                WHERE booking_date = %s AND time_slot = %s 
                 AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
             """, (date, time))
             for row in cursor.fetchall():
@@ -263,23 +238,17 @@ class BookingService:
             is_online = online_statuses.get(w_id, False)
             w_slots = worker_slots_map.get(w_id, [])
             has_explicit_slot = time in w_slots
-            
-            # Conflict check
-            if bookings_map.get(w_id):
+
+            if bookings_map.get(w_id, 0) > 0:
                 continue
 
-            # Logic check
             if booking_type == 'instant':
-                if not (is_online or has_explicit_slot):
+                if not is_online:
                     continue
-            else: # scheduled
-                if worker_id:
-                    if not (has_explicit_slot or is_online):
-                        continue
-                else:
-                    if not (is_online or has_explicit_slot or len(w_slots) == 0):
-                        continue
-            
+            else:
+                if not has_explicit_slot:
+                    continue
+
             worker['is_online'] = is_online
             available_workers.append(worker)
                 
@@ -289,27 +258,23 @@ class BookingService:
         """
         Create a booking request.
         """
-        # Handle 'Instant' marker
         if time == 'Instant':
             time = datetime.now().strftime("%I:%M %p")
             
         date = self._normalize_date(date)
         time = self._normalize_time(time)
 
-        # Calculate price (worker-specific if applicable). Supports size/area tiers.
         def compute_worker_price(w_id, svc_name, home_size, add_ons_text):
             import json as _json
-            # Quick exit if no config
-            # Try find detailed config
             conn = self.db.get_conn()
             cur = conn.cursor()
             try:
-                cur.execute("SELECT id FROM services WHERE name = ?", (svc_name,))
+                cur.execute("SELECT id FROM services WHERE name = %s", (svc_name,))
                 srow = cur.fetchone()
                 if not srow:
                     return self.db.get_service_price(svc_name)
                 sid = srow[0]
-                cur.execute("SELECT price, pricing_json FROM worker_services WHERE worker_id = ? AND service_id = ? AND active = 1", (w_id, sid))
+                cur.execute("SELECT price, pricing_json FROM worker_services WHERE worker_id = %s AND service_id = %s AND active = TRUE", (w_id, sid))
                 ws = cur.fetchone()
                 if not ws:
                     return self.db.get_service_price(svc_name)
@@ -322,7 +287,6 @@ class BookingService:
                         cfg = None
                 if not cfg:
                     return default_price if default_price > 0 else self.db.get_service_price(svc_name)
-                # Size-based
                 sizes = (cfg.get('sizes') or {})
                 custom_cfg = (cfg.get('custom') or {})
                 if home_size:
@@ -330,9 +294,7 @@ class BookingService:
                         p = float(sizes[home_size].get('price', 0))
                         if p > 0:
                             return p
-                    # custom area
                     if home_size.startswith('Custom') and custom_cfg.get('enabled'):
-                        # Expect pattern "Custom: <area> sqft"
                         import re
                         m = re.search(r'(\d+(\.\d+)?)', home_size)
                         if m:
@@ -340,7 +302,6 @@ class BookingService:
                             rate = float(custom_cfg.get('per_sqft', 0))
                             if rate > 0 and area > 0:
                                 return round(rate * area, 2)
-                # fallback
                 return default_price if default_price > 0 else self.db.get_service_price(svc_name)
             finally:
                 conn.close()
@@ -353,21 +314,14 @@ class BookingService:
             slots = self.availability_db.get_availability(worker_id, date)
             has_explicit_slot = any(self._normalize_time(s['time_slot']) == time for s in slots)
 
-            # Check for availability based on booking type
-            if booking_type == 'instant':
-                # For instant booking with specific worker: always allow booking
-                # But only check availability if we need to assign immediately
-                pass  # Always allow booking for specific worker
-            else: # schedule
-                if not has_explicit_slot:
-                    return {"error": "Worker has not listed availability for this time slot"}
+            if booking_type != 'instant' and not has_explicit_slot:
+                return {"error": "Worker has not listed availability for this time slot"}
 
-            # Check for conflicting bookings
             conn = self.db.get_conn()
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT count(*) FROM bookings 
-                WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
+                WHERE worker_id = %s AND booking_date = %s AND time_slot = %s 
                 AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
             """, (worker_id, date, time))
             if cursor.fetchone()[0] > 0:
@@ -378,17 +332,10 @@ class BookingService:
             price = compute_worker_price(worker_id, service_type, home_size, add_ons)
         else:
             price = self.db.get_service_price(service_type)
-        # Add-ons logic could be added here
         
-        # Determine booking status based on worker online status
         if worker_id:
             is_online = self.db.get_worker_online_status(worker_id)
-            if booking_type == 'instant' and is_online:
-                # Worker is online and instant booking - assign immediately
-                status = 'ASSIGNED'
-            else:
-                # Worker is offline or scheduled booking - keep as requested
-                status = 'REQUESTED'
+            status = 'ASSIGNED' if booking_type == 'instant' and is_online else 'REQUESTED'
         else:
             status = 'PENDING'
         
@@ -399,7 +346,6 @@ class BookingService:
         )
         
         if booking_id:
-            # Notify worker only if assigned (not just requested)
             if worker_id and status == 'ASSIGNED':
                 self._notify_worker(worker_id, booking_id, "New Booking Assigned", f"You have been assigned a new booking for {service_type} on {date} at {time}.")
             elif worker_id and status == 'REQUESTED':
@@ -430,7 +376,6 @@ class BookingService:
         updated = self.db.update_booking_status(booking_id, 'CANCELLED')
         if not updated:
             return False, "Failed to cancel booking"
-        # Notify worker
         if booking.get('worker_id'):
             try:
                 self._notify_worker(booking['worker_id'], booking_id, "Booking Cancelled", f"Booking #{booking_id} has been cancelled by the user.")
@@ -447,18 +392,15 @@ class BookingService:
             return False, "Booking not found", None
             
         if status == 'ACCEPTED':
-            # Verify assignment
             if booking['worker_id'] and str(booking['worker_id']) != str(worker_id):
                  return False, "This booking is assigned to another worker", None
             
             if self.db.update_booking_status(booking_id, 'ACCEPTED', worker_id=worker_id):
-                # Notify User
                 self._notify_user(booking['user_id'], booking_id, "Booking Accepted", f"Your booking #{booking_id} has been accepted by the worker.")
                 return True, "Booking accepted", 'ACCEPTED'
                 
         elif status == 'DECLINED':
             if self.db.update_booking_status(booking_id, 'DECLINED'):
-                # Notify User
                 self._notify_user(booking['user_id'], booking_id, "Booking Declined", f"Your booking #{booking_id} has been declined by the worker.")
                 return True, "Booking declined", 'DECLINED'
                 
@@ -467,11 +409,6 @@ class BookingService:
     def start_job(self, booking_id, worker_id):
         """
         Worker starts the job.
-        1. Validate booking and worker.
-        2. Generate OTP.
-        3. Update status to IN_PROGRESS.
-        4. Store OTP and started_at.
-        5. Notify User with OTP.
         """
         booking = self.db.get_booking_by_id(booking_id)
         if not booking:
@@ -483,22 +420,19 @@ class BookingService:
         if booking['status'] != 'ACCEPTED':
             return False, f"Cannot start job in '{booking['status']}' state. Must be ACCEPTED.", None
         
-        # Generate OTP
         otp = str(random.randint(100000, 999999))
         started_at = datetime.now().isoformat()
         
-        # Update DB
         conn = self.db.get_conn()
         cursor = conn.cursor()
         try:
             cursor.execute("""
             UPDATE bookings 
-            SET status = 'IN_PROGRESS', otp = ?, started_at = ?, retry_count = 0
-            WHERE id = ?
+            SET status = 'IN_PROGRESS', otp = %s, started_at = %s, retry_count = 0
+            WHERE id = %s
             """, (otp, started_at, booking_id))
             conn.commit()
             
-            # Notify User
             user_msg = f"Your housekeeping service has started. Please share this OTP with the worker to complete the job: {otp}"
             self._notify_user(booking['user_id'], booking_id, "Service Started - OTP Inside", user_msg)
             
@@ -513,9 +447,6 @@ class BookingService:
     def complete_job(self, booking_id, worker_id, provided_otp):
         """
         Worker completes the job using OTP.
-        1. Validate booking and worker.
-        2. Verify OTP.
-        3. Update status to COMPLETED.
         """
         booking = self.db.get_booking_by_id(booking_id)
         if not booking:
@@ -530,24 +461,20 @@ class BookingService:
         if not booking.get('otp'):
             return False, "System Error: No OTP found for this active job."
             
-        # Check Retry Count
         retry_count = booking.get('retry_count', 0)
         if retry_count >= 5:
             return False, "Too many failed attempts. Please contact support."
         
-        # Check OTP Expiry (8 hours)
         if booking.get('started_at'):
             started_at = datetime.fromisoformat(booking['started_at'])
             if datetime.now() > started_at + timedelta(hours=8):
                  return False, "OTP has expired. Please contact support or request manual completion."
         
-        # Verify OTP
         if str(booking['otp']).strip() != str(provided_otp).strip():
-            # Increment retry count
             conn = self.db.get_conn()
             cursor = conn.cursor()
             try:
-                cursor.execute("UPDATE bookings SET retry_count = retry_count + 1 WHERE id = ?", (booking_id,))
+                cursor.execute("UPDATE bookings SET retry_count = retry_count + 1 WHERE id = %s", (booking_id,))
                 conn.commit()
             finally:
                 conn.close()
@@ -555,7 +482,6 @@ class BookingService:
             logging.warning(f"[AUDIT] Invalid OTP attempt for booking {booking_id} by worker {worker_id}. Retry count: {retry_count + 1}")
             return False, f"Invalid OTP. {4 - retry_count} attempts remaining."
         
-        # Update DB
         if self.db.update_booking_status(booking_id, 'COMPLETED'):
              self._notify_user(booking['user_id'], booking_id, "Service Completed", "Your housekeeping service has been marked as completed. Thank you!")
              logging.info(f"[AUDIT] Job completed successfully for booking {booking_id} by worker {worker_id}")
@@ -589,3 +515,20 @@ class BookingService:
                 logging.info(f"[AUDIT] Notification sent to worker {worker_id} for booking {booking_id}: {subject}")
         except Exception as e:
             logging.error(f"[ERROR] Failed to notify worker {worker_id}: {e}")
+
+    def get_worker_bookings(self, worker_id):
+        """
+        Get all bookings for a specific worker with user details.
+        """
+        bookings = self.db.get_worker_bookings(worker_id)
+        
+        # Enrich with user details (names)
+        for b in bookings:
+            user = self.user_db.get_user_by_id(b['user_id'])
+            if user:
+                b['user_name'] = user.get('full_name') or user.get('name') or "Client"
+                b['user_phone'] = user.get('phone')
+            else:
+                b['user_name'] = "Client"
+                
+        return bookings

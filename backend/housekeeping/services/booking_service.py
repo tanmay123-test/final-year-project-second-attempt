@@ -165,7 +165,7 @@ class BookingService:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT count(*) FROM bookings 
-                WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
+                WHERE worker_id = %s AND booking_date = %s AND time_slot = %s 
                 AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
             """, (worker['id'], date, time))
             count = cursor.fetchone()[0]
@@ -212,12 +212,12 @@ class BookingService:
             conn = self.db.get_conn()
             cur = conn.cursor()
             try:
-                cur.execute("SELECT id FROM services WHERE name = ?", (svc_name,))
+                cur.execute("SELECT id FROM services WHERE name = %s", (svc_name,))
                 srow = cur.fetchone()
                 if not srow:
                     return self.db.get_service_price(svc_name)
                 sid = srow[0]
-                cur.execute("SELECT price, pricing_json FROM worker_services WHERE worker_id = ? AND service_id = ? AND active = 1", (w_id, sid))
+                cur.execute("SELECT price, pricing_json FROM worker_services WHERE worker_id = %s AND service_id = %s AND active = TRUE", (w_id, sid))
                 ws = cur.fetchone()
                 if not ws:
                     return self.db.get_service_price(svc_name)
@@ -362,8 +362,8 @@ class BookingService:
         try:
             cursor.execute("""
             UPDATE bookings 
-            SET status = 'IN_PROGRESS', otp = ?, started_at = ?, retry_count = 0
-            WHERE id = ?
+            SET status = 'IN_PROGRESS', otp = %s, started_at = %s, retry_count = 0
+            WHERE id = %s
             """, (otp, started_at, booking_id))
             conn.commit()
             
@@ -416,7 +416,7 @@ class BookingService:
             conn = self.db.get_conn()
             cursor = conn.cursor()
             try:
-                cursor.execute("UPDATE bookings SET retry_count = retry_count + 1 WHERE id = ?", (booking_id,))
+                cursor.execute("UPDATE bookings SET retry_count = retry_count + 1 WHERE id = %s", (booking_id,))
                 conn.commit()
             finally:
                 conn.close()

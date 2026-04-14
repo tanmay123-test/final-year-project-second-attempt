@@ -60,7 +60,10 @@ class HousekeepingDatabase:
                 add_ons TEXT,
                 booking_type TEXT,
                 user_hidden BOOLEAN DEFAULT FALSE,
-                user_accepted_at TIMESTAMP
+                user_accepted_at TIMESTAMP,
+                otp TEXT,
+                started_at TEXT,
+                retry_count INTEGER DEFAULT 0
             )
             """)
             

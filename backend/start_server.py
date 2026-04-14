@@ -14,6 +14,10 @@ def main():
     print("  Server starting...")
     
     try:
+        # Load environment variables first
+        from dotenv import load_dotenv
+        load_dotenv()
+        
         # Import and run the Flask app
         from app import app
         app.run(host='127.0.0.1', port=5000, debug=True)

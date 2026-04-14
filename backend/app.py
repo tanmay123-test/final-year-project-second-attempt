@@ -21,6 +21,18 @@ from functools import wraps
 import requests
 import logging
 import time
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Pre-import housekeeping to avoid slow dynamic imports
+try:
+    from services.housekeeping.models.database import housekeeping_db
+    print("  ✅ Housekeeping DB Pre-imported")
+except Exception as e:
+    print(f"  ⚠️ Could not pre-import Housekeeping DB: {e}")
+
 from data.meeting_utils import generate_meeting_link as create_meeting_link
 import random
 from user_db import UserDB
@@ -535,10 +547,10 @@ def get_worker_availability(worker_id):
         for slot in availability:
             try:
                 # Check for conflicts in housekeeping bookings
-                # Use standard ? placeholder for SQLite which hk_booking_service uses
+                # Use standard %s placeholder for PostgreSQL
                 cursor.execute("""
                     SELECT count(*) FROM bookings 
-                    WHERE worker_id = ? AND booking_date = ? AND time_slot = ? 
+                    WHERE worker_id = %s AND booking_date = %s AND time_slot = %s 
                     AND status IN ('ACCEPTED', 'IN_PROGRESS', 'ASSIGNED', 'REQUESTED')
                 """, (int(worker_id), str(slot['date']), str(slot['time_slot'])))
                 count = cursor.fetchone()[0]
@@ -751,6 +763,7 @@ def user_appointments():
 # ================= WORKER AUTH =================
 @app.route("/worker/signup", methods=["POST"])
 def worker_register():
+    start_time = time.time()
     try:
         import os
         from werkzeug.utils import secure_filename
@@ -782,14 +795,18 @@ def worker_register():
         if service_type != "healthcare" and not specialization:
             specialization = "General"
 
-        # Handle file uploads for all services (especially housekeeping and freelance)
+        # Handle file uploads
+        print(f"  [PERF] Processing signup request for {d.get('email')} - Service: {service_type}")
+        file_start = time.time()
         profile_photo_path = save_file(files.get('profile_photo'), 'photo')
         aadhaar_path = save_file(files.get('aadhaar_card'), 'aadhaar')
         police_verification_path = save_file(files.get('police_verification'), 'police')
         portfolio_path = save_file(files.get('portfolio'), 'portfolio')
         skill_certificate_path = save_file(files.get('skill_certificate'), 'skill')
+        print(f"  [PERF] File saving took: {time.time() - file_start:.4f}s")
 
-        wid = worker_db.register_worker(
+        db_start = time.time()
+        result = worker_db.register_worker(
             full_name=d["full_name"], 
             email=d["email"], 
             phone=d["phone"],
@@ -809,9 +826,47 @@ def worker_register():
             portfolio_path=portfolio_path,
             skill_certificate_path=skill_certificate_path
         )
+        print(f"  [PERF] Database registration took: {time.time() - db_start:.4f}s")
         
-        if wid is None:
-            return jsonify({"error": "Worker already exists for this service"}), 400
+        if "error" in result:
+            print(f"  [SIGNUP ERROR] {result['error']}")
+            return jsonify({
+                "error": result["error"],
+                "code": "duplicate_entry" if "already exists" in result["error"].lower() else "bad_request",
+                "v": "1.0.4"
+            }), 400
+            
+        wid = result["worker_id"]
+            
+        # If housekeeping, auto-populate the housekeeping_db services table
+        if service_type == "housekeeping":
+            hk_start = time.time()
+            try:
+                # Use pre-imported housekeeping_db if possible
+                from services.housekeeping.models.database import housekeeping_db
+                # Get service IDs from names
+                all_hk_services = housekeeping_db.get_all_services()
+                selected_service_names = [s.strip() for s in specialization.split(',') if s.strip()]
+                
+                services_to_add = []
+                for s_name in selected_service_names:
+                    # Find matching service in DB
+                    match = next((s for s in all_hk_services if s['name'].lower() == s_name.lower()), None)
+                    if match:
+                        services_to_add.append({
+                            'service_id': match['id'],
+                            'price': match['base_price'],
+                            'active': 1
+                        })
+                
+                if services_to_add:
+                    housekeeping_db.upsert_worker_services(wid, services_to_add)
+                    print(f"  [HOUSEKEEPING] Auto-populated {len(services_to_add)} services for worker {wid}")
+            except Exception as e:
+                print(f"  [HOUSEKEEPING] Error auto-populating services: {e}")
+            print(f"  [PERF] Housekeeping auto-populate took: {time.time() - hk_start:.4f}s")
+
+        print(f"  [PERF] TOTAL signup processing took: {time.time() - start_time:.4f}s")
         return jsonify({"worker_id": wid}), 201
     except Exception as e:
         print(f"Worker signup error: {str(e)}")
@@ -2417,7 +2472,15 @@ def handle_exception(e):
     return jsonify({"success": False, "error": str(e)}), 500
 
 
-# ================= RUN =================
+# ================= HEALTH CHECK =================
+@app.route("/health", methods=["GET"])
+def health_check():
+    return jsonify({
+        "status": "online",
+        "timestamp": datetime.now().isoformat(),
+        "database": "connected" if worker_db else "disconnected",
+        "version": "1.0.1_fixed_registration"
+    }), 200
 # Temporary approval/reject endpoints (until server restart)
 @app.route("/admin/workers/<int:worker_id>/approve", methods=["POST"])
 def temp_approve_worker(worker_id):
@@ -2465,11 +2528,5 @@ def temp_reject_worker(worker_id):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print("🚀 Starting ExpertEase Backend...")
-    print(f"📍 Server running on: http://localhost:{port}")
-    print(f"📍 Server running on: http://127.0.0.1:{port}")
-    print(f"🌐 Access from browser: http://localhost:{port}")
-    print("="*50)
-    
-    # Run normally without socket for now
+    print(f"🚀 ExpertEase Backend running on http://127.0.0.1:{port}")
     app.run(host="0.0.0.0", port=port, debug=True)
