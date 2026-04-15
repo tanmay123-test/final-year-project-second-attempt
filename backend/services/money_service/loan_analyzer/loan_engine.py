@@ -245,6 +245,7 @@ class LoanEngine:
             return "✅ RECOMMENDED: Low risk loan within affordable limits"
 
         return "🤔 CONDITIONAL: Proceed with caution and monitor finances"
+
     def display_comprehensive_analysis(self, analysis):
         """Display complete loan analysis"""
         print("\n" + "="*80)
@@ -261,6 +262,29 @@ class LoanEngine:
         print("-" * 40)
         print(analysis['recommendation'])
         print("="*80)
+
+    def analyze_loan_impact(self, user_id, loan_amount, interest_rate, loan_tenure):
+        """Analyze the impact of a loan on user's finances"""
+        loan_details = EMICalculator.calculate_loan_details(loan_amount, interest_rate, loan_tenure)
+        financial_data = self.get_user_financial_data(user_id)
+        
+        return {
+            'monthly_income': financial_data['monthly_income'],
+            'monthly_fixed_expenses': financial_data['monthly_fixed_expenses'],
+            'disposable_income': financial_data['disposable_income'],
+            'loan_emi': loan_details['monthly_emi'],
+            'remaining_balance': financial_data['disposable_income'] - loan_details['monthly_emi'],
+            'emi_percentage_of_income': (loan_details['monthly_emi'] / financial_data['monthly_income']) * 100 if financial_data['monthly_income'] > 0 else 0,
+            'emi_percentage_of_disposable': (loan_details['monthly_emi'] / financial_data['disposable_income']) * 100 if financial_data['disposable_income'] > 0 else 0
+        }
+
+    def get_analysis_history(self, user_id, limit=10):
+        """Get user's loan analysis history - alias for get_loan_history"""
+        return self.get_loan_history(user_id, limit)
+
+    def get_amortization_schedule(self, loan_amount, interest_rate, loan_tenure):
+        """Generate detailed amortization schedule"""
+        return self.generate_repayment_schedule(loan_amount, interest_rate, loan_tenure)
 
     def get_quick_analysis(self, user_id, loan_amount, interest_rate, loan_tenure):
         """Get quick loan analysis without detailed display"""

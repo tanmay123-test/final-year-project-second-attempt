@@ -26,6 +26,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+print("📊 DATABASE_URL:", os.environ.get('DATABASE_URL', 'NOT SET'))
+
 # Pre-import housekeeping to avoid slow dynamic imports
 try:
     from services.housekeeping.models.database import housekeeping_db
@@ -134,7 +136,9 @@ def register_blueprints(app):
     # Register money management blueprint
     try:
         app.register_blueprint(money_bp)
-        print("  ✅ Money management blueprint registered")
+        from services.money_service.ai_coach_api import ai_coach_bp
+        app.register_blueprint(ai_coach_bp)
+        print("  ✅ Money management blueprints registered")
     except Exception as e:
         print(f"  ❌ Failed to register money management blueprint: {e}")
 
@@ -496,11 +500,9 @@ def get_specializations():
 def get_all_doctors():
     """Get all available doctors"""
     try:
-        # Only get healthcare workers
+        # Get all healthcare workers regardless of status
         doctors = worker_db.get_workers_by_service("healthcare")
-        # Filter only approved workers
-        approved_doctors = [doctor for doctor in doctors if doctor.get('status') == 'approved']
-        return jsonify({"doctors": approved_doctors}), 200
+        return jsonify({"doctors": doctors}), 200
     except Exception as e:
         print(f"  Error fetching doctors: {e}")
         return jsonify({"error": "Failed to fetch doctors", "doctors": []}), 500
@@ -509,12 +511,11 @@ def get_all_doctors():
 @app.route("/healthcare/doctors/<specialization>")
 def doctors_by_specialization(specialization):
     try:
-        # Get healthcare workers by specialization
         all_doctors = worker_db.get_workers_by_specialization(
             specialization.lower()
         )
-        # Filter only healthcare workers and approved ones
-        healthcare_doctors = [doctor for doctor in all_doctors if doctor.get('service') == 'healthcare' and doctor.get('status') == 'approved']
+        # Filter only healthcare workers
+        healthcare_doctors = [doctor for doctor in all_doctors if doctor.get('service') == 'healthcare']
         return jsonify({"doctors": healthcare_doctors}), 200
     except Exception as e:
         print(f"  Error fetching doctors by specialization: {e}")
@@ -591,15 +592,7 @@ def add_worker_availability(worker_id):
     if not time_slot:
         return jsonify({"error": "Time slot is required"}), 400
     
-    # Validate time slot format (should be HH:MM-HH:MM)
-    import re
-    if not re.match(r'^\d{2}:\d{2}-\d{2}:\d{2}$', time_slot):
-        return jsonify({"error": "Invalid time slot format. Use HH:MM-HH:MM format"}), 400
-    
-    # Validate date format (YYYY-MM-DD)
-    if not re.match(r'^\d{4}-\d{2}-\d{2}$', date):
-        return jsonify({"error": "Invalid date format. Use YYYY-MM-DD format"}), 400
-    
+    # AvailabilityDB handles normalization and internal validation
     ok, msg = availability_db.add_availability(
         worker_id, date, time_slot
     )

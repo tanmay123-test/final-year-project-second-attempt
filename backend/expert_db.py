@@ -16,11 +16,13 @@ class ExpertDB:
 
     def get_conn(self):
         load_dotenv()
-        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        db_url = os.environ.get('DATABASE_URL', '')
+        return psycopg2.connect(db_url, sslmode='require')
 
     def create_tables(self):
         load_dotenv()
-        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        db_url = os.environ.get('DATABASE_URL', '')
+        conn = psycopg2.connect(db_url, sslmode='require')
         cursor = conn.cursor()
         try:
             # Create experts table (extends workers table)

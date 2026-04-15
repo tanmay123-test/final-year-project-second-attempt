@@ -16,8 +16,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .back-button {
@@ -51,15 +50,14 @@
 }
 
 .main-content {
-  padding: 20px 16px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 24px;
+  width: 100%;
 }
 
 .goal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
 }
 
 .goal-card {
@@ -86,13 +84,15 @@
 
 .goal-emoji {
   font-size: 24px;
-  width: 44px;
-  height: 44px;
-  background: #F3F4F6;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  background: #FDF2F8; /* Light pink/purple */
+  color: #BE185D; /* Darker pink for the emoji/icon */
+  border-radius: 50%; /* Circle like screenshot */
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 10px rgba(190, 24, 93, 0.1);
 }
 
 .goal-name {
@@ -296,20 +296,24 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: 80px 24px;
   text-align: center;
   background: white;
-  border-radius: 16px;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin: 40px auto;
+  width: 100%;
+  max-width: 600px; /* Center these in the main area */
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #F3F4F6;
-  border-top: 3px solid #1F5F7A;
+  width: 48px;
+  height: 48px;
+  border: 4px solid #F3F4F6;
+  border-top: 4px solid #1F5F7A;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 @keyframes spin {
@@ -323,61 +327,64 @@
     width: 100%;
     max-width: 100%;
     margin: 0;
-    padding: 0 32px 40px 32px;
+    padding: 0 40px 60px 40px;
+    background-color: transparent;
   }
 
-  .goal-jar-page .header-content,
-  .goal-jar-page .main-content {
+  .header {
+    background: linear-gradient(135deg, #1F5F7A 0%, #2C7DA0 100%);
+    padding: 40px;
+    border-radius: 0 0 32px 32px;
+    margin: 0 -40px 40px -40px; /* Full width bleed */
+    box-shadow: 0 10px 30px rgba(31, 95, 122, 0.15);
+  }
+
+  .header-content {
     max-width: 100%;
     width: 100%;
-    margin: 0;
+  }
+
+  .header-title {
+    font-size: 32px;
+  }
+
+  .header-subtitle {
+    font-size: 18px;
   }
 
   .main-content {
     padding: 0;
+    max-width: 100%;
+    width: 100%;
   }
 
-  .header {
-    padding: 0 0 24px 0;
-    background: transparent;
-  }
-
-  .goals-grid,
   .goal-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 32px;
   }
 
-  .fab,
-  .add-goal-fab {
-    position: fixed !important;
-    bottom: 40px !important;
-    right: 40px !important;
-    left: auto !important;
-    transform: none !important;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  .goal-card {
+    padding: 32px;
+    border-radius: 24px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
   }
 
-  .modal-overlay {
-    align-items: center;
-    justify-content: center;
+  .goal-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
   }
 
-  .modal-content {
-    max-width: 480px;
-    width: 90%;
-    border-radius: 20px;
-    max-height: 80vh;
-    overflow-y: auto;
+  .fab {
+    bottom: 40px;
+    right: 40px;
+    width: 64px;
+    height: 64px;
+    box-shadow: 0 8px 24px rgba(244, 180, 0, 0.4);
   }
 
-  .summary-card {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+  .loading-state, .error-state, .empty-state {
+    margin: 100px auto;
+    padding: 100px 40px;
   }
 }
 
@@ -391,5 +398,52 @@
 
   .goal-jar-page .main-content {
     padding: 0;
+  }
+}
+
+/* Desktop Styles */
+@media (min-width: 1024px) {
+  .goal-jar-page {
+    padding-bottom: 40px;
+  }
+
+  .header {
+    padding: 32px 40px;
+    border-radius: 0 0 24px 24px;
+    margin-bottom: 24px;
+  }
+
+  .header-title {
+    font-size: 28px;
+  }
+
+  .header-subtitle {
+    font-size: 16px;
+  }
+
+  .main-content {
+    padding: 0 40px;
+  }
+
+  .goal-grid {
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 32px;
+  }
+
+  .goal-card {
+    padding: 28px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .goal-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .fab {
+    bottom: 40px;
+    right: 40px;
+    width: 64px;
+    height: 64px;
   }
 }

@@ -30,11 +30,25 @@ const ProviderAvailability = () => {
     return slots;
   }, []);
 
-  const getWorkerId = () => worker?.id || worker?.worker_id;
+  const getWorkerId = () => {
+    const id = worker?.id || worker?.worker_id;
+    if (!id) {
+      // Fallback — read directly from localStorage
+      try {
+        const stored = JSON.parse(localStorage.getItem('workerData') || '{}');
+        return stored.id || stored.worker_id || null;
+      } catch {
+        return null;
+      }
+    }
+    return id;
+  };
 
   // Fetch availability when date changes
   useEffect(() => {
-    if (getWorkerId() && selectedDate) {
+    const workerId = getWorkerId();
+    if (!workerId) return; // don't fetch if no valid ID
+    if (selectedDate) {
       fetchDayAvailability();
     }
   }, [worker, selectedDate]);
@@ -73,6 +87,13 @@ const ProviderAvailability = () => {
   };
 
   const handleAddSlot = async () => {
+    const workerId = getWorkerId();
+    if (!workerId) {
+      console.error('Worker ID is undefined — cannot add slot');
+      setMessage({ type: 'error', text: 'Session error. Please log out and log in again.' });
+      return;
+    }
+
     if (!selectedTime) {
       showMessage('error', 'Please select a time');
       return;
@@ -83,9 +104,6 @@ const ProviderAvailability = () => {
       showMessage('error', 'Slot already added');
       return;
     }
-
-    const workerId = getWorkerId();
-    if (!workerId) return;
 
     setAdding(true);
     try {

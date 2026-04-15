@@ -12,7 +12,8 @@ class UserDB:
         self.create_table()
 
     def get_conn(self):
-        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        db_url = os.environ.get('DATABASE_URL', '')
+        return psycopg2.connect(db_url, sslmode='require')
 
     def create_table(self):
         conn = self.get_conn()

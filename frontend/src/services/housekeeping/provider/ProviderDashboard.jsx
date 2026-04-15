@@ -202,16 +202,21 @@ const ProviderDashboard = () => {
       console.log('Starting job for booking:', id);
       const response = await housekeepingService.startJob(id);
       console.log('Start job response:', response);
-      
+
+      const otp = response.data?.otp;
+
       // Fetch bookings after successful start
       try {
         await fetchBookings();
       } catch (fetchError) {
         console.error('Error fetching bookings after start:', fetchError);
-        // Don't fail the whole operation if fetch fails
       }
-      
-      alert('Job started! OTP sent to user.');
+
+      if (otp) {
+        alert(`✅ Job started!\n\n🔑 OTP for this job: ${otp}\n\nThe OTP has also been sent to the customer's email.\nAsk the customer to share this OTP when the job is complete.`);
+      } else {
+        alert('Job started! OTP sent to user.');
+      }
     } catch (error) {
       console.error('Failed to start job', error);
       const errorMessage = error.response?.data?.error || error.message || 'Failed to start job. Please try again.';

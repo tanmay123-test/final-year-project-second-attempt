@@ -13,7 +13,9 @@ class HousekeepingDatabase:
 
     def get_conn(self):
         load_dotenv()
-        return psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+        conn.autocommit = False
+        return conn
 
     def _create_tables(self):
         load_dotenv()
@@ -126,12 +128,21 @@ class HousekeepingDatabase:
             """, (worker_id, is_online))
             conn.commit()
         except Exception as e:
-            conn.rollback()
-            print(f"DB Error: {e}")
+            print(f"DB Error set_worker_online: {e}")
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_worker_online_status(self, worker_id):
         conn = self.get_conn()
@@ -139,14 +150,19 @@ class HousekeepingDatabase:
         try:
             cursor.execute("SELECT is_online FROM worker_status WHERE worker_id = %s", (worker_id,))
             row = cursor.fetchone()
-            return bool(row[0]) if row else False # Default offline
+            return bool(row[0]) if row else False
         except Exception as e:
-            conn.rollback()
-            print(f"DB Error: {e}")
-            raise
+            print(f"DB Error get_worker_online_status: {e}")
+            return False
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def create_booking(self, user_id, service_type, address, date, time, price, worker_id=None, status='PENDING'):
         conn = self.get_conn()
@@ -161,12 +177,21 @@ class HousekeepingDatabase:
             conn.commit()
             return booking_id
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"Error creating booking: {e}")
             return None
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def create_booking_atomic(self, user_id, service_type, address, date, time, price, worker_id=None, status='PENDING', home_size=None, add_ons=None, booking_type=None):
         """
@@ -196,11 +221,20 @@ class HousekeepingDatabase:
             conn.commit()
             return booking_id, "Booking created"
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             return None, f"Database error: {str(e)}"
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_booking_by_id(self, booking_id):
         conn = self.get_conn()
@@ -210,12 +244,21 @@ class HousekeepingDatabase:
             row = cursor.fetchone()
             return dict(row) if row else None
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"DB Error: {e}")
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_user_bookings(self, user_id, visible_only=True):
         conn = self.get_conn()
@@ -228,12 +271,21 @@ class HousekeepingDatabase:
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"DB Error: {e}")
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_worker_bookings(self, worker_id):
         conn = self.get_conn()
@@ -243,12 +295,21 @@ class HousekeepingDatabase:
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"DB Error: {e}")
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_available_bookings(self, service_type):
         conn = self.get_conn()
@@ -262,12 +323,21 @@ class HousekeepingDatabase:
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"DB Error: {e}")
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def update_booking_status(self, booking_id, status, worker_id=None):
         conn = self.get_conn()
@@ -297,17 +367,23 @@ class HousekeepingDatabase:
             conn.commit()
             return True
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"Error updating booking: {e}")
             return False
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def accept_booking_by_user(self, booking_id, user_id):
-        """
-        Mark a booking as accepted by the user and hide it from user's views.
-        """
         conn = self.get_conn()
         cursor = conn.cursor()
         try:
@@ -319,21 +395,26 @@ class HousekeepingDatabase:
             conn.commit()
             return cursor.rowcount > 0
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"Error accepting booking by user: {e}")
             return False
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def assign_worker_atomic(self, booking_id, worker_id, date, time, status='ASSIGNED'):
-        """
-        Atomically assign a worker to a booking if they are not already booked.
-        """
         conn = self.get_conn()
         cursor = conn.cursor()
         try:
-            # Check for conflict
             query_check = """
             SELECT id FROM bookings 
             WHERE worker_id = %s AND booking_date = %s AND time_slot = %s 
@@ -342,30 +423,34 @@ class HousekeepingDatabase:
             """
             cursor.execute(query_check, (worker_id, date, time, booking_id))
             conflict = cursor.fetchone()
-            
             if conflict:
                 return False, "Worker is already booked for this slot"
-            
-            # Update booking
             query_update = """
             UPDATE bookings 
             SET status = %s, worker_id = %s 
             WHERE id = %s
             """
             cursor.execute(query_update, (status, worker_id, booking_id))
-            
             if cursor.rowcount == 0:
-                 return False, "Booking not found or update failed"
-                 
+                return False, "Booking not found or update failed"
             conn.commit()
             return True, "Worker assigned successfully"
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"Error in assign_worker_atomic: {e}")
             return False, f"Database error: {str(e)}"
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_service_price(self, service_name):
         conn = self.get_conn()
@@ -375,12 +460,21 @@ class HousekeepingDatabase:
             row = cursor.fetchone()
             return row[0] if row else 0.0
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"DB Error: {e}")
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_all_services(self):
         conn = self.get_conn()
@@ -390,19 +484,24 @@ class HousekeepingDatabase:
             rows = cursor.fetchall()
             return [dict(row) for row in rows]
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"DB Error: {e}")
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     # Worker Service Configuration
     def upsert_worker_services(self, worker_id, services):
-        """
-        Bulk upsert worker services.
-        services: list of dicts {service_id: int, price: float, active: int}
-        """
         conn = self.get_conn()
         cursor = conn.cursor()
         try:
@@ -422,18 +521,23 @@ class HousekeepingDatabase:
             conn.commit()
             return True
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"[DB] upsert_worker_services error: {e}")
             return False
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_services_for_worker(self, worker_id):
-        """
-        Return list of services configured by the worker with pricing.
-        [{id, name, description, price, active}]
-        """
         conn = self.get_conn()
         cursor = conn.cursor()
         try:
@@ -451,26 +555,83 @@ class HousekeepingDatabase:
                 for r in rows
             ]
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"DB Error: {e}")
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_all_services_with_base(self):
-        """
-        Return all services including base price with consistent keys.
-        """
         base = self.get_all_services()
-        # Normalize shape to include 'price' for UI defaults
-        return [{"id": s["id"], "name": s["name"], "description": s["description"], "price": s["base_price"]} for s in base]
+        result = []
+        for s in base:
+            result.append({
+                "id": s["id"],
+                "name": s["name"],
+                "description": s["description"],
+                "price": s["base_price"],
+                "available_count": 0
+            })
+        # If table was empty, seed defaults and retry
+        if not result:
+            self._seed_default_services()
+            base = self.get_all_services()
+            for s in base:
+                result.append({
+                    "id": s["id"],
+                    "name": s["name"],
+                    "description": s["description"],
+                    "price": s["base_price"],
+                    "available_count": 0
+                })
+        return result
+
+    def _seed_default_services(self):
+        """Ensure default services exist in the services table."""
+        conn = self.get_conn()
+        cursor = conn.cursor()
+        try:
+            default_services = [
+                ("General Cleaning", 500.0, "Standard home cleaning service"),
+                ("Deep Cleaning", 1000.0, "Thorough deep cleaning service"),
+                ("Bathroom Cleaning", 400.0, "Specialized bathroom cleaning"),
+                ("Kitchen Cleaning", 600.0, "Intensive kitchen cleaning")
+            ]
+            for name, price, desc in default_services:
+                cursor.execute("""
+                    INSERT INTO services (name, base_price, description)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (name) DO NOTHING
+                """, (name, price, desc))
+            conn.commit()
+            print("[DB] Default services seeded successfully")
+        except Exception as e:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            print(f"[DB] Error seeding services: {e}")
+        finally:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def get_worker_service_price(self, worker_id, service_name):
-        """
-        Return worker-specific price for a given service name.
-        Fallback to base price if worker has no override or not active.
-        """
         conn = self.get_conn()
         cursor = conn.cursor()
         try:
@@ -488,31 +649,30 @@ class HousekeepingDatabase:
                 return ws[0]
             return base_price
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"DB Error: {e}")
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     def worker_offers_service(self, worker_id, service_name):
-        """
-        Check if the worker has enabled a given service.
-        If the worker has NO services configured in worker_services, we assume
-        they offer all default services for their category.
-        """
         conn = self.get_conn()
         cursor = conn.cursor()
         try:
-            # 1. Check if worker has ANY configuration at all
             cursor.execute("SELECT count(*) FROM worker_services WHERE worker_id = %s", (worker_id,))
             has_config = cursor.fetchone()[0] > 0
-            
             if not has_config:
-                # No custom configuration? They offer everything by default.
                 return True
-
-            # 2. If they have config, check for the specific service
             cursor.execute("SELECT id FROM services WHERE name = %s", (service_name,))
             row = cursor.fetchone()
             if not row:
@@ -524,12 +684,21 @@ class HousekeepingDatabase:
             """, (worker_id, service_id))
             return cursor.fetchone() is not None
         except Exception as e:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             print(f"DB Error: {e}")
             raise
         finally:
-            cursor.close()
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # Singleton instance

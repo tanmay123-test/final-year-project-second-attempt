@@ -339,7 +339,7 @@ const UserHome = () => {
           
           {filteredCleaners.length > 0 ? (
             filteredCleaners.map(cleaner => (
-              <div key={cleaner.id} style={{ backgroundColor: 'white', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid #EEF2F7', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
+              <div key={String(cleaner.id)} style={{ backgroundColor: 'white', borderRadius: '16px', padding: '16px', marginBottom: '16px', border: '1px solid #EEF2F7', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
                 <div style={{ display: 'flex', gap: '16px', marginBottom: '12px', alignItems: 'center' }}>
                   <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: cleaner.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '18px', fontWeight: 'bold', position: 'relative' }}>
                     {cleaner.name.charAt(0)}

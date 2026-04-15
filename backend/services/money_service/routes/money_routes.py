@@ -1,10 +1,16 @@
 from flask import Blueprint, request, jsonify
 from ..services.money_service import money_service
+from ..goal_jar.goal_api import GoalAPI
+from ..loan_analyzer.loan_api import LoanAPI
+from ..ai_groups.ai_groups_api import AIGroupsAPI
 from auth_utils import verify_token
 from user_db import UserDB
 from worker_db import WorkerDB
 
 money_bp = Blueprint('money', __name__)
+goal_api = GoalAPI(money_bp)
+loan_api = LoanAPI(money_bp)
+ai_groups_api = AIGroupsAPI(money_bp)
 
 def get_current_user_id():
     auth_header = request.headers.get('Authorization')

@@ -6,13 +6,43 @@ REST API endpoints for AI Groups functionality following existing patterns
 from flask import Flask, request, jsonify
 from datetime import datetime
 from typing import Dict, Any, List
+from auth_utils import get_current_user_id as _get_current_user_id
 
 class AIGroupsAPI:
     """API class for AI Groups following existing patterns"""
     
-    def __init__(self):
-        pass
+    def __init__(self, blueprint=None):
+        self.blueprint = blueprint
+        if blueprint:
+            self.init_blueprint(blueprint)
     
+    def init_blueprint(self, blueprint):
+        """Initialize Blueprint with AI group API endpoints"""
+        self.blueprint = blueprint
+        self.register_routes()
+    
+    def register_routes(self):
+        """Register all API routes"""
+        
+        @self.blueprint.route('/api/money/groups/create', methods=['POST'])
+        def create_group_route():
+            user_id = _get_current_user_id()
+            if not user_id:
+                return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+            return jsonify(self.create_group(user_id))
+            
+        @self.blueprint.route('/api/money/groups/list', methods=['GET'])
+        def list_groups_route():
+            user_id = _get_current_user_id()
+            return jsonify(self.list_groups(user_id))
+            
+        @self.blueprint.route('/api/money/groups/join', methods=['POST'])
+        def join_group_route():
+            user_id = _get_current_user_id()
+            if not user_id:
+                return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+            return jsonify(self.join_group(user_id))
+
     def create_group(self, user_id: int) -> Dict[str, Any]:
         """Create a new AI group"""
         try:

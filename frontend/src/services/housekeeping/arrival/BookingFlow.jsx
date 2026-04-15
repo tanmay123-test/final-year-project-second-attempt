@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { housekeepingService } from '../../../shared/api';
-import { Calendar, Clock, MapPin, CheckCircle, AlertCircle, Home, Check, Plus, Minus, ArrowRight, ArrowLeft, Star } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckCircle, AlertCircle, Home, Check, Plus, Minus, ArrowRight, ArrowLeft, Star, Sparkles, Bath, Utensils, Loader2 } from 'lucide-react';
 import '../../../pages/Housekeeping/Housekeeping.css';
 
 const BookingFlow = () => {
@@ -9,6 +9,17 @@ const BookingFlow = () => {
   const location = useLocation();
   const [step, setStep] = useState('select'); // select, details, type-selection, schedule, confirm, success
   const [services, setServices] = useState([]);
+  
+  // Icon mapping helper
+  const getServiceIcon = (name) => {
+    switch (name) {
+      case 'General Cleaning': return <Home size={32} />;
+      case 'Deep Cleaning': return <Sparkles size={32} />;
+      case 'Bathroom Cleaning': return <Bath size={32} />;
+      case 'Kitchen Cleaning': return <Utensils size={32} />;
+      default: return <Home size={32} />;
+    }
+  };
   const [selectedService, setSelectedService] = useState(null);
   const [recommendedWorkers, setRecommendedWorkers] = useState([]);
   const [selectedWorker, setSelectedWorker] = useState(null);
@@ -159,6 +170,11 @@ const BookingFlow = () => {
   const [availableWorkers, setAvailableWorkers] = useState([]);
 
   const handleCheckAvailability = async () => {
+    if (!formData.address || formData.address.trim() === '') {
+      setError('Please enter your address before checking availability.');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     try {
@@ -303,7 +319,7 @@ const BookingFlow = () => {
             {services.map((service) => (
               <div key={service.name} className={`service-card ${selectedService?.name === service.name ? 'selected' : ''}`} onClick={() => handleSelectService(service)}>
                 <div className="icon-wrapper">
-                  <Home size={32} />
+                  {getServiceIcon(service.name)}
                 </div>
                 <h3>{service.name}</h3>
                 <p>{service.description}</p>
@@ -468,7 +484,7 @@ const BookingFlow = () => {
           <button 
              className="primary-btn"
              onClick={handleCheckAvailability}
-             disabled={loading || !formData.address}
+             disabled={loading}
              style={{
                  width: '100%',
                  marginBottom: '24px',

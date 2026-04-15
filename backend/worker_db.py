@@ -17,10 +17,11 @@ class WorkerDB:
     def __init__(self):
         if WorkerDB._pool is None:
             try:
+                db_url = os.environ.get('DATABASE_URL', '')
                 # Use a pool to reuse database connections (MUCH faster)
                 WorkerDB._pool = psycopg2.pool.SimpleConnectionPool(
                     1, 10, # min 1, max 10 connections
-                    os.environ['DATABASE_URL'],
+                    db_url,
                     sslmode='require',
                     connect_timeout=10
                 )
@@ -464,7 +465,7 @@ class WorkerDB:
         try:
             query = """
                 SELECT * FROM workers 
-                WHERE service = %s AND status = 'approved'
+                WHERE service = %s
             """
             cursor.execute(query, (service_type,))
             rows = cursor.fetchall()

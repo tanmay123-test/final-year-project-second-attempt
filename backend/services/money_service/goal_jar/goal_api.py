@@ -11,21 +11,21 @@ def _get_user_id_from_token():
 class GoalAPI:
     """REST API endpoints for goal jar management"""
     
-    def __init__(self, app=None):
-        self.app = app
+    def __init__(self, blueprint=None):
+        self.blueprint = blueprint
         self.goal_engine = GoalEngine()
-        if app:
-            self.init_app(app)
+        if blueprint:
+            self.init_blueprint(blueprint)
     
-    def init_app(self, app):
-        """Initialize Flask app with goal API endpoints"""
-        self.app = app
+    def init_blueprint(self, blueprint):
+        """Initialize Blueprint with goal API endpoints"""
+        self.blueprint = blueprint
         self.register_routes()
     
     def register_routes(self):
         """Register all API routes"""
         
-        @self.app.route('/api/goal/create', methods=['POST'])
+        @self.blueprint.route('/api/goal/create', methods=['POST'])
         def create_goal():
             """Create a new goal"""
             try:
@@ -59,7 +59,7 @@ class GoalAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
         
-        @self.app.route('/api/goal/list', methods=['GET'])
+        @self.blueprint.route('/api/goal/list', methods=['GET'])
         def list_goals():
             """Get all user goals"""
             try:
@@ -78,7 +78,7 @@ class GoalAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
         
-        @self.app.route('/api/goal/add-savings', methods=['POST'])
+        @self.blueprint.route('/api/goal/add-savings', methods=['POST'])
         def add_savings():
             """Add money to a goal"""
             try:
@@ -102,15 +102,18 @@ class GoalAPI:
                 
                 success = self.goal_engine.add_savings(user_id, goal_id, amount, payment_method, notes)
                 
-                return jsonify({
-                    'success': success,
-                    'data': {'message': 'Savings added successfully' if success else 'Failed to add savings'}
-                })
-                
+                if success:
+                    return jsonify({
+                        'success': True,
+                        'data': {'message': 'Savings added successfully'}
+                    })
+                else:
+                    return jsonify({'error': 'Failed to add savings'}), 400
+                    
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
         
-        @self.app.route('/api/goal/payment/create-order', methods=['POST'])
+        @self.blueprint.route('/api/goal/payment/create-order', methods=['POST'])
         def goal_create_payment_order():
             """Create Razorpay order for goal savings"""
             try:
@@ -157,7 +160,7 @@ class GoalAPI:
                 print(f"Goal Payment Order Error: {str(e)}")
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route('/api/goal/payment/verify', methods=['POST'])
+        @self.blueprint.route('/api/goal/payment/verify', methods=['POST'])
         def goal_verify_payment():
             """Verify Razorpay signature and record savings"""
             try:
@@ -202,7 +205,7 @@ class GoalAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route('/api/goal/simulate', methods=['POST'])
+        @self.blueprint.route('/api/goal/simulate', methods=['POST'])
         def simulate_goal():
             try:
                 data = request.get_json()
@@ -218,7 +221,7 @@ class GoalAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route('/api/goal/progress', methods=['GET'])
+        @self.blueprint.route('/api/goal/progress', methods=['GET'])
         def get_goal_progress():
             try:
                 user_id = _get_user_id_from_token()
@@ -234,7 +237,7 @@ class GoalAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route('/api/goal/transfer-leftover', methods=['POST'])
+        @self.blueprint.route('/api/goal/transfer-leftover', methods=['POST'])
         def transfer_leftover():
             try:
                 user_id = _get_user_id_from_token()
@@ -259,7 +262,7 @@ class GoalAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route('/api/goal/notifications', methods=['GET'])
+        @self.blueprint.route('/api/goal/notifications', methods=['GET'])
         def get_notifications():
             try:
                 user_id = _get_user_id_from_token()
@@ -270,7 +273,7 @@ class GoalAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route('/api/goal/acceleration', methods=['GET'])
+        @self.blueprint.route('/api/goal/acceleration', methods=['GET'])
         def get_acceleration_suggestions():
             try:
                 user_id = _get_user_id_from_token()
@@ -281,7 +284,7 @@ class GoalAPI:
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
 
-        @self.app.route('/api/goal/projection', methods=['GET'])
+        @self.blueprint.route('/api/goal/projection', methods=['GET'])
         def get_savings_projection():
             try:
                 user_id = _get_user_id_from_token()

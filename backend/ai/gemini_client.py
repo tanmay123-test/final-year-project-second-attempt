@@ -24,12 +24,16 @@ class GeminiClient:
     """
     
     def __init__(self):
-        # Try to load API key from separate config file if available
-        try:
-            from services.freelance.gemini_config import GEMINI_API_KEY
-            self.api_key = GEMINI_API_KEY
-        except ImportError:
-            self.api_key = os.getenv("GEMINI_API_KEY", "your_gemini_api_key_here")
+        # Use the provided Gemini API key for housekeeping AI chat
+        self.api_key = "AIzaSyCzZoEMgFTLvyF1A5HfePnriU3IPcUQHQk"
+        
+        # Fallback to environment variable if needed
+        if not self.api_key or len(self.api_key) < 20:
+            try:
+                from services.freelance.gemini_config import GEMINI_API_KEY
+                self.api_key = GEMINI_API_KEY
+            except ImportError:
+                self.api_key = os.getenv("GEMINI_API_KEY", "your_gemini_api_key_here")
             
         # Connectivity check on startup
         if not self.api_key or self.api_key == "your_gemini_api_key_here":

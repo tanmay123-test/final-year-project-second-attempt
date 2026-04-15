@@ -4,21 +4,21 @@ from .loan_engine import LoanEngine
 class LoanAPI:
     """REST API endpoints for loan analysis"""
     
-    def __init__(self, app=None):
-        self.app = app
+    def __init__(self, blueprint=None):
+        self.blueprint = blueprint
         self.loan_engine = LoanEngine()
-        if app:
-            self.init_app(app)
+        if blueprint:
+            self.init_blueprint(blueprint)
     
-    def init_app(self, app):
-        """Initialize Flask app with loan API endpoints"""
-        self.app = app
+    def init_blueprint(self, blueprint):
+        """Initialize Blueprint with loan API endpoints"""
+        self.blueprint = blueprint
         self.register_routes()
     
     def register_routes(self):
         """Register all API routes"""
         
-        @self.app.route('/api/loan/analyze', methods=['POST'])
+        @self.blueprint.route('/api/loan/analyze', methods=['POST'])
         def analyze_loan():
             """Analyze a single loan"""
             try:
@@ -71,7 +71,7 @@ class LoanAPI:
                 print(f"Loan analyze error: {traceback.format_exc()}")
                 return jsonify({'error': str(e)}), 500
         
-        @self.app.route('/api/loan/compare', methods=['POST'])
+        @self.blueprint.route('/api/loan/compare', methods=['POST'])
         def compare_loans():
             """Compare two loan offers"""
             try:
@@ -97,7 +97,6 @@ class LoanAPI:
                     if float(loan.get('amount') or 0) <= 0 or float(loan.get('rate') or 0) < 0 or int(loan.get('tenure') or 0) <= 0:
                         return jsonify({'error': f'Invalid values in loan{i}'}), 400
                 
-                # Perform comparison
                 comparison = self.loan_engine.compare_loans(user_id, loan1, loan2)
                 
                 return jsonify({
@@ -106,160 +105,14 @@ class LoanAPI:
                 })
                 
             except Exception as e:
-                import traceback
-                print(f"Loan compare error: {traceback.format_exc()}")
                 return jsonify({'error': str(e)}), 500
         
-        @self.app.route('/api/loan/impact', methods=['POST'])
-        def calculate_impact():
-            """Calculate loan impact on finances"""
+        @self.blueprint.route('/api/loan/impact', methods=['POST'])
+        def simulate_impact():
+            """Simulate how a loan affects monthly budget"""
             try:
                 data = request.get_json() or {}
                 
-                # Validate required fields
-                required_fields = ['monthly_income', 'monthly_fixed_expenses', 'loan_amount', 'interest_rate', 'loan_tenure']
-                for field in required_fields:
-                    if field not in data or data.get(field) is None:
-                        return jsonify({'error': f'Missing required field: {field}'}), 400
-                
-                monthly_income = float(data.get('monthly_income') or 0)
-                monthly_fixed_expenses = float(data.get('monthly_fixed_expenses') or 0)
-                loan_amount = float(data.get('loan_amount') or 0)
-                interest_rate = float(data.get('interest_rate') or 0)
-                loan_tenure = int(data.get('loan_tenure') or 0)
-                
-                # Calculate EMI
-                from .emi_calculator import EMICalculator
-                emi, _, _ = EMICalculator.calculate_emi(loan_amount, interest_rate, loan_tenure)
-                
-                # Calculate impact
-                impact = self.loan_engine.loan_risk.calculate_loan_impact(
-                    monthly_income, monthly_fixed_expenses, emi
-                )
-                
-                return jsonify({
-                    'success': True,
-                    'data': {
-                        'monthly_emi': emi,
-                        'disposable_income': impact['disposable_income'],
-                        'remaining_after_emi': impact['remaining_after_emi'],
-                        'impact_percentage': impact['impact_percentage'],
-                        'is_sustainable': impact['is_sustainable']
-                    }
-                })
-                
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/loan/repayment-simulation', methods=['POST'])
-        def repayment_simulation():
-            """Simulate early repayment"""
-            try:
-                data = request.get_json() or {}
-                
-                # Validate required fields
-                required_fields = ['loan_amount', 'interest_rate', 'loan_tenure', 'extra_payment']
-                for field in required_fields:
-                    if field not in data or data.get(field) is None:
-                        return jsonify({'error': f'Missing required field: {field}'}), 400
-                
-                loan_amount = float(data.get('loan_amount') or 0)
-                interest_rate = float(data.get('interest_rate') or 0)
-                loan_tenure = int(data.get('loan_tenure') or 0)
-                extra_payment = float(data.get('extra_payment') or 0)
-                
-                # Perform simulation
-                simulation = self.loan_engine.simulate_early_repayment(
-                    loan_amount, interest_rate, loan_tenure, extra_payment
-                )
-                
-                return jsonify({
-                    'success': True,
-                    'data': simulation
-                })
-                
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/loan/schedule', methods=['POST'])
-        def generate_schedule():
-            """Generate repayment schedule"""
-            try:
-                data = request.get_json() or {}
-                
-                # Validate required fields
-                required_fields = ['loan_amount', 'interest_rate', 'loan_tenure']
-                for field in required_fields:
-                    if field not in data or data.get(field) is None:
-                        return jsonify({'error': f'Missing required field: {field}'}), 400
-                
-                loan_amount = float(data.get('loan_amount') or 0)
-                interest_rate = float(data.get('interest_rate') or 0)
-                loan_tenure = int(data.get('loan_tenure') or 0)
-                extra_payment = float(data.get('extra_payment') or 0)
-                
-                # Calculate EMI and totals for summary
-                from .emi_calculator import EMICalculator
-                emi, total_interest, total_payment = EMICalculator.calculate_emi(loan_amount, interest_rate, loan_tenure)
-
-                # Generate schedule
-                schedule = self.loan_engine.generate_repayment_schedule(
-                    loan_amount, interest_rate, loan_tenure, extra_payment
-                )
-                
-                return jsonify({
-                    'success': True,
-                    'data': {
-                        'schedule': schedule,
-                        'total_months': len(schedule),
-                        'emi': emi,
-                        'total_interest': total_interest,
-                        'total_payment': total_payment
-                    }
-                })
-                
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/loan/history/<int:user_id>', methods=['GET'])
-        def get_loan_history(user_id):
-            """Get user's loan analysis history"""
-            try:
-                history = self.loan_engine.get_loan_history(user_id)
-                comparison_history = self.loan_engine.get_comparison_history(user_id)
-                
-                # Normalize fields for frontend
-                for item in history:
-                    item['date'] = item.get('created_at', '')[:10] if item.get('created_at') else ''
-                    item['amount'] = item.get('loan_amount', 0)
-                    item['tenure'] = item.get('loan_tenure', 0)
-                    item['emi'] = item.get('monthly_emi', 0)
-                    item['dti'] = round(item.get('dti_ratio', 0), 1)
-                    item['risk_score'] = round(item.get('risk_score', 0))
-                    item['risk_level'] = (
-                        'High' if item['risk_score'] > 70 else
-                        'Medium' if item['risk_score'] > 40 else 'Low'
-                    )
-                
-                return jsonify({
-                    'success': True,
-                    'data': {
-                        'loan_analyses': history,
-                        'analyses': history,  # alias for frontend compatibility
-                        'comparisons': comparison_history
-                    }
-                })
-                
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        
-        @self.app.route('/api/loan/quick-analysis', methods=['POST'])
-        def quick_analysis():
-            """Get quick loan analysis"""
-            try:
-                data = request.get_json()
-                
-                # Validate required fields
                 required_fields = ['user_id', 'loan_amount', 'interest_rate', 'loan_tenure']
                 for field in required_fields:
                     if field not in data:
@@ -270,14 +123,118 @@ class LoanAPI:
                 interest_rate = float(data['interest_rate'])
                 loan_tenure = int(data['loan_tenure'])
                 
-                # Get quick analysis
-                analysis = self.loan_engine.get_quick_analysis(user_id, loan_amount, interest_rate, loan_tenure)
+                # Financial data can be provided or fetched from DB
+                monthly_income = data.get('monthly_income')
+                monthly_expenses = data.get('monthly_expenses')
+                
+                if monthly_income:
+                    self.loan_engine._override_financial_data = {
+                        'monthly_income': float(monthly_income),
+                        'monthly_fixed_expenses': float(monthly_expenses or 0),
+                        'disposable_income': float(monthly_income) - float(monthly_expenses or 0)
+                    }
+                
+                # Explicitly call analyze_loan_impact on the engine
+                impact = self.loan_engine.analyze_loan_impact(user_id, loan_amount, interest_rate, loan_tenure)
+                
+                # Clear override
+                self.loan_engine._override_financial_data = None
                 
                 return jsonify({
                     'success': True,
-                    'data': analysis
+                    'data': impact
                 })
                 
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.blueprint.route('/api/loan/repayment-simulation', methods=['POST'])
+        def simulate_early_repayment():
+            """Simulate how extra payments reduce loan tenure/interest"""
+            try:
+                data = request.get_json() or {}
+                
+                required_fields = ['loan_amount', 'interest_rate', 'loan_tenure', 'extra_payment']
+                for field in required_fields:
+                    if field not in data:
+                        return jsonify({'error': f'Missing required field: {field}'}), 400
+                
+                sim = self.loan_engine.simulate_early_repayment(
+                    float(data['loan_amount']),
+                    float(data['interest_rate']),
+                    int(data['loan_tenure']),
+                    float(data['extra_payment'])
+                )
+                
+                return jsonify({
+                    'success': True,
+                    'data': sim
+                })
+                
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.blueprint.route('/api/loan/schedule', methods=['POST'])
+        def get_amortization_schedule():
+            """Get full month-by-month repayment schedule"""
+            try:
+                data = request.get_json() or {}
+                
+                required_fields = ['loan_amount', 'interest_rate', 'loan_tenure']
+                for field in required_fields:
+                    if field not in data:
+                        return jsonify({'error': f'Missing required field: {field}'}), 400
+                
+                schedule = self.loan_engine.get_amortization_schedule(
+                    float(data['loan_amount']),
+                    float(data['interest_rate']),
+                    int(data['loan_tenure'])
+                )
+                
+                return jsonify({
+                    'success': True,
+                    'data': schedule
+                })
+                
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.blueprint.route('/api/loan/history/<int:user_id>', methods=['GET'])
+        def get_loan_history(user_id):
+            """Get user's previous loan analysis history"""
+            try:
+                # Explicitly call get_analysis_history on the engine
+                history = self.loan_engine.get_analysis_history(user_id)
+                return jsonify({
+                    'success': True,
+                    'data': history
+                })
+            except Exception as e:
+                return jsonify({'error': str(e)}), 500
+        
+        @self.blueprint.route('/api/loan/quick-analysis', methods=['POST'])
+        def quick_analysis():
+            """Minimal analysis without user context"""
+            try:
+                data = request.get_json() or {}
+                required = ['amount', 'rate', 'tenure']
+                if not all(k in data for k in required):
+                    return jsonify({'error': 'Missing parameters'}), 400
+                
+                from .emi_calculator import EMICalculator
+                calc = EMICalculator()
+                emi = calc.calculate_emi(float(data['amount']), float(data['rate']), int(data['tenure']))
+                total_payment = emi * int(data['tenure'])
+                total_interest = total_payment - float(data['amount'])
+                
+                return jsonify({
+                    'success': True,
+                    'data': {
+                        'emi': emi,
+                        'total_payment': total_payment,
+                        'total_interest': total_interest
+                    }
+                })
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
 

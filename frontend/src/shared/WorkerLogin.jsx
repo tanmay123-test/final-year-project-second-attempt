@@ -69,6 +69,12 @@ const WorkerLogin = ({ serviceType = 'healthcare' }) => {
         localStorage.setItem('workerToken', data.token)
         console.log('Token stored:', localStorage.getItem('workerToken'))
         localStorage.setItem('workerData', JSON.stringify(data.worker || {}))
+        // ADD THIS — hydrate context immediately so worker.id is available
+        if (typeof workerLogin === 'function') {
+          workerLogin(data.worker);
+        } else if (typeof setWorker === 'function') {
+          setWorker(data.worker);
+        }
         navigate(dashboardPath)
       } else {
         setError(data.error || 'Invalid email or password')

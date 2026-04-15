@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -35,6 +35,17 @@ const WorkerSignupPage = () => {
   const [aadhaarCard, setAadhaarCard] = useState(null)
   const [degreeCertificate, setDegreeCertificate] = useState(null)
   const [medicalLicense, setMedicalLicense] = useState(null)
+
+  // Error boundary handling
+  useEffect(() => {
+    const handleError = (event) => {
+      console.error('WorkerSignupPage Error:', event.error);
+      setError('An unexpected error occurred. Please refresh the page.');
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
 
   const onChange = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -74,7 +85,7 @@ const WorkerSignupPage = () => {
   const onGoDashboard = () => {
     if (successData?.worker_id) localStorage.setItem('worker_id', String(successData.worker_id));
     if (successData?.worker_token) localStorage.setItem('worker_token', String(successData.worker_token));
-    navigate('/worker/dashboard');
+    navigate('/worker/healthcare/login');
   };
 
   return (
@@ -90,6 +101,12 @@ const WorkerSignupPage = () => {
         </div>
 
         <div className="wp-form-card wp-card">
+          {error && (
+            <div className="wp-error-banner" style={{ margin: '16px', textAlign: 'center' }}>
+              {error}
+            </div>
+          )}
+          
           {!successData ? (
             <form onSubmit={onSubmit}>
               <div className="wp-section-title">Personal Details</div>
@@ -207,7 +224,6 @@ const WorkerSignupPage = () => {
               <button className="wp-primary-btn" type="submit" disabled={loading}>
                 {loading ? 'Creating...' : 'Create Worker Account'}
               </button>
-              {error ? <div className="wp-error-banner" style={{ margin: '10px 0 0' }}>{error}</div> : null}
             </form>
           ) : (
             <div style={{ textAlign: 'center', padding: '12px 0' }}>

@@ -8,8 +8,8 @@ from ai.gemini_client import gemini_client
 # Initialize database
 db = HousekeepingDatabase()
 
-# Gemini Configuration
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# Gemini Configuration - Use provided API key for housekeeping AI chat
+GEMINI_API_KEY = "AIzaSyCzZoEMgFTLvyF1A5HfePnriU3IPcUQHQk"
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 GEMINI_MODEL = "gemini-2.0-flash"
 

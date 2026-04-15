@@ -19,7 +19,12 @@ class BookingService:
         Get all available service types.
         """
         if worker_id:
-            return self.db.get_services_for_worker(worker_id)
+            services = self.db.get_services_for_worker(worker_id)
+            if services:
+                return services
+            # Fallback to all services if worker has none configured
+            logging.info(f"Worker {worker_id} has no configured services, falling back to defaults")
+            
         return self.db.get_all_services_with_base()
 
     def get_top_cleaners(self):
@@ -243,15 +248,21 @@ class BookingService:
                 continue
 
             if booking_type == 'instant':
-                if not is_online:
-                    continue
+                # For instant booking, accept any worker (online preferred)
+                pass
             else:
                 if not has_explicit_slot:
                     continue
 
             worker['is_online'] = is_online
             available_workers.append(worker)
-                
+
+        # For instant booking, prefer online workers but fall back to all if none online
+        if booking_type == 'instant' and available_workers:
+            online_workers = [w for w in available_workers if w.get('is_online')]
+            if online_workers:
+                return online_workers
+
         return available_workers
 
     def create_booking_request(self, user_id, service_type, address, date, time, worker_id=None, home_size=None, add_ons=None, booking_type='schedule'):
@@ -408,41 +419,64 @@ class BookingService:
 
     def start_job(self, booking_id, worker_id):
         """
-        Worker starts the job.
+        Worker starts the job. Generates OTP and notifies user.
         """
         booking = self.db.get_booking_by_id(booking_id)
         if not booking:
             return False, "Booking not found", None
-        
+
         if str(booking['worker_id']) != str(worker_id):
             return False, "Unauthorized worker", None
-            
+
         if booking['status'] != 'ACCEPTED':
             return False, f"Cannot start job in '{booking['status']}' state. Must be ACCEPTED.", None
-        
+
         otp = str(random.randint(100000, 999999))
         started_at = datetime.now().isoformat()
-        
+
         conn = self.db.get_conn()
         cursor = conn.cursor()
         try:
             cursor.execute("""
-            UPDATE bookings 
+            UPDATE bookings
             SET status = 'IN_PROGRESS', otp = %s, started_at = %s, retry_count = 0
             WHERE id = %s
             """, (otp, started_at, booking_id))
             conn.commit()
-            
-            user_msg = f"Your housekeeping service has started. Please share this OTP with the worker to complete the job: {otp}"
-            self._notify_user(booking['user_id'], booking_id, "Service Started - OTP Inside", user_msg)
-            
-            logging.info(f"[AUDIT] Job started for booking {booking_id} by worker {worker_id} at {started_at}")
-            return True, "Job started successfully", otp
         except Exception as e:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             logging.error(f"[ERROR] Error starting job for booking {booking_id}: {e}")
             return False, str(e), None
         finally:
-            conn.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+        # Notify user with OTP — done AFTER commit so DB is consistent
+        try:
+            user_msg = (
+                f"Your housekeeping service has started!\n\n"
+                f"OTP to complete the job: {otp}\n\n"
+                f"Share this OTP with the worker when the job is done."
+            )
+            self._notify_user(
+                booking['user_id'], booking_id,
+                "Service Started — Your OTP is Inside", user_msg
+            )
+        except Exception as e:
+            logging.warning(f"[WARN] OTP notification failed for booking {booking_id}: {e}")
+            # Don't fail the whole operation — job is started, OTP is in DB
+
+        logging.info(f"[AUDIT] Job started for booking {booking_id} by worker {worker_id} at {started_at}")
+        return True, "Job started successfully", otp
 
     def complete_job(self, booking_id, worker_id, provided_otp):
         """

@@ -866,3 +866,69 @@
     font-size: 9px;
   }
 }
+
+/* Horizontal Scrollable Chips in Active State */
+.active-chips-container {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 0 4px 12px 4px;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+
+.active-chips-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+/* Desktop Responsiveness */
+@media (min-width: 1024px) {
+  .goal-jar-page {
+    padding-bottom: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: transparent;
+  }
+
+  .summary-card {
+    margin: 24px 0;
+    padding: 32px;
+  }
+
+  .stats-row {
+    gap: 32px;
+  }
+
+  .stat-column .stat-value {
+    font-size: 28px;
+  }
+
+  .stat-column .stat-label {
+    font-size: 14px;
+  }
+
+  .goals-section {
+    padding: 0;
+  }
+
+  .goals-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 24px;
+    padding-bottom: 40px;
+  }
+
+  .goal-card {
+    margin-bottom: 0;
+    height: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .goal-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .goal-jar-header {
+    border-radius: 0 0 16px 16px;
+  }
+}

@@ -12,12 +12,6 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Skip auth check for worker portal
-      if (window.location.pathname.startsWith('/worker')) {
-        setLoading(false);
-        return;
-      }
-      
       const token = localStorage.getItem('token');
       
       if (token) {
@@ -42,6 +36,17 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('worker_email');
             setUser(null);
             setWorker(null);
+          }
+        }
+      } else {
+        // No token found, try to hydrate worker state from localStorage
+        const workerToken = localStorage.getItem('workerToken');
+        const workerData = localStorage.getItem('workerData');
+        if (workerToken && workerData) {
+          try {
+            setWorker(JSON.parse(workerData));
+          } catch (e) {
+            console.error('Failed to parse workerData from localStorage', e);
           }
         }
       }

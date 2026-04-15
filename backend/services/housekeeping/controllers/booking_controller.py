@@ -129,12 +129,20 @@ def get_recommended_workers():
 @housekeeping_bp.route('/services', methods=['GET'])
 def list_services():
     worker_id = request.args.get('worker_id')
-    services = booking_service.get_service_types(worker_id=worker_id)
-    top_cleaners = booking_service.get_top_cleaners()
-    
+    try:
+        services = booking_service.get_service_types(worker_id=worker_id)
+    except Exception as e:
+        print(f"[API] Error fetching services: {e}")
+        services = []
+    try:
+        top_cleaners = booking_service.get_top_cleaners()
+    except Exception as e:
+        print(f"[API] Error fetching top cleaners: {e}")
+        top_cleaners = []
+
     # Log the count to debug
     print(f"[API] Found {len(services)} services and {len(top_cleaners)} cleaners")
-    
+
     return jsonify({
         "services": services,
         "top_cleaners": top_cleaners
@@ -175,7 +183,9 @@ def get_available_slots():
 @housekeeping_bp.route('/check-availability', methods=['POST'])
 def check_availability():
     user, error = get_current_user()
-    if not user or user['type'] != 'user':
+    if not user:
+        return jsonify({"error": "Unauthorized: Please log in"}), 401
+    if user.get('type') not in ['user', 'customer']:
         return jsonify({"error": "Unauthorized: Only users can check availability"}), 401
 
     data = request.json
@@ -405,27 +415,30 @@ def start_job():
     user, error = get_current_user()
     if not user or user['type'] != 'worker':
         return jsonify({"error": "Unauthorized"}), 401
-    
+
     data = request.json
     booking_id = data.get('booking_id')
     if not booking_id:
         return jsonify({"error": "Missing booking_id"}), 400
-        
+
     success, msg, otp = booking_service.start_job(booking_id, user['data']['id'])
-    
+
     if success:
         # Emit WebSocket event to User
         socketio = get_socketio()
         if socketio:
             try:
-                # Fetch booking to get user_id
                 booking = booking_service.db.get_booking_by_id(booking_id)
-                emit_booking_update(socketio, booking_id, 'IN_PROGRESS', user_id=booking['user_id'])
+                if booking:
+                    emit_booking_update(socketio, booking_id, 'IN_PROGRESS', user_id=booking['user_id'])
             except Exception as e:
                 print(f"[WS ERROR] Failed to emit update: {e}")
-                
-        # In a real app, we don't return OTP to worker, but for demo/testing it helps
-        return jsonify({"success": True, "message": msg, "otp": otp}), 200
+
+        return jsonify({
+            "success": True,
+            "message": msg,
+            "otp": otp  # Returned so worker dashboard can display it
+        }), 200
     else:
         return jsonify({"error": msg}), 400
 
